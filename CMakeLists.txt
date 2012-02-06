@@ -8,5 +8,21 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 #Searching CUDA
 FIND_PACKAGE(CUDA)
 
+#Searching MATLAB
+FIND_PACKAGE(MATLAB)
+
+#Include dirs
+include_directories (inc)
+
 #Adding src directory to the project
 ADD_SUBDIRECTORY(src)
+ADD_SUBDIRECTORY(test)
+
+# For make-based builds, defines make target named test.
+# For Visual Studio builds, defines Visual Studio project named RUN_TESTS.
+enable_testing()
+
+add_test(
+    NAME runUnitTests
+    COMMAND runUnitTests
+)

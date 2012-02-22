@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define OVERSAMPLING_RATIO				1.5
+#define OVERSAMPLING_RATIO				1
 #define KERNEL_WIDTH					5.0  
 #define DEFAULT_RADIUS_FOV_PRODUCT		((KERNEL_WIDTH) / 2.0)
 #define DEFAULT_KERNEL_TABLE_SIZE		800

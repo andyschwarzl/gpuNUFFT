@@ -33,22 +33,36 @@ TEST(TestGridding,CPUTest)
 	loadGrid3Kernel(kern,kernel_entries);
 
 	//Image
-	int im_width = 3;
+	int im_width = 11;
 
 	//Data
-	int data_entries = 1;
+	int data_entries = 3;
     float* data = (float*) calloc(2*data_entries,sizeof(float)); //2* re + im
 	data[0] = 1;
 	data[1] = 1;
+	
+	data[2] = 1;
+	data[3] = 1;
+
+	data[4] = 1;
+	data[5] = 1;
 
 	//Coords
 	//Scaled between -0.5 and 0.5
 	//in triplets (x,y,z)
-	int coord_entries = 1;
-    float* coords = (float*) calloc(3*coord_entries,sizeof(float));//3* x,y,z
-	coords[0] = 0;
-	coords[1] = 0;
-	coords[2] = 0;
+	//int coord_entries = 1;
+    float* coords = (float*) calloc(3*data_entries,sizeof(float));//3* x,y,z
+	coords[0] = 0.2272; //should return in 8,8,8 center
+	coords[1] = 0.2272;
+	coords[2] = 0.2272;
+
+	coords[3] = -0.318181; //should return in 2,2,2 center
+	coords[4] = -0.318181;
+	coords[5] = -0.318181;
+	
+	coords[6] = -0.318181; //should return in 2,8,8 center
+	coords[7] = 0.2272;
+	coords[8] =0.2272;
 
 	//Output Grid
     float* gdata;
@@ -66,15 +80,30 @@ TEST(TestGridding,CPUTest)
 	//e.g. 1000 sectors (50x50x50 image with
 	//5x5x5 sector size -> 10x10x10 padded
 	//
-	int sector_count = 1;
-	int* sectors = (int*) calloc(2,sizeof(int));
+	int sector_count = 3;
+	int* sectors = (int*) calloc(2*sector_count,sizeof(int));
 	sectors[0]=0;
 	sectors[1]=1;
 
-	int* sector_centers = (int*) calloc(3,sizeof(int));
-	sector_centers[0] = 1;
-	sector_centers[1] = 1;
-	sector_centers[2] = 1;
+	sectors[2]=2;
+	sectors[3]=3;
+
+	sectors[4]=4;
+	sectors[5]=5;
+
+
+	int* sector_centers = (int*) calloc(3*sector_count,sizeof(int));
+	sector_centers[0] = 8;
+	sector_centers[1] = 8;
+	sector_centers[2] = 8;
+
+	sector_centers[3] = 2;
+	sector_centers[4] = 2;
+	sector_centers[5] = 2;
+
+	sector_centers[6] = 2;
+	sector_centers[7] = 8;
+	sector_centers[8] = 8;
 
 	gridding3D(data,coords,gdata,kern,sectors,sector_count,sector_centers, KERNEL_WIDTH, kernel_entries,dims_g[1]);
 

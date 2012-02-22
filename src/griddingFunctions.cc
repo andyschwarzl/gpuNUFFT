@@ -33,19 +33,19 @@ static float i0( float x )
 	float ans;
 	float y;
 
-	if (ax < 3.75) 
+	if (ax < 3.75f) 
     {
-		y=x/3.75,y=y*y;
-		ans=1.0+y*(3.5156229+y*(3.0899424+y*(1.2067492
-			   +y*(0.2659732+y*(0.360768e-1+y*0.45813e-2)))));
+		y=x/3.75f,y=y*y;
+		ans=1.0f+y*(3.5156229f+y*(3.0899424f+y*(1.2067492f
+			   +y*(0.2659732f+y*(0.360768e-1f+y*0.45813e-2f)))));
 	} 
     else 
     {
-		y=3.75/ax;
-		ans=(exp(ax)/sqrt(ax))*(0.39894228+y*(0.1328592e-1
-				+y*(0.225319e-2+y*(-0.157565e-2+y*(0.916281e-2
-				+y*(-0.2057706e-1+y*(0.2635537e-1+y*(-0.1647633e-1
-				+y*0.392377e-2))))))));
+		y=3.75f/ax;
+		ans=(exp(ax)/sqrt(ax))*(0.39894228f+y*(0.1328592e-1f
+				+y*(0.225319e-2f+y*(-0.157565e-2f+y*(0.916281e-2f
+				+y*(-0.2057706e-1f+y*(0.2635537e-1f+y*(-0.1647633e-1f
+				+y*0.392377e-2f))))))));
 	}
 	return (ans);
 }
@@ -75,7 +75,7 @@ void loadGrid3Kernel(float *kernTab, int kernel_entries)
 	for (i=1; i<size-1; i++)	
     {
 		rsqr = sqrt(i/(float)(size-1));//*(i/(float)(size-1));
-		kernTab[i] = kernel(rsqr); /* kernel table for radius squared */
+		kernTab[i] = static_cast<float>(kernel(rsqr)); /* kernel table for radius squared */
 		//assert(kernTab[i]!=kernTab[i]); //check is NaN
 	}
 
@@ -91,7 +91,9 @@ void loadGrid3Kernel(float *kernTab, int kernel_entries)
 void set_minmax (double x, int *min, int *max, int maximum, double radius)	
 {
 	*min = (int) ceil (x - radius);
+	printf("x - radius %f - %f => %d ### ",x,radius,*min);
 	*max = (int) floor (x + radius);
+	printf("x + radius %f - %f => %d\n",x,radius,*max);
 	if (*min < 0) *min = 0;
 	if (*max >= maximum) *max = maximum-1;
 }
@@ -109,8 +111,9 @@ void gridding3D(float* data, float* crds, float* gdata, float* kernel, int* sect
     /* kr */
 	float dx_sqr, dy_sqr, dz_sqr, dz_sqr_PLUS_dy_sqr, dist_sqr, val;
 	int center_x, center_y, center_z, max_x, max_y, max_z;
-
-	float radius = kernel_width / width;
+	
+	float radius = static_cast<float>(kernel_width) / width;
+	printf("radius %f\n",radius);
 	float width_inv = 1.0f / width;
 	float radiusSquared = radius * radius;
 	float kernelRadius_invSqr = 1 / radiusSquared;
@@ -140,11 +143,11 @@ void gridding3D(float* data, float* crds, float* gdata, float* kernel, int* sect
 
 			/* set the boundaries of final dataset for gridding this point */
 			ix = x * width + center_x;
-			set_minmax(ix, &imin, &imax, max_x, radius);
+			set_minmax(ix, &imin, &imax, max_x, KERNEL_WIDTH/2.0f);
 			jy = y * width + center_y;
-			set_minmax(jy, &jmin, &jmax, max_y, radius);
+			set_minmax(jy, &jmin, &jmax, max_y, KERNEL_WIDTH/2.0f);
 			kz = z * width + center_z;
-			set_minmax(kz, &kmin, &kmax, max_z, radius);
+			set_minmax(kz, &kmin, &kmax, max_z, KERNEL_WIDTH/2.0f);
 			printf("grid position of data point: %f,%f,%f\n",ix,jy,kz);
 			printf("boundaries: x %d to %d, y %d to %d, z %d to %d\n",imin,imax,jmin,jmax,kmin,kmax);
 
@@ -169,16 +172,16 @@ void gridding3D(float* data, float* crds, float* gdata, float* kernel, int* sect
 							dx_sqr = ix - x;
 							dx_sqr *= dx_sqr;
 							dist_sqr = dx_sqr + dz_sqr_PLUS_dy_sqr;
-							printf("distances dx_sqr=(%f-%f)^2=%f dy_sqr=(%f-%f)^2=%f dz_sqr=(%f-%f)^2=%f -> dist_sqr= %f\n",ix,x,dx_sqr,jy,y,dy_sqr,kz,z,dz_sqr,dist_sqr);
+							//printf("dx_sqr=(%f-%f)^2=%f dy_sqr=(%f-%f)^2=%f dz_sqr=(%f-%f)^2=%f -> dist_sqr= %f\n",ix,x,dx_sqr,jy,y,dy_sqr,kz,z,dz_sqr,dist_sqr);
 							if (dist_sqr < radiusSquared)	
 							{
 								/* get kernel value */
 								val = kernel[(int) round(dist_sqr * dist_multiplier)];
-								printf("distance sqr %f - kernel-value %f\n",dist_sqr,val);
+								//printf("distance sqr %f - kernel-value %f\n",dist_sqr,val);
 								
 								ind = getIndex(i,j,k,width);
 								
-								printf("calculating index for output grid with %d, %d, %d -> %d\n",i,j,k,ind);
+								//printf("calculating index for output grid with x=%d, y=%d, z=%d -> %d\n",i,j,k,ind);
 								
 								/* multiply data by current kernel val */
 								

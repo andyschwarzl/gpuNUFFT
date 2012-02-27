@@ -56,34 +56,62 @@ static float i0( float x )
  * respect to the kernel radius squared.
  */
 #define sqr(__se) ((__se)*(__se))
-#define BETA (M_PI*sqrt(sqr(KERNEL_WIDTH/OVERSAMPLING_RATIO*(OVERSAMPLING_RATIO-0.5))-0.8))
+#define BETA (M_PI*sqrt(sqr(DEFAULT_KERNEL_WIDTH/DEFAULT_OVERSAMPLING_RATIO*(DEFAULT_OVERSAMPLING_RATIO-0.5))-0.8))
 #define I0_BETA	(i0(BETA))
 #define kernel(__radius) (i0 (BETA * sqrt (1 - sqr(__radius))) / I0_BETA)
+
+#define BETA_d(__kw,__osr) (M_PI*sqrt(sqr(__kw/__osr*(__osr-0.5))-0.8))
+#define I0_BETA_d(__kw,__osr)	(i0(BETA_d(__kw,__osr)))
+#define kernel_d(__radius,__kw,__osr) (i0 (BETA_d(__kw,__osr) * sqrt (1 - sqr(__radius))) / I0_BETA_d(__kw,__osr))
+
 
 /*END Zwart*/
 
 #define round(x) floor((x) + 0.5)
 
-void loadGrid3Kernel(float *kernTab, int kernel_entries)	
+long calculateGrid3KernelSize()
+{
+	return calculateGrid3KernelSize(DEFAULT_OVERSAMPLING_RATIO,DEFAULT_KERNEL_RADIUS);
+}
+
+long calculateGrid3KernelSize(float osr, float kernel_radius)
+{
+	//calculate kernel density (per grid/kernel unit) 
+	//nearest neighbor with maximum aliasing error
+	//of 0.001
+	
+	long kernel_osf = floor(0.91f/(osr * MAXIMUM_ALIASING_ERROR));
+
+	float kernel_radius_osr = static_cast<float>(osr * kernel_radius);
+
+    return kernel_osf * kernel_radius_osr;
+}
+
+void loadGrid3Kernel(float *kernTab)
+{
+	loadGrid3Kernel(kernTab,calculateGrid3KernelSize());
+}
+
+void loadGrid3Kernel(float *kernTab,long kernel_entries)	
 {
     /* check input data */
     assert( kernTab != NULL );
 	long i;
-    long size = kernel_entries;
+
 	float rsqr = 0.0f;
     /* load table */
-	for (i=1; i<size-1; i++)	
+	for (i=1; i<kernel_entries-1; i++)	
     {
-		rsqr = sqrt(i/(float)(size-1));//*(i/(float)(size-1));
+		rsqr = sqrt(i/(float)(kernel_entries-1));//*(i/(float)(size-1));
 		kernTab[i] = static_cast<float>(kernel(rsqr)); /* kernel table for radius squared */
 		//assert(kernTab[i]!=kernTab[i]); //check is NaN
 	}
 
     /* ensure center point is 1 */
-    kernTab[0] = 1.0;
+    kernTab[0] = 1.0f;
 
     /* ensure last point is zero */
-    kernTab[size-1] = 0.0;
+    kernTab[kernel_entries-1] = 0.0f;
 } /* end loadGrid3Kernel() */
 
 
@@ -112,7 +140,9 @@ void gridding3D(float* data, float* crds, float* gdata, float* kernel, int* sect
 	float dx_sqr, dy_sqr, dz_sqr, dz_sqr_PLUS_dy_sqr, dist_sqr, val;
 	int center_x, center_y, center_z, max_x, max_y, max_z;
 	
-	float radius = static_cast<float>(kernel_width/2.0f) / width;
+	float kernel_radius = static_cast<float>(kernel_width) / 2.0f;
+	float radius = kernel_radius / static_cast<float>(width);
+
 	printf("radius rel. to grid width %f\n",radius);
 	float width_inv = 1.0f / width;
 	float radiusSquared = radius * radius;
@@ -164,48 +194,56 @@ void gridding3D(float* data, float* crds, float* gdata, float* kernel, int* sect
 				dz_sqr = kz - z;
 				dz_sqr *= dz_sqr;
 				//printf("-----------------------------------------------------------------------------####\n " \
-					"(%d + %d - %d)/%d - 0.5 = %f\ndz_sqr = %f\n",k,center_z,sector_offset,width,kz,dz_sqr);
-				
-				for (j=jmin; j<=jmax; j++)	
+				//	"(%d + %d - %d)/%d - 0.5 = %f\ndz_sqr = %f\n",k,center_z,sector_offset,width,kz,dz_sqr);
+				if (dz_sqr < radiusSquared)
 				{
-					jy = static_cast<float>(j + center_y - sector_offset) / static_cast<float>((width)) - 0.5f;   //(j - center_y) *width_inv;
-					dy_sqr = jy - y;
-					dy_sqr *= dy_sqr;
-					dz_sqr_PLUS_dy_sqr = dz_sqr + dy_sqr;
-					//printf("(%d + %d - %d)/%d - 0.5 = %f\ndy_sqr = %f\n",j,center_y,sector_offset,width,jy,dy_sqr);
-				
-					if (dz_sqr_PLUS_dy_sqr < radiusSquared)	
+					for (j=jmin; j<=jmax; j++)	
 					{
-						for (i=imin; i<=imax; i++)	
-						{
-							ix = static_cast<float>(i + center_x - sector_offset) / static_cast<float>((width)) - 0.5f;// (i - center_x) *width_inv;
-							dx_sqr = ix - x;
-							dx_sqr *= dx_sqr;
-							dist_sqr = dx_sqr + dz_sqr_PLUS_dy_sqr;
-							//printf("(%d + %d - %d)/%d - 0.5 = %f\ndx_sqr = %f\n",i,center_x,sector_offset,width,ix,dx_sqr);
+						jy = static_cast<float>(j + center_y - sector_offset) / static_cast<float>((width)) - 0.5f;   //(j - center_y) *width_inv;
+						dy_sqr = jy - y;
+						dy_sqr *= dy_sqr;
+						//dz_sqr_PLUS_dy_sqr = dy_sqr;// + dz_sqr;
+						//printf("(%d + %d - %d)/%d - 0.5 = %f\ndy_sqr = %f\n",j,center_y,sector_offset,width,jy,dy_sqr);
 				
-							if (dist_sqr < radiusSquared)	
+						if (dy_sqr < radiusSquared)	
+						{
+							for (i=imin; i<=imax; i++)	
 							{
-								//printf("dist_sqr = %f\n", dist_sqr);
-								/* get kernel value */
-								val = kernel[(int) round(dist_sqr * dist_multiplier)];
-								//printf("distance sqr %f - kernel-value %f\n",dist_sqr,val);
+								ix = static_cast<float>(i + center_x - sector_offset) / static_cast<float>((width)) - 0.5f;// (i - center_x) *width_inv;
+								dx_sqr = ix - x;
+								dx_sqr *= dx_sqr;
+								//dist_sqr = dx_sqr;// + dz_sqr_PLUS_dy_sqr;
+								//printf("(%d + %d - %d)/%d - 0.5 = %f\ndx_sqr = %f\n",i,center_x,sector_offset,width,ix,dx_sqr);
+				
+								if (dx_sqr < radiusSquared)	
+								{
+									//printf("dist_sqr = %f\n", dist_sqr);
+									/* get kernel value */
+									//val = kernel[(int) round(dist_sqr * dist_multiplier)];
+									//Berechnung mit Separable Filters 
+
+									val = kernel[(int) round(dz_sqr * dist_multiplier)] *
+										  kernel[(int) round(dy_sqr * dist_multiplier)] *
+										  kernel[(int) round(dx_sqr * dist_multiplier)];
+
+									//printf("distance sqr %f - kernel-value %f\n",dist_sqr,val);
 								
-								ind = getIndex(i,j,k,sector_width);
+									ind = getIndex(i,j,k,sector_width);
 								
-								//printf("calculating index for output grid with x=%d, y=%d, z=%d -> %d ",i,j,k,ind);
+									//printf("calculating index for output grid with x=%d, y=%d, z=%d -> %d ",i,j,k,ind);
 								
-								/* multiply data by current kernel val */
+									/* multiply data by current kernel val */
 								
-								/* grid complex or scalar */
-								gdata[2*ind] = val*data[2*data_cnt];
-								//printf("and setting real value %f\n",gdata[2*ind]);
-								gdata[2*ind+1] = val*data[2*data_cnt+1];
-								//printf("sdata at index %d set to = %f\n",2*ind,sdata[2*ind]);
-							} /* kernel bounds check, spherical support */
-						} /* x 	 */
-					} /* kernel bounds check, spherical support */
-				} /* y */
+									/* grid complex or scalar */
+									gdata[2*ind] = val*data[2*data_cnt];
+									//printf("and setting real value %f\n",gdata[2*ind]);
+									gdata[2*ind+1] = val*data[2*data_cnt+1];
+									//printf("sdata at index %d set to = %f\n",2*ind,sdata[2*ind]);
+								} /* kernel bounds check, spherical support */
+							} /* x 	 */
+						} /* kernel bounds check, spherical support */
+					} /* y */
+				}
 			} /* z */
 		}
 	}

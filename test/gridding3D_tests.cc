@@ -7,10 +7,10 @@
 
 TEST(LoadGrid3KernelTest, LoadKernel) {
 	printf("start creating kernel...\n");
+	long kernel_entries = calculateGrid3KernelSize();
 	
-	int kernel_entries = DEFAULT_KERNEL_TABLE_SIZE;
-	EXPECT_EQ(kernel_entries,1365);
-	
+	assert(kernel_entries > 0);
+
 	float *kern = (float*) calloc(kernel_entries,sizeof(float));
 	if (kern != NULL)
 	{
@@ -30,8 +30,7 @@ TEST(LoadGrid3KernelTest, LoadKernel) {
 TEST(TestGridding,CPUTest_1Sector)
 {
 	int kernel_width = 3;
-	int kernel_entries = DEFAULT_KERNEL_TABLE_SIZE;
-	
+	long kernel_entries = calculateGrid3KernelSize();
 	float *kern = (float*) calloc(kernel_entries,sizeof(float));
 	loadGrid3Kernel(kern,kernel_entries);
 
@@ -52,13 +51,16 @@ TEST(TestGridding,CPUTest_1Sector)
 	coords[1] = 0;
 	coords[2] = 0;
 
+	//oversampling ratio
+	float osr = DEFAULT_OVERSAMPLING_RATIO;
+
 	//Output Grid
     float* gdata;
 	unsigned long dims_g[4];
     dims_g[0] = 2; /* complex */
-	dims_g[1] = im_width * OVERSAMPLING_RATIO; 
-    dims_g[2] = im_width * OVERSAMPLING_RATIO;
-    dims_g[3] = im_width * OVERSAMPLING_RATIO;
+	dims_g[1] = im_width * osr; 
+    dims_g[2] = im_width * osr;
+    dims_g[3] = im_width * osr;
 
 	long grid_size = dims_g[0]*dims_g[1]*dims_g[2]*dims_g[3];
 
@@ -84,8 +86,12 @@ TEST(TestGridding,CPUTest_1Sector)
 	EXPECT_EQ(index,2*555);
 	EXPECT_NEAR(1.0f,gdata[index],epsilon);
 	EXPECT_NEAR(0.4502,gdata[get3DC2lin(5,4,5,im_width)],epsilon*10.0f);
-	//EXPECT_NEAR(0.4502,gdata[get3DC2lin(6,6,5,im_width)],epsilon*10.0f);
-	//EXPECT_NEAR(0.2027,gdata[get3DC2lin(8,8,7,im_width)],epsilon*10.0f);
+	EXPECT_NEAR(0.4502,gdata[get3DC2lin(4,5,5,im_width)],epsilon*10.0f);
+	EXPECT_NEAR(0.4502,gdata[get3DC2lin(5,6,5,im_width)],epsilon*10.0f);
+
+	EXPECT_NEAR(0.2027,gdata[get3DC2lin(6,6,5,im_width)],epsilon*10.0f);
+	EXPECT_NEAR(0.2027,gdata[get3DC2lin(4,4,5,im_width)],epsilon*10.0f);
+	EXPECT_NEAR(0.2027,gdata[get3DC2lin(4,6,5,im_width)],epsilon*10.0f);
 
 	for (int j=0; j<im_width; j++)
 	{
@@ -93,7 +99,6 @@ TEST(TestGridding,CPUTest_1Sector)
 			printf("%.4f ",gdata[get3DC2lin(i,im_width-j,5,im_width)]);
 		printf("\n");
 	}
-
 
 	free(data);
 	free(coords);

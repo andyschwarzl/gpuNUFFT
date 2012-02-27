@@ -4,11 +4,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define OVERSAMPLING_RATIO				1
-#define KERNEL_WIDTH					3.0  
-#define DEFAULT_RADIUS_FOV_PRODUCT		((KERNEL_WIDTH) / 2.0)
-#define DEFAULT_KERNEL_TABLE_SIZE		1365
+#define DEFAULT_OVERSAMPLING_RATIO				1
+#define DEFAULT_KERNEL_WIDTH					3.0  
+#define DEFAULT_KERNEL_RADIUS		((DEFAULT_KERNEL_WIDTH) / 2.0)
+
 #define DEFAULT_WINDOW_LENGTH			1.0
+
+#define MAXIMUM_ALIASING_ERROR			0.001
+
 
 void gridding3D(float* data, 
 				float* crds, 
@@ -22,7 +25,10 @@ void gridding3D(float* data,
 				int kernel_count, 
 				int width);
 
+long calculateGrid3KernelSize();
+long calculateGrid3KernelSize(float osr, float kernel_radius);
 
-void loadGrid3Kernel(float *kernTab, int kernel_entries);
+void loadGrid3Kernel(float *kernTab);
+void loadGrid3Kernel(float *kernTab,long kernel_entries);
 
 #endif  // GRIDDING_FUNCTIONS_H_

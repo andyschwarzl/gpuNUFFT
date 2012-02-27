@@ -3,13 +3,14 @@
 #include "griddingFunctions.h"
 #include "gtest/gtest.h"
 
+#define epsilon 0.0001f
+
 TEST(LoadGrid3KernelTest, LoadKernel) {
 	printf("start creating kernel...\n");
 	
 	int kernel_entries = DEFAULT_KERNEL_TABLE_SIZE;
-	EXPECT_EQ(kernel_entries,800);
-	float epsilon = 0.0001;
-
+	EXPECT_EQ(kernel_entries,1365);
+	
 	float *kern = (float*) calloc(kernel_entries,sizeof(float));
 	if (kern != NULL)
 	{
@@ -24,45 +25,32 @@ TEST(LoadGrid3KernelTest, LoadKernel) {
 	EXPECT_EQ(1, 1);
 }
 
-TEST(TestGridding,CPUTest)
+#define get3DC2lin(_x,_y,_z,_width) 2*((_x) + (_width) * ( (_y) + (_z) * (_width)))
+
+TEST(TestGridding,CPUTest_1Sector)
 {
-	int kernel_width = 5;
+	int kernel_width = 3;
 	int kernel_entries = DEFAULT_KERNEL_TABLE_SIZE;
 	
 	float *kern = (float*) calloc(kernel_entries,sizeof(float));
 	loadGrid3Kernel(kern,kernel_entries);
 
 	//Image
-	int im_width = 11;
+	int im_width = 10;
 
 	//Data
-	int data_entries = 3;
+	int data_entries = 1;
     float* data = (float*) calloc(2*data_entries,sizeof(float)); //2* re + im
 	data[0] = 1;
 	data[1] = 1;
-	
-	data[2] = 1;
-	data[3] = 1;
-
-	data[4] = 1;
-	data[5] = 1;
 
 	//Coords
 	//Scaled between -0.5 and 0.5
 	//in triplets (x,y,z)
-	//int coord_entries = 1;
     float* coords = (float*) calloc(3*data_entries,sizeof(float));//3* x,y,z
-	coords[0] = 0.2272; //should return in 8,8,8 center
-	coords[1] = 0.2272;
-	coords[2] = 0.2272;
-
-	coords[3] = -0.318181; //should return in 2,2,2 center
-	coords[4] = -0.318181;
-	coords[5] = -0.318181;
-	
-	coords[6] = -0.318181; //should return in 2,8,8 center
-	coords[7] = 0.2272;
-	coords[8] =0.2272;
+	coords[0] = 0; //should result in 7,7,7 center
+	coords[1] = 0;
+	coords[2] = 0;
 
 	//Output Grid
     float* gdata;
@@ -77,40 +65,35 @@ TEST(TestGridding,CPUTest)
     gdata = (float*) calloc(grid_size,sizeof(float));
 	
 	//sectors of data, count and start indices
-	//e.g. 1000 sectors (50x50x50 image with
-	//5x5x5 sector size -> 10x10x10 padded
-	//
-	int sector_count = 3;
+	int sector_width = 10;
+	
+	int sector_count = 1;
 	int* sectors = (int*) calloc(2*sector_count,sizeof(int));
 	sectors[0]=0;
 	sectors[1]=1;
 
-	sectors[2]=2;
-	sectors[3]=3;
-
-	sectors[4]=4;
-	sectors[5]=5;
-
-
 	int* sector_centers = (int*) calloc(3*sector_count,sizeof(int));
-	sector_centers[0] = 8;
-	sector_centers[1] = 8;
-	sector_centers[2] = 8;
+	sector_centers[0] = 5;
+	sector_centers[1] = 5;
+	sector_centers[2] = 5;
 
-	sector_centers[3] = 2;
-	sector_centers[4] = 2;
-	sector_centers[5] = 2;
+	gridding3D(data,coords,gdata,kern,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1]);
 
-	sector_centers[6] = 2;
-	sector_centers[7] = 8;
-	sector_centers[8] = 8;
+	int index = get3DC2lin(5,5,5,im_width);
+	printf("index to test %d\n",index);
+	EXPECT_EQ(index,2*555);
+	EXPECT_NEAR(1.0f,gdata[index],epsilon);
+	EXPECT_NEAR(0.4502,gdata[get3DC2lin(5,4,5,im_width)],epsilon*10.0f);
+	//EXPECT_NEAR(0.4502,gdata[get3DC2lin(6,6,5,im_width)],epsilon*10.0f);
+	//EXPECT_NEAR(0.2027,gdata[get3DC2lin(8,8,7,im_width)],epsilon*10.0f);
 
-	gridding3D(data,coords,gdata,kern,sectors,sector_count,sector_centers, KERNEL_WIDTH, kernel_entries,dims_g[1]);
+	for (int j=0; j<im_width; j++)
+	{
+		for (int i=0; i<im_width; i++)
+			printf("%.4f ",gdata[get3DC2lin(i,im_width-j,5,im_width)]);
+		printf("\n");
+	}
 
-	for (int i=0; i<dims_g[1]; i++)
-		for (int j=0; j<dims_g[2];j++)
-			for (int k=0; k<dims_g[3];k++)
-				printf("data[%d,%d,%d]=%f + i %f\n",i,j,k,gdata[2*(i + im_width * (j + k*im_width))],gdata[2*(i + im_width * (j + k*im_width))+1]);
 
 	free(data);
 	free(coords);
@@ -118,8 +101,6 @@ TEST(TestGridding,CPUTest)
 	free(kern);
 	free(sectors);
 	free(sector_centers);
-	
-	EXPECT_EQ(1, 1);
 }
 
 

@@ -103,7 +103,7 @@ inline int getIndex(int x, int y, int z, int gwidth)
 	return x + gwidth * (y + gwidth * z);
 }
 
-void gridding3D(float* data, float* crds, float* gdata, float* kernel, int* sectors, int sector_count, int* sector_centers, int kernel_width, int kernel_count, int width)
+void gridding3D(float* data, float* crds, float* gdata, float* kernel, int* sectors, int sector_count, int* sector_centers, int sector_width, int kernel_width, int kernel_count, int width)
 {
 	int imin, imax, jmin, jmax, kmin, kmax, i, j, k, ind;
 	float x, y, z, ix, jy, kz;
@@ -112,82 +112,96 @@ void gridding3D(float* data, float* crds, float* gdata, float* kernel, int* sect
 	float dx_sqr, dy_sqr, dz_sqr, dz_sqr_PLUS_dy_sqr, dist_sqr, val;
 	int center_x, center_y, center_z, max_x, max_y, max_z;
 	
-	float radius = static_cast<float>(kernel_width) / width;
-	printf("radius %f\n",radius);
+	float radius = static_cast<float>(kernel_width/2.0f) / width;
+	printf("radius rel. to grid width %f\n",radius);
 	float width_inv = 1.0f / width;
 	float radiusSquared = radius * radius;
 	float kernelRadius_invSqr = 1 / radiusSquared;
 
 	float dist_multiplier = (kernel_count - 1) * kernelRadius_invSqr;
-
+	//int sector_width = 10;
+	int sector_dim = sector_width * sector_width * sector_width;
+	int sector_offset = floor(sector_width / 2.0f);
+	printf("sector offset = %d",sector_offset);
 	for (int sec = 0; sec < sector_count; sec++)
 	{
+		float* sdata = (float*)malloc(sector_dim * 2 * sizeof(float)); // 5*5*5 * 2
+
 		center_x = sector_centers[sec * 3];
 		center_y = sector_centers[sec * 3 + 1];
 		center_z = sector_centers[sec * 3 + 2];
 
-		printf("handling center (%d,%d,%d) in sector %d\n",center_x,center_y,center_z,sec);
+		printf("\nhandling center (%d,%d,%d) in sector %d\n",center_x,center_y,center_z,sec);
 
 		for (int data_cnt = sectors[sec]; data_cnt < sectors[sec+1];data_cnt++)
 		{
-			printf("handling data point %d = %f\n",data_cnt,data[data_cnt]);
+			printf("handling %d data point = %f\n",data_cnt+1,data[data_cnt]);
 
 			x = crds[3*data_cnt];
 			y = crds[3*data_cnt +1];
 			z = crds[3*data_cnt +2];
 			printf("data k-space coords (%f, %f, %f)\n",x,y,z);
 			
-			max_x = width;
-			max_y = width;
-			max_z = width;
+			max_x = sector_width-1;
+			max_y = sector_width-1;
+			max_z = sector_width-1;
 
 			/* set the boundaries of final dataset for gridding this point */
-			ix = x * width + center_x;
-			set_minmax(ix, &imin, &imax, max_x, KERNEL_WIDTH/2.0f);
-			jy = y * width + center_y;
-			set_minmax(jy, &jmin, &jmax, max_y, KERNEL_WIDTH/2.0f);
-			kz = z * width + center_z;
-			set_minmax(kz, &kmin, &kmax, max_z, KERNEL_WIDTH/2.0f);
-			printf("grid position of data point: %f,%f,%f\n",ix,jy,kz);
-			printf("boundaries: x %d to %d, y %d to %d, z %d to %d\n",imin,imax,jmin,jmax,kmin,kmax);
+			ix = (x + 0.5f) * (width) - center_x + sector_offset;
+			set_minmax(ix, &imin, &imax, max_x, kernel_width/2.0f);
+			jy = (y + 0.5f) * (width) - center_y + sector_offset;
+			set_minmax(jy, &jmin, &jmax, max_y, kernel_width/2.0f);
+			kz = (z + 0.5f) * (width) - center_z + sector_offset;
+			set_minmax(kz, &kmin, &kmax, max_z, kernel_width/2.0f);
+
+			printf("sector grid position of data point: %f,%f,%f\n",ix,jy,kz);
+			//printf("boundaries: x %d to %d, y %d to %d, z %d to %d\n",imin,imax,jmin,jmax,kmin,kmax);
 
 			/* grid this point onto the neighboring cartesian points */
 			for (k=kmin; k<=kmax; k++)	
 			{
-				kz = (k - center_z) *width_inv;
+				kz = static_cast<float>((k + center_z - sector_offset)) / static_cast<float>((width)) - 0.5f;//(k - center_z) *width_inv;
 				dz_sqr = kz - z;
 				dz_sqr *= dz_sqr;
+				//printf("-----------------------------------------------------------------------------####\n " \
+					"(%d + %d - %d)/%d - 0.5 = %f\ndz_sqr = %f\n",k,center_z,sector_offset,width,kz,dz_sqr);
 				
 				for (j=jmin; j<=jmax; j++)	
 				{
-					jy = (j - center_y) *width_inv;
+					jy = static_cast<float>(j + center_y - sector_offset) / static_cast<float>((width)) - 0.5f;   //(j - center_y) *width_inv;
 					dy_sqr = jy - y;
 					dy_sqr *= dy_sqr;
 					dz_sqr_PLUS_dy_sqr = dz_sqr + dy_sqr;
+					//printf("(%d + %d - %d)/%d - 0.5 = %f\ndy_sqr = %f\n",j,center_y,sector_offset,width,jy,dy_sqr);
+				
 					if (dz_sqr_PLUS_dy_sqr < radiusSquared)	
 					{
 						for (i=imin; i<=imax; i++)	
 						{
-							ix = (i - center_x) *width_inv;
+							ix = static_cast<float>(i + center_x - sector_offset) / static_cast<float>((width)) - 0.5f;// (i - center_x) *width_inv;
 							dx_sqr = ix - x;
 							dx_sqr *= dx_sqr;
 							dist_sqr = dx_sqr + dz_sqr_PLUS_dy_sqr;
-							//printf("dx_sqr=(%f-%f)^2=%f dy_sqr=(%f-%f)^2=%f dz_sqr=(%f-%f)^2=%f -> dist_sqr= %f\n",ix,x,dx_sqr,jy,y,dy_sqr,kz,z,dz_sqr,dist_sqr);
+							//printf("(%d + %d - %d)/%d - 0.5 = %f\ndx_sqr = %f\n",i,center_x,sector_offset,width,ix,dx_sqr);
+				
 							if (dist_sqr < radiusSquared)	
 							{
+								//printf("dist_sqr = %f\n", dist_sqr);
 								/* get kernel value */
 								val = kernel[(int) round(dist_sqr * dist_multiplier)];
 								//printf("distance sqr %f - kernel-value %f\n",dist_sqr,val);
 								
-								ind = getIndex(i,j,k,width);
+								ind = getIndex(i,j,k,sector_width);
 								
-								//printf("calculating index for output grid with x=%d, y=%d, z=%d -> %d\n",i,j,k,ind);
+								//printf("calculating index for output grid with x=%d, y=%d, z=%d -> %d ",i,j,k,ind);
 								
 								/* multiply data by current kernel val */
 								
 								/* grid complex or scalar */
 								gdata[2*ind] = val*data[2*data_cnt];
+								//printf("and setting real value %f\n",gdata[2*ind]);
 								gdata[2*ind+1] = val*data[2*data_cnt+1];
+								//printf("sdata at index %d set to = %f\n",2*ind,sdata[2*ind]);
 							} /* kernel bounds check, spherical support */
 						} /* x 	 */
 					} /* kernel bounds check, spherical support */

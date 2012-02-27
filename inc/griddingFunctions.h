@@ -5,9 +5,9 @@
 #include <stdio.h>
 
 #define OVERSAMPLING_RATIO				1
-#define KERNEL_WIDTH					5.0  
+#define KERNEL_WIDTH					3.0  
 #define DEFAULT_RADIUS_FOV_PRODUCT		((KERNEL_WIDTH) / 2.0)
-#define DEFAULT_KERNEL_TABLE_SIZE		800
+#define DEFAULT_KERNEL_TABLE_SIZE		1365
 #define DEFAULT_WINDOW_LENGTH			1.0
 
 void gridding3D(float* data, 
@@ -17,6 +17,7 @@ void gridding3D(float* data,
 				int* sectors, 
 				int sector_count, 
 				int* sector_centers,
+				int sector_width,
 				int kernel_width, 
 				int kernel_count, 
 				int width);

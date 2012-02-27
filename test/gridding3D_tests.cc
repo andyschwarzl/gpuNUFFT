@@ -27,7 +27,7 @@ TEST(LoadGrid3KernelTest, LoadKernel) {
 
 #define get3DC2lin(_x,_y,_z,_width) 2*((_x) + (_width) * ( (_y) + (_z) * (_width)))
 
-TEST(TestGridding,CPUTest_1Sector)
+TEST(TestGridding,CPUTest_1SectorKernel3)
 {
 	int kernel_width = 3;
 	long kernel_entries = calculateGrid3KernelSize();
@@ -93,6 +93,88 @@ TEST(TestGridding,CPUTest_1Sector)
 	EXPECT_NEAR(0.2027,gdata[get3DC2lin(4,4,5,im_width)],epsilon*10.0f);
 	EXPECT_NEAR(0.2027,gdata[get3DC2lin(4,6,5,im_width)],epsilon*10.0f);
 
+	for (int j=0; j<im_width; j++)
+	{
+		for (int i=0; i<im_width; i++)
+			printf("%.4f ",gdata[get3DC2lin(i,im_width-j,5,im_width)]);
+		printf("\n");
+	}
+
+	free(data);
+	free(coords);
+	free(gdata);
+	free(kern);
+	free(sectors);
+	free(sector_centers);
+}
+
+TEST(TestGridding,CPUTest_1SectorKernel5)
+{
+	//oversampling ratio
+	float osr = DEFAULT_OVERSAMPLING_RATIO;
+	//kernel width
+	int kernel_width = 5;
+
+	long kernel_entries = calculateGrid3KernelSize(osr, kernel_width);
+
+	float *kern = (float*) calloc(kernel_entries,sizeof(float));
+	loadGrid3Kernel(kern,kernel_entries,kernel_width,osr);
+
+	//Image
+	int im_width = 10;
+
+	//Data
+	int data_entries = 1;
+    float* data = (float*) calloc(2*data_entries,sizeof(float)); //2* re + im
+	data[0] = 1;
+	data[1] = 1;
+
+	//Coords
+	//Scaled between -0.5 and 0.5
+	//in triplets (x,y,z)
+    float* coords = (float*) calloc(3*data_entries,sizeof(float));//3* x,y,z
+	coords[0] = 0; //should result in 7,7,7 center
+	coords[1] = 0;
+	coords[2] = 0;
+
+	//Output Grid
+    float* gdata;
+	unsigned long dims_g[4];
+    dims_g[0] = 2; /* complex */
+	dims_g[1] = im_width * osr; 
+    dims_g[2] = im_width * osr;
+    dims_g[3] = im_width * osr;
+
+	long grid_size = dims_g[0]*dims_g[1]*dims_g[2]*dims_g[3];
+
+    gdata = (float*) calloc(grid_size,sizeof(float));
+	
+	//sectors of data, count and start indices
+	int sector_width = 10;
+	
+	int sector_count = 1;
+	int* sectors = (int*) calloc(2*sector_count,sizeof(int));
+	sectors[0]=0;
+	sectors[1]=1;
+
+	int* sector_centers = (int*) calloc(3*sector_count,sizeof(int));
+	sector_centers[0] = 5;
+	sector_centers[1] = 5;
+	sector_centers[2] = 5;
+
+	gridding3D(data,coords,gdata,kern,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1]);
+
+	int index = get3DC2lin(5,5,5,im_width);
+	printf("index to test %d\n",index);
+	//EXPECT_EQ(index,2*555);
+	EXPECT_NEAR(1.0f,gdata[index],epsilon);
+	EXPECT_NEAR(0.0049,gdata[get3DC2lin(3,3,5,im_width)],epsilon*10.0f);
+	EXPECT_NEAR(0.3218,gdata[get3DC2lin(4,4,5,im_width)],epsilon*10.0f);
+	EXPECT_NEAR(0.5673,gdata[get3DC2lin(5,4,5,im_width)],epsilon*10.0f);
+
+	EXPECT_NEAR(0.0697,gdata[get3DC2lin(5,7,5,im_width)],epsilon*10.0f);
+	EXPECT_NEAR(0.0697,gdata[get3DC2lin(5,3,5,im_width)],epsilon*10.0f);
+	
 	for (int j=0; j<im_width; j++)
 	{
 		for (int i=0; i<im_width; i++)

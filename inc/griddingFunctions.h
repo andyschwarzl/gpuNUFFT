@@ -28,7 +28,8 @@ void gridding3D(float* data,
 long calculateGrid3KernelSize();
 long calculateGrid3KernelSize(float osr, float kernel_radius);
 
-void loadGrid3Kernel(float *kernTab);
+void loadGrid3Kernel(float *kernTab,long kernel_entries, int kernel_width, float osr);
 void loadGrid3Kernel(float *kernTab,long kernel_entries);
+void loadGrid3Kernel(float *kernTab);
 
 #endif  // GRIDDING_FUNCTIONS_H_

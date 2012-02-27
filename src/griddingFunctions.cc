@@ -56,14 +56,13 @@ static float i0( float x )
  * respect to the kernel radius squared.
  */
 #define sqr(__se) ((__se)*(__se))
-#define BETA (M_PI*sqrt(sqr(DEFAULT_KERNEL_WIDTH/DEFAULT_OVERSAMPLING_RATIO*(DEFAULT_OVERSAMPLING_RATIO-0.5))-0.8))
-#define I0_BETA	(i0(BETA))
-#define kernel(__radius) (i0 (BETA * sqrt (1 - sqr(__radius))) / I0_BETA)
+//#define BETA (M_PI*sqrt(sqr(DEFAULT_KERNEL_WIDTH/DEFAULT_OVERSAMPLING_RATIO*(DEFAULT_OVERSAMPLING_RATIO-0.5))-0.8))
+//#define I0_BETA	(i0(BETA))
+//#define kernel(__radius) (i0 (BETA * sqrt (1 - sqr(__radius))) / I0_BETA)
 
-#define BETA_d(__kw,__osr) (M_PI*sqrt(sqr(__kw/__osr*(__osr-0.5))-0.8))
-#define I0_BETA_d(__kw,__osr)	(i0(BETA_d(__kw,__osr)))
-#define kernel_d(__radius,__kw,__osr) (i0 (BETA_d(__kw,__osr) * sqrt (1 - sqr(__radius))) / I0_BETA_d(__kw,__osr))
-
+#define BETA(__kw,__osr) (M_PI*sqrt(sqr(__kw/__osr*(__osr-0.5))-0.8))
+#define I0_BETA(__kw,__osr)	(i0(BETA(__kw,__osr)))
+#define kernel(__radius,__kw,__osr) (i0 (BETA(__kw,__osr) * sqrt (1 - sqr(__radius))) / I0_BETA(__kw,__osr))
 
 /*END Zwart*/
 
@@ -89,10 +88,15 @@ long calculateGrid3KernelSize(float osr, float kernel_radius)
 
 void loadGrid3Kernel(float *kernTab)
 {
-	loadGrid3Kernel(kernTab,calculateGrid3KernelSize());
+	loadGrid3Kernel(kernTab,calculateGrid3KernelSize(),DEFAULT_KERNEL_WIDTH,DEFAULT_OVERSAMPLING_RATIO);
 }
 
-void loadGrid3Kernel(float *kernTab,long kernel_entries)	
+void loadGrid3Kernel(float *kernTab,long kernel_entries)
+{
+	loadGrid3Kernel(kernTab,kernel_entries,DEFAULT_KERNEL_WIDTH,DEFAULT_OVERSAMPLING_RATIO);
+}
+
+void loadGrid3Kernel(float *kernTab,long kernel_entries, int kernel_width, float osr)	
 {
     /* check input data */
     assert( kernTab != NULL );
@@ -103,7 +107,7 @@ void loadGrid3Kernel(float *kernTab,long kernel_entries)
 	for (i=1; i<kernel_entries-1; i++)	
     {
 		rsqr = sqrt(i/(float)(kernel_entries-1));//*(i/(float)(size-1));
-		kernTab[i] = static_cast<float>(kernel(rsqr)); /* kernel table for radius squared */
+		kernTab[i] = static_cast<float>(kernel(rsqr,kernel_width,osr)); /* kernel table for radius squared */
 		//assert(kernTab[i]!=kernTab[i]); //check is NaN
 	}
 

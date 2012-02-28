@@ -123,11 +123,12 @@ void loadGrid3Kernel(float *kernTab,long kernel_entries, int kernel_width, float
 void set_minmax (double x, int *min, int *max, int maximum, double radius)	
 {
 	*min = (int) ceil (x - radius);
-	printf("x - radius %f - %f => %d ### ",x,radius,*min);
 	*max = (int) floor (x + radius);
-	printf("x + radius %f - %f => %d\n",x,radius,*max);
+	//check boundaries
 	if (*min < 0) *min = 0;
-	if (*max >= maximum) *max = maximum-1;
+	if (*max >= maximum) *max = maximum;
+	printf("x - radius %f - %f => %d ### ",x,radius,*min);
+	printf("x + radius %f - %f => %d\n",x,radius,*max);
 }
 
 inline int getIndex(int x, int y, int z, int gwidth)
@@ -156,10 +157,16 @@ void gridding3D(float* data, float* crds, float* gdata, float* kernel, int* sect
 	//int sector_width = 10;
 	int sector_dim = sector_width * sector_width * sector_width;
 	int sector_offset = floor(sector_width / 2.0f);
+
 	printf("sector offset = %d",sector_offset);
+	float** sdata =  (float**)malloc(sector_count*sizeof(float*));
+
+	assert(sectors != NULL);
+
 	for (int sec = 0; sec < sector_count; sec++)
 	{
-		float* sdata = (float*)malloc(sector_dim * 2 * sizeof(float)); // 5*5*5 * 2
+		sdata[sec] = (float *) calloc(sector_dim * 2, sizeof(float)); // 5*5*5 * 2
+		assert(sdata[sec] != NULL);
 
 		center_x = sector_centers[sec * 3];
 		center_y = sector_centers[sec * 3 + 1];
@@ -239,17 +246,48 @@ void gridding3D(float* data, float* crds, float* gdata, float* kernel, int* sect
 									/* multiply data by current kernel val */
 								
 									/* grid complex or scalar */
-									gdata[2*ind] = val*data[2*data_cnt];
+									//gdata[2*ind] = val*data[2*data_cnt];
+									sdata[sec][2*ind] = val * data[2*data_cnt];
 									//printf("and setting real value %f\n",gdata[2*ind]);
-									gdata[2*ind+1] = val*data[2*data_cnt+1];
+									//gdata[2*ind+1] = val*data[2*data_cnt+1];
+									sdata[sec][2*ind+1] = val * data[2*data_cnt+1];
 									//printf("sdata at index %d set to = %f\n",2*ind,sdata[2*ind]);
-								} /* kernel bounds check, spherical support */
+								} /* kernel bounds check x, spherical support */
 							} /* x 	 */
-						} /* kernel bounds check, spherical support */
+						} /* kernel bounds check y, spherical support */
 					} /* y */
-				}
+				} /*kernel bounds check z */
 			} /* z */
-		}
+		} /*data points per sector*/
+	
+	}/*sectors*/
+	
+	//TODO copy data from sectors to original grid
+	for (int sec = 0; sec < sector_count; sec++)
+	{
+		printf("DEBUG: showing entries of sector %d in z = 5 plane...\n",sec);
+		center_x = sector_centers[sec * 3];
+		center_y = sector_centers[sec * 3 + 1];
+		center_z = sector_centers[sec * 3 + 2];
+		
+		int sector_ind_offset = getIndex(center_x - sector_offset,center_y - sector_offset,center_z - sector_offset,width);
+		printf("sector index offset in resulting grid: %d\n", sector_ind_offset);
+		for (int z = 0; z < sector_width; z++)
+			for (int y = 0; y < sector_width; y++)
+			{
+				for (int x = 0; x < sector_width; x++)
+				{
+					int s_ind = 2*getIndex(x,y,z,sector_width) ;
+					ind = 2*(sector_ind_offset + getIndex(x,y,z,width));
+					//if (z==2)
+					//	printf("%.4f ",sdata[sec][s_ind]);
+					gdata[ind] = sdata[sec][s_ind]; //Re
+					gdata[ind+1] = sdata[sec][s_ind+1];//Im
+				}
+				//if (z==2) printf("\n");
+			}
+		free(sdata[sec]);
 	}
+	free(sdata);
 }
 

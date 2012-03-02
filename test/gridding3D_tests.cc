@@ -312,12 +312,12 @@ TEST(TestGridding,CPUTest_2SectorsKernel3nData)
 	int im_width = 10;
 
 	//Data
-	int data_entries = 4;
+	int data_entries = 5;
     float* data = (float*) calloc(2*data_entries,sizeof(float)); //2* re + im
 	data[0] = 0.5;
 	data[1] = 0.5;
 	
-	data[2] = 1;
+	data[2] = 0.7;
 	data[3] = 1;
 	
 	data[4] = 1;
@@ -326,25 +326,35 @@ TEST(TestGridding,CPUTest_2SectorsKernel3nData)
 	data[6] = 1;
 	data[7] = 1;
 
+	data[8] = 1;
+	data[9] = 1;
+
 	//Coords
 	//Scaled between -0.5 and 0.5
 	//in triplets (x,y,z)
     float* coords = (float*) calloc(3*data_entries,sizeof(float));//3* x,y,z
-	coords[0] = -0.3; 
-	coords[1] = 0.2;
-	coords[2] = 0;
+	int coord_cnt = 0;
+	//1.Sektor
+	coords[coord_cnt++] = -0.3; 
+	coords[coord_cnt++] = 0.2;
+	coords[coord_cnt++] = 0;
 
-	coords[3] = 0.3;
-	coords[4] = 0.3;
-	coords[5] = 0;
+	coords[coord_cnt++] = -0.1;
+	coords[coord_cnt++] = 0;
+	coords[coord_cnt++] = 0;
 
-	coords[6] = 0; 
-	coords[7] = 0;
-	coords[8] = 0;
+	//2.Sektor
+	coords[coord_cnt++] = 0; 
+	coords[coord_cnt++] = 0;
+	coords[coord_cnt++] = 0;
 
-	coords[9] = 0.5; 
-	coords[10] = 0;
-	coords[11] = 0;
+	coords[coord_cnt++] = 0.5; 
+	coords[coord_cnt++] = 0;
+	coords[coord_cnt++] = 0;
+
+	coords[coord_cnt++] = 0.3;
+	coords[coord_cnt++] = 0.3;
+	coords[coord_cnt++] = 0;
 
 	//Output Grid
     float* gdata;
@@ -364,8 +374,8 @@ TEST(TestGridding,CPUTest_2SectorsKernel3nData)
 	int sector_count = 2;
 	int* sectors = (int*) calloc(2*sector_count,sizeof(int));
 	sectors[0]=0;
-	sectors[1]=1;
-	sectors[2]=4;
+	sectors[1]=2;
+	sectors[2]=5;
 
 	int* sector_centers = (int*) calloc(3*sector_count,sizeof(int));
 	sector_centers[0] = 2;
@@ -382,9 +392,9 @@ TEST(TestGridding,CPUTest_2SectorsKernel3nData)
 	printf("index to test %d\n",index);
 	//EXPECT_EQ(index,2*555);
 	EXPECT_NEAR(1.0f,gdata[index],epsilon);
-	EXPECT_NEAR(0.1013,gdata[get3DC2lin(3,3,5,im_width)],epsilon*10.0f);
+	EXPECT_NEAR(0.1013,gdata[get3DC2lin(3,6,5,im_width)],epsilon*10.0f);
 	
-	EXPECT_NEAR(0.2251,gdata[get3DC2lin(1,2,5,im_width)],epsilon*10.0f);
+	EXPECT_NEAR(0.2251,gdata[get3DC2lin(1,7,5,im_width)],epsilon*10.0f);
 	EXPECT_NEAR(0.4502,gdata[get3DC2lin(6,5,5,im_width)],epsilon*10.0f);
 
 	EXPECT_NEAR(1.0f,gdata[get3DC2lin(8,8,5,im_width)],epsilon*10.0f);
@@ -393,7 +403,7 @@ TEST(TestGridding,CPUTest_2SectorsKernel3nData)
 	for (int j=0; j<im_width; j++)
 	{
 		for (int i=0; i<im_width; i++)
-			printf("%.4f ",gdata[get3DC2lin(i,im_width-j,5,im_width)]);
+			printf("%.4f ",gdata[get3DC2lin(i,im_width-1-j,5,im_width)]);
 		printf("\n");
 	}
 

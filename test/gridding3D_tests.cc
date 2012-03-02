@@ -314,20 +314,21 @@ TEST(TestGridding,CPUTest_2SectorsKernel3nData)
 	//Data
 	int data_entries = 5;
     float* data = (float*) calloc(2*data_entries,sizeof(float)); //2* re + im
-	data[0] = 0.5;
-	data[1] = 0.5;
+	int data_cnt = 0;
+	data[data_cnt++] = 0.5;
+	data[data_cnt++] = 0.5;
 	
-	data[2] = 0.7;
-	data[3] = 1;
+	data[data_cnt++] = 0.7;
+	data[data_cnt++] = 1;
 	
-	data[4] = 1;
-	data[5] = 1;
+	data[data_cnt++] = 1;
+	data[data_cnt++] = 1;
 
-	data[6] = 1;
-	data[7] = 1;
+	data[data_cnt++] = 1;
+	data[data_cnt++] = 1;
 
-	data[8] = 1;
-	data[9] = 1;
+	data[data_cnt++] = 1;
+	data[data_cnt++] = 1;
 
 	//Coords
 	//Scaled between -0.5 and 0.5
@@ -392,7 +393,7 @@ TEST(TestGridding,CPUTest_2SectorsKernel3nData)
 	printf("index to test %d\n",index);
 	//EXPECT_EQ(index,2*555);
 	EXPECT_NEAR(1.0f,gdata[index],epsilon);
-	EXPECT_NEAR(0.1013,gdata[get3DC2lin(3,6,5,im_width)],epsilon*10.0f);
+	EXPECT_NEAR(0.2432,gdata[get3DC2lin(3,6,5,im_width)],epsilon*10.0f);
 	
 	EXPECT_NEAR(0.2251,gdata[get3DC2lin(1,7,5,im_width)],epsilon*10.0f);
 	EXPECT_NEAR(0.4502,gdata[get3DC2lin(6,5,5,im_width)],epsilon*10.0f);

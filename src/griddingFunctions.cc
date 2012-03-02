@@ -136,6 +136,16 @@ inline int getIndex(int x, int y, int z, int gwidth)
 	return x + gwidth * (y + gwidth * z);
 }
 
+bool isOutlier(int x, int y, int z, int center_x, int center_y, int center_z, int width, int sector_offset)
+{
+	return ((center_x - sector_offset + x) >= width ||
+						(center_x - sector_offset + x) < 0 ||
+						(center_y - sector_offset + y) >= width ||
+						(center_y - sector_offset + y) < 0 ||
+						(center_z - sector_offset + z) >= width ||
+						(center_z - sector_offset + z) < 0);
+}
+
 void gridding3D(float* data, float* crds, float* gdata, float* kernel, int* sectors, int sector_count, int* sector_centers, int sector_width, int kernel_width, int kernel_count, int width)
 {
 	int imin, imax, jmin, jmax, kmin, kmax, i, j, k, ind;
@@ -245,7 +255,7 @@ void gridding3D(float* data, float* crds, float* gdata, float* kernel, int* sect
 	}/*sectors*/
 	
 	//TODO copy data from sectors to original grid
-	int max_im_index = width * width * width * 2;
+	int max_im_index = width;
 	for (int sec = 0; sec < sector_count; sec++)
 	{
 		printf("DEBUG: showing entries of sector %d in z = 5 plane...\n",sec);
@@ -265,8 +275,10 @@ void gridding3D(float* data, float* crds, float* gdata, float* kernel, int* sect
 					ind = 2*(sector_ind_offset + getIndex(x,y,z,width));
 					if (z==3)
 						printf("%.4f ",sdata[sec][s_ind]);
-					if (ind < 0 || 
-						ind >= max_im_index)
+					if (sdata[sec][s_ind] != 0.0)
+						printf("");
+					//TODO auslagern
+					if (isOutlier(x,y,z,center_x,center_y,center_z,width,sector_offset))
 						continue;
 					
 					gdata[ind] += sdata[sec][s_ind]; //Re

@@ -52,7 +52,7 @@ static float i0( float x )
 //#define I0_BETA	(i0(BETA))
 //#define kernel(__radius) (i0 (BETA * sqrt (1 - sqr(__radius))) / I0_BETA)
 
-#define BETA(__kw,__osr) (M_PI*sqrt(sqr(__kw/__osr*(__osr-0.5))-0.8))
+#define BETA(__kw,__osr) (M_PI*sqrt(sqr(__kw/__osr*(__osr-0.5f))-0.8f))
 #define I0_BETA(__kw,__osr)	(i0(BETA(__kw,__osr)))
 #define kernel(__radius,__kw,__osr) (i0 (BETA(__kw,__osr) * sqrt (1 - sqr(__radius))) / I0_BETA(__kw,__osr))
 
@@ -69,11 +69,11 @@ long calculateGrid3KernelSize(float osr, float kernel_radius)
 	//nearest neighbor with maximum aliasing error
 	//of 0.001
 	
-	long kernel_osf = floor(0.91f/(osr * MAXIMUM_ALIASING_ERROR));
+	long kernel_osf = (long)(floor(0.91f/(osr * MAXIMUM_ALIASING_ERROR)));
 
 	float kernel_radius_osr = static_cast<float>(osr * kernel_radius);
 
-    return kernel_osf * kernel_radius_osr;
+    return (long)(kernel_osf * kernel_radius_osr);
 }
 
 void loadGrid3Kernel(float *kernTab)
@@ -109,20 +109,14 @@ void loadGrid3Kernel(float *kernTab,long kernel_entries, int kernel_width, float
 } /* end loadGrid3Kernel() */
 
 
-/* set bounds for current data point based on kernel and grid limits */
-void set_minmax (double x, int *min, int *max, int maximum, double radius)	
+/* set bounds for current data point based on kernel and grid limits *
+DEVICEHOST void set_minmax (double x, int *min, int *max, int maximum, double radius)	
 {
-	*min = (int) ceil (x - radius);
-	*max = (int) floor (x + radius);
-	//check boundaries
-	if (*min < 0) *min = 0;
-	if (*max >= maximum) *max = maximum;
-	printf("x - radius %f - %f => %d ### ",x,radius,*min);
-	printf("x + radius %f - %f => %d\n",x,radius,*max);
-}
+
+}*/
 
 
-bool isOutlier(int x, int y, int z, int center_x, int center_y, int center_z, int width, int sector_offset)
+/*DEVICEHOST  bool isOutlier(int x, int y, int z, int center_x, int center_y, int center_z, int width, int sector_offset)
 {
 	return ((center_x - sector_offset + x) >= width ||
 						(center_x - sector_offset + x) < 0 ||
@@ -130,15 +124,15 @@ bool isOutlier(int x, int y, int z, int center_x, int center_y, int center_z, in
 						(center_y - sector_offset + y) < 0 ||
 						(center_z - sector_offset + z) >= width ||
 						(center_z - sector_offset + z) < 0);
-}
+}*/
 
-void gridding3D(float* data, float* crds, float* gdata, float* kernel, int* sectors, int sector_count, int* sector_centers, int sector_width, int kernel_width, int kernel_count, int width)
+/*void gridding3D(float* data, float* crds, float* gdata, float* kernel, int* sectors, int sector_count, int* sector_centers, int sector_width, int kernel_width, int kernel_count, int width)
 {
 	int imin, imax, jmin, jmax, kmin, kmax, i, j, k, ind;
 	float x, y, z, ix, jy, kz;
 
-    /* kr */
-	float dx_sqr, dy_sqr, dz_sqr, dz_sqr_PLUS_dy_sqr, dist_sqr, val;
+    /* kr 
+	float dx_sqr, dy_sqr, dz_sqr, val;
 	int center_x, center_y, center_z, max_x, max_y, max_z;
 	
 	float kernel_radius = static_cast<float>(kernel_width) / 2.0f;
@@ -154,9 +148,9 @@ void gridding3D(float* data, float* crds, float* gdata, float* kernel, int* sect
 	
 	
 	//TODO passt das?
-	int sector_pad_width = sector_width + 2*floor(kernel_width / 2.0f);
+	int sector_pad_width = sector_width + 2*(int)(floor(kernel_width / 2.0f));
 	int sector_dim = sector_pad_width  * sector_pad_width  * sector_pad_width ;
-	int sector_offset = floor(sector_pad_width / 2.0f);
+	int sector_offset = (int)(floor(sector_pad_width / 2.0f));
 
 	printf("sector offset = %d",sector_offset);
 	float** sdata =  (float**)malloc(sector_count*sizeof(float*));
@@ -187,7 +181,7 @@ void gridding3D(float* data, float* crds, float* gdata, float* kernel, int* sect
 			max_y = sector_pad_width-1;
 			max_z = sector_pad_width-1;
 
-			/* set the boundaries of final dataset for gridding this point */
+			/* set the boundaries of final dataset for gridding this point 
 			ix = (x + 0.5f) * (width) - center_x + sector_offset;
 			set_minmax(ix, &imin, &imax, max_x, kernel_radius);
 			jy = (y + 0.5f) * (width) - center_y + sector_offset;
@@ -197,7 +191,7 @@ void gridding3D(float* data, float* crds, float* gdata, float* kernel, int* sect
 
 			printf("sector grid position of data point: %f,%f,%f\n",ix,jy,kz);
 			
-			/* grid this point onto the neighboring cartesian points */
+			/* grid this point onto the neighboring cartesian points 
 			for (k=kmin; k<=kmax; k++)	
 			{
 				kz = static_cast<float>((k + center_z - sector_offset)) / static_cast<float>((width)) - 0.5f;//(k - center_z) *width_inv;
@@ -219,26 +213,26 @@ void gridding3D(float* data, float* crds, float* gdata, float* kernel, int* sect
 								dx_sqr *= dx_sqr;
 								if (dx_sqr < radiusSquared)	
 								{
-									/* get kernel value */
+									/* get kernel value 
 									//Berechnung mit Separable Filters 
 									val = kernel[(int) round(dz_sqr * dist_multiplier)] *
 										  kernel[(int) round(dy_sqr * dist_multiplier)] *
 										  kernel[(int) round(dx_sqr * dist_multiplier)];
 									ind = getIndex(i,j,k,sector_pad_width);
 								
-									/* multiply data by current kernel val */
-									/* grid complex or scalar */
+									/* multiply data by current kernel val 
+									/* grid complex or scalar 
 									sdata[sec][2*ind] += val * data[2*data_cnt];
 									sdata[sec][2*ind+1] += val * data[2*data_cnt+1];
-								} /* kernel bounds check x, spherical support */
-							} /* x 	 */
-						} /* kernel bounds check y, spherical support */
-					} /* y */
-				} /*kernel bounds check z */
-			} /* z */
-		} /*data points per sector*/
+								} /* kernel bounds check x, spherical support 
+							} /* x 	 
+						} /* kernel bounds check y, spherical support 
+					} /* y 
+				} /*kernel bounds check z 
+			} /* z 
+		} /*data points per sector
 	
-	}/*sectors*/
+	}/*sectors
 	
 	//TODO copy data from sectors to original grid
 	int max_im_index = width;
@@ -274,5 +268,5 @@ void gridding3D(float* data, float* crds, float* gdata, float* kernel, int* sect
 		free(sdata[sec]);
 	}
 	free(sdata);
-}
+}*/
 

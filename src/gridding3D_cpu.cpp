@@ -6,7 +6,7 @@ void gridding3D_cpu(float* data, float* crds, float* gdata, float* kernel, int* 
 	float x, y, z, ix, jy, kz;
 
     /* kr */
-	float dx_sqr, dy_sqr, dz_sqr, dz_sqr_PLUS_dy_sqr, dist_sqr, val;
+	float dx_sqr, dy_sqr, dz_sqr, val;
 	int center_x, center_y, center_z, max_x, max_y, max_z;
 	
 	float kernel_radius = static_cast<float>(kernel_width) / 2.0f;
@@ -22,7 +22,7 @@ void gridding3D_cpu(float* data, float* crds, float* gdata, float* kernel, int* 
 	
 	
 	//TODO passt das?
-	int sector_pad_width = sector_width + 2*floor(kernel_width / 2.0f);
+	int sector_pad_width = sector_width + 2*(int)floor(kernel_width / 2.0f);
 	int sector_dim = sector_pad_width  * sector_pad_width  * sector_pad_width ;
 	int sector_offset = floor(sector_pad_width / 2.0f);
 

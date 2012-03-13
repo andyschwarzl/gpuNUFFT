@@ -19,24 +19,24 @@ __global__ void kernel_call(int *a)
 }
 
 __constant__ GriddingInfo GI;
-//extern __shared__ float sdata_arr[];
+//extern __shared__ DType sdata_arr[];
 
 #define N_THREADS_PER_SECTOR 256 //16x16
 
-__global__ void griddingKernel( float* data, 
-							    float* crds, 
-							    float* gdata,
-							    float* kernel, 
+__global__ void griddingKernel( DType* data, 
+							    DType* crds, 
+							    DType* gdata,
+							    DType* kernel, 
 							    int* sectors, 
 								int* sector_centers
 								)
 {
-	__shared__ float sdata[2*10*10*10]; //ca. 8kB -> 2 Blöcke je SM ???
+	__shared__ DType sdata[2*10*10*10]; //ca. 8kB -> 2 Blöcke je SM ???
 
 	int  sec= blockIdx.x;
 	//TODO static or dynamic?
 	//manually cast to correct type/pos
-	//float* sdata = (float*)sdata_arr;
+	//DType* sdata = (DType*)sdata_arr;
 	for (int i=0; i<2*GI.sector_dim;i++)
 		sdata[i]=0.0f;
 
@@ -44,7 +44,7 @@ __global__ void griddingKernel( float* data,
 	{
 		int ind, max_x, max_y, max_z, imin, imax, jmin, jmax,kmin,kmax, k, i, j;
 
-		float dx_sqr, dy_sqr, dz_sqr, val, ix, jy, kz;
+		DType dx_sqr, dy_sqr, dz_sqr, val, ix, jy, kz;
 
 		__shared__ int3 center;
 		center.x = sector_centers[sec * 3];
@@ -57,7 +57,7 @@ __global__ void griddingKernel( float* data,
 				int data_cnt = sectors[sec]+threadIdx.x;
 				while (data_cnt < sectors[sec+1])
 				{
-				float3 data_point; //shared????
+				DType3 data_point; //shared????
 				data_point.x = crds[3*data_cnt];
 				data_point.y = crds[3*data_cnt +1];
 				data_point.z = crds[3*data_cnt +2];
@@ -77,21 +77,21 @@ __global__ void griddingKernel( float* data,
 				// grid this point onto the neighboring cartesian points
 				for (k=kmin; k<=kmax; k++)	
 				{
-					kz = static_cast<float>((k + center.z - GI.sector_offset)) / static_cast<float>((GI.width)) - 0.5f;//(k - center_z) *width_inv;
+					kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.width)) - 0.5f;//(k - center_z) *width_inv;
 					dz_sqr = kz - data_point.z;
 					dz_sqr *= dz_sqr;
 					if (dz_sqr < GI.radiusSquared)
 					{
 						for (j=jmin; j<=jmax; j++)	
 						{
-							jy = static_cast<float>(j + center.y - GI.sector_offset) / static_cast<float>((GI.width)) - 0.5f;   //(j - center_y) *width_inv;
+							jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.width)) - 0.5f;   //(j - center_y) *width_inv;
 							dy_sqr = jy - data_point.y;
 							dy_sqr *= dy_sqr;
 							if (dy_sqr < GI.radiusSquared)	
 							{
 								for (i=imin; i<=imax; i++)	
 								{
-									ix = static_cast<float>(i + center.x - GI.sector_offset) / static_cast<float>((GI.width)) - 0.5f;// (i - center_x) *width_inv;
+									ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.width)) - 0.5f;// (i - center_x) *width_inv;
 									dx_sqr = ix - data_point.x;
 									dx_sqr *= dx_sqr;
 									if (dx_sqr < GI.radiusSquared)	
@@ -187,12 +187,12 @@ void initAndCopyGriddingInfo(int sector_count,
 	gi_host->kernel_count = kernel_count;
 	gi_host->width = width;
 
-	float kernel_radius = static_cast<float>(kernel_width) / 2.0f;
-	float radius = kernel_radius / static_cast<float>(width);
-	float width_inv = 1.0f / width;
-	float radiusSquared = radius * radius;
-	float kernelRadius_invSqr = 1 / radiusSquared;
-	float dist_multiplier = (kernel_count - 1) * kernelRadius_invSqr;
+	DType kernel_radius = static_cast<DType>(kernel_width) / 2.0f;
+	DType radius = kernel_radius / static_cast<DType>(width);
+	DType width_inv = 1.0f / width;
+	DType radiusSquared = radius * radius;
+	DType kernelRadius_invSqr = 1 / radiusSquared;
+	DType dist_multiplier = (kernel_count - 1) * kernelRadius_invSqr;
 	printf("radius rel. to grid width %f\n",radius);
 	int sector_pad_width = sector_width + 2*(int)(floor(kernel_width / 2.0f));
 	int sector_dim = sector_pad_width  * sector_pad_width  * sector_pad_width ;
@@ -214,12 +214,12 @@ void initAndCopyGriddingInfo(int sector_count,
 	free(gi_host);
 }
 
-void gridding3D_gpu(float* data, 
+void gridding3D_gpu(DType* data, 
 					int data_cnt,
-					float* crds, 
-					float* gdata,
+					DType* crds, 
+					DType* gdata,
 					int gdata_cnt,
-					float* kernel,
+					DType* kernel,
 					int kernel_cnt,
 					int* sectors, 
 					int sector_count, 
@@ -238,13 +238,13 @@ void gridding3D_gpu(float* data,
 
 	initAndCopyGriddingInfo(sector_count,sector_width,kernel_width,kernel_count,width);
 	
-	float* data_d, *crds_d, *gdata_d, *kernel_d;
+	DType* data_d, *crds_d, *gdata_d, *kernel_d;
 	int* sector_centers_d, *sectors_d;
 
-	allocateAndCopyToDeviceMem<float>(&data_d,data,2*data_cnt);
-	allocateAndCopyToDeviceMem<float>(&crds_d,crds,3*data_cnt);
-	allocateAndCopyToDeviceMem<float>(&gdata_d,gdata,gdata_cnt);//Konvention!!!
-	allocateAndCopyToDeviceMem<float>(&kernel_d,kernel,kernel_cnt);
+	allocateAndCopyToDeviceMem<DType>(&data_d,data,2*data_cnt);
+	allocateAndCopyToDeviceMem<DType>(&crds_d,crds,3*data_cnt);
+	allocateAndCopyToDeviceMem<DType>(&gdata_d,gdata,gdata_cnt);//Konvention!!!
+	allocateAndCopyToDeviceMem<DType>(&kernel_d,kernel,kernel_cnt);
 	allocateAndCopyToDeviceMem<int>(&sectors_d,sectors,2*sector_count);
 	allocateAndCopyToDeviceMem<int>(&sector_centers_d,sector_centers,3*sector_count);
 	

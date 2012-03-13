@@ -1,7 +1,6 @@
 #include <limits.h>
 
 #include "gridding_gpu.hpp"
-#include "griddingFunctions.hpp"
 
 #include "gtest/gtest.h"
 

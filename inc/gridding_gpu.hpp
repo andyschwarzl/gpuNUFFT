@@ -6,12 +6,20 @@
 #include <stdlib.h>
 #include <string.h>
 
-void gridding3D_gpu(float* data, 
+#ifdef __DOUBLE_PREC__
+	typedef double DType;
+	typedef double3 DType3;
+#else
+	typedef float DType;
+	typedef float3 DType3;
+#endif
+
+void gridding3D_gpu(DType* data, 
 					int data_cnt,
-					float* crds, 
-					float* gdata,
+					DType* crds, 
+					DType* gdata,
 					int gdata_cnt,
-					float* kernel,
+					DType* kernel,
 					int kernel_cnt,
 					int* sectors, 
 					int sector_count, 
@@ -28,7 +36,7 @@ struct GriddingInfo
 	
 	int kernel_width; 
 	int kernel_count;
-	float kernel_radius;
+	DType kernel_radius;
 
 	int width;
 	
@@ -36,8 +44,8 @@ struct GriddingInfo
 	int sector_pad_width;
 	int sector_offset;
 
-	float radiusSquared;
-	float dist_multiplier;
+	DType radiusSquared;
+	DType dist_multiplier;
 };
 
 #endif  // GRIDDING_GPU_HPP_*/

@@ -39,7 +39,8 @@
 
 #define MAX_BLOCK_SZ 512
 
-void readMatlabInputArray(const mxArray *prhs[], int input_index, int highest_varying_dim, const char* name,float** data, int* data_entries)
+template <typename TType>
+void readMatlabInputArray(const mxArray *prhs[], int input_index, int highest_varying_dim, const char* name,TType** data, int* data_entries)
 {
 	int nd = mxGetNumberOfDimensions(prhs[input_index]); /* get coordinate dimensions */
 	mexPrintf("number of dims %d\n",nd);
@@ -71,8 +72,7 @@ void readMatlabInputArray(const mxArray *prhs[], int input_index, int highest_va
 
 	const mxArray *matlabData;
     matlabData = prhs[input_index];   
-    *data = ( float*) mxGetPr(matlabData);
-
+	*data = ( TType*) mxGetPr(matlabData);
 }
 
 /*
@@ -87,6 +87,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 {
 	mexPrintf("Starting GRIDDING 3D Function...\n");
 
+	//TODO check input params count first!
   /*  if(nrhs != 9 ) {
 	printf("\nUsage:\n");
     return;
@@ -100,19 +101,33 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	int pcnt = 0;  
     
 	//Data
-	float* data = NULL;
-	int data_entries;
-	readMatlabInputArray(prhs, pcnt++, 2,"data",&data, &data_entries);
-	for (int i = 0; i < 2*data_entries; i++)
+	DType* data = NULL;
+	int data_cnt;
+	readMatlabInputArray<DType>(prhs, pcnt++, 2,"data",&data, &data_cnt);
+	for (int i = 0; i < 2*data_cnt; i++)//re, im
 		mexPrintf("data: %f, ",data[i]);
 	mexPrintf("\n");
 
 	//Coords
-	float* coords = NULL;
+	DType* coords = NULL;
 	int coord_cnt;
-	readMatlabInputArray(prhs, pcnt++, 3,"coords",&coords, &coord_cnt);
-	for (int i = 0; i < 3*coord_cnt; i++)
+	readMatlabInputArray<DType>(prhs, pcnt++, 3,"coords",&coords, &coord_cnt);
+	for (int i = 0; i < 3*coord_cnt; i++)//x,y,z
 		mexPrintf("coords: %f, ",coords[i]);
+	mexPrintf("\n");
+
+	//Sectors
+	DType* sectors = NULL;
+	int sector_cnt;
+	readMatlabInputArray<DType>(prhs, pcnt++, 1,"sectors",&sectors, &sector_cnt);
+	
+	int* sectors_int = (int*) calloc(2*sector_cnt,sizeof(int));
+
+	for (int i = 0; i < sector_cnt; i++)//no int array as input array?
+	{
+		sectors_int[i] = (int)sectors[i];
+		mexPrintf("sectors: %d, ",sectors_int[i]);
+	}
 	mexPrintf("\n");
 
    /**************** Init Cuda *****************/
@@ -127,48 +142,19 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     }   
    
 	//oversampling ratio
-	float osr = DEFAULT_OVERSAMPLING_RATIO;
+	DType osr = DEFAULT_OVERSAMPLING_RATIO;
 	//kernel width
 	int kernel_width = 3;
 
 	long kernel_entries = calculateGrid3KernelSize(osr, kernel_width/2.0f);
-
-	float *kern = (float*) calloc(kernel_entries,sizeof(float));
+	DType* kern = (DType*) calloc(kernel_entries,sizeof(float));
 	loadGrid3Kernel(kern,kernel_entries,kernel_width,osr);
 
 	//Image
 	int im_width = 10;
 
-	//Coords
-	//Scaled between -0.5 and 0.5
-	//in triplets (x,y,z)
-    
-	/*float* coords = (float*) calloc(3*data_entries,sizeof(float));//3* x,y,z
-	int coord_cnt = 0;
-	//7.Sektor
-	coords[coord_cnt++] = -0.3f; 
-	coords[coord_cnt++] = 0.2f;
-	coords[coord_cnt++] = 0;
-
-	coords[coord_cnt++] = -0.1f;
-	coords[coord_cnt++] = 0;
-	coords[coord_cnt++] = 0;
-
-	//8.Sektor
-	coords[coord_cnt++] = 0; 
-	coords[coord_cnt++] = 0;
-	coords[coord_cnt++] = 0;
-
-	coords[coord_cnt++] = 0.5f; 
-	coords[coord_cnt++] = 0;
-	coords[coord_cnt++] = 0;
-
-	coords[coord_cnt++] = 0.3f;
-	coords[coord_cnt++] = 0.3f;
-	coords[coord_cnt++] = 0;*/
-
 	//Output Grid
-    float* gdata;
+    DType* gdata;
 	unsigned long dims_g[4];
     dims_g[0] = 2; /* complex */
 	dims_g[1] = (unsigned long)(im_width * osr); 
@@ -182,59 +168,47 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	//sectors of data, count and start indices
 	int sector_width = 5;
 	
-	int sector_count = 8;
-	int* sectors = (int*) calloc(2*sector_count,sizeof(int));
-	sectors[0]=0;
-	sectors[1]=0;
-	sectors[2]=0;
-	sectors[3]=0;
-	sectors[4]=0;
-	sectors[5]=0;
-	sectors[6]=0;
-	sectors[7]=2;
-	sectors[8]=5;
+	int* sector_centers = (int*) calloc(3*sector_cnt,sizeof(int));
+	int s_cnt = 0;
+	sector_centers[s_cnt++] = 2;
+	sector_centers[s_cnt++] = 2;
+	sector_centers[s_cnt++] = 2;
 
-	int* sector_centers = (int*) calloc(3*sector_count,sizeof(int));
-	int sector_cnt = 0;
-	sector_centers[sector_cnt++] = 2;
-	sector_centers[sector_cnt++] = 2;
-	sector_centers[sector_cnt++] = 2;
+	sector_centers[s_cnt++] = 7;
+	sector_centers[s_cnt++] = 2;
+	sector_centers[s_cnt++] = 2;
 
-	sector_centers[sector_cnt++] = 7;
-	sector_centers[sector_cnt++] = 2;
-	sector_centers[sector_cnt++] = 2;
+	sector_centers[s_cnt++] = 2;
+	sector_centers[s_cnt++] = 7;
+	sector_centers[s_cnt++] = 2;
 
-	sector_centers[sector_cnt++] = 2;
-	sector_centers[sector_cnt++] = 7;
-	sector_centers[sector_cnt++] = 2;
+	sector_centers[s_cnt++] = 7;
+	sector_centers[s_cnt++] = 7;
+	sector_centers[s_cnt++] = 2;
 
-	sector_centers[sector_cnt++] = 7;
-	sector_centers[sector_cnt++] = 7;
-	sector_centers[sector_cnt++] = 2;
+	sector_centers[s_cnt++] = 2;
+	sector_centers[s_cnt++] = 2;
+	sector_centers[s_cnt++] = 7;
 
-	sector_centers[sector_cnt++] = 2;
-	sector_centers[sector_cnt++] = 2;
-	sector_centers[sector_cnt++] = 7;
+	sector_centers[s_cnt++] = 7;
+	sector_centers[s_cnt++] = 2;
+	sector_centers[s_cnt++] = 7;
 
-	sector_centers[sector_cnt++] = 7;
-	sector_centers[sector_cnt++] = 2;
-	sector_centers[sector_cnt++] = 7;
+	sector_centers[s_cnt++] = 2;
+	sector_centers[s_cnt++] = 7;
+	sector_centers[s_cnt++] = 7;
 
-	sector_centers[sector_cnt++] = 2;
-	sector_centers[sector_cnt++] = 7;
-	sector_centers[sector_cnt++] = 7;
+	sector_centers[s_cnt++] = 7;
+	sector_centers[s_cnt++] = 7;
+	sector_centers[s_cnt++] = 7;
 
-	sector_centers[sector_cnt++] = 7;
-	sector_centers[sector_cnt++] = 7;
-	sector_centers[sector_cnt++] = 7;
-
-	gridding3D_gpu(data,data_entries,coords,gdata,grid_size,kern,kernel_entries,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1]);
+	gridding3D_gpu(data,data_cnt,coords,gdata,grid_size,kern,kernel_entries,sectors_int,sector_cnt,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1]);
 
 	//free(data);
 	//free(coords);
 	free(gdata);
 	free(kern);
-	free(sectors);
+	//free(sectors);
 	free(sector_centers);
 
     CUcontext  pctx ;

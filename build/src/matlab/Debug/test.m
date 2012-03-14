@@ -15,12 +15,18 @@ sector_centers = [2, 7, 2, 7, 2, 7, 2, 7;
                   2, 2, 7, 7, 2, 2, 7, 7;
                   2, 2, 2, 2, 7, 7, 7, 7];
 
+%% init params
+im_width = 10;
+osr = 1;
+kernel_width = 3;
+sector_width = 5;
+params = [im_width, osr, kernel_width, sector_width];
 %%
 size(data)
 size(coords)
 
 %%
-gdata = cuda_mex_kernel(single(data(:,:)),single(coords(:,:)),single(sectors),single(sector_centers));
+gdata = cuda_mex_kernel(single(data(:,:)),single(coords(:,:)),single(sectors),single(sector_centers),single(params));
 
 %%
 test= gdata(:,:,:,6)

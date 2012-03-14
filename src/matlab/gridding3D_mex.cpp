@@ -143,6 +143,22 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	}
 	mexPrintf("\n");
 
+	//Parameters
+	const mxArray *Params;
+    Params = prhs[pcnt++]; //8... Parameter   
+    float *params = (float*) mxGetData(Params);
+	//Image
+	int im_width = (int)params[0];
+
+	//oversampling ratio
+	DType osr = (DType)params[1];
+
+	//kernel width
+	int kernel_width = (int)params[2];
+	
+	//sectors of data, count and start indices
+	int sector_width = (int)params[3];
+
 
    /**************** Init Cuda *****************/
     
@@ -155,17 +171,9 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     //   cuCtxPopCurrent(&pctx);	      
     }   
    
-	//oversampling ratio
-	DType osr = DEFAULT_OVERSAMPLING_RATIO;
-	//kernel width
-	int kernel_width = 3;
-
 	long kernel_entries = calculateGrid3KernelSize(osr, kernel_width/2.0f);
 	DType* kern = (DType*) calloc(kernel_entries,sizeof(float));
 	loadGrid3Kernel(kern,kernel_entries,kernel_width,osr);
-
-	//Image
-	int im_width = 10;
 
 	//Output Grid
     DType* gdata;
@@ -181,16 +189,9 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	plhs[0] = mxCreateNumericArray(4,(const mwSize*)dims_g,mxGetClassID(prhs[0]),mxREAL);
     gdata = (DType*) mxGetData(plhs[0]);
 
-	//sectors of data, count and start indices
-	int sector_width = 5;
 	
-//	int* sector_centers = (int*) calloc(3*sector_cnt,sizeof(int));
-
 	gridding3D_gpu(data,data_cnt,coords,gdata,grid_size,kern,kernel_entries,sectors_int,sector_cnt,sector_centers_int,sector_width, kernel_width, kernel_entries,dims_g[1]);
 
-	//free(data);
-	//free(coords);
-	//free(gdata);
 	free(kern);
 	free(sectors_int);
 	free(sector_centers_int);

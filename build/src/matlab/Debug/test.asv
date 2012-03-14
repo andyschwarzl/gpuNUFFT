@@ -5,7 +5,7 @@ data = [0.5, 0.7, 1, 1, 1;
 %% data coords x,y,z in [-0.5,0.5] 
 coords = [-0.3, -0.1, 0, 0.5, 0.3;
            0.2,    0, 0,   0, 0.3;
-              0,    0, 0,   0, 0];
+             0,    0, 0,   0, 0];
 %% sectors
 sectors = [0,0,0,0,0,0,0,2,5];
 
@@ -17,8 +17,8 @@ size(coords)
 gdata = cuda_mex_kernel(single(data(:,:)),single(coords(:,:)),single(sectors));
 
 %%
-test= gdata(:,:,:,5)
+test= gdata(:,:,:,6)
 test2 = reshape(test(1,:,:),10,10)
 
 %%
-flipud(test2)
+flipud(test2')

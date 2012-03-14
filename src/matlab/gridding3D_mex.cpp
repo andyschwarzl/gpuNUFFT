@@ -163,7 +163,10 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
 	long grid_size = dims_g[0]*dims_g[1]*dims_g[2]*dims_g[3];
 
-    gdata = (float*) calloc(grid_size,sizeof(float));
+    //gdata = (float*) calloc(grid_size,sizeof(float));
+	plhs[0] = mxCreateNumericArray(4,(const mwSize*)dims_g,mxGetClassID(prhs[0]),mxREAL);
+    gdata = (DType*) mxGetData(plhs[0]);
+
 	
 	//sectors of data, count and start indices
 	int sector_width = 5;
@@ -206,7 +209,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
 	//free(data);
 	//free(coords);
-	free(gdata);
+	//free(gdata);
 	free(kern);
 	//free(sectors);
 	free(sector_centers);

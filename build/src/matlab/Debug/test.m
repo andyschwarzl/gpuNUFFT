@@ -14,4 +14,11 @@ size(data)
 size(coords)
 
 %%
-cuda_mex_kernel(single(data(:,:)),single(coords(:,:)),single(sectors));
+gdata = cuda_mex_kernel(single(data(:,:)),single(coords(:,:)),single(sectors));
+
+%%
+test= gdata(:,:,:,5)
+test2 = reshape(test(1,:,:),10,10)
+
+%%
+flipud(test2)

@@ -71,8 +71,15 @@ void readMatlabInputArray(const mxArray *prhs[], int input_index, int highest_va
 	*data_entries = dims[1];
 
 	const mxArray *matlabData;
-    matlabData = prhs[input_index];   
-	*data = ( TType*) mxGetPr(matlabData);
+    matlabData = prhs[input_index];
+	if (mxIsInt32(matlabData))
+	{
+		*data = ( TType*) mxGetData(matlabData);
+	}
+	else
+	{
+		*data = ( TType*) mxGetPr(matlabData);
+	}
 }
 
 /*
@@ -117,29 +124,23 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	mexPrintf("\n");
 
 	//Sectors
-	DType* sectors = NULL;
+	int* sectors = NULL;
 	int sector_cnt;
-	readMatlabInputArray<DType>(prhs, pcnt++, 1,"sectors",&sectors, &sector_cnt);
-	
-	int* sectors_int = (int*) calloc(sector_cnt,sizeof(int));
+	readMatlabInputArray<int>(prhs, pcnt++, 1,"sectors",&sectors, &sector_cnt);
 
-	for (int i = 0; i < sector_cnt; i++)//no int array as input array?
+	for (int i = 0; i < sector_cnt; i++)
 	{
-		sectors_int[i] = (int)sectors[i];
-		mexPrintf("sectors: %d, ",sectors_int[i]);
+		mexPrintf("sectors: %d, ",sectors[i]);
 	}
 	mexPrintf("\n");
 
 	//Sector centers
-	DType* sector_centers = NULL;
-	readMatlabInputArray<DType>(prhs, pcnt++, 3,"sectors-centers",&sector_centers, &sector_cnt);
+	int* sector_centers = NULL;
+	readMatlabInputArray<int>(prhs, pcnt++, 3,"sectors-centers",&sector_centers, &sector_cnt);
 	
-	int* sector_centers_int = (int*) calloc(3*sector_cnt,sizeof(int));
-
 	for (int i = 0; i < 3*sector_cnt; i++)//no int array as input array?
 	{
-		sector_centers_int[i] = (int)sector_centers[i];
-		mexPrintf("sector-centers: %d, ",sector_centers_int[i]);
+		mexPrintf("sector-centers: %d, ",sector_centers[i]);
 	}
 	mexPrintf("\n");
 
@@ -185,16 +186,13 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
 	long grid_size = dims_g[0]*dims_g[1]*dims_g[2]*dims_g[3];
 
-    //gdata = (float*) calloc(grid_size,sizeof(float));
 	plhs[0] = mxCreateNumericArray(4,(const mwSize*)dims_g,mxGetClassID(prhs[0]),mxREAL);
     gdata = (DType*) mxGetData(plhs[0]);
 
 	
-	gridding3D_gpu(data,data_cnt,coords,gdata,grid_size,kern,kernel_entries,sectors_int,sector_cnt,sector_centers_int,sector_width, kernel_width, kernel_entries,dims_g[1]);
+	gridding3D_gpu(data,data_cnt,coords,gdata,grid_size,kern,kernel_entries,sectors,sector_cnt,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1]);
 
 	free(kern);
-	free(sectors_int);
-	free(sector_centers_int);
 
     CUcontext  pctx ;
     cuCtxPopCurrent(&pctx);	

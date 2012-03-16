@@ -1,3 +1,6 @@
+%% 
+close all; clear all; clc;
+
 %% data values
 data = [0.5, 0.7, 1, 1, 1;
         0.5, 1,   1, 1, 1];
@@ -26,11 +29,11 @@ size(data)
 size(coords)
 
 %%
-gdata = cuda_mex_kernel(single(data(:,:)),single(coords(:,:)),single(sectors),single(sector_centers),single(params));
+gdata = cuda_mex_kernel(single(data(:,:)),single(coords(:,:)),uint32(sectors),uint32(sector_centers),single(params));
 
 %%
-test= gdata(:,:,:,6)
-test2 = reshape(test(1,:,:),10,10)
+test_gdata = gdata(:,:,:,6)
+test2 = reshape(test_gdata (1,:,:),10,10)
 
 %% print result
 flipud(test2')

@@ -1,23 +1,23 @@
 #include "gridding_cpu.hpp"
 
-void gridding3D_cpu(float* data, float* crds, float* gdata, float* kernel, int* sectors, int sector_count, int* sector_centers, int sector_width, int kernel_width, int kernel_count, int width)
+void gridding3D_cpu(DType* data, DType* crds, DType* gdata, DType* kernel, int* sectors, int sector_count, int* sector_centers, int sector_width, int kernel_width, int kernel_count, int width)
 {
 	int imin, imax, jmin, jmax, kmin, kmax, i, j, k, ind;
-	float x, y, z, ix, jy, kz;
+	DType x, y, z, ix, jy, kz;
 
     /* kr */
-	float dx_sqr, dy_sqr, dz_sqr, val;
+	DType dx_sqr, dy_sqr, dz_sqr, val;
 	int center_x, center_y, center_z, max_x, max_y, max_z;
 	
-	float kernel_radius = static_cast<float>(kernel_width) / 2.0f;
-	float radius = kernel_radius / static_cast<float>(width);
+	DType kernel_radius = static_cast<DType>(kernel_width) / 2.0f;
+	DType radius = kernel_radius / static_cast<DType>(width);
 
 	printf("radius rel. to grid width %f\n",radius);
-	float width_inv = 1.0f / width;
-	float radiusSquared = radius * radius;
-	float kernelRadius_invSqr = 1 / radiusSquared;
+	DType width_inv = 1.0f / width;
+	DType radiusSquared = radius * radius;
+	DType kernelRadius_invSqr = 1 / radiusSquared;
 
-	float dist_multiplier = (kernel_count - 1) * kernelRadius_invSqr;
+	DType dist_multiplier = (kernel_count - 1) * kernelRadius_invSqr;
 	//int sector_width = 10;
 	
 	
@@ -27,13 +27,13 @@ void gridding3D_cpu(float* data, float* crds, float* gdata, float* kernel, int* 
 	int sector_offset = floor(sector_pad_width / 2.0f);
 
 	printf("sector offset = %d",sector_offset);
-	float** sdata =  (float**)malloc(sector_count*sizeof(float*));
+	DType** sdata =  (DType**)malloc(sector_count*sizeof(DType*));
 
 	assert(sectors != NULL);
 
 	for (int sec = 0; sec < sector_count; sec++)
 	{
-		sdata[sec] = (float *) calloc(sector_dim * 2, sizeof(float)); // 5*5*5 * 2
+		sdata[sec] = (DType *) calloc(sector_dim * 2, sizeof(DType)); // 5*5*5 * 2
 		assert(sdata[sec] != NULL);
 
 		center_x = sector_centers[sec * 3];
@@ -68,21 +68,21 @@ void gridding3D_cpu(float* data, float* crds, float* gdata, float* kernel, int* 
 			/* grid this point onto the neighboring cartesian points */
 			for (k=kmin; k<=kmax; k++)	
 			{
-				kz = static_cast<float>((k + center_z - sector_offset)) / static_cast<float>((width)) - 0.5f;//(k - center_z) *width_inv;
+				kz = static_cast<DType>((k + center_z - sector_offset)) / static_cast<DType>((width)) - 0.5f;//(k - center_z) *width_inv;
 				dz_sqr = kz - z;
 				dz_sqr *= dz_sqr;
 				if (dz_sqr < radiusSquared)
 				{
 					for (j=jmin; j<=jmax; j++)	
 					{
-						jy = static_cast<float>(j + center_y - sector_offset) / static_cast<float>((width)) - 0.5f;   //(j - center_y) *width_inv;
+						jy = static_cast<DType>(j + center_y - sector_offset) / static_cast<DType>((width)) - 0.5f;   //(j - center_y) *width_inv;
 						dy_sqr = jy - y;
 						dy_sqr *= dy_sqr;
 						if (dy_sqr < radiusSquared)	
 						{
 							for (i=imin; i<=imax; i++)	
 							{
-								ix = static_cast<float>(i + center_x - sector_offset) / static_cast<float>((width)) - 0.5f;// (i - center_x) *width_inv;
+								ix = static_cast<DType>(i + center_x - sector_offset) / static_cast<DType>((width)) - 0.5f;// (i - center_x) *width_inv;
 								dx_sqr = ix - x;
 								dx_sqr *= dx_sqr;
 								if (dx_sqr < radiusSquared)	

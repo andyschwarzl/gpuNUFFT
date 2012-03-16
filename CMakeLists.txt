@@ -11,6 +11,22 @@ FIND_PACKAGE(CUDA)
 #Searching MATLAB
 FIND_PACKAGE(MATLAB)
 
+#Options
+set (MATLAB_DEBUG FALSE)
+OPTION(WITH_MATLAB_DEBUG "Enable DEBUG messages for MATLAB calls" OFF)
+if (WITH_MATLAB_DEBUG)
+ set (MATLAB_DEBUG TRUE)
+endif()
+MESSAGE(STATUS "Setting MATLAB DEBUG Option to ${MATLAB_DEBUG}")
+
+set(GPU_DOUBLE_PREC OFF CACHE BOOL "Enable double precision floating point operations on GPU")
+
+if(GPU_DOUBLE_PREC)
+  SET(CUDA_NVCC_FLAGS "-arch;sm_20")
+endif(GPU_DOUBLE_PREC)
+
+CONFIGURE_FILE( ${CMAKE_SOURCE_DIR}/inc/config.hpp.cmake ${CMAKE_SOURCE_DIR}/inc/config.hpp)
+
 #Include dirs
 include_directories (inc)
 

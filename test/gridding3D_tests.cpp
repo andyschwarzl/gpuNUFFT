@@ -12,7 +12,7 @@ TEST(TestKernel, LoadKernel) {
 	
 	assert(kernel_entries > 0);
 
-	float *kern = (float*) calloc(kernel_entries,sizeof(float));
+	DType *kern = (DType*) calloc(kernel_entries,sizeof(DType));
 	if (kern != NULL)
 	{
 		loadGrid3Kernel(kern,kernel_entries);
@@ -32,7 +32,7 @@ TEST(TestGridding,CPUTest_1SectorKernel3)
 {
 	int kernel_width = 3;
 	long kernel_entries = calculateGrid3KernelSize();
-	float *kern = (float*) calloc(kernel_entries,sizeof(float));
+	DType *kern = (DType*) calloc(kernel_entries,sizeof(DType));
 	loadGrid3Kernel(kern,kernel_entries);
 
 	//Image
@@ -40,14 +40,14 @@ TEST(TestGridding,CPUTest_1SectorKernel3)
 
 	//Data
 	int data_entries = 1;
-    float* data = (float*) calloc(2*data_entries,sizeof(float)); //2* re + im
+    DType* data = (DType*) calloc(2*data_entries,sizeof(DType)); //2* re + im
 	data[0] = 1;
 	data[1] = 1;
 
 	//Coords
 	//Scaled between -0.5 and 0.5
 	//in triplets (x,y,z)
-    float* coords = (float*) calloc(3*data_entries,sizeof(float));//3* x,y,z
+    DType* coords = (DType*) calloc(3*data_entries,sizeof(DType));//3* x,y,z
 	coords[0] = 0; //should result in 7,7,7 center
 	coords[1] = 0;
 	coords[2] = 0;
@@ -56,7 +56,7 @@ TEST(TestGridding,CPUTest_1SectorKernel3)
 	float osr = DEFAULT_OVERSAMPLING_RATIO;
 
 	//Output Grid
-    float* gdata;
+    DType* gdata;
 	unsigned long dims_g[4];
     dims_g[0] = 2; /* complex */
 	dims_g[1] = (unsigned long)(im_width * osr); 
@@ -65,7 +65,7 @@ TEST(TestGridding,CPUTest_1SectorKernel3)
 
 	long grid_size = dims_g[0]*dims_g[1]*dims_g[2]*dims_g[3];
 
-    gdata = (float*) calloc(grid_size,sizeof(float));
+    gdata = (DType*) calloc(grid_size,sizeof(DType));
 	
 	//sectors of data, count and start indices
 	int sector_width = 8;
@@ -118,7 +118,7 @@ TEST(TestGridding,CPUTest_1SectorKernel5)
 
 	long kernel_entries = calculateGrid3KernelSize(osr, kernel_width/2.0f);
 
-	float *kern = (float*) calloc(kernel_entries,sizeof(float));
+	DType *kern = (DType*) calloc(kernel_entries,sizeof(DType));
 	loadGrid3Kernel(kern,kernel_entries,kernel_width,osr);
 
 	//Image
@@ -126,20 +126,20 @@ TEST(TestGridding,CPUTest_1SectorKernel5)
 
 	//Data
 	int data_entries = 1;
-    float* data = (float*) calloc(2*data_entries,sizeof(float)); //2* re + im
+    DType* data = (DType*) calloc(2*data_entries,sizeof(DType)); //2* re + im
 	data[0] = 1;
 	data[1] = 1;
 
 	//Coords
 	//Scaled between -0.5 and 0.5
 	//in triplets (x,y,z)
-    float* coords = (float*) calloc(3*data_entries,sizeof(float));//3* x,y,z
+    DType* coords = (DType*) calloc(3*data_entries,sizeof(DType));//3* x,y,z
 	coords[0] = 0; //should result in 7,7,7 center
 	coords[1] = 0;
 	coords[2] = 0;
 
 	//Output Grid
-    float* gdata;
+    DType* gdata;
 	unsigned long dims_g[4];
     dims_g[0] = 2; /* complex */
 	dims_g[1] = (unsigned long)(im_width * osr); 
@@ -148,7 +148,7 @@ TEST(TestGridding,CPUTest_1SectorKernel5)
 
 	long grid_size = dims_g[0]*dims_g[1]*dims_g[2]*dims_g[3];
 
-    gdata = (float*) calloc(grid_size,sizeof(float));
+    gdata = (DType*) calloc(grid_size,sizeof(DType));
 	
 	//sectors of data, count and start indices
 	int sector_width = 10;
@@ -202,7 +202,7 @@ TEST(TestGridding,CPUTest_1SectorKernel3nData)
 
 	long kernel_entries = calculateGrid3KernelSize(osr, kernel_width/2.0f);
 
-	float *kern = (float*) calloc(kernel_entries,sizeof(float));
+	DType *kern = (DType*) calloc(kernel_entries,sizeof(DType));
 	loadGrid3Kernel(kern,kernel_entries,kernel_width,osr);
 
 	//Image
@@ -210,7 +210,7 @@ TEST(TestGridding,CPUTest_1SectorKernel3nData)
 
 	//Data
 	int data_entries = 4;
-    float* data = (float*) calloc(2*data_entries,sizeof(float)); //2* re + im
+    DType* data = (DType*) calloc(2*data_entries,sizeof(DType)); //2* re + im
 	data[0] = 1;
 	data[1] = 1;
 	
@@ -226,7 +226,7 @@ TEST(TestGridding,CPUTest_1SectorKernel3nData)
 	//Coords
 	//Scaled between -0.5 and 0.5
 	//in triplets (x,y,z)
-    float* coords = (float*) calloc(3*data_entries,sizeof(float));//3* x,y,z
+    DType* coords = (DType*) calloc(3*data_entries,sizeof(DType));//3* x,y,z
 	coords[0] = 0; 
 	coords[1] = 0;
 	coords[2] = 0;
@@ -244,7 +244,7 @@ TEST(TestGridding,CPUTest_1SectorKernel3nData)
 	coords[11] = 0;
 
 	//Output Grid
-    float* gdata;
+    DType* gdata;
 	unsigned long dims_g[4];
     dims_g[0] = 2; /* complex */
 	dims_g[1] = (unsigned long)(im_width * osr); 
@@ -253,7 +253,7 @@ TEST(TestGridding,CPUTest_1SectorKernel3nData)
 
 	long grid_size = dims_g[0]*dims_g[1]*dims_g[2]*dims_g[3];
 
-    gdata = (float*) calloc(grid_size,sizeof(float));
+    gdata = (DType*) calloc(grid_size,sizeof(DType));
 	
 	//sectors of data, count and start indices
 	int sector_width = 10;
@@ -306,7 +306,7 @@ TEST(TestGridding,CPUTest_2SectorsKernel3nData)
 
 	long kernel_entries = calculateGrid3KernelSize(osr, kernel_width/2.0f);
 
-	float *kern = (float*) calloc(kernel_entries,sizeof(float));
+	DType *kern = (DType*) calloc(kernel_entries,sizeof(DType));
 	loadGrid3Kernel(kern,kernel_entries,kernel_width,osr);
 
 	//Image
@@ -314,7 +314,7 @@ TEST(TestGridding,CPUTest_2SectorsKernel3nData)
 
 	//Data
 	int data_entries = 5;
-    float* data = (float*) calloc(2*data_entries,sizeof(float)); //2* re + im
+    DType* data = (DType*) calloc(2*data_entries,sizeof(DType)); //2* re + im
 	int data_cnt = 0;
 	data[data_cnt++] = 0.5f;
 	data[data_cnt++] = 0.5f;
@@ -334,7 +334,7 @@ TEST(TestGridding,CPUTest_2SectorsKernel3nData)
 	//Coords
 	//Scaled between -0.5 and 0.5
 	//in triplets (x,y,z)
-    float* coords = (float*) calloc(3*data_entries,sizeof(float));//3* x,y,z
+    DType* coords = (DType*) calloc(3*data_entries,sizeof(DType));//3* x,y,z
 	int coord_cnt = 0;
 	//1.Sektor
 	coords[coord_cnt++] = -0.3f; 
@@ -359,7 +359,7 @@ TEST(TestGridding,CPUTest_2SectorsKernel3nData)
 	coords[coord_cnt++] = 0;
 
 	//Output Grid
-    float* gdata;
+    DType* gdata;
 	unsigned long dims_g[4];
     dims_g[0] = 2; /* complex */
 	dims_g[1] = (unsigned long)(im_width * osr); 
@@ -368,7 +368,7 @@ TEST(TestGridding,CPUTest_2SectorsKernel3nData)
 
 	long grid_size = dims_g[0]*dims_g[1]*dims_g[2]*dims_g[3];
 
-    gdata = (float*) calloc(grid_size,sizeof(float));
+    gdata = (DType*) calloc(grid_size,sizeof(DType));
 	
 	//sectors of data, count and start indices
 	int sector_width = 5;
@@ -426,7 +426,7 @@ TEST(TestGridding,CPUTest_8SectorsKernel3nData)
 
 	long kernel_entries = calculateGrid3KernelSize(osr, kernel_width/2.0f);
 
-	float *kern = (float*) calloc(kernel_entries,sizeof(float));
+	DType *kern = (DType*) calloc(kernel_entries,sizeof(DType));
 	loadGrid3Kernel(kern,kernel_entries,kernel_width,osr);
 
 	//Image
@@ -434,7 +434,7 @@ TEST(TestGridding,CPUTest_8SectorsKernel3nData)
 
 	//Data
 	int data_entries = 5;
-    float* data = (float*) calloc(2*data_entries,sizeof(float)); //2* re + im
+    DType* data = (DType*) calloc(2*data_entries,sizeof(DType)); //2* re + im
 	int data_cnt = 0;
 	data[data_cnt++] = 0.5f;
 	data[data_cnt++] = 0.5f;
@@ -454,7 +454,7 @@ TEST(TestGridding,CPUTest_8SectorsKernel3nData)
 	//Coords
 	//Scaled between -0.5 and 0.5
 	//in triplets (x,y,z)
-    float* coords = (float*) calloc(3*data_entries,sizeof(float));//3* x,y,z
+    DType* coords = (DType*) calloc(3*data_entries,sizeof(DType));//3* x,y,z
 	int coord_cnt = 0;
 	//7.Sektor
 	coords[coord_cnt++] = -0.3f; 
@@ -479,7 +479,7 @@ TEST(TestGridding,CPUTest_8SectorsKernel3nData)
 	coords[coord_cnt++] = 0;
 
 	//Output Grid
-    float* gdata;
+    DType* gdata;
 	unsigned long dims_g[4];
     dims_g[0] = 2; /* complex */
 	dims_g[1] = (unsigned long)(im_width * osr); 
@@ -488,7 +488,7 @@ TEST(TestGridding,CPUTest_8SectorsKernel3nData)
 
 	long grid_size = dims_g[0]*dims_g[1]*dims_g[2]*dims_g[3];
 
-    gdata = (float*) calloc(grid_size,sizeof(float));
+    gdata = (DType*) calloc(grid_size,sizeof(DType));
 	
 	//sectors of data, count and start indices
 	int sector_width = 5;
@@ -578,7 +578,7 @@ TEST(TestGridding,CPUTest_8SectorsKernel4nData)
 
 	long kernel_entries = calculateGrid3KernelSize(osr, kernel_width/2.0f);
 
-	float *kern = (float*) calloc(kernel_entries,sizeof(float));
+	DType *kern = (DType*) calloc(kernel_entries,sizeof(DType));
 	loadGrid3Kernel(kern,kernel_entries,kernel_width,osr);
 
 	//Image
@@ -586,7 +586,7 @@ TEST(TestGridding,CPUTest_8SectorsKernel4nData)
 
 	//Data
 	int data_entries = 5;
-    float* data = (float*) calloc(2*data_entries,sizeof(float)); //2* re + im
+    DType* data = (DType*) calloc(2*data_entries,sizeof(DType)); //2* re + im
 	int data_cnt = 0;
 	data[data_cnt++] = 0.5f;
 	data[data_cnt++] = 0.5f;
@@ -606,7 +606,7 @@ TEST(TestGridding,CPUTest_8SectorsKernel4nData)
 	//Coords
 	//Scaled between -0.5 and 0.5
 	//in triplets (x,y,z)
-    float* coords = (float*) calloc(3*data_entries,sizeof(float));//3* x,y,z
+    DType* coords = (DType*) calloc(3*data_entries,sizeof(DType));//3* x,y,z
 	int coord_cnt = 0;
 	//7.Sektor
 	coords[coord_cnt++] = -0.3f; 
@@ -631,7 +631,7 @@ TEST(TestGridding,CPUTest_8SectorsKernel4nData)
 	coords[coord_cnt++] = 0;
 
 	//Output Grid
-    float* gdata;
+    DType* gdata;
 	unsigned long dims_g[4];
     dims_g[0] = 2; /* complex */
 	dims_g[1] = (unsigned long)(im_width * osr); 
@@ -640,7 +640,7 @@ TEST(TestGridding,CPUTest_8SectorsKernel4nData)
 
 	long grid_size = dims_g[0]*dims_g[1]*dims_g[2]*dims_g[3];
 
-    gdata = (float*) calloc(grid_size,sizeof(float));
+    gdata = (DType*) calloc(grid_size,sizeof(DType));
 	
 	//sectors of data, count and start indices
 	int sector_width = 5;

@@ -6,6 +6,8 @@
 #include <cuda.h>
 #include <cuda_runtime.h> 
 
+#include "config.hpp" 
+
 #ifdef _WIN32 
 	#define _USE_MATH_DEFINES	
 #endif
@@ -14,7 +16,7 @@
 #include <assert.h>
 
 #define DEFAULT_OVERSAMPLING_RATIO				1.0f
-#define DEFAULT_KERNEL_WIDTH					3.0f  
+#define DEFAULT_KERNEL_WIDTH					3.0  
 #define DEFAULT_KERNEL_RADIUS		((DEFAULT_KERNEL_WIDTH) / 2.0f)
 
 #define DEFAULT_WINDOW_LENGTH			1.0f
@@ -35,9 +37,9 @@ __inline__ __device__ __host__ void set_minmax (double x, int *min, int *max, in
 long calculateGrid3KernelSize();
 long calculateGrid3KernelSize(float osr, float kernel_radius);
 
-void loadGrid3Kernel(float *kernTab,long kernel_entries, int kernel_width, float osr);
-void loadGrid3Kernel(float *kernTab,long kernel_entries);
-void loadGrid3Kernel(float *kernTab);
+void loadGrid3Kernel(DType *kernTab,long kernel_entries, int kernel_width, float osr);
+void loadGrid3Kernel(DType *kernTab,long kernel_entries);
+void loadGrid3Kernel(DType *kernTab);
 
 __inline__ __device__ __host__ int getIndex(int x, int y, int z, int gwidth)
 {

@@ -2,17 +2,10 @@
 #define GRIDDING_GPU_HPP_
 
 #include "griddingFunctions.hpp"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#ifdef __DOUBLE_PREC__
-	typedef double DType;
-	typedef double3 DType3;
-#else
-	typedef float DType;
-	typedef float3 DType3;
-#endif
 
 void gridding3D_gpu(DType* data, 
 					int data_cnt,

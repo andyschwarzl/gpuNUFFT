@@ -111,37 +111,45 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	DType* data = NULL;
 	int data_cnt;
 	readMatlabInputArray<DType>(prhs, pcnt++, 2,"data",&data, &data_cnt);
-	for (int i = 0; i < 2*data_cnt; i++)//re, im
-		mexPrintf("data: %f, ",data[i]);
-	mexPrintf("\n");
+	if (MATLAB_DEBUG)
+	{
+		for (int i = 0; i < 2*data_cnt; i++)//re, im
+			mexPrintf("data: %f, ",data[i]);
+		mexPrintf("\n");
+	}
 
 	//Coords
 	DType* coords = NULL;
 	int coord_cnt;
 	readMatlabInputArray<DType>(prhs, pcnt++, 3,"coords",&coords, &coord_cnt);
-	for (int i = 0; i < 3*coord_cnt; i++)//x,y,z
-		mexPrintf("coords: %f, ",coords[i]);
-	mexPrintf("\n");
+	if (MATLAB_DEBUG)
+	{
+		for (int i = 0; i < 3*coord_cnt; i++)//x,y,z
+			mexPrintf("coords: %f, ",coords[i]);
+		mexPrintf("\n");
+	}
 
 	//Sectors
 	int* sectors = NULL;
 	int sector_cnt;
 	readMatlabInputArray<int>(prhs, pcnt++, 1,"sectors",&sectors, &sector_cnt);
 
-	for (int i = 0; i < sector_cnt; i++)
-	{
-		mexPrintf("sectors: %d, ",sectors[i]);
-	}
+	if (MATLAB_DEBUG)
+		for (int i = 0; i < sector_cnt; i++)
+		{
+			mexPrintf("sectors: %d, ",sectors[i]);
+		}
 	mexPrintf("\n");
 
 	//Sector centers
 	int* sector_centers = NULL;
 	readMatlabInputArray<int>(prhs, pcnt++, 3,"sectors-centers",&sector_centers, &sector_cnt);
 	
-	for (int i = 0; i < 3*sector_cnt; i++)//no int array as input array?
-	{
-		mexPrintf("sector-centers: %d, ",sector_centers[i]);
-	}
+	if (MATLAB_DEBUG)
+		for (int i = 0; i < 3*sector_cnt; i++)//no int array as input array?
+		{
+			mexPrintf("sector-centers: %d, ",sector_centers[i]);
+		}
 	mexPrintf("\n");
 
 	//Parameters

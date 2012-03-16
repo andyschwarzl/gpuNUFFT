@@ -3,10 +3,10 @@
 
 #include "griddingFunctions.hpp"
 
-void gridding3D_cpu(float* data, 
-				float* crds, 
-				float* gdata,
-				float* kernel, 
+void gridding3D_cpu(DType* data, 
+				DType* crds, 
+				DType* gdata,
+				DType* kernel, 
 				int* sectors, 
 				int sector_count, 
 				int* sector_centers,

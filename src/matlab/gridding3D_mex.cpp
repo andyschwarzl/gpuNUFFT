@@ -43,7 +43,10 @@ template <typename TType>
 void readMatlabInputArray(const mxArray *prhs[], int input_index, int highest_varying_dim, const char* name,TType** data, int* data_entries)
 {
 	int nd = mxGetNumberOfDimensions(prhs[input_index]); /* get coordinate dimensions */
-	mexPrintf("number of dims %d\n",nd);
+	
+	if (MATLAB_DEBUG)
+		mexPrintf("number of dims %d\n",nd);
+
 	const int *dims = (int*)mxGetDimensions(prhs[input_index]);
     
 	if (nd == 2)
@@ -64,9 +67,13 @@ void readMatlabInputArray(const mxArray *prhs[], int input_index, int highest_va
 		mexErrMsgTxt ("Error occured!\n");
 	}
 
-	for (int i=0; i<nd; i++)
-		mexPrintf("%s dimensions: %d ",name, dims[i]);
-	mexPrintf("\n");
+	if (MATLAB_DEBUG)
+	{
+		mexPrintf("%s dimensions: ",name);
+		for (int i=0; i<nd; i++)
+			mexPrintf(" %d ",dims[i]);
+		mexPrintf("\n");
+	}
 	
 	*data_entries = dims[1];
 
@@ -80,6 +87,12 @@ void readMatlabInputArray(const mxArray *prhs[], int input_index, int highest_va
 	{
 		*data = ( TType*) mxGetPr(matlabData);
 	}
+	if (MATLAB_DEBUG)
+	{
+		for (int i = 0; i < min(highest_varying_dim * (*data_entries),100); i++)//re, im
+			mexPrintf("%s: %f, ",name,(*data)[i]);
+		mexPrintf("\n");
+	}
 }
 
 /*
@@ -92,7 +105,8 @@ prhs Array of pointers to the input mxArrays. Do not modify any prhs values in y
 */
 void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 {
-	mexPrintf("Starting GRIDDING 3D Function...\n");
+	if (MATLAB_DEBUG)
+		mexPrintf("Starting GRIDDING 3D Function...\n");
 
 	//TODO check input params count first!
   /*  if(nrhs != 9 ) {
@@ -105,57 +119,32 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
     //////////////////////////////////// fetching data from MATLAB
 
-	int pcnt = 0;  
+	int pcnt = 0;  //Parametercounter
     
 	//Data
 	DType* data = NULL;
 	int data_cnt;
 	readMatlabInputArray<DType>(prhs, pcnt++, 2,"data",&data, &data_cnt);
-	if (MATLAB_DEBUG)
-	{
-		for (int i = 0; i < 2*data_cnt; i++)//re, im
-			mexPrintf("data: %f, ",data[i]);
-		mexPrintf("\n");
-	}
-
+	
 	//Coords
 	DType* coords = NULL;
 	int coord_cnt;
 	readMatlabInputArray<DType>(prhs, pcnt++, 3,"coords",&coords, &coord_cnt);
-	if (MATLAB_DEBUG)
-	{
-		for (int i = 0; i < 3*coord_cnt; i++)//x,y,z
-			mexPrintf("coords: %f, ",coords[i]);
-		mexPrintf("\n");
-	}
 
 	//Sectors
 	int* sectors = NULL;
 	int sector_cnt;
 	readMatlabInputArray<int>(prhs, pcnt++, 1,"sectors",&sectors, &sector_cnt);
 
-	if (MATLAB_DEBUG)
-		for (int i = 0; i < sector_cnt; i++)
-		{
-			mexPrintf("sectors: %d, ",sectors[i]);
-		}
-	mexPrintf("\n");
-
 	//Sector centers
 	int* sector_centers = NULL;
 	readMatlabInputArray<int>(prhs, pcnt++, 3,"sectors-centers",&sector_centers, &sector_cnt);
-	
-	if (MATLAB_DEBUG)
-		for (int i = 0; i < 3*sector_cnt; i++)//no int array as input array?
-		{
-			mexPrintf("sector-centers: %d, ",sector_centers[i]);
-		}
-	mexPrintf("\n");
 
 	//Parameters
 	const mxArray *Params;
     Params = prhs[pcnt++]; //8... Parameter   
     float *params = (float*) mxGetData(Params);
+	
 	//Image
 	int im_width = (int)params[0];
 
@@ -167,7 +156,6 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	
 	//sectors of data, count and start indices
 	int sector_width = (int)params[3];
-
 
    /**************** Init Cuda *****************/
     
@@ -197,7 +185,6 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	plhs[0] = mxCreateNumericArray(4,(const mwSize*)dims_g,mxGetClassID(prhs[0]),mxREAL);
     gdata = (DType*) mxGetData(plhs[0]);
 
-	
 	gridding3D_gpu(data,data_cnt,coords,gdata,grid_size,kern,kernel_entries,sectors,sector_cnt,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1]);
 
 	free(kern);

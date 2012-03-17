@@ -95,6 +95,21 @@ void readMatlabInputArray(const mxArray *prhs[], int input_index, int highest_va
 	}
 }
 
+template <typename TName>
+inline TName getParamField(const mxArray* params, const char* fieldname)
+{
+	const mxArray* data = mxGetField(params, 0, fieldname);
+	if (mxIsInt32(data))
+	{
+		return (TName)(((TName*)mxGetData(data))[0]); 
+	}
+	else
+	{
+		return (TName)(((TName*)mxGetPr(data))[0]); 
+	}
+}
+
+
 /*
 From MATLAB doc:
 Arguments
@@ -141,21 +156,19 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	readMatlabInputArray<int>(prhs, pcnt++, 3,"sectors-centers",&sector_centers, &sector_cnt);
 
 	//Parameters
-	const mxArray *Params;
-    Params = prhs[pcnt++]; //8... Parameter   
-    float *params = (float*) mxGetData(Params);
+    mwIndex j;
+    const mxArray *matParams = prhs[pcnt++];
 	
-	//Image
-	int im_width = (int)params[0];
-
-	//oversampling ratio
-	DType osr = (DType)params[1];
-
-	//kernel width
-	int kernel_width = (int)params[2];
+	if (!mxIsStruct (matParams))
+         mexErrMsgTxt ("expects struct containing parameters!");
+    //'im_width', 'osr', 'kernel_width', 'sector_width'
+	int im_width = getParamField<int>(matParams,"im_width");
+	DType osr = getParamField<DType>(matParams,"osr"); 
+	int kernel_width = getParamField<int>(matParams,"kernel_width");
+	int sector_width = getParamField<int>(matParams,"sector_width");
 	
-	//sectors of data, count and start indices
-	int sector_width = (int)params[3];
+	if (MATLAB_DEBUG)
+		mexPrintf("passed Params, IM_WIDTH: %d, OSR: %f, KERNEL_WIDTH: %d, SECTOR_WIDTH: %d\n",im_width,osr,kernel_width,sector_width);
 
    /**************** Init Cuda *****************/
     
@@ -171,7 +184,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	long kernel_entries = calculateGrid3KernelSize(osr, kernel_width/2.0f);
 	DType* kern = (DType*) calloc(kernel_entries,sizeof(float));
 	loadGrid3Kernel(kern,kernel_entries,kernel_width,osr);
-
+	
 	//Output Grid
     DType* gdata;
 	unsigned long dims_g[4];
@@ -184,7 +197,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
 	plhs[0] = mxCreateNumericArray(4,(const mwSize*)dims_g,mxGetClassID(prhs[0]),mxREAL);
     gdata = (DType*) mxGetData(plhs[0]);
-
+	
 	gridding3D_gpu(data,data_cnt,coords,gdata,grid_size,kern,kernel_entries,sectors,sector_cnt,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1]);
 
 	free(kern);

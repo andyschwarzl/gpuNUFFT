@@ -19,21 +19,21 @@ sector_centers = [2, 7, 2, 7, 2, 7, 2, 7;
                   2, 2, 2, 2, 7, 7, 7, 7];
 
 %% init params
-im_width = 10;
-osr = 1;
-kernel_width = 3;
-sector_width = 5;
-params = [im_width, osr, kernel_width, sector_width];
+params.im_width = uint32(10);
+params.osr = single(1);
+params.kernel_width = uint32(3);
+params.sector_width = uint32(5);
+
 %%
 size(data)
 size(coords)
 
 %%
-gdata = cuda_mex_kernel(single(data(:,:)),single(coords(:,:)),uint32(sectors),uint32(sector_centers),single(params));
+gdata = cuda_mex_kernel(single(data(:,:)),single(coords(:,:)),uint32(sectors),uint32(sector_centers),params);
 
 %%
-test_gdata = gdata(:,:,:,6)
-test2 = reshape(test_gdata (1,:,:),10,10)
+test_gdata = gdata(:,:,:,6);
+test2 = reshape(test_gdata (1,:,:),10,10);
 
 %% print result
 flipud(test2')

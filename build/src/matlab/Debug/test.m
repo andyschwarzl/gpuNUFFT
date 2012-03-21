@@ -10,6 +10,8 @@ coords = [-0.3, -0.1, 0, 0.5, 0.3;
            0.2,    0, 0,   0, 0.3;
              0,    0, 0,   0, 0];
 
+[test_coords, test_sector_centers] = assign_sectors(10,5,coords);
+test_sector_centers
 %% sector data indizes
 sectors = [0,0,0,0,0,0,0,2,5];
 

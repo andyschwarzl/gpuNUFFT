@@ -79,9 +79,12 @@ void readMatlabInputArray(const mxArray *prhs[], int input_index, int highest_va
 
 	const mxArray *matlabData;
     matlabData = prhs[input_index];
-	if (mxIsInt32(matlabData))
+	bool is_int = false;
+
+	if (mxIsInt32(matlabData) || mxIsUint32(matlabData))
 	{
-		*data = ( TType*) mxGetData(matlabData);
+		is_int = true;
+		*data = ( TType*) mxGetData(matlabData);		
 	}
 	else
 	{
@@ -90,7 +93,11 @@ void readMatlabInputArray(const mxArray *prhs[], int input_index, int highest_va
 	if (MATLAB_DEBUG)
 	{
 		for (int i = 0; i < min(highest_varying_dim * (*data_entries),100); i++)//re, im
-			mexPrintf("%s: %f, ",name,(*data)[i]);
+			if (is_int)
+				mexPrintf("%s: %d, ",name,(*data)[i]);
+			else
+				mexPrintf("%s: %f, ",name,(*data)[i]);
+
 		mexPrintf("\n");
 	}
 }
@@ -166,7 +173,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	DType osr = getParamField<DType>(matParams,"osr"); 
 	int kernel_width = getParamField<int>(matParams,"kernel_width");
 	int sector_width = getParamField<int>(matParams,"sector_width");
-	
+		
 	if (MATLAB_DEBUG)
 		mexPrintf("passed Params, IM_WIDTH: %d, OSR: %f, KERNEL_WIDTH: %d, SECTOR_WIDTH: %d\n",im_width,osr,kernel_width,sector_width);
 

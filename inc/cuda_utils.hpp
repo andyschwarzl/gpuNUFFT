@@ -43,7 +43,7 @@ inline void copyFromDevice(TypeName* device_ptr, TypeName* host_ptr, int num_ele
 	HANDLE_ERROR(cudaMemcpy(host_ptr, device_ptr,num_elements*sizeof(TypeName),cudaMemcpyDeviceToHost ));
 }
 
-/*__device__ inline float atomicFloatAdd(float* address, float value)
+__device__ inline float atomicFloatAdd(float* address, float value)
 {
   float old = value;  
   float ret=atomicExch(address, 0.0f);
@@ -54,6 +54,6 @@ inline void copyFromDevice(TypeName* device_ptr, TypeName* host_ptr, int num_ele
         new_old += old;
   }
   return ret;
-};*/
+};
 
 #endif

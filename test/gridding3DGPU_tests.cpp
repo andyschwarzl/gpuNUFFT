@@ -751,9 +751,6 @@ TEST(TestGridding,GPUTest_8SectorsKernel3nDataw128)
 	free(sector_centers);
 }
 
-
-
-
 TEST(TestGridding,GPUTest_FactorTwoTest)
 {
 	//oversampling ratio
@@ -779,8 +776,8 @@ TEST(TestGridding,GPUTest_FactorTwoTest)
 	data[data_cnt++] = 0.5f;
 	data[data_cnt++] = 0.5f;
 	
-	data[data_cnt++] = 0.7;
-	data[data_cnt++] = 0.7;
+	data[data_cnt++] = 1;
+	data[data_cnt++] = 1;
 
 	data[data_cnt++] = 1;
 	data[data_cnt++] = 1;

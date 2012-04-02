@@ -105,12 +105,12 @@ __global__ void griddingKernel( DType* data,
 								
 										// multiply data by current kernel val 
 										// grid complex or scalar 
+										
 										sdata[ind]   += val * data[2*data_cnt];
 										sdata[ind+1] += val * data[2*data_cnt+1];
 										
 										//atomicFloatAdd(&(sdata[ind]), val * data[2*data_cnt]);
 										//atomicFloatAdd(&(sdata[ind+1]),val * data[2*data_cnt+1]);
-
 									} // kernel bounds check x, spherical support 
 								} // x 	 
 							} // kernel bounds check y, spherical support 

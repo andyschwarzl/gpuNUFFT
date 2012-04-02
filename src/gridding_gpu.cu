@@ -154,22 +154,20 @@ void runSimpleKernelCall()
 {
 	printf("starting gpu implementation\n");
 	int test_h[3];
-	test_h[0] = 1;
-	test_h[1] = 2;
-	test_h[2] = 3;	
+	test_h[0] = 3;
+	test_h[1] = 4;
+	test_h[2] = 6;	
 	int* test_d;
 	printf("input: %d , %d , %d\n",test_h[0],test_h[1],test_h[2]);
-	
-	//allocateDeviceMem<int>(&test_d,3);
-	//copyToDevice(test_h,test_d,3);
 	
 	allocateAndCopyToDeviceMem<int>(&test_d,test_h,3);
 
 	dim3 grid_size = 1;
-	dim3 thread_size = 3;//TODO bleibt das?
+	dim3 thread_size = 3;
+
 	kernel_call<<<grid_size,thread_size>>>(test_d);
 	
-	copyFromDevice(test_d,test_h,3);
+	copyFromDevice<int>(test_d,test_h,3);
 
 	printf("output: %d , %d , %d\n",test_h[0],test_h[1],test_h[2]);
 	
@@ -237,7 +235,7 @@ void gridding3D_gpu(DType* data,
 	runSimpleKernelCall();
 		
 	assert(sectors != NULL);
-
+	
 	//split and run sectors into blocks
 	//and each data point to one thread inside this block 
 
@@ -247,22 +245,22 @@ void gridding3D_gpu(DType* data,
 	int* sector_centers_d, *sectors_d;
 	printf("allocate and copy gdata of size %d...\n",gdata_cnt);
 	allocateAndCopyToDeviceMem<DType>(&gdata_d,gdata,gdata_cnt);//Konvention!!!
-	printf("allocate and copy data...\n");
+	printf("allocate and copy data of size %d...\n",2*data_cnt);
 	allocateAndCopyToDeviceMem<DType>(&data_d,data,2*data_cnt);
-	printf("allocate and copy coords...\n");
+	printf("allocate and copy coords of size %d...\n",3*data_cnt);
 	allocateAndCopyToDeviceMem<DType>(&crds_d,crds,3*data_cnt);
 	
-	printf("allocate and copy kernel...\n");
+	printf("allocate and copy kernel of size %d...\n",kernel_cnt);
 	allocateAndCopyToDeviceMem<DType>(&kernel_d,kernel,kernel_cnt);
-	printf("allocate and copy sectors...\n");
+	printf("allocate and copy sectors of size %d...\n",2*sector_count);
 	allocateAndCopyToDeviceMem<int>(&sectors_d,sectors,2*sector_count);
-	printf("allocate and copy sector_centers...\n");
+	printf("allocate and copy sector_centers of size %d...\n",3*sector_count);
 	allocateAndCopyToDeviceMem<int>(&sector_centers_d,sector_centers,3*sector_count);
 	
 	griddingKernel<<<sector_count,N_THREADS_PER_SECTOR>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d);
-
-	copyFromDevice(gdata_d,gdata,gdata_cnt);
-
+	
+	copyFromDevice<DType>(gdata_d,gdata,gdata_cnt);
+	
 	freeDeviceMem(data_d);
 	freeDeviceMem(crds_d);
 	freeDeviceMem(gdata_d);

@@ -81,7 +81,7 @@ TEST(TestGPULib,KernelCall1Sector)
 	sector_centers[2] = 5;
 
 	gridding3D_gpu(data,data_entries,coords,gdata,grid_size,kern,kernel_entries,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1]);
-
+	
 	printf("test %f \n",gdata[4]);
 	int index = get3DC2lin(5,5,5,im_width);
 	printf("index to test %d\n",index);
@@ -95,12 +95,12 @@ TEST(TestGPULib,KernelCall1Sector)
 	EXPECT_NEAR(0.2027,gdata[get3DC2lin(4,4,5,im_width)],epsilon*10.0f);
 	EXPECT_NEAR(0.2027,gdata[get3DC2lin(4,6,5,im_width)],epsilon*10.0f);
 	
-	/*for (int j=0; j<im_width; j++)
+	for (int j=0; j<im_width; j++)
 	{
 		for (int i=0; i<im_width; i++)
 			printf("%.4f ",gdata[get3DC2lin(i,j,5,im_width)]);
 		printf("\n");
-	}*/
+	}
 
 	free(data);
 	free(coords);
@@ -111,6 +111,7 @@ TEST(TestGPULib,KernelCall1Sector)
 
 	EXPECT_EQ(1, 1);
 }
+
 
 TEST(TestGPULib,GPUTest_1SectorKernel5)
 {
@@ -142,7 +143,7 @@ TEST(TestGPULib,GPUTest_1SectorKernel5)
 	//Output Grid
     DType* gdata;
 	unsigned long dims_g[4];
-    dims_g[0] = 2; /* complex */
+    dims_g[0] = 2; // complex /
 	dims_g[1] = (unsigned long)(im_width * osr); 
     dims_g[2] = (unsigned long)(im_width * osr);
     dims_g[3] = (unsigned long)(im_width * osr);
@@ -177,12 +178,12 @@ TEST(TestGPULib,GPUTest_1SectorKernel5)
 	EXPECT_NEAR(0.0697,gdata[get3DC2lin(5,7,5,im_width)],epsilon*10.0f);
 	EXPECT_NEAR(0.0697,gdata[get3DC2lin(5,3,5,im_width)],epsilon*10.0f);
 	
-	/*for (int j=0; j<im_width; j++)
-	{
-		for (int i=0; i<im_width; i++)
-			printf("%.4f ",gdata[get3DC2lin(i,im_width-j,5,im_width)]);
-		printf("\n");
-	}*/
+	//for (int j=0; j<im_width; j++)
+	//{
+	//	for (int i=0; i<im_width; i++)
+	//		printf("%.4f ",gdata[get3DC2lin(i,im_width-j,5,im_width)]);
+	//	printf("\n");
+	//}
 
 	free(data);
 	free(coords);
@@ -258,7 +259,7 @@ TEST(TestGPULib,GPUTest_2SectorsKernel3nData)
 	//Output Grid
     DType* gdata;
 	unsigned long dims_g[4];
-    dims_g[0] = 2; /* complex */
+    dims_g[0] = 2; // complex 
 	dims_g[1] = (unsigned long)(im_width * osr); 
     dims_g[2] = (unsigned long)(im_width * osr);
     dims_g[3] = (unsigned long)(im_width * osr);
@@ -299,12 +300,12 @@ TEST(TestGPULib,GPUTest_2SectorsKernel3nData)
 	EXPECT_NEAR(1.0f,gdata[get3DC2lin(8,8,5,im_width)],epsilon*10.0f);
 	EXPECT_NEAR(0.2027,gdata[get3DC2lin(9,9,5,im_width)],epsilon*10.0f);
 	
-	/*for (int j=0; j<im_width; j++)
-	{
-		for (int i=0; i<im_width; i++)
-			printf("%.4f ",gdata[get3DC2lin(i,im_width-1-j,5,im_width)]);
-		printf("\n");
-	}*/
+	//for (int j=0; j<im_width; j++)
+	//{
+	//	for (int i=0; i<im_width; i++)
+	//		printf("%.4f ",gdata[get3DC2lin(i,im_width-1-j,5,im_width)]);
+	//	printf("\n");
+	//}
 
 	free(data);
 	free(coords);
@@ -379,7 +380,7 @@ TEST(TestGridding,GPUTest_8SectorsKernel3nData)
 	//Output Grid
     DType* gdata;
 	unsigned long dims_g[4];
-    dims_g[0] = 2; /* complex */
+    dims_g[0] = 2; // complex
 	dims_g[1] = (unsigned long)(im_width * osr); 
     dims_g[2] = (unsigned long)(im_width * osr);
     dims_g[3] = (unsigned long)(im_width * osr);
@@ -525,7 +526,7 @@ TEST(TestGridding,GPUTest_8SectorsKernel4nData)
 	//Output Grid
     DType* gdata;
 	unsigned long dims_g[4];
-    dims_g[0] = 2; /* complex */
+    dims_g[0] = 2; // complex
 	dims_g[1] = (unsigned long)(im_width * osr); 
     dims_g[2] = (unsigned long)(im_width * osr);
     dims_g[3] = (unsigned long)(im_width * osr);
@@ -597,12 +598,12 @@ TEST(TestGridding,GPUTest_8SectorsKernel4nData)
 	EXPECT_NEAR(1.0f,gdata[get3DC2lin(8,8,5,im_width)],epsilon*10.0f);
 	EXPECT_NEAR(0.2585f,gdata[get3DC2lin(9,9,5,im_width)],epsilon*10.0f);
 	
-	/*for (int j=0; j<im_width; j++)
-	{
-		for (int i=0; i<im_width; i++)
-			printf("%.4f ",gdata[get3DC2lin(i,im_width-1-j,5,im_width)]);
-		printf("\n");
-	}*/
+	//for (int j=0; j<im_width; j++)
+	//{
+	//	for (int i=0; i<im_width; i++)
+	//		printf("%.4f ",gdata[get3DC2lin(i,im_width-1-j,5,im_width)]);
+	//	printf("\n");
+	//}
 
 	free(data);
 	free(coords);
@@ -678,7 +679,7 @@ TEST(TestGridding,GPUTest_8SectorsKernel3nDataw64)
 	//Output Grid
     DType* gdata;
 	unsigned long dims_g[4];
-    dims_g[0] = 2; /* complex */
+    dims_g[0] = 2; // complex
 	dims_g[1] = (unsigned long)(im_width * osr); 
     dims_g[2] = (unsigned long)(im_width * osr);
     dims_g[3] = (unsigned long)(im_width * osr);
@@ -825,7 +826,7 @@ TEST(TestGridding,GPUTest_FactorTwoTest)
 	//Output Grid
     DType* gdata;
 	unsigned long dims_g[4];
-    dims_g[0] = 2; /* complex */
+    dims_g[0] = 2; // complex
 	dims_g[1] = (unsigned long)(im_width * osr); 
     dims_g[2] = (unsigned long)(im_width * osr);
     dims_g[3] = (unsigned long)(im_width * osr);
@@ -897,4 +898,3 @@ TEST(TestGridding,GPUTest_FactorTwoTest)
 	free(sectors);
 	free(sector_centers);
 }
-

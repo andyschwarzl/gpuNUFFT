@@ -1,8 +1,9 @@
-#ifndef CUDA_UTILS_H
-#define CUDA_UTILS_H
+#ifndef CUDA_UTILS_HPP
+#define CUDA_UTILS_HPP
 
 #include <cuda.h>
 #include <cuda_runtime.h>
+#include <stdio.h>
 
 #define HANDLE_ERROR(err) { \
 	if (err != cudaSuccess) \
@@ -42,7 +43,7 @@ inline void copyFromDevice(TypeName* device_ptr, TypeName* host_ptr, int num_ele
 	HANDLE_ERROR(cudaMemcpy(host_ptr, device_ptr,num_elements*sizeof(TypeName),cudaMemcpyDeviceToHost ));
 }
 
-__device__ inline float atomicFloatAdd(float* address, float value)
+/*__device__ inline float atomicFloatAdd(float* address, float value)
 {
   float old = value;  
   float ret=atomicExch(address, 0.0f);
@@ -53,6 +54,6 @@ __device__ inline float atomicFloatAdd(float* address, float value)
         new_old += old;
   }
   return ret;
-};
+};*/
 
 #endif

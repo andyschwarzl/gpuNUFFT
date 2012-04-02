@@ -31,7 +31,7 @@ __global__ void griddingKernel( DType* data,
 								int* sector_centers
 								)
 {
-	__shared__ DType sdata[2*10*10*10]; //ca. 8kB -> 2 Blöcke je SM ???
+	__shared__ float sdata[2*10*10*10]; //ca. 8kB -> 2 Blöcke je SM ???
 
 	int  sec= blockIdx.x;
 	//TODO static or dynamic?
@@ -105,8 +105,12 @@ __global__ void griddingKernel( DType* data,
 								
 										// multiply data by current kernel val 
 										// grid complex or scalar 
-										sdata[ind] += val * data[2*data_cnt];
+										sdata[ind]   += val * data[2*data_cnt];
 										sdata[ind+1] += val * data[2*data_cnt+1];
+										
+										//atomicFloatAdd(&(sdata[ind]), val * data[2*data_cnt]);
+										//atomicFloatAdd(&(sdata[ind+1]),val * data[2*data_cnt+1]);
+
 									} // kernel bounds check x, spherical support 
 								} // x 	 
 							} // kernel bounds check y, spherical support 
@@ -136,7 +140,7 @@ __global__ void griddingKernel( DType* data,
 						//TODO auslagern
 						if (isOutlier(x,y,z,center.x,center.y,center.z,GI.width,GI.sector_offset))
 							continue;
-					
+
 						gdata[ind] += sdata[s_ind]; //Re
 						gdata[ind+1] += sdata[s_ind+1];//Im
 					}
@@ -205,13 +209,14 @@ void initAndCopyGriddingInfo(int sector_count,
 	gi_host->radiusSquared = radiusSquared;
 	gi_host->dist_multiplier = dist_multiplier;
 
-	printf("sector offset = %d",sector_offset);
+	printf("sector offset = %d\n",sector_offset);
 	
 	gi_host->sector_pad_width = sector_pad_width;
 	
-
+	printf("copy Gridding Info to symbol memory...\n");
 	cudaMemcpyToSymbol(GI, gi_host,sizeof(GriddingInfo));
 	free(gi_host);
+	printf("...done!\n");
 }
 
 void gridding3D_gpu(DType* data, 
@@ -240,12 +245,18 @@ void gridding3D_gpu(DType* data,
 	
 	DType* data_d, *crds_d, *gdata_d, *kernel_d;
 	int* sector_centers_d, *sectors_d;
-
-	allocateAndCopyToDeviceMem<DType>(&data_d,data,2*data_cnt);
-	allocateAndCopyToDeviceMem<DType>(&crds_d,crds,3*data_cnt);
+	printf("allocate and copy gdata of size %d...\n",gdata_cnt);
 	allocateAndCopyToDeviceMem<DType>(&gdata_d,gdata,gdata_cnt);//Konvention!!!
+	printf("allocate and copy data...\n");
+	allocateAndCopyToDeviceMem<DType>(&data_d,data,2*data_cnt);
+	printf("allocate and copy coords...\n");
+	allocateAndCopyToDeviceMem<DType>(&crds_d,crds,3*data_cnt);
+	
+	printf("allocate and copy kernel...\n");
 	allocateAndCopyToDeviceMem<DType>(&kernel_d,kernel,kernel_cnt);
+	printf("allocate and copy sectors...\n");
 	allocateAndCopyToDeviceMem<int>(&sectors_d,sectors,2*sector_count);
+	printf("allocate and copy sector_centers...\n");
 	allocateAndCopyToDeviceMem<int>(&sector_centers_d,sector_centers,3*sector_count);
 	
 	griddingKernel<<<sector_count,N_THREADS_PER_SECTOR>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d);

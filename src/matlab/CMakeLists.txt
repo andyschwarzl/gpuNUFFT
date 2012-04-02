@@ -39,7 +39,7 @@ endmacro()
 
 matlab_config()
 
-find_library(GRIDDING3D_LIB gridding3D "${CMAKE_SOURCE_DIR}/build/src/Debug")
+#find_library(GRIDDING3D_LIB gridding3D "${CMAKE_SOURCE_DIR}/build/src/Debug")
 
 set(MEX_FILE gridding3D_mex.cpp)
 set(CUDA_NVCC_FLAGS -arch sm_13;--ptxas-options=-v)
@@ -48,7 +48,8 @@ CUDA_COMPILE( cuda_mex_kernel_generated ${MEX_FILE} SHARED)
 
 ADD_LIBRARY(cuda_mex_kernel SHARED ${cuda_mex_kernel_generated} ${MEX_FILE})
 
-TARGET_LINK_LIBRARIES(cuda_mex_kernel ${MATLAB_LIB_DIR} ${MATLAB_LIB_DIR1} ${CUDA_LIBRARIES} ${GRIDDING3D_LIB})
+TARGET_LINK_LIBRARIES(cuda_mex_kernel ${MATLAB_LIB_DIR} ${MATLAB_LIB_DIR1} ${CUDA_LIBRARIES} gridding3D)
+#ADD_DEPENDENCIES(cuda_mex_kernel ${GRIDDING3D_LIB})
 SET_TARGET_PROPERTIES(cuda_mex_kernel PROPERTIES PREFIX "" LINKER_LANGUAGE CXX)
 
 if(WIN32)

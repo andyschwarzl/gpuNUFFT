@@ -3,8 +3,8 @@
 #include "cuda_utils.hpp"
 
 //Simple Test Kernel 
-#define N 64 //DIM ^3 
-#define DIM 4
+#define N 1000 //DIM ^3 
+#define DIM 10
 __global__ void kernel_call(int *a)
 {
     int tx = threadIdx.x;
@@ -16,7 +16,7 @@ __global__ void kernel_call(int *a)
 		while (index < N)
 		{
 			a[index] = index;
-			tz += 2;
+			tz += blockDim.z;
 			index = tx + DIM * (ty + tz * DIM);
 		}
 }
@@ -115,15 +115,14 @@ __global__ void griddingKernel( DType* data,
 										
 											sdata[ind]   += val * data[2*data_cnt];
 											sdata[ind+1] += val * data[2*data_cnt+1];
-											__syncthreads();
 										} // kernel bounds check x, spherical support 
 									} // x 	 
 								} // kernel bounds check y, spherical support 
 							} // y 
 						} //kernel bounds check z 
-						} // z 
-						__syncthreads();
+						} // z
 					}
+				__syncthreads();
 				data_cnt++;
 			} //grid points per sector
 	
@@ -164,7 +163,7 @@ void runSimpleKernelCall()
 	allocateAndCopyToDeviceMem<int>(&test_ad,test_a,N);
 
 	dim3 grid_size = 1;
-	dim3 thread_size(4,4,2);
+	dim3 thread_size(10,10,3);
 	printf("dimensions %d,%d,%d \n",thread_size.x,thread_size.y,thread_size.z);
 	kernel_call<<<grid_size,thread_size>>>(test_ad);
 	
@@ -236,7 +235,7 @@ void gridding3D_gpu(DType* data,
 					int kernel_count, 
 					int width)
 {
-	runSimpleKernelCall();
+	//runSimpleKernelCall();
 		
 	assert(sectors != NULL);
 	
@@ -261,7 +260,7 @@ void gridding3D_gpu(DType* data,
 	printf("allocate and copy sector_centers of size %d...\n",3*sector_count);
 	allocateAndCopyToDeviceMem<int>(&sector_centers_d,sector_centers,3*sector_count);
 	
-	dim3 block_dim(SECTOR_WIDTH,SECTOR_WIDTH,1);
+	dim3 block_dim(SECTOR_WIDTH,SECTOR_WIDTH,2);
 
 	griddingKernel<<<sector_count,block_dim>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d);
 	

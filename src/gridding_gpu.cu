@@ -32,7 +32,8 @@ __global__ void griddingKernel( DType* data,
 							    DType* gdata,
 							    DType* kernel, 
 							    int* sectors, 
-								int* sector_centers
+								  int* sector_centers,
+								  DType* temp_gdata
 								)
 {
 	__shared__ float sdata[2*SECTOR_WIDTH*SECTOR_WIDTH*SECTOR_WIDTH]; //ca. 8kB -> 2 Blöcke je SM ???
@@ -132,26 +133,53 @@ __global__ void griddingKernel( DType* data,
 		if (threadIdx.x == 0 && threadIdx.y == 0 && threadIdx.z == 0)
 		{
 			int max_im_index = GI.width;
-			int sector_ind_offset = getIndex(center.x - GI.sector_offset,center.y - GI.sector_offset,center.z - GI.sector_offset,GI.width);
-
+			//int sector_ind_offset = getIndex(center.x - GI.sector_offset,center.y - GI.sector_offset,center.z - GI.sector_offset,GI.width);
+			int sector_ind_offset = sec * GI.sector_pad_width*GI.sector_pad_width*GI.sector_pad_width;
 			for (int z = 0; z < GI.sector_pad_width; z++)
 				for (int y = 0; y < GI.sector_pad_width; y++)
 				{
 					for (int x = 0; x < GI.sector_pad_width; x++)
 					{
 						int s_ind = 2* getIndex(x,y,z,GI.sector_pad_width) ;
-						ind = 2*(sector_ind_offset + getIndex(x,y,z,GI.width));
-						//TODO auslagern
-						if (isOutlier(x,y,z,center.x,center.y,center.z,GI.width,GI.sector_offset))
-							continue;
-
-						gdata[ind] += sdata[s_ind]; //Re
-						gdata[ind+1] += sdata[s_ind+1];//Im
+						ind = 2*(sector_ind_offset + getIndex(x,y,z,GI.sector_pad_width));
+						
+						temp_gdata[ind] = sdata[s_ind];//Re
+						temp_gdata[ind+1] = sdata[s_ind+1];//Im
 					}
 				}
 		}
 	}//sec < sector_count
 	
+}
+
+__global__ void composeOutput(DType* temp_gdata, DType* gdata, int* sector_centers)
+{
+	for (int sec = 0; sec < GI.sector_count; sec++)
+	{
+		int3 center;
+		center.x = sector_centers[sec * 3];
+		center.y = sector_centers[sec * 3 + 1];
+		center.z = sector_centers[sec * 3 + 2];
+		int sector_ind_offset = getIndex(center.x - GI.sector_offset,center.y - GI.sector_offset,center.z - GI.sector_offset,GI.width);
+		
+		int sector_grid_offset = sec * GI.sector_pad_width*GI.sector_pad_width*GI.sector_pad_width;
+			
+		for (int z = 0; z < GI.sector_pad_width; z++)
+			for (int y = 0; y < GI.sector_pad_width; y++)
+			{
+				for (int x = 0; x < GI.sector_pad_width; x++)
+				{
+					int s_ind = 2* (sector_grid_offset + getIndex(x,y,z,GI.sector_pad_width));
+					int ind = 2*(sector_ind_offset + getIndex(x,y,z,GI.width));
+					//TODO outlier richtig???
+					if (isOutlier(x,y,z,center.x,center.y,center.z,GI.width,GI.sector_offset))
+						continue;
+
+					gdata[ind] += temp_gdata[s_ind];//Re
+					gdata[ind+1] += temp_gdata[s_ind+1];//Im
+				}
+			}
+	}
 }
 
 void runSimpleKernelCall()
@@ -177,7 +205,7 @@ void runSimpleKernelCall()
 	freeDeviceMem(test_ad);
 }
 
-void initAndCopyGriddingInfo(int sector_count, 
+GriddingInfo* initAndCopyGriddingInfo(int sector_count, 
 							 int sector_width,
 							 int kernel_width,
 							 int kernel_count, 
@@ -199,7 +227,7 @@ void initAndCopyGriddingInfo(int sector_count,
 	DType kernelRadius_invSqr = 1 / radiusSquared;
 	DType dist_multiplier = (kernel_count - 1) * kernelRadius_invSqr;
 	printf("radius rel. to grid width %f\n",radius);
-	int sector_pad_width = sector_width + 2*(int)(floor(kernel_width / 2.0f));
+	int sector_pad_width = 10;//sector_width + 2*(int)(floor(kernel_width / 2.0f));
 	int sector_dim = sector_pad_width  * sector_pad_width  * sector_pad_width ;
 	int sector_offset = (int)(floor(sector_pad_width / 2.0f));
 
@@ -216,8 +244,9 @@ void initAndCopyGriddingInfo(int sector_count,
 	
 	printf("copy Gridding Info to symbol memory...\n");
 	cudaMemcpyToSymbol(GI, gi_host,sizeof(GriddingInfo));
-	free(gi_host);
+	//free(gi_host);
 	printf("...done!\n");
+	return gi_host;
 }
 
 void gridding3D_gpu(DType* data, 
@@ -242,14 +271,24 @@ void gridding3D_gpu(DType* data,
 	//split and run sectors into blocks
 	//and each data point to one thread inside this block 
 
-	initAndCopyGriddingInfo(sector_count,sector_width,kernel_width,kernel_count,width);
+	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,sector_width,kernel_width,kernel_count,width);
 	
-	DType* data_d, *crds_d, *gdata_d, *kernel_d;
+	DType* data_d, *crds_d, *gdata_d, *kernel_d, *temp_gdata_d;
 	int* sector_centers_d, *sectors_d;
+
 	printf("allocate and copy gdata of size %d...\n",gdata_cnt);
 	allocateAndCopyToDeviceMem<DType>(&gdata_d,gdata,gdata_cnt);//Konvention!!!
+
 	printf("allocate and copy data of size %d...\n",2*data_cnt);
 	allocateAndCopyToDeviceMem<DType>(&data_d,data,2*data_cnt);
+
+	int temp_grid_cnt = 2 * sector_count * gi_host->sector_dim;
+	//TODO delete
+	DType* temp_gdata = (DType*) calloc(temp_grid_cnt,sizeof(DType));
+
+	printf("allocate temp grid data of size %d...\n",temp_grid_cnt);
+	allocateAndCopyToDeviceMem<DType>(&temp_gdata_d,temp_gdata,temp_grid_cnt);
+	
 	printf("allocate and copy coords of size %d...\n",3*data_cnt);
 	allocateAndCopyToDeviceMem<DType>(&crds_d,crds,3*data_cnt);
 	
@@ -262,8 +301,10 @@ void gridding3D_gpu(DType* data,
 	
 	dim3 block_dim(SECTOR_WIDTH,SECTOR_WIDTH,2);
 
-	griddingKernel<<<sector_count,block_dim>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d);
-	
+  griddingKernel<<<sector_count,block_dim>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d);
+
+	composeOutput<<<1,1>>>(temp_gdata_d,gdata_d,sector_centers_d);
+
 	copyFromDevice<DType>(gdata_d,gdata,gdata_cnt);
 	
 	freeDeviceMem(data_d);
@@ -272,4 +313,6 @@ void gridding3D_gpu(DType* data,
 	freeDeviceMem(kernel_d);
 	freeDeviceMem(sectors_d);
 	freeDeviceMem(sector_centers_d);
+	freeDeviceMem(temp_gdata_d);
+	free(gi_host);
 }

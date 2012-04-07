@@ -153,7 +153,7 @@ TEST(TestGPULib,GPUTest_1SectorKernel5)
     gdata = (DType*) calloc(grid_size,sizeof(DType));
 	
 	//sectors of data, count and start indices
-	int sector_width = 8;
+	int sector_width = 5;
 	
 	int sector_count = 1;
 	int* sectors = (int*) calloc(2*sector_count,sizeof(int));

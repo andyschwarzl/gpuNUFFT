@@ -909,10 +909,10 @@ TEST(TestGridding,GPUTest_8SectorsKernel3nDataw32)
     DType* data = (DType*) calloc(2*data_entries,sizeof(DType)); //2* re + im
 	int data_cnt = 0;
 	
-	data[data_cnt++] = 0.5;
+	data[data_cnt++] = 0.5f;
 	data[data_cnt++] = 0;
 	
-	data[data_cnt++] = 0.7;
+	data[data_cnt++] = 0.7f;
 	data[data_cnt++] = 0;
 
 	data[data_cnt++] = -0.2f;
@@ -931,22 +931,22 @@ TEST(TestGridding,GPUTest_8SectorsKernel3nDataw32)
     DType* coords = (DType*) calloc(3*data_entries,sizeof(DType));//3* x,y,z
 	int coord_cnt = 0;
 	coords[coord_cnt++] = -0.3f; 
-	coords[coord_cnt++] = 0.2;
+	coords[coord_cnt++] = 0.2f;
 	coords[coord_cnt++] = 0;
 	
-	coords[coord_cnt++] = -0.1;
+	coords[coord_cnt++] = -0.1f;
 	coords[coord_cnt++] = 0;
 	coords[coord_cnt++] = 0;
 
-	coords[coord_cnt++] = 0.0f; 
-	coords[coord_cnt++] = 0.0f;
-	coords[coord_cnt++] = 0;
-
-	coords[coord_cnt++] = 0.0f;
+	coords[coord_cnt++] = 0; 
 	coords[coord_cnt++] = 0;
 	coords[coord_cnt++] = 0;
 
-	coords[coord_cnt++] = 0.5; 
+	coords[coord_cnt++] = 0;
+	coords[coord_cnt++] = 0;
+	coords[coord_cnt++] = 0;
+
+	coords[coord_cnt++] = 0.5f; 
 	coords[coord_cnt++] = 0;
 	coords[coord_cnt++] = 0;
 
@@ -984,7 +984,7 @@ TEST(TestGridding,GPUTest_8SectorsKernel3nDataw32)
 	{
 		for (int i=0; i<im_width; i++)
 		{
-			float dp = gdata[get3DC2lin(i,im_width-1-j,16,im_width)];
+			float dp = gdata[get3DC2lin(i,im_width-1-j,15,im_width)];
 			if (dp > 0.0f)
 				printf("(%d,%d)= %.4f ",i,j,dp);
 		}

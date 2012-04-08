@@ -887,3 +887,114 @@ TEST(TestGridding,GPUTest_FactorTwoTest)
 	free(sectors);
 	free(sector_centers);
 }
+
+
+TEST(TestGridding,GPUTest_8SectorsKernel3nDataw32)
+{
+	//oversampling ratio
+	float osr = DEFAULT_OVERSAMPLING_RATIO;
+	//kernel width
+	int kernel_width = 3;
+
+	long kernel_entries = calculateGrid3KernelSize(osr, kernel_width/2.0f);
+
+	DType *kern = (DType*) calloc(kernel_entries,sizeof(DType));
+	loadGrid3Kernel(kern,kernel_entries,kernel_width,osr);
+
+	//Image
+	int im_width = 32;
+
+	//Data
+	int data_entries = 5;
+    DType* data = (DType*) calloc(2*data_entries,sizeof(DType)); //2* re + im
+	int data_cnt = 0;
+	
+	data[data_cnt++] = 0.5;
+	data[data_cnt++] = 0;
+	
+	data[data_cnt++] = 0.7;
+	data[data_cnt++] = 0;
+
+	data[data_cnt++] = -0.2f;
+	data[data_cnt++] = 0.8f;
+	
+	data[data_cnt++] = -0.2f;
+	data[data_cnt++] = 0.8f;
+
+	data[data_cnt++] = 1;
+		data[data_cnt++] = 0;
+
+
+	//Coords
+	//Scaled between -0.5 and 0.5
+	//in triplets (x,y,z)
+    DType* coords = (DType*) calloc(3*data_entries,sizeof(DType));//3* x,y,z
+	int coord_cnt = 0;
+	coords[coord_cnt++] = -0.3f; 
+	coords[coord_cnt++] = 0.2;
+	coords[coord_cnt++] = 0;
+	
+	coords[coord_cnt++] = -0.1;
+	coords[coord_cnt++] = 0;
+	coords[coord_cnt++] = 0;
+
+	coords[coord_cnt++] = 0.0f; 
+	coords[coord_cnt++] = 0.0f;
+	coords[coord_cnt++] = 0;
+
+	coords[coord_cnt++] = 0.0f;
+	coords[coord_cnt++] = 0;
+	coords[coord_cnt++] = 0;
+
+	coords[coord_cnt++] = 0.5; 
+	coords[coord_cnt++] = 0;
+	coords[coord_cnt++] = 0;
+
+	//Output Grid
+  DType* gdata;
+	unsigned long dims_g[4];
+  dims_g[0] = 2; // complex
+	dims_g[1] = (unsigned long)(im_width * osr); 
+  dims_g[2] = (unsigned long)(im_width * osr);
+  dims_g[3] = (unsigned long)(im_width * osr);
+
+	long grid_size = dims_g[0]*dims_g[1]*dims_g[2]*dims_g[3];
+  gdata = (DType*) calloc(grid_size,sizeof(DType));
+	
+	//sectors of data, count and start indices
+	int sector_width = 8;
+	
+	const int sector_count = 64;
+	//int* sectors = (int*) calloc(sector_count+1,sizeof(int));
+	//extracted from matlab
+	int sectors[sector_count+1] = {0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2.2,2,2,2,2,2,2,2,2,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,5,5,5,5,5,5,5};
+
+	//int* sector_centers = (int*) calloc(3*sector_count,sizeof(int));
+	int sector_cnt = 0;
+	
+	int sector_centers[3*sector_count] = {4,4,4,4,4,12,4,4,20,4,4,28,4,12,4,4,12,12,4,12,20,4,12,28,4,20,4,4,20,12,4,20,20,4,20,28,4,28,4,4,28,12,4,28,20,28,28,12,4,4,12,4,12,12,4,20,12,4,28,12,4,12
+,12,12,12,12,20,12,12,28,12,20,4,12,20,12,20,20,12,20,28,12,28,4,12,28,12,12,28,20,12,28
+,20,4,4,20,4,12,20,4,20,20,4,28,20,12,20,12,12,20,12,20,20,12,28,20,20,4,20,20,12,20,
+20,20,20,28,20,28,4,20,28,12,20,28,20,20,28,28,4,4,28,4,12,28,4,20,28,4,28,28,12,28,
+12,12,28,12,20,28,12,28,28,20,4,28,20,12,20,20,28,20,28,28,28,4,28,28,12,28,28,20,28,28};
+
+	gridding3D_gpu(data,data_entries,coords,gdata,grid_size,kern,kernel_entries,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1]);
+
+	for (int j=0; j<im_width; j++)
+	{
+		for (int i=0; i<im_width; i++)
+		{
+			float dp = gdata[get3DC2lin(i,im_width-1-j,16,im_width)];
+			if (dp > 0.0f)
+				printf("(%d,%d)= %.4f ",i,j,dp);
+		}
+		printf("\n");
+	}
+
+	free(data);
+	free(coords);
+	free(gdata);
+	free(kern);
+	//free(sectors);
+	//free(sector_centers);
+}

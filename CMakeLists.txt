@@ -10,7 +10,6 @@ FIND_PACKAGE(CUDA)
 
 #Searching MATLAB
 FIND_PACKAGE(Matlab)
-
 #Options
 set (MATLAB_DEBUG FALSE)
 OPTION(WITH_MATLAB_DEBUG "Enable DEBUG messages for MATLAB calls" OFF)

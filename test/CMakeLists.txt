@@ -22,7 +22,7 @@ set(GPU_SOURCES gridding3DGPU_tests.cpp)
 #add source dir
 add_executable(runUnitTests ${CPU_SOURCES} ../inc/gridding_cpu.hpp)
 target_link_libraries(runUnitTests ${GTEST_LIB} ${GTESTMAIN_LIB})
-
+set_target_properties(runUnitTests PROPERTIES LINK_FLAGS -lpthread)
 #target_link_libraries(runUnitTests ${GTEST_LIB} gtest gtest_main)
 
 cuda_add_executable(runGPUUnitTests ${GPU_SOURCES} ../inc/gridding_gpu.hpp)

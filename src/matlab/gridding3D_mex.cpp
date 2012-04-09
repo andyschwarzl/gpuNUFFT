@@ -6,7 +6,6 @@
 
 #ifdef __unix__ 
 #include <unistd.h>
-#include <cmath.h>
 #elif defined _WIN32 
 # include <windows.h>
 #endif
@@ -39,6 +38,8 @@
 }
 
 #define MAX_BLOCK_SZ 512
+
+#define MIN(X,Y) ((X) < (Y) ? (X) : (Y))
 
 template <typename TType>
 void readMatlabInputArray(const mxArray *prhs[], int input_index, int highest_varying_dim, const char* name,TType** data, int* data_entries)
@@ -93,7 +94,7 @@ void readMatlabInputArray(const mxArray *prhs[], int input_index, int highest_va
 	}
 	if (MATLAB_DEBUG)
 	{
-		for (int i = 0; i < min(highest_varying_dim * (*data_entries),100); i++)//re, im
+		for (int i = 0; i < MIN((highest_varying_dim * (*data_entries)),100); i++)//re, im
 			if (is_int)
 				mexPrintf("%s: %d, ",name,(*data)[i]);
 			else

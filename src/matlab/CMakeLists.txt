@@ -36,9 +36,9 @@ macro( matlab_config )
 
     INCLUDE_DIRECTORIES( ${MATLAB_INCLUDE_DIR} )
 endmacro()
-
+if(Win32)
 matlab_config()
-
+endif()
 #find_library(GRIDDING3D_LIB gridding3D "${CMAKE_SOURCE_DIR}/build/src/Debug")
 
 set(MEX_FILE gridding3D_mex.cpp)

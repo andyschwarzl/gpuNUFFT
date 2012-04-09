@@ -24,7 +24,6 @@ if(GPU_DOUBLE_PREC)
   SET(CUDA_NVCC_FLAGS "-arch;sm_20")
 else(GPU_DOUBLE_PREC)
   SET(CUDA_NVCC_FLAGS "-arch;sm_11")
-  #SET(CUDA_NVCC_FLAGS "-Xcompiler;-fPIC;-arch;sm_20")
 endif(GPU_DOUBLE_PREC)
 
 MESSAGE("setting NVCC FLAGS to: ${CUDA_NVCC_FLAGS}")

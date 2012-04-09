@@ -76,9 +76,11 @@ INCLUDE_DIRECTORIES(${MATLAB_INCLUDE_DIR})
 set(MEX_FILE gridding3D_mex.cpp)
 set(CUDA_NVCC_FLAGS -arch sm_13;--ptxas-options=-v)
 
-CUDA_COMPILE( cuda_mex_kernel_generated ${MEX_FILE} SHARED)
+#CUDA_COMPILE( cuda_mex_kernel_generated ${MEX_FILE} SHARED)
+CUDA_COMPILE( cuda_mex_kernel_generated ${MEX_FILE})
 
-ADD_LIBRARY(cuda_mex_kernel SHARED ${cuda_mex_kernel_generated} ${MEX_FILE})
+ADD_LIBRARY(cuda_mex_kernel ${cuda_mex_kernel_generated} ${MEX_FILE})
+#ADD_LIBRARY(cuda_mex_kernel SHARED ${cuda_mex_kernel_generated} ${MEX_FILE})
 
 TARGET_LINK_LIBRARIES(cuda_mex_kernel ${MATLAB_MEX_LIBRARY} ${MATLAB_MX_LIBRARY} ${CUDA_LIBRARIES} gridding3D)
 SET_TARGET_PROPERTIES(cuda_mex_kernel PROPERTIES PREFIX "" LINKER_LANGUAGE CXX)

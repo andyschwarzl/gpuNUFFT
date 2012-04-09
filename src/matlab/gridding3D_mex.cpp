@@ -5,7 +5,8 @@
 #include <vector>
 
 #ifdef __unix__ 
-# include <unistd.h>
+#include <unistd.h>
+#include <cmath.h>
 #elif defined _WIN32 
 # include <windows.h>
 #endif

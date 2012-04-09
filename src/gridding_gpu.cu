@@ -116,6 +116,7 @@ __global__ void griddingKernel( DType* data,
 										
 											sdata[ind]   += val * data[2*data_cnt];
 											sdata[ind+1] += val * data[2*data_cnt+1];
+											__syncthreads();
 										} // kernel bounds check x, spherical support 
 									} // x 	 
 								} // kernel bounds check y, spherical support 

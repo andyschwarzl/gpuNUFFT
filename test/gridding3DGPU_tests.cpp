@@ -922,7 +922,7 @@ TEST(TestGridding,GPUTest_8SectorsKernel3nDataw32)
 	data[data_cnt++] = 0.8f;
 
 	data[data_cnt++] = 1;
-		data[data_cnt++] = 0;
+  data[data_cnt++] = 0;
 
 
 	//Coords
@@ -967,30 +967,41 @@ TEST(TestGridding,GPUTest_8SectorsKernel3nDataw32)
 	const int sector_count = 64;
 	//int* sectors = (int*) calloc(sector_count+1,sizeof(int));
 	//extracted from matlab
-	int sectors[sector_count+1] = {0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2.2,2,2,2,2,2,2,2,2,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,5,5,5,5,5,5,5};
+	int sectors[sector_count+1] = {0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,5,5,5,5,5,5,5};
 
 	//int* sector_centers = (int*) calloc(3*sector_count,sizeof(int));
 	int sector_cnt = 0;
 	
-	int sector_centers[3*sector_count] = {4,4,4,4,4,12,4,4,20,4,4,28,4,12,4,4,12,12,4,12,20,4,12,28,4,20,4,4,20,12,4,20,20,4,20,28,4,28,4,4,28,12,4,28,20,28,28,12,4,4,12,4,12,12,4,20,12,4,28,12,4,12
-																			,12,12,12,12,20,12,12,28,12,20,4,12,20,12,20,20,12,20,28,12,28,4,12,28,12,12,28,20,12,28
-																			,20,4,4,20,4,12,20,4,20,20,4,28,20,12,20,12,12,20,12,20,20,12,28,20,20,4,20,20,12,20,
-																			20,20,20,28,20,28,4,20,28,12,20,28,20,20,28,28,4,4,28,4,12,28,4,20,28,4,28,28,12,28,
-																			12,12,28,12,20,28,12,28,28,20,4,28,20,12,20,20,28,20,28,28,28,4,28,28,12,28,28,20,28,28};
+	int sector_centers[3*sector_count] = {4,4,4,4,4,12,4,4,20,4,4,28,4,12,4,4,12,12,4,12,20,4,12,28,4,20,4,4,20,12,4,20,20,4,20,28,4,28,4,4,28,12,4,28,20,4,28,28,12,4,4,12,4,12,12,4,20,12,4,28,12,12,4,12,12,12,12,12,20,12,12,28,12,20,4,12,20,12,12,20,20,12,20,28,12,28,4,12,28,12,12,28,20,12,28,28,20,4,4,20,4,12,20,4,20,20,4,28,20,12,4,20,12,12,20,12,20,20,12,28,20,20,4,20,20,12,20,20,20,20,20,28,20,28,4,20,28,12,20,28,20,20,28,28,28,4,4,28,4,12,28,4,20,28,4,28,28,12,4,28,12,12,28,12,20,28,12,28,28,20,4,28,20,12,28,20,20,28,20,28,28,28,4,28,28,12,28,28,20,28,28,28};
 
 	gridding3D_gpu(data,data_entries,coords,gdata,grid_size,kern,kernel_entries,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1]);
 
-	for (int j=0; j<im_width; j++)
+	/*for (int j=0; j<im_width; j++)
 	{
 		for (int i=0; i<im_width; i++)
 		{
-			float dp = gdata[get3DC2lin(i,im_width-1-j,15,im_width)];
-			if (dp > 0.0f)
-				printf("(%d,%d)= %.4f ",i,j,dp);
+			float dpr = gdata[get3DC2lin(i,im_width-1-j,16,im_width)];
+			float dpi = gdata[get3DC2lin(i,im_width-1-j,16,im_width)+1];
+
+			if (abs(dpr) > 0.0f)
+				printf("(%d,%d)= %.4f + %.4f i ",i,im_width-1-j,dpr,dpi);
 		}
 		printf("\n");
-	}
+	}*/
 
+	EXPECT_NEAR(gdata[get3DC2lin(12,16,16,im_width)],0.4289f,epsilon);
+	EXPECT_NEAR(gdata[get3DC2lin(13,16,16,im_width)],0.6803f,epsilon);
+	EXPECT_NEAR(gdata[get3DC2lin(14,16,16,im_width)],0.2065f,epsilon);
+	EXPECT_NEAR(gdata[get3DC2lin(15,16,16,im_width)],-0.1801f,epsilon);//Re
+	EXPECT_NEAR(gdata[get3DC2lin(15,16,16,im_width)+1],0.7206f,epsilon);//Im
+	EXPECT_NEAR(gdata[get3DC2lin(16,16,16,im_width)],-0.4f,epsilon);
+	EXPECT_NEAR(gdata[get3DC2lin(16,16,16,im_width)+1],1.6f,epsilon);
+  EXPECT_NEAR(gdata[get3DC2lin(17,16,16,im_width)],-0.1801f,epsilon);//Re
+	EXPECT_NEAR(gdata[get3DC2lin(17,16,16,im_width)+1],0.7206f,epsilon);//Im
+
+	EXPECT_NEAR(gdata[get3DC2lin(12,15,16,im_width)],0.1932f,epsilon);
+	EXPECT_NEAR(gdata[get3DC2lin(14,17,16,im_width)],0.0930f,epsilon);
+	
 	free(data);
 	free(coords);
 	free(gdata);

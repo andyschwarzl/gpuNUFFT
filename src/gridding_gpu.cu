@@ -42,7 +42,7 @@ __global__ void griddingKernel( DType* data,
 	//TODO static or dynamic?
 	//manually cast to correct type/pos
 	//DType* sdata = (DType*)sdata_arr;
-	for (int i=0; i<2*GI.sector_dim;i++)
+	for (int i=0; i<2*SECTOR_WIDTH*SECTOR_WIDTH*SECTOR_WIDTH;i++)
 		sdata[i]=0.0f;
 
 	if (sec < GI.sector_count)

@@ -44,7 +44,7 @@ void gridding3D_cpu(DType* data, DType* crds, DType* gdata, DType* kernel, int* 
 
 		for (int data_cnt = sectors[sec]; data_cnt < sectors[sec+1];data_cnt++)
 		{
-			printf("handling %d data point = %f\n",data_cnt+1,data[data_cnt]);
+			printf("handling %d data point = %f\n",data_cnt+1,data[2*data_cnt]);
 
 			x = crds[3*data_cnt];
 			y = crds[3*data_cnt +1];
@@ -112,14 +112,14 @@ void gridding3D_cpu(DType* data, DType* crds, DType* gdata, DType* kernel, int* 
 	int max_im_index = width;
 	for (int sec = 0; sec < sector_count; sec++)
 	{
-		printf("DEBUG: showing entries of sector %d in z = 5 plane...\n",sec);
+		//printf("DEBUG: showing entries of sector %d in z = 5 plane...\n",sec);
 		center_x = sector_centers[sec * 3];
 		center_y = sector_centers[sec * 3 + 1];
 		center_z = sector_centers[sec * 3 + 2];
 		
 		int sector_ind_offset = getIndex(center_x - sector_offset,center_y - sector_offset,center_z - sector_offset,width);
 
-		printf("sector index offset in resulting grid: %d\n", sector_ind_offset);
+		//printf("sector index offset in resulting grid: %d\n", sector_ind_offset);
 		for (int z = 0; z < sector_pad_width; z++)
 			for (int y = 0; y < sector_pad_width; y++)
 			{

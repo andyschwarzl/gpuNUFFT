@@ -39,6 +39,8 @@ endmacro()
 if(Win32)
 matlab_config()
 endif()
+MESSAGE('MATLAB libraries: ${MATLAB_LIBRARIES}')
+MESSAGE('MATLAB inc dir: ${MATLAB_INCLUDE_DIR}')
 INCLUDE_DIRECTORIES(${MATLAB_INCLUDE_DIR})
 
 #find_library(GRIDDING3D_LIB gridding3D "${CMAKE_SOURCE_DIR}/build/src/Debug")

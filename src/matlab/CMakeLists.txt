@@ -34,11 +34,13 @@ macro( matlab_config )
     SET( MATLAB_MX_LIBRARY ${MATLAB_ROOT_DIR}/extern/lib/${LIB_DIR}/microsoft CACHE STRING "" FORCE )
     SET( MATLAB_ENG_LIBRARY ${MATLAB_ROOT_DIR}/extern/lib/${LIB_DIR}/microsoft CACHE STRING "" FORCE )
 
-    INCLUDE_DIRECTORIES( ${MATLAB_INCLUDE_DIR} )
+    #INCLUDE_DIRECTORIES( ${MATLAB_INCLUDE_DIR} )
 endmacro()
 if(Win32)
 matlab_config()
 endif()
+INCLUDE_DIRECTORIES(${MATLAB_INCLUDE_DIR})
+
 #find_library(GRIDDING3D_LIB gridding3D "${CMAKE_SOURCE_DIR}/build/src/Debug")
 
 set(MEX_FILE gridding3D_mex.cpp)

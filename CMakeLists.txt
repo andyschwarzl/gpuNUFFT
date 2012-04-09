@@ -4,7 +4,8 @@ PROJECT(gridding3D)
 #The CMake Minimum version that is required. The FindCUDA script
 #is distributed since version 2.8
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
-
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 #Searching CUDA
 FIND_PACKAGE(CUDA)
 

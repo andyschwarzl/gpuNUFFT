@@ -5,7 +5,7 @@ clear all; close all; clc;
 %% Load data
 load kspaceRadial.mat;
 
-kspace = kspace(1,[1:30]);
+kspace = kspace(:,:);
 %% Radial Sampling Pattern
 [numSamplesOnSpoke, numSpokes] = size(kspace);
 rho=linspace(-0.5,0.5,numSamplesOnSpoke)';

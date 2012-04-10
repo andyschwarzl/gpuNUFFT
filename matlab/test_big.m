@@ -40,7 +40,7 @@ wg = 3;
 %w = ([1,1,1,1,1]);
 
 tic
-[imgRegrid_kb,kernel] = gridkb(kspace2,k,w,32,osf,wg,'image');
+[imgRegrid_kb,kernel] = gridkb(kspace2,k,w,64,osf,wg,'image');
 toc
 figure, imshow(abs(flipud(imgRegrid_kb)),[]);
           

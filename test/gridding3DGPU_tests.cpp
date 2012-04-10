@@ -1027,24 +1027,24 @@ TEST(TestGridding,MatlabTest_8SK3w32)
 	int im_width = 32;
 
 	//Data
-	int data_entries = 5;
+	int data_entries = 1;
     DType* data = (DType*) calloc(2*data_entries,sizeof(DType)); //2* re + im
 	int data_cnt = 0;
 	
-	data[data_cnt++] = 0.0057f;
-	data[data_cnt++] = -0.0052f;
+	data[data_cnt++] = 0.0046f;
+	data[data_cnt++] = -0.0021f;
 	
-	data[data_cnt++] = -0.0128f;
-	data[data_cnt++] = 0.0024f;
+	/*data[data_cnt++] = 0.0046f;
+	data[data_cnt++] = -0.0021f;
 
-	data[data_cnt++] = 0.0051f;
-	data[data_cnt++] = -0.0042f;
+	data[data_cnt++] = -0.0011f;
+	data[data_cnt++] = -0.0017f;
 	
-	data[data_cnt++] = -0.0029f;
-	data[data_cnt++] = 0.0010f;
+	data[data_cnt++] = 0.0001f;
+	data[data_cnt++] = 0.0065f;
 
-	data[data_cnt++] = -0.0189f;
-  data[data_cnt++] = 0;
+	data[data_cnt++] = 0.0035f;
+  data[data_cnt++] = -0.0075f;*/
 
 
 	//Coords
@@ -1052,26 +1052,26 @@ TEST(TestGridding,MatlabTest_8SK3w32)
 	//in triplets (x,y,z)
     DType* coords = (DType*) calloc(3*data_entries,sizeof(DType));//3* x,y,z
 	int coord_cnt = 0;
-	coords[coord_cnt++] = -0.4045f; 
-	coords[coord_cnt++] = -0.2939f;
+	/*coords[coord_cnt++] = -0.0374f; 
+	coords[coord_cnt++] = -0.4986f;
 	coords[coord_cnt++] = 0;
-	
-	coords[coord_cnt++] = -0.1545f;
-	coords[coord_cnt++] = -0.4755f;
+	*/
+	coords[coord_cnt++] = 0.2500f;
+	coords[coord_cnt++] = -0.4330f;
 	coords[coord_cnt++] = 0;
-
-	coords[coord_cnt++] = 0.1545f; 
-	coords[coord_cnt++] = -0.4755f;
-	coords[coord_cnt++] = 0;
-
-	coords[coord_cnt++] = 0.4045;
-	coords[coord_cnt++] = -0.2939;
+	/*
+	coords[coord_cnt++] = 0.1827f; 
+	coords[coord_cnt++] = -0.4654f;
 	coords[coord_cnt++] = 0;
 
-	coords[coord_cnt++] = 0.5f; 
-	coords[coord_cnt++] = 0;
+	coords[coord_cnt++] = 0.1113f;
+	coords[coord_cnt++] = -0.4875f;
 	coords[coord_cnt++] = 0;
 
+	coords[coord_cnt++] = 0.0374f; 
+	coords[coord_cnt++] = -0.4986f;
+	coords[coord_cnt++] = 0;
+	*/
 	//Output Grid
   DType* gdata;
 	unsigned long dims_g[4];
@@ -1089,7 +1089,7 @@ TEST(TestGridding,MatlabTest_8SK3w32)
 	const int sector_count = 64;
 	//int* sectors = (int*) calloc(sector_count+1,sizeof(int));
 	//extracted from matlab
-	int sectors[sector_count+1] = {0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,4,4,4,4,4,4,4,4,5,5,5,5,5,5,5};
+	int sectors[sector_count+1] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
 
 	//int* sector_centers = (int*) calloc(3*sector_count,sizeof(int));
 	int sector_cnt = 0;

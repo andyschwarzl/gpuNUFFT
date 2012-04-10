@@ -21,20 +21,22 @@ test_data_z = data_coords(3,:);
 
 r1 = [sector_ranges(1:end-1)] ;
 r2 = [sector_ranges(2:end)] ;
-r2(end)=r2(end)+0.01; %workaround damit wert bei 0.5 nicht weg fällt
+r2(end)=r2(end); %workaround damit wert bei 0.5 nicht weg fällt
 
-q1 = bsxfun(@ge,test_data_x(:),r1(:).');
-q2 = bsxfun(@lt,test_data_x(:),r2(:).');
+delta = 1 / im_width / 2;
+
+q1 = bsxfun(@ge,test_data_x(:)+delta,r1(:).');
+q2 = bsxfun(@lt,test_data_x(:)+delta,r2(:).');
 
 Rx = q1 & q2;
 
-q1 = bsxfun(@ge,test_data_y(:),r1(:).');
-q2 = bsxfun(@lt,test_data_y(:),r2(:).');
+q1 = bsxfun(@ge,test_data_y(:)+delta,r1(:).');
+q2 = bsxfun(@lt,test_data_y(:)+delta,r2(:).');
 
 Ry = q1 & q2;
 
-q1 = bsxfun(@ge,test_data_z(:),r1(:).');
-q2 = bsxfun(@lt,test_data_z(:),r2(:).');
+q1 = bsxfun(@ge,test_data_z(:)+delta,r1(:).');
+q2 = bsxfun(@lt,test_data_z(:)+delta,r2(:).');
 
 Rz = q1 & q2;
 %% dec2bin

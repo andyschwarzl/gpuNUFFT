@@ -2,10 +2,13 @@
 
 clear all; close all; clc;
 
+%% add bin to path
+addpath ../bin ../bin/Debug
+
 %% Load data
 load kspaceRadial.mat;
 
-kspace = kspace(1,[1:20]);
+kspace = kspace(30,120:140);
 %% Radial Sampling Pattern
 [numSamplesOnSpoke, numSpokes] = size(kspace);
 rho=linspace(-0.5,0.5,numSamplesOnSpoke)';

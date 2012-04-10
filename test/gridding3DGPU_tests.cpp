@@ -153,7 +153,7 @@ TEST(TestGPULib,GPUTest_1SectorKernel5)
     gdata = (DType*) calloc(grid_size,sizeof(DType));
 	
 	//sectors of data, count and start indices
-	int sector_width = 8;
+	int sector_width = 5;
 	
 	int sector_count = 1;
 	int* sectors = (int*) calloc(2*sector_count,sizeof(int));
@@ -886,4 +886,126 @@ TEST(TestGridding,GPUTest_FactorTwoTest)
 	free(kern);
 	free(sectors);
 	free(sector_centers);
+}
+
+
+TEST(TestGridding,GPUTest_8SectorsKernel3nDataw32)
+{
+	//oversampling ratio
+	float osr = DEFAULT_OVERSAMPLING_RATIO;
+	//kernel width
+	int kernel_width = 3;
+
+	long kernel_entries = calculateGrid3KernelSize(osr, kernel_width/2.0f);
+
+	DType *kern = (DType*) calloc(kernel_entries,sizeof(DType));
+	loadGrid3Kernel(kern,kernel_entries,kernel_width,osr);
+
+	//Image
+	int im_width = 32;
+
+	//Data
+	int data_entries = 5;
+    DType* data = (DType*) calloc(2*data_entries,sizeof(DType)); //2* re + im
+	int data_cnt = 0;
+	
+	data[data_cnt++] = 0.5f;
+	data[data_cnt++] = 0;
+	
+	data[data_cnt++] = 0.7f;
+	data[data_cnt++] = 0;
+
+	data[data_cnt++] = -0.2f;
+	data[data_cnt++] = 0.8f;
+	
+	data[data_cnt++] = -0.2f;
+	data[data_cnt++] = 0.8f;
+
+	data[data_cnt++] = 1;
+  data[data_cnt++] = 0;
+
+
+	//Coords
+	//Scaled between -0.5 and 0.5
+	//in triplets (x,y,z)
+    DType* coords = (DType*) calloc(3*data_entries,sizeof(DType));//3* x,y,z
+	int coord_cnt = 0;
+	coords[coord_cnt++] = -0.3f; 
+	coords[coord_cnt++] = 0.2f;
+	coords[coord_cnt++] = 0;
+	
+	coords[coord_cnt++] = -0.1f;
+	coords[coord_cnt++] = 0;
+	coords[coord_cnt++] = 0;
+
+	coords[coord_cnt++] = 0; 
+	coords[coord_cnt++] = 0;
+	coords[coord_cnt++] = 0;
+
+	coords[coord_cnt++] = 0;
+	coords[coord_cnt++] = 0;
+	coords[coord_cnt++] = 0;
+
+	coords[coord_cnt++] = 0.5f; 
+	coords[coord_cnt++] = 0;
+	coords[coord_cnt++] = 0;
+
+	//Output Grid
+  DType* gdata;
+	unsigned long dims_g[4];
+  dims_g[0] = 2; // complex
+	dims_g[1] = (unsigned long)(im_width * osr); 
+  dims_g[2] = (unsigned long)(im_width * osr);
+  dims_g[3] = (unsigned long)(im_width * osr);
+
+	long grid_size = dims_g[0]*dims_g[1]*dims_g[2]*dims_g[3];
+  gdata = (DType*) calloc(grid_size,sizeof(DType));
+	
+	//sectors of data, count and start indices
+	int sector_width = 8;
+	
+	const int sector_count = 64;
+	//int* sectors = (int*) calloc(sector_count+1,sizeof(int));
+	//extracted from matlab
+	int sectors[sector_count+1] = {0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,5,5,5,5,5,5,5};
+
+	//int* sector_centers = (int*) calloc(3*sector_count,sizeof(int));
+	int sector_cnt = 0;
+	
+	int sector_centers[3*sector_count] = {4,4,4,4,4,12,4,4,20,4,4,28,4,12,4,4,12,12,4,12,20,4,12,28,4,20,4,4,20,12,4,20,20,4,20,28,4,28,4,4,28,12,4,28,20,4,28,28,12,4,4,12,4,12,12,4,20,12,4,28,12,12,4,12,12,12,12,12,20,12,12,28,12,20,4,12,20,12,12,20,20,12,20,28,12,28,4,12,28,12,12,28,20,12,28,28,20,4,4,20,4,12,20,4,20,20,4,28,20,12,4,20,12,12,20,12,20,20,12,28,20,20,4,20,20,12,20,20,20,20,20,28,20,28,4,20,28,12,20,28,20,20,28,28,28,4,4,28,4,12,28,4,20,28,4,28,28,12,4,28,12,12,28,12,20,28,12,28,28,20,4,28,20,12,28,20,20,28,20,28,28,28,4,28,28,12,28,28,20,28,28,28};
+
+	gridding3D_gpu(data,data_entries,coords,gdata,grid_size,kern,kernel_entries,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1]);
+
+	/*for (int j=0; j<im_width; j++)
+	{
+		for (int i=0; i<im_width; i++)
+		{
+			float dpr = gdata[get3DC2lin(i,im_width-1-j,16,im_width)];
+			float dpi = gdata[get3DC2lin(i,im_width-1-j,16,im_width)+1];
+
+			if (abs(dpr) > 0.0f)
+				printf("(%d,%d)= %.4f + %.4f i ",i,im_width-1-j,dpr,dpi);
+		}
+		printf("\n");
+	}*/
+
+	EXPECT_NEAR(gdata[get3DC2lin(12,16,16,im_width)],0.4289f,epsilon);
+	EXPECT_NEAR(gdata[get3DC2lin(13,16,16,im_width)],0.6803f,epsilon);
+	EXPECT_NEAR(gdata[get3DC2lin(14,16,16,im_width)],0.2065f,epsilon);
+	EXPECT_NEAR(gdata[get3DC2lin(15,16,16,im_width)],-0.1801f,epsilon);//Re
+	EXPECT_NEAR(gdata[get3DC2lin(15,16,16,im_width)+1],0.7206f,epsilon);//Im
+	EXPECT_NEAR(gdata[get3DC2lin(16,16,16,im_width)],-0.4f,epsilon);
+	EXPECT_NEAR(gdata[get3DC2lin(16,16,16,im_width)+1],1.6f,epsilon);
+  EXPECT_NEAR(gdata[get3DC2lin(17,16,16,im_width)],-0.1801f,epsilon);//Re
+	EXPECT_NEAR(gdata[get3DC2lin(17,16,16,im_width)+1],0.7206f,epsilon);//Im
+
+	EXPECT_NEAR(gdata[get3DC2lin(12,15,16,im_width)],0.1932f,epsilon);
+	EXPECT_NEAR(gdata[get3DC2lin(14,17,16,im_width)],0.0930f,epsilon);
+	
+	free(data);
+	free(coords);
+	free(gdata);
+	free(kern);
+	//free(sectors);
+	//free(sector_centers);
 }

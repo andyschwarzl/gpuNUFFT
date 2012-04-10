@@ -38,7 +38,7 @@ __global__ void griddingKernel( DType* data,
 {
 	__shared__ float sdata[2*SECTOR_WIDTH*SECTOR_WIDTH*SECTOR_WIDTH]; //ca. 8kB -> 2 Blöcke je SM ???
 
-	int  sec= blockIdx.x;
+	int sec= blockIdx.x;
 	//TODO static or dynamic?
 	//manually cast to correct type/pos
 	//DType* sdata = (DType*)sdata_arr;
@@ -56,8 +56,10 @@ __global__ void griddingKernel( DType* data,
 		center.y = sector_centers[sec * 3 + 1];
 		center.z = sector_centers[sec * 3 + 2];
 
-			//Grid Points ueber Threads abwickeln
-			int data_cnt = sectors[sec];
+			//Grid Points over threads
+			int data_cnt;
+			data_cnt = sectors[sec];
+			
 			while (data_cnt < sectors[sec+1])
 			{
 				__shared__ DType3 data_point; //datapoint shared in every thread
@@ -80,6 +82,7 @@ __global__ void griddingKernel( DType* data,
 				// grid this point onto the neighboring cartesian points
 				for (k=threadIdx.z;k<=kmax; k += blockDim.z)
 				{
+					__syncthreads();
 					if (k<=kmax && k>=kmin)
 					{
 						kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.width)) - 0.5f;//(k - center_z) *width_inv;
@@ -121,8 +124,8 @@ __global__ void griddingKernel( DType* data,
 								} // kernel bounds check y, spherical support 
 							} // y 
 						} //kernel bounds check z 
-						} // z
-					}
+					} // z
+				}//for loop over z entries
 				__syncthreads();
 				data_cnt++;
 			} //grid points per sector

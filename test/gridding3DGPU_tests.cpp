@@ -461,7 +461,7 @@ TEST(TestGridding,GPUTest_8SectorsKernel3nData)
 }
 
 
-TEST(TestGridding,GPUTest_8SectorsKernel4nData)
+TEST(DISABLE_TestGridding,GPUTest_8SectorsKernel4nData)
 {
 	//oversampling ratio
 	float osr = DEFAULT_OVERSAMPLING_RATIO;

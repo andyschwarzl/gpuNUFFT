@@ -113,21 +113,6 @@ __global__ void griddingKernel( DType* data,
 								
 											// multiply data by current kernel val 
 											// grid complex or scalar 
-										
-<<<<<<< HEAD
-										sdata[ind]   += val * data[2*data_cnt];
-										sdata[ind+1] += val * data[2*data_cnt+1];
-										__syncthreads();
-									} // kernel bounds check x, spherical support 
-								} // x 	 
-							} // kernel bounds check y, spherical support 
-						} // y 
-					} //kernel bounds check z 
-				} // z 
-				data_cnt += N_THREADS_PER_SECTOR;
-				}
-			//} //data points per sector
-=======
 											sdata[ind]   += val * data[2*data_cnt];
 											sdata[ind+1] += val * data[2*data_cnt+1];
 											__syncthreads();
@@ -141,7 +126,6 @@ __global__ void griddingKernel( DType* data,
 				__syncthreads();
 				data_cnt++;
 			} //grid points per sector
->>>>>>> 343a45f60c08897c310b6a8cd4337b83f4bc81d6
 	
 		__syncthreads();
 

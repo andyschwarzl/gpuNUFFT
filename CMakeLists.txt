@@ -15,7 +15,7 @@ FIND_PACKAGE(Matlab)
 set (MATLAB_DEBUG false)
 OPTION(WITH_MATLAB_DEBUG "Enable DEBUG messages for MATLAB calls" OFF)
 if (WITH_MATLAB_DEBUG)
- set (MATLAB_DEBUG TRUE)
+ set (MATLAB_DEBUG true)
 endif()
 MESSAGE(STATUS "Setting MATLAB DEBUG Option to ${MATLAB_DEBUG}")
 

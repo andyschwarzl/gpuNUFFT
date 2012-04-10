@@ -2,6 +2,9 @@
 
 clear all; close all; clc;
 
+%% add bin to path
+addpath ../bin ../bin/Debug
+
 %% Load data
 load kspaceRadial.mat;
 

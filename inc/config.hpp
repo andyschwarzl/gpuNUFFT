@@ -1,7 +1,7 @@
 #ifndef CONFIG_H
 #define CONFIG_H
  
-#define MATLAB_DEBUG false
+#define MATLAB_DEBUG true
 
 /* #undef GPU_DOUBLE_PREC */
 

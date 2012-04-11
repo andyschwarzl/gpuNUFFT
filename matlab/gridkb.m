@@ -117,7 +117,10 @@ params.kernel_width = uint32(wg);
 params.sector_width = uint32(8);
 
 %%
+tic
 m = cuda_mex_kernel(single(data(data_ind)),single(coords(coord_ind)),int32(sectors_test),int32(test_sector_centers),params);
+toc
+
 size(m)
 m = squeeze(m(1,:,:,:) + 1j*(m(2,:,:,:)));
 

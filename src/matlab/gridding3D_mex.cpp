@@ -49,7 +49,7 @@ void readMatlabInputArray(const mxArray *prhs[], int input_index, int highest_va
 	if (MATLAB_DEBUG)
 		mexPrintf("number of dims %d\n",nd);
 
-	const int *dims = (int*)mxGetDimensions(prhs[input_index]);
+	const mwSize *dims = mxGetDimensions(prhs[input_index]);
     
 	if (nd == 2)
 	{

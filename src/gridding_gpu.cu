@@ -306,7 +306,14 @@ void gridding3D_gpu(DType* data,
 
   griddingKernel<<<sector_count,block_dim>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d);
 
+	//compose total output from local blocks 
 	composeOutput<<<1,1>>>(temp_gdata_d,gdata_d,sector_centers_d);
+
+	//TODO Inverse fft
+
+
+	//TODO deapodization
+
 
 	copyFromDevice<DType>(gdata_d,gdata,gdata_cnt);
 	

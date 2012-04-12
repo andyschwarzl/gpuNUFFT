@@ -1,17 +1,14 @@
 #setup testframework
 MESSAGE("------setting up testframework-------")
 
-set(GTEST_DIR "${PROJECT_SOURCE_DIR}/../gtest-1.6.0")
+set(GTEST_DIR ${PROJECT_SOURCE_DIR}/../gtest-1.6.0)
 MESSAGE("GTEST_DIR " ${GTEST_DIR})
 
-include_directories("${GTEST_DIR}/include")
-#link_directories("${GTEST_DIR}/mybuild")
-#cuda_include_directories("${GTEST_DIR}/include")
+include_directories("../../gtest-1.6.0/include")
 find_library(GTEST_LIB NAMES gtest libgtest HINTS "${GTEST_DIR}/mybuild" "${GTEST_DIR}/mybuild/Debug")
 find_library(GTESTMAIN_LIB NAMES gtest_main libgtest_main HINTS "${GTEST_DIR}/mybuild" "${GTEST_DIR}/mybuild/Debug")
 MESSAGE("GTEST_LIB = ${GTEST_LIB}")
 MESSAGE("GTESTMAIN_LIB = ${GTESTMAIN_LIB}")
-#find_library(GRIDDING3D_LIB gridding3D "${CMAKE_SOURCE_DIR}/build/src/Debug")
 
 #cpu test sources
 set(CPU_SOURCES gridding3D_tests.cpp ../src/griddingFunctions.cpp ../src/gridding3D_cpu.cpp)

@@ -1033,45 +1033,17 @@ TEST(TestGridding,MatlabTest_8SK3w32)
 	
 	data[data_cnt++] = 0.0046f;
 	data[data_cnt++] = -0.0021f;
-	
-	/*data[data_cnt++] = 0.0046f;
-	data[data_cnt++] = -0.0021f;
-
-	data[data_cnt++] = -0.0011f;
-	data[data_cnt++] = -0.0017f;
-	
-	data[data_cnt++] = 0.0001f;
-	data[data_cnt++] = 0.0065f;
-
-	data[data_cnt++] = 0.0035f;
-  data[data_cnt++] = -0.0075f;*/
-
 
 	//Coords
 	//Scaled between -0.5 and 0.5
 	//in triplets (x,y,z)
     DType* coords = (DType*) calloc(3*data_entries,sizeof(DType));//3* x,y,z
 	int coord_cnt = 0;
-	/*coords[coord_cnt++] = -0.0374f; 
-	coords[coord_cnt++] = -0.4986f;
-	coords[coord_cnt++] = 0;
-	*/
+
 	coords[coord_cnt++] = 0.2500f;
 	coords[coord_cnt++] = -0.4330f;
 	coords[coord_cnt++] = 0;
-	/*
-	coords[coord_cnt++] = 0.1827f; 
-	coords[coord_cnt++] = -0.4654f;
-	coords[coord_cnt++] = 0;
-
-	coords[coord_cnt++] = 0.1113f;
-	coords[coord_cnt++] = -0.4875f;
-	coords[coord_cnt++] = 0;
-
-	coords[coord_cnt++] = 0.0374f; 
-	coords[coord_cnt++] = -0.4986f;
-	coords[coord_cnt++] = 0;
-	*/
+	
 	//Output Grid
   DType* gdata;
 	unsigned long dims_g[4];
@@ -1089,7 +1061,7 @@ TEST(TestGridding,MatlabTest_8SK3w32)
 	const int sector_count = 64;
 	//int* sectors = (int*) calloc(sector_count+1,sizeof(int));
 	//extracted from matlab
-	int sectors[sector_count+1] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
+	int sectors[sector_count+1] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
 
 	//int* sector_centers = (int*) calloc(3*sector_count,sizeof(int));
 	int sector_cnt = 0;
@@ -1098,7 +1070,7 @@ TEST(TestGridding,MatlabTest_8SK3w32)
 
 	gridding3D_gpu(data,data_entries,coords,gdata,grid_size,kern,kernel_entries,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1]);
 
-	for (int j=0; j<im_width; j++)
+	/*for (int j=0; j<im_width; j++)
 	{
 		for (int i=0; i<im_width; i++)
 		{
@@ -1109,21 +1081,20 @@ TEST(TestGridding,MatlabTest_8SK3w32)
 				printf("(%d,%d)= %.4f + %.4f i ",i,im_width-1-j,dpr,dpi);
 		}
 		printf("\n");
-	}
+	}*/
 
-	/*EXPECT_NEAR(gdata[get3DC2lin(12,16,16,im_width)],0.4289f,epsilon);
-	EXPECT_NEAR(gdata[get3DC2lin(13,16,16,im_width)],0.6803f,epsilon);
-	EXPECT_NEAR(gdata[get3DC2lin(14,16,16,im_width)],0.2065f,epsilon);
-	EXPECT_NEAR(gdata[get3DC2lin(15,16,16,im_width)],-0.1801f,epsilon);//Re
-	EXPECT_NEAR(gdata[get3DC2lin(15,16,16,im_width)+1],0.7206f,epsilon);//Im
-	EXPECT_NEAR(gdata[get3DC2lin(16,16,16,im_width)],-0.4f,epsilon);
-	EXPECT_NEAR(gdata[get3DC2lin(16,16,16,im_width)+1],1.6f,epsilon);
-  EXPECT_NEAR(gdata[get3DC2lin(17,16,16,im_width)],-0.1801f,epsilon);//Re
-	EXPECT_NEAR(gdata[get3DC2lin(17,16,16,im_width)+1],0.7206f,epsilon);//Im
-
-	EXPECT_NEAR(gdata[get3DC2lin(12,15,16,im_width)],0.1932f,epsilon);
-	EXPECT_NEAR(gdata[get3DC2lin(14,17,16,im_width)],0.0930f,epsilon);
-	*/
+	EXPECT_NEAR(gdata[get3DC2lin(23,3,16,im_width)],0.0012f,epsilon);
+	EXPECT_NEAR(gdata[get3DC2lin(23,2,16,im_width)],0.0020f,epsilon);
+	EXPECT_NEAR(gdata[get3DC2lin(23,1,16,im_width)],0.0007f,epsilon);
+	EXPECT_NEAR(gdata[get3DC2lin(24,3,16,im_width)],0.0026f,epsilon);//Re
+	EXPECT_NEAR(gdata[get3DC2lin(24,3,16,im_width)+1],-0.0012f,epsilon);//Im
+	EXPECT_NEAR(gdata[get3DC2lin(24,2,16,im_width)],0.0045f,epsilon);
+	EXPECT_NEAR(gdata[get3DC2lin(24,1,16,im_width)],0.0016f,epsilon);
+	EXPECT_NEAR(gdata[get3DC2lin(25,3,16,im_width)],0.0012f,epsilon);
+  EXPECT_NEAR(gdata[get3DC2lin(25,2,16,im_width)],0.0020f,epsilon);//Re
+	EXPECT_NEAR(gdata[get3DC2lin(25,2,16,im_width)+1],-0.0009f,epsilon);//Im
+	EXPECT_NEAR(gdata[get3DC2lin(25,1,16,im_width)],0.0007f,epsilon);
+	
 	free(data);
 	free(coords);
 	free(gdata);

@@ -118,7 +118,6 @@ __global__ void griddingKernel( DType* data,
 											// grid complex or scalar 
 											sdata[ind]   += val * data[2*data_cnt];
 											sdata[ind+1] += val * data[2*data_cnt+1];
-											__syncthreads();
 										} // kernel bounds check x, spherical support 
 									} // x 	 
 								} // kernel bounds check y, spherical support 
@@ -130,9 +129,23 @@ __global__ void griddingKernel( DType* data,
 				data_cnt++;
 			} //grid points per sector
 	
-		__syncthreads();
+		int sector_ind_offset = sec * GI.sector_pad_width*GI.sector_pad_width*GI.sector_pad_width;
+		for (int z=threadIdx.z;z<GI.sector_pad_width; z += blockDim.z)
+		{
+			__syncthreads();
+			int y=threadIdx.y;
+			int x=threadIdx.x;
+			
+			int s_ind = 2* getIndex(x,y,z,GI.sector_pad_width) ;
+			ind = 2*(sector_ind_offset + getIndex(x,y,z,GI.sector_pad_width));
+						
+			temp_gdata[ind] = sdata[s_ind];//Re
+			temp_gdata[ind+1] = sdata[s_ind+1];//Im
+		}
 
 		//TODO copy data from sectors to original grid
+		
+		/*__syncthreads();
 		if (threadIdx.x == 0 && threadIdx.y == 0 && threadIdx.z == 0)
 		{
 			int max_im_index = GI.width;
@@ -150,7 +163,7 @@ __global__ void griddingKernel( DType* data,
 						temp_gdata[ind+1] = sdata[s_ind+1];//Im
 					}
 				}
-		}
+		}*/
 	}//sec < sector_count
 	
 }

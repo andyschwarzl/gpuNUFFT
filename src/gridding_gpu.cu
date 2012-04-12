@@ -142,30 +142,7 @@ __global__ void griddingKernel( DType* data,
 			temp_gdata[ind] = sdata[s_ind];//Re
 			temp_gdata[ind+1] = sdata[s_ind+1];//Im
 		}
-
-		//TODO copy data from sectors to original grid
-		
-		/*__syncthreads();
-		if (threadIdx.x == 0 && threadIdx.y == 0 && threadIdx.z == 0)
-		{
-			int max_im_index = GI.width;
-			//int sector_ind_offset = getIndex(center.x - GI.sector_offset,center.y - GI.sector_offset,center.z - GI.sector_offset,GI.width);
-			int sector_ind_offset = sec * GI.sector_pad_width*GI.sector_pad_width*GI.sector_pad_width;
-			for (int z = 0; z < GI.sector_pad_width; z++)
-				for (int y = 0; y < GI.sector_pad_width; y++)
-				{
-					for (int x = 0; x < GI.sector_pad_width; x++)
-					{
-						int s_ind = 2* getIndex(x,y,z,GI.sector_pad_width) ;
-						ind = 2*(sector_ind_offset + getIndex(x,y,z,GI.sector_pad_width));
-						
-						temp_gdata[ind] = sdata[s_ind];//Re
-						temp_gdata[ind+1] = sdata[s_ind+1];//Im
-					}
-				}
-		}*/
-	}//sec < sector_count
-	
+	}//sec < sector_count	
 }
 
 __global__ void composeOutput(DType* temp_gdata, DType* gdata, int* sector_centers)

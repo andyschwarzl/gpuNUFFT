@@ -36,18 +36,33 @@ __global__ void griddingKernel( DType* data,
 								  DType* temp_gdata
 								)
 {
-	__shared__ float sdata[2*SECTOR_WIDTH*SECTOR_WIDTH*SECTOR_WIDTH]; //ca. 8kB -> 2 Blöcke je SM ???
+	//TODO static or dynamic?
+	__shared__ DType sdata[2*SECTOR_WIDTH*SECTOR_WIDTH*SECTOR_WIDTH]; //ca. 8kB -> 2 Blöcke je SM ???
 
 	int sec= blockIdx.x;
-	//TODO static or dynamic?
-	//manually cast to correct type/pos
-	//DType* sdata = (DType*)sdata_arr;
-	for (int i=0; i<2*SECTOR_WIDTH*SECTOR_WIDTH*SECTOR_WIDTH;i++)
-		sdata[i]=0.0f;
-
+	//init shared memory
+	for (int z=threadIdx.z;z<GI.sector_pad_width; z += blockDim.z)
+	{
+			int y=threadIdx.y;
+			int x=threadIdx.x;
+			int s_ind = 2* getIndex(x,y,z,GI.sector_pad_width) ;
+			sdata[s_ind] = 0.0f;//Re
+			sdata[s_ind+1]=0.0f;//Im
+	}
+	__syncthreads();
+	//start convolution
 	if (sec < GI.sector_count)
 	{
-		int ind, max_x, max_y, max_z, imin, imax, jmin, jmax,kmin,kmax, k, i, j;
+		int ind, k, i, j;
+		__shared__ int max_x;
+		__shared__ int max_y;
+		__shared__ int max_z; 
+		__shared__ int imin;
+		__shared__ int imax;
+		__shared__ int jmin;
+		__shared__ int jmax;
+		__shared__ int kmin;
+		__shared__ int kmax;
 
 		DType dx_sqr, dy_sqr, dz_sqr, val, ix, jy, kz;
 
@@ -82,7 +97,7 @@ __global__ void griddingKernel( DType* data,
 				// grid this point onto the neighboring cartesian points
 				for (k=threadIdx.z;k<=kmax; k += blockDim.z)
 				{
-					__syncthreads();
+					//__syncthreads();
 					if (k<=kmax && k>=kmin)
 					{
 						kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.width)) - 0.5f;//(k - center_z) *width_inv;
@@ -129,15 +144,15 @@ __global__ void griddingKernel( DType* data,
 				data_cnt++;
 			} //grid points per sector
 	
+	  //write shared data to temporary output grid
 		int sector_ind_offset = sec * GI.sector_pad_width*GI.sector_pad_width*GI.sector_pad_width;
 		for (int z=threadIdx.z;z<GI.sector_pad_width; z += blockDim.z)
 		{
-			__syncthreads();
 			int y=threadIdx.y;
 			int x=threadIdx.x;
 			
-			int s_ind = 2* getIndex(x,y,z,GI.sector_pad_width) ;
-			ind = 2*(sector_ind_offset + getIndex(x,y,z,GI.sector_pad_width));
+			int s_ind = 2* getIndex(x,y,z,GI.sector_pad_width) ;//index in shared grid
+			ind = 2*sector_ind_offset + s_ind;//index in temp output grid
 						
 			temp_gdata[ind] = sdata[s_ind];//Re
 			temp_gdata[ind+1] = sdata[s_ind+1];//Im
@@ -149,29 +164,27 @@ __global__ void composeOutput(DType* temp_gdata, DType* gdata, int* sector_cente
 {
 	for (int sec = 0; sec < GI.sector_count; sec++)
 	{
-		int3 center;
+		__syncthreads();
+		__shared__ int3 center;
 		center.x = sector_centers[sec * 3];
 		center.y = sector_centers[sec * 3 + 1];
 		center.z = sector_centers[sec * 3 + 2];
-		int sector_ind_offset = getIndex(center.x - GI.sector_offset,center.y - GI.sector_offset,center.z - GI.sector_offset,GI.width);
-		
-		int sector_grid_offset = sec * GI.sector_pad_width*GI.sector_pad_width*GI.sector_pad_width;
-			
-		for (int z = 0; z < GI.sector_pad_width; z++)
-			for (int y = 0; y < GI.sector_pad_width; y++)
-			{
-				for (int x = 0; x < GI.sector_pad_width; x++)
-				{
-					int s_ind = 2* (sector_grid_offset + getIndex(x,y,z,GI.sector_pad_width));
-					int ind = 2*(sector_ind_offset + getIndex(x,y,z,GI.width));
-					//TODO outlier richtig???
-					if (isOutlier(x,y,z,center.x,center.y,center.z,GI.width,GI.sector_offset))
+		__shared__ int sector_ind_offset;
+		sector_ind_offset = getIndex(center.x - GI.sector_offset,center.y - GI.sector_offset,center.z - GI.sector_offset,GI.width);
+		__shared__ int sector_grid_offset;
+		sector_grid_offset = sec * GI.sector_pad_width*GI.sector_pad_width*GI.sector_pad_width;
+		//write data from temp grid to overall output grid
+		for (int z=threadIdx.z;z<GI.sector_pad_width; z += blockDim.z)
+		{
+			int y=threadIdx.y;
+			int x=threadIdx.x;
+			int s_ind = 2* (sector_grid_offset + getIndex(x,y,z,GI.sector_pad_width));
+			int ind = 2*(sector_ind_offset + getIndex(x,y,z,GI.width));
+			if (isOutlier(x,y,z,center.x,center.y,center.z,GI.width,GI.sector_offset))
 						continue;
-
-					gdata[ind] += temp_gdata[s_ind];//Re
-					gdata[ind+1] += temp_gdata[s_ind+1];//Im
-				}
-			}
+			gdata[ind] += temp_gdata[s_ind];//Re
+			gdata[ind+1] += temp_gdata[s_ind+1];//Im
+		}
 	}
 }
 
@@ -297,7 +310,7 @@ void gridding3D_gpu(DType* data,
   griddingKernel<<<sector_count,block_dim>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d);
 
 	//compose total output from local blocks 
-	composeOutput<<<1,1>>>(temp_gdata_d,gdata_d,sector_centers_d);
+	composeOutput<<<1,block_dim>>>(temp_gdata_d,gdata_d,sector_centers_d);
 
 	//TODO Inverse fft
 

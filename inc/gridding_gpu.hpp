@@ -10,7 +10,7 @@
 void gridding3D_gpu(DType* data, 
 					int data_cnt,
 					DType* crds, 
-					DType* gdata,
+					CufftType* gdata,
 					int gdata_cnt,
 					DType* kernel,
 					int kernel_cnt,

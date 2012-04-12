@@ -29,7 +29,7 @@ __constant__ GriddingInfo GI;
 
 __global__ void griddingKernel( DType* data, 
 							    DType* crds, 
-							    DType* gdata,
+							    CufftType* gdata,
 							    DType* kernel, 
 							    int* sectors, 
 								  int* sector_centers,
@@ -160,7 +160,7 @@ __global__ void griddingKernel( DType* data,
 	}//sec < sector_count	
 }
 
-__global__ void composeOutput(DType* temp_gdata, DType* gdata, int* sector_centers)
+__global__ void composeOutput(DType* temp_gdata, CufftType* gdata, int* sector_centers)
 {
 	for (int sec = 0; sec < GI.sector_count; sec++)
 	{
@@ -179,11 +179,11 @@ __global__ void composeOutput(DType* temp_gdata, DType* gdata, int* sector_cente
 			int y=threadIdx.y;
 			int x=threadIdx.x;
 			int s_ind = 2* (sector_grid_offset + getIndex(x,y,z,GI.sector_pad_width));
-			int ind = 2*(sector_ind_offset + getIndex(x,y,z,GI.width));
+			int ind = (sector_ind_offset + getIndex(x,y,z,GI.width));
 			if (isOutlier(x,y,z,center.x,center.y,center.z,GI.width,GI.sector_offset))
 						continue;
-			gdata[ind] += temp_gdata[s_ind];//Re
-			gdata[ind+1] += temp_gdata[s_ind+1];//Im
+			gdata[ind].x += temp_gdata[s_ind];//Re
+			gdata[ind].y += temp_gdata[s_ind+1];//Im
 		}
 	}
 }
@@ -258,7 +258,7 @@ GriddingInfo* initAndCopyGriddingInfo(int sector_count,
 void gridding3D_gpu(DType* data, 
 					int data_cnt,
 					DType* crds, 
-					DType* gdata,
+					CufftType* gdata,
 					int gdata_cnt,
 					DType* kernel,
 					int kernel_cnt,
@@ -279,11 +279,12 @@ void gridding3D_gpu(DType* data,
 
 	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,sector_width,kernel_width,kernel_count,width);
 	
-	DType* data_d, *crds_d, *gdata_d, *kernel_d, *temp_gdata_d;
+	DType* data_d, *crds_d, *kernel_d, *temp_gdata_d;
+	CufftType *gdata_d;
 	int* sector_centers_d, *sectors_d;
 
 	printf("allocate and copy gdata of size %d...\n",gdata_cnt);
-	allocateAndCopyToDeviceMem<DType>(&gdata_d,gdata,gdata_cnt);//Konvention!!!
+	allocateAndCopyToDeviceMem<CufftType>(&gdata_d,gdata,gdata_cnt);//Konvention!!!
 
 	printf("allocate and copy data of size %d...\n",2*data_cnt);
 	allocateAndCopyToDeviceMem<DType>(&data_d,data,2*data_cnt);
@@ -313,12 +314,20 @@ void gridding3D_gpu(DType* data,
 	composeOutput<<<1,block_dim>>>(temp_gdata_d,gdata_d,sector_centers_d);
 
 	//TODO Inverse fft
-
+	/*cufftHandle fft_plan;
+	cufftPlan3d(&fft_plan, GI.width,GI.width,GI.width, CUFFT_C2C) ;
+	int err;
+	 //Inverse FFT
+	if (err=cufftExecC2C(fft_plan, gdata_d, gdata_d, CUFFT_INVERSE) != CUFFT_SUCCESS)
+  {
+      printf("cufft has failed with err %i \n",err);
+      return;
+  }*/
 
 	//TODO deapodization
 
 
-	copyFromDevice<DType>(gdata_d,gdata,gdata_cnt);
+	copyFromDevice<CufftType>(gdata_d,gdata,gdata_cnt);
 	
 	freeDeviceMem(data_d);
 	freeDeviceMem(crds_d);

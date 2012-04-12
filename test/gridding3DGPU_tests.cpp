@@ -6,7 +6,7 @@
 
 #define epsilon 0.0001f
 
-#define get3DC2lin(_x,_y,_z,_width) 2*((_x) + (_width) * ( (_y) + (_z) * (_width)))
+#define get3DC2lin(_x,_y,_z,_width) ((_x) + (_width) * ( (_y) + (_z) * (_width)))
 
 TEST(TestKernel, LoadKernel) {
 	printf("start creating kernel...\n");
@@ -56,16 +56,16 @@ TEST(TestGPULib,KernelCall1Sector)
 	float osr = DEFAULT_OVERSAMPLING_RATIO;
 
 	//Output Grid
-    DType* gdata;
+  CufftType* gdata;
 	unsigned long dims_g[4];
-    dims_g[0] = 2; /* complex */
+    dims_g[0] = 1; /* complex */
 	dims_g[1] = (unsigned long)(im_width * osr); 
     dims_g[2] = (unsigned long)(im_width * osr);
     dims_g[3] = (unsigned long)(im_width * osr);
 
 	long grid_size = dims_g[0]*dims_g[1]*dims_g[2]*dims_g[3];
 
-    gdata = (DType*) calloc(grid_size,sizeof(DType));
+	gdata = (CufftType*) calloc(grid_size,sizeof(CufftType));
 	
 	//sectors of data, count and start indices
 	int sector_width = 10;
@@ -82,23 +82,23 @@ TEST(TestGPULib,KernelCall1Sector)
 
 	gridding3D_gpu(data,data_entries,coords,gdata,grid_size,kern,kernel_entries,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1]);
 	
-	printf("test %f \n",gdata[4]);
+	printf("test %f \n",gdata[4].x);
 	int index = get3DC2lin(5,5,5,im_width);
 	printf("index to test %d\n",index);
-	EXPECT_EQ(index,2*555);
-	EXPECT_NEAR(1.0f,gdata[index],epsilon);
-	EXPECT_NEAR(0.4502,gdata[get3DC2lin(5,4,5,im_width)],epsilon*10.0f);
-	EXPECT_NEAR(0.4502,gdata[get3DC2lin(4,5,5,im_width)],epsilon*10.0f);
-	EXPECT_NEAR(0.4502,gdata[get3DC2lin(5,6,5,im_width)],epsilon*10.0f);
+	EXPECT_EQ(index,555);
+	EXPECT_NEAR(1.0f,gdata[index].x,epsilon);
+	EXPECT_NEAR(0.4502,gdata[get3DC2lin(5,4,5,im_width)].x,epsilon*10.0f);
+	EXPECT_NEAR(0.4502,gdata[get3DC2lin(4,5,5,im_width)].x,epsilon*10.0f);
+	EXPECT_NEAR(0.4502,gdata[get3DC2lin(5,6,5,im_width)].x,epsilon*10.0f);
 
-	EXPECT_NEAR(0.2027,gdata[get3DC2lin(6,6,5,im_width)],epsilon*10.0f);
-	EXPECT_NEAR(0.2027,gdata[get3DC2lin(4,4,5,im_width)],epsilon*10.0f);
-	EXPECT_NEAR(0.2027,gdata[get3DC2lin(4,6,5,im_width)],epsilon*10.0f);
+	EXPECT_NEAR(0.2027,gdata[get3DC2lin(6,6,5,im_width)].x,epsilon*10.0f);
+	EXPECT_NEAR(0.2027,gdata[get3DC2lin(4,4,5,im_width)].x,epsilon*10.0f);
+	EXPECT_NEAR(0.2027,gdata[get3DC2lin(4,6,5,im_width)].x,epsilon*10.0f);
 	
 	for (int j=0; j<im_width; j++)
 	{
 		for (int i=0; i<im_width; i++)
-			printf("%.4f ",gdata[get3DC2lin(i,j,5,im_width)]);
+			printf("%.4f ",gdata[get3DC2lin(i,j,5,im_width)].x);
 		printf("\n");
 	}
 
@@ -141,16 +141,16 @@ TEST(TestGPULib,GPUTest_1SectorKernel5)
 	coords[2] = 0;
 
 	//Output Grid
-    DType* gdata;
+    CufftType* gdata;
 	unsigned long dims_g[4];
-    dims_g[0] = 2; // complex /
+    dims_g[0] = 1; // complex /
 	dims_g[1] = (unsigned long)(im_width * osr); 
     dims_g[2] = (unsigned long)(im_width * osr);
     dims_g[3] = (unsigned long)(im_width * osr);
 
 	long grid_size = dims_g[0]*dims_g[1]*dims_g[2]*dims_g[3];
 
-    gdata = (DType*) calloc(grid_size,sizeof(DType));
+    gdata = (CufftType*) calloc(grid_size,sizeof(CufftType));
 	
 	//sectors of data, count and start indices
 	int sector_width = 5;
@@ -170,13 +170,13 @@ TEST(TestGPULib,GPUTest_1SectorKernel5)
 	int index = get3DC2lin(5,5,5,im_width);
 	printf("index to test %d\n",index);
 	//EXPECT_EQ(index,2*555);
-	EXPECT_NEAR(1.0f,gdata[index],epsilon);
-	EXPECT_NEAR(0.0049,gdata[get3DC2lin(3,3,5,im_width)],epsilon*10.0f);
-	EXPECT_NEAR(0.3218,gdata[get3DC2lin(4,4,5,im_width)],epsilon*10.0f);
-	EXPECT_NEAR(0.5673,gdata[get3DC2lin(5,4,5,im_width)],epsilon*10.0f);
+	EXPECT_NEAR(1.0f,gdata[index].x,epsilon);
+	EXPECT_NEAR(0.0049,gdata[get3DC2lin(3,3,5,im_width)].x,epsilon*10.0f);
+	EXPECT_NEAR(0.3218,gdata[get3DC2lin(4,4,5,im_width)].x,epsilon*10.0f);
+	EXPECT_NEAR(0.5673,gdata[get3DC2lin(5,4,5,im_width)].x,epsilon*10.0f);
 
-	EXPECT_NEAR(0.0697,gdata[get3DC2lin(5,7,5,im_width)],epsilon*10.0f);
-	EXPECT_NEAR(0.0697,gdata[get3DC2lin(5,3,5,im_width)],epsilon*10.0f);
+	EXPECT_NEAR(0.0697,gdata[get3DC2lin(5,7,5,im_width)].x,epsilon*10.0f);
+	EXPECT_NEAR(0.0697,gdata[get3DC2lin(5,3,5,im_width)].x,epsilon*10.0f);
 	
 	//for (int j=0; j<im_width; j++)
 	//{
@@ -257,16 +257,16 @@ TEST(TestGPULib,GPUTest_2SectorsKernel3nData)
 	coords[coord_cnt++] = 0;
 
 	//Output Grid
-    DType* gdata;
+    CufftType* gdata;
 	unsigned long dims_g[4];
-    dims_g[0] = 2; // complex 
+    dims_g[0] = 1; // complex 
 	dims_g[1] = (unsigned long)(im_width * osr); 
     dims_g[2] = (unsigned long)(im_width * osr);
     dims_g[3] = (unsigned long)(im_width * osr);
 
 	long grid_size = dims_g[0]*dims_g[1]*dims_g[2]*dims_g[3];
 
-    gdata = (DType*) calloc(grid_size,sizeof(DType));
+    gdata = (CufftType*) calloc(grid_size,sizeof(CufftType));
 	
 	//sectors of data, count and start indices
 	int sector_width = 5;
@@ -291,14 +291,14 @@ TEST(TestGPULib,GPUTest_2SectorsKernel3nData)
 	int index = get3DC2lin(5,5,5,im_width);
 	printf("index to test %d\n",index);
 	//EXPECT_EQ(index,2*555);
-	EXPECT_NEAR(1.3152f,gdata[index],epsilon);
-	EXPECT_NEAR(0.2432,gdata[get3DC2lin(3,6,5,im_width)],epsilon*10.0f);
+	EXPECT_NEAR(1.3152f,gdata[index].x,epsilon);
+	EXPECT_NEAR(0.2432,gdata[get3DC2lin(3,6,5,im_width)].x,epsilon*10.0f);
 	
-	EXPECT_NEAR(0.2251,gdata[get3DC2lin(1,7,5,im_width)],epsilon*10.0f);
-	EXPECT_NEAR(0.4502,gdata[get3DC2lin(6,5,5,im_width)],epsilon*10.0f);
+	EXPECT_NEAR(0.2251,gdata[get3DC2lin(1,7,5,im_width)].x,epsilon*10.0f);
+	EXPECT_NEAR(0.4502,gdata[get3DC2lin(6,5,5,im_width)].x,epsilon*10.0f);
 
-	EXPECT_NEAR(1.0f,gdata[get3DC2lin(8,8,5,im_width)],epsilon*10.0f);
-	EXPECT_NEAR(0.2027,gdata[get3DC2lin(9,9,5,im_width)],epsilon*10.0f);
+	EXPECT_NEAR(1.0f,gdata[get3DC2lin(8,8,5,im_width)].x,epsilon*10.0f);
+	EXPECT_NEAR(0.2027,gdata[get3DC2lin(9,9,5,im_width)].x,epsilon*10.0f);
 	
 	//for (int j=0; j<im_width; j++)
 	//{
@@ -378,16 +378,16 @@ TEST(TestGridding,GPUTest_8SectorsKernel3nData)
 	coords[coord_cnt++] = 0;
 
 	//Output Grid
-    DType* gdata;
+    CufftType* gdata;
 	unsigned long dims_g[4];
-    dims_g[0] = 2; // complex
+    dims_g[0] = 1; // complex
 	dims_g[1] = (unsigned long)(im_width * osr); 
     dims_g[2] = (unsigned long)(im_width * osr);
     dims_g[3] = (unsigned long)(im_width * osr);
 
 	long grid_size = dims_g[0]*dims_g[1]*dims_g[2]*dims_g[3];
 
-    gdata = (DType*) calloc(grid_size,sizeof(DType));
+    gdata = (CufftType*) calloc(grid_size,sizeof(CufftType));
 	
 	//sectors of data, count and start indices
 	int sector_width = 5;
@@ -443,14 +443,14 @@ TEST(TestGridding,GPUTest_8SectorsKernel3nData)
 	int index = get3DC2lin(5,5,5,im_width);
 	printf("index to test %d\n",index);
 	//EXPECT_EQ(index,2*555);
-	EXPECT_NEAR(1.3152f,gdata[index],epsilon);
-	EXPECT_NEAR(0.2432,gdata[get3DC2lin(3,6,5,im_width)],epsilon*10.0f);
+	EXPECT_NEAR(1.3152f,gdata[index].x,epsilon);
+	EXPECT_NEAR(0.2432,gdata[get3DC2lin(3,6,5,im_width)].x,epsilon*10.0f);
 	
-	EXPECT_NEAR(0.2251,gdata[get3DC2lin(1,7,5,im_width)],epsilon*10.0f);
-	EXPECT_NEAR(0.4502,gdata[get3DC2lin(6,5,5,im_width)],epsilon*10.0f);
+	EXPECT_NEAR(0.2251,gdata[get3DC2lin(1,7,5,im_width)].x,epsilon*10.0f);
+	EXPECT_NEAR(0.4502,gdata[get3DC2lin(6,5,5,im_width)].x,epsilon*10.0f);
 
-	EXPECT_NEAR(1.0f,gdata[get3DC2lin(8,8,5,im_width)],epsilon*10.0f);
-	EXPECT_NEAR(0.2027,gdata[get3DC2lin(9,9,5,im_width)],epsilon*10.0f);
+	EXPECT_NEAR(1.0f,gdata[get3DC2lin(8,8,5,im_width)].x,epsilon*10.0f);
+	EXPECT_NEAR(0.2027,gdata[get3DC2lin(9,9,5,im_width)].x,epsilon*10.0f);
 
 	free(data);
 	free(coords);
@@ -524,16 +524,16 @@ TEST(DISABLED_TestGridding,GPUTest_8SectorsKernel4nData)
 	coords[coord_cnt++] = 0;
 
 	//Output Grid
-    DType* gdata;
+    CufftType* gdata;
 	unsigned long dims_g[4];
-    dims_g[0] = 2; // complex
+    dims_g[0] = 1; // complex
 	dims_g[1] = (unsigned long)(im_width * osr); 
     dims_g[2] = (unsigned long)(im_width * osr);
     dims_g[3] = (unsigned long)(im_width * osr);
 
 	long grid_size = dims_g[0]*dims_g[1]*dims_g[2]*dims_g[3];
 
-    gdata = (DType*) calloc(grid_size,sizeof(DType));
+    gdata = (CufftType*) calloc(grid_size,sizeof(CufftType));
 	
 	//sectors of data, count and start indices
 	int sector_width = 5;
@@ -589,14 +589,14 @@ TEST(DISABLED_TestGridding,GPUTest_8SectorsKernel4nData)
 	int index = get3DC2lin(5,5,5,im_width);
 	printf("index to test %d\n",index);
 	//EXPECT_EQ(index,2*555);
-	EXPECT_NEAR(1.3558f,gdata[index],epsilon);
-	EXPECT_NEAR(0.3101f,gdata[get3DC2lin(3,6,5,im_width)],epsilon*10.0f);
+	EXPECT_NEAR(1.3558f,gdata[index].x,epsilon);
+	EXPECT_NEAR(0.3101f,gdata[get3DC2lin(3,6,5,im_width)].x,epsilon*10.0f);
 	
-	EXPECT_NEAR(0.2542f,gdata[get3DC2lin(1,7,5,im_width)],epsilon*10.0f);
-	EXPECT_NEAR(0.5084f,gdata[get3DC2lin(6,5,5,im_width)],epsilon*10.0f);
+	EXPECT_NEAR(0.2542f,gdata[get3DC2lin(1,7,5,im_width)].x,epsilon*10.0f);
+	EXPECT_NEAR(0.5084f,gdata[get3DC2lin(6,5,5,im_width)].x,epsilon*10.0f);
 
-	EXPECT_NEAR(1.0f,gdata[get3DC2lin(8,8,5,im_width)],epsilon*10.0f);
-	EXPECT_NEAR(0.2585f,gdata[get3DC2lin(9,9,5,im_width)],epsilon*10.0f);
+	EXPECT_NEAR(1.0f,gdata[get3DC2lin(8,8,5,im_width)].x,epsilon*10.0f);
+	EXPECT_NEAR(0.2585f,gdata[get3DC2lin(9,9,5,im_width)].x,epsilon*10.0f);
 	
 	//for (int j=0; j<im_width; j++)
 	//{
@@ -677,16 +677,16 @@ TEST(TestGridding,GPUTest_8SectorsKernel3nDataw128)
 	coords[coord_cnt++] = 0;
 
 	//Output Grid
-    DType* gdata;
+    CufftType* gdata;
 	unsigned long dims_g[4];
-    dims_g[0] = 2; // complex
+    dims_g[0] = 1; // complex
 	dims_g[1] = (unsigned long)(im_width * osr); 
     dims_g[2] = (unsigned long)(im_width * osr);
     dims_g[3] = (unsigned long)(im_width * osr);
 
 	long grid_size = dims_g[0]*dims_g[1]*dims_g[2]*dims_g[3];
 
-    gdata = (DType*) calloc(grid_size,sizeof(DType));
+    gdata = (CufftType*) calloc(grid_size,sizeof(CufftType));
 	
 	//sectors of data, count and start indices
 	int sector_width = 5;
@@ -813,16 +813,16 @@ TEST(TestGridding,GPUTest_FactorTwoTest)
 	coords[coord_cnt++] = 0;
 
 	//Output Grid
-    DType* gdata;
+    CufftType* gdata;
 	unsigned long dims_g[4];
-    dims_g[0] = 2; // complex
+    dims_g[0] = 1; // complex
 	dims_g[1] = (unsigned long)(im_width * osr); 
     dims_g[2] = (unsigned long)(im_width * osr);
     dims_g[3] = (unsigned long)(im_width * osr);
 
 	long grid_size = dims_g[0]*dims_g[1]*dims_g[2]*dims_g[3];
 
-    gdata = (DType*) calloc(grid_size,sizeof(DType));
+    gdata = (CufftType*) calloc(grid_size,sizeof(CufftType));
 	
 	//sectors of data, count and start indices
 	int sector_width = 8;
@@ -878,7 +878,7 @@ TEST(TestGridding,GPUTest_FactorTwoTest)
 	int index = get3DC2lin(5,5,5,im_width);
 	printf("index to test %d\n",index);
 	
-	EXPECT_NEAR(gdata[get3DC2lin(8,8,8,16)],2.0f,epsilon);
+	EXPECT_NEAR(gdata[get3DC2lin(8,8,8,16)].x,2.0f,epsilon);
 
 	free(data);
 	free(coords);
@@ -951,15 +951,15 @@ TEST(TestGridding,GPUTest_8SectorsKernel3nDataw32)
 	coords[coord_cnt++] = 0;
 
 	//Output Grid
-  DType* gdata;
+  CufftType* gdata;
 	unsigned long dims_g[4];
-  dims_g[0] = 2; // complex
+  dims_g[0] = 1; // complex
 	dims_g[1] = (unsigned long)(im_width * osr); 
   dims_g[2] = (unsigned long)(im_width * osr);
   dims_g[3] = (unsigned long)(im_width * osr);
 
 	long grid_size = dims_g[0]*dims_g[1]*dims_g[2]*dims_g[3];
-  gdata = (DType*) calloc(grid_size,sizeof(DType));
+  gdata = (CufftType*) calloc(grid_size,sizeof(CufftType));
 	
 	//sectors of data, count and start indices
 	int sector_width = 8;
@@ -980,8 +980,8 @@ TEST(TestGridding,GPUTest_8SectorsKernel3nDataw32)
 	{
 		for (int i=0; i<im_width; i++)
 		{
-			float dpr = gdata[get3DC2lin(i,im_width-1-j,16,im_width)];
-			float dpi = gdata[get3DC2lin(i,im_width-1-j,16,im_width)+1];
+			float dpr = gdata[get3DC2lin(i,im_width-1-j,16,im_width)].x;
+			float dpi = gdata[get3DC2lin(i,im_width-1-j,16,im_width)].y;
 
 			if (abs(dpr) > 0.0f)
 				printf("(%d,%d)= %.4f + %.4f i ",i,im_width-1-j,dpr,dpi);
@@ -989,18 +989,18 @@ TEST(TestGridding,GPUTest_8SectorsKernel3nDataw32)
 		printf("\n");
 	}*/
 
-	EXPECT_NEAR(gdata[get3DC2lin(12,16,16,im_width)],0.4289f,epsilon);
-	EXPECT_NEAR(gdata[get3DC2lin(13,16,16,im_width)],0.6803f,epsilon);
-	EXPECT_NEAR(gdata[get3DC2lin(14,16,16,im_width)],0.2065f,epsilon);
-	EXPECT_NEAR(gdata[get3DC2lin(15,16,16,im_width)],-0.1801f,epsilon);//Re
-	EXPECT_NEAR(gdata[get3DC2lin(15,16,16,im_width)+1],0.7206f,epsilon);//Im
-	EXPECT_NEAR(gdata[get3DC2lin(16,16,16,im_width)],-0.4f,epsilon);
-	EXPECT_NEAR(gdata[get3DC2lin(16,16,16,im_width)+1],1.6f,epsilon);
-  EXPECT_NEAR(gdata[get3DC2lin(17,16,16,im_width)],-0.1801f,epsilon);//Re
-	EXPECT_NEAR(gdata[get3DC2lin(17,16,16,im_width)+1],0.7206f,epsilon);//Im
+	EXPECT_NEAR(gdata[get3DC2lin(12,16,16,im_width)].x,0.4289f,epsilon);
+	EXPECT_NEAR(gdata[get3DC2lin(13,16,16,im_width)].x,0.6803f,epsilon);
+	EXPECT_NEAR(gdata[get3DC2lin(14,16,16,im_width)].x,0.2065f,epsilon);
+	EXPECT_NEAR(gdata[get3DC2lin(15,16,16,im_width)].x,-0.1801f,epsilon);//Re
+	EXPECT_NEAR(gdata[get3DC2lin(15,16,16,im_width)].y,0.7206f,epsilon);//Im
+	EXPECT_NEAR(gdata[get3DC2lin(16,16,16,im_width)].x,-0.4f,epsilon);
+	EXPECT_NEAR(gdata[get3DC2lin(16,16,16,im_width)].y,1.6f,epsilon);
+  EXPECT_NEAR(gdata[get3DC2lin(17,16,16,im_width)].x,-0.1801f,epsilon);//Re
+	EXPECT_NEAR(gdata[get3DC2lin(17,16,16,im_width)].y,0.7206f,epsilon);//Im
 
-	EXPECT_NEAR(gdata[get3DC2lin(12,15,16,im_width)],0.1932f,epsilon);
-	EXPECT_NEAR(gdata[get3DC2lin(14,17,16,im_width)],0.0930f,epsilon);
+	EXPECT_NEAR(gdata[get3DC2lin(12,15,16,im_width)].x,0.1932f,epsilon);
+	EXPECT_NEAR(gdata[get3DC2lin(14,17,16,im_width)].x,0.0930f,epsilon);
 	
 	free(data);
 	free(coords);
@@ -1045,15 +1045,15 @@ TEST(TestGridding,MatlabTest_8SK3w32)
 	coords[coord_cnt++] = 0;
 	
 	//Output Grid
-  DType* gdata;
+  CufftType* gdata;
 	unsigned long dims_g[4];
-  dims_g[0] = 2; // complex
+  dims_g[0] = 1; // complex
 	dims_g[1] = (unsigned long)(im_width * osr); 
   dims_g[2] = (unsigned long)(im_width * osr);
   dims_g[3] = (unsigned long)(im_width * osr);
 
 	long grid_size = dims_g[0]*dims_g[1]*dims_g[2]*dims_g[3];
-  gdata = (DType*) calloc(grid_size,sizeof(DType));
+  gdata = (CufftType*) calloc(grid_size,sizeof(CufftType));
 	
 	//sectors of data, count and start indices
 	int sector_width = 8;
@@ -1083,17 +1083,17 @@ TEST(TestGridding,MatlabTest_8SK3w32)
 		printf("\n");
 	}*/
 
-	EXPECT_NEAR(gdata[get3DC2lin(23,3,16,im_width)],0.0012f,epsilon);
-	EXPECT_NEAR(gdata[get3DC2lin(23,2,16,im_width)],0.0020f,epsilon);
-	EXPECT_NEAR(gdata[get3DC2lin(23,1,16,im_width)],0.0007f,epsilon);
-	EXPECT_NEAR(gdata[get3DC2lin(24,3,16,im_width)],0.0026f,epsilon);//Re
-	EXPECT_NEAR(gdata[get3DC2lin(24,3,16,im_width)+1],-0.0012f,epsilon);//Im
-	EXPECT_NEAR(gdata[get3DC2lin(24,2,16,im_width)],0.0045f,epsilon);
-	EXPECT_NEAR(gdata[get3DC2lin(24,1,16,im_width)],0.0016f,epsilon);
-	EXPECT_NEAR(gdata[get3DC2lin(25,3,16,im_width)],0.0012f,epsilon);
-  EXPECT_NEAR(gdata[get3DC2lin(25,2,16,im_width)],0.0020f,epsilon);//Re
-	EXPECT_NEAR(gdata[get3DC2lin(25,2,16,im_width)+1],-0.0009f,epsilon);//Im
-	EXPECT_NEAR(gdata[get3DC2lin(25,1,16,im_width)],0.0007f,epsilon);
+	EXPECT_NEAR(gdata[get3DC2lin(23,3,16,im_width)].x,0.0012f,epsilon);
+	EXPECT_NEAR(gdata[get3DC2lin(23,2,16,im_width)].x,0.0020f,epsilon);
+	EXPECT_NEAR(gdata[get3DC2lin(23,1,16,im_width)].x,0.0007f,epsilon);
+	EXPECT_NEAR(gdata[get3DC2lin(24,3,16,im_width)].x,0.0026f,epsilon);//Re
+	EXPECT_NEAR(gdata[get3DC2lin(24,3,16,im_width)].y,-0.0012f,epsilon);//Im
+	EXPECT_NEAR(gdata[get3DC2lin(24,2,16,im_width)].x,0.0045f,epsilon);
+	EXPECT_NEAR(gdata[get3DC2lin(24,1,16,im_width)].x,0.0016f,epsilon);
+	EXPECT_NEAR(gdata[get3DC2lin(25,3,16,im_width)].x,0.0012f,epsilon);
+  EXPECT_NEAR(gdata[get3DC2lin(25,2,16,im_width)].x,0.0020f,epsilon);//Re
+	EXPECT_NEAR(gdata[get3DC2lin(25,2,16,im_width)].y,-0.0009f,epsilon);//Im
+	EXPECT_NEAR(gdata[get3DC2lin(25,1,16,im_width)].x,0.0007f,epsilon);
 	
 	free(data);
 	free(coords);

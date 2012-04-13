@@ -2,8 +2,9 @@
 clear all; close all; clc;
 
 % 4 channel head coil image
-addpath '../bin ../bin/Debug';
+addpath ../bin ../bin/Debug;
 
+addpath(genpath('../../NUFFT_recon_demo_2D/NUFFT'));
 % load data
 load img_brain_4ch;
 [nPE,nFE,nCh]=size(img);
@@ -27,11 +28,21 @@ w = abs(rho);
 w = repmat(w, [1, numSpokes,nCh]);
 dataRadial_dc = dataRadial.*w;
 
+%% inverse NUFFT
 % inverse NUFFT
-recon = FT'*dataRadial;
+%recon = FT'*dataRadial;
+osf = 1;
+wg = 3;
+
+tic
+[imgRegrid_kb,kernel] = gridkb(dataRadial,k,w,256,osf,wg,'image');
+toc
+
+figure, imshow(abs(flipud(imgRegrid_kb)),[]);
+%%
 recon_dc = FT'*(dataRadial_dc);
 
-% SOS combination
+%% SOS combination
 recon_orig = sqrt(sum(abs(img).^2,3));
 recon_sos = sqrt(sum(abs(recon).^2,3));
 recon_sos_dc = sqrt(sum(abs(recon_dc).^2,3));

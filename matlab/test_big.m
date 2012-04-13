@@ -32,12 +32,12 @@ w = repmat(w, 1, numSpokes);
 %figure, imshow(abs(flipud(imgRegrid_kb)),[]);
 %% MatlabTest_8SK3w32
 osf=1
- kspace = ([0.0046-0.0021i]);
+ kspace_test = ([0.0046-0.0021i]);
  wg = 3;
- k = ([0.25-0.4330i]);
- w = ([1]);
+ k_test = ([0.25-0.4330i]);
+ w_test = ([1]);
  
- [imgRegrid_kb,kernel] = gridkb(kspace,k,w,32,osf,wg,'image');
+ [imgRegrid_kb,kernel] = gridkb(kspace_test,k_test,w_test,32,osf,wg,'image');
  figure, imshow(abs(flipud(imgRegrid_kb)),[]);
 
 %% kleiner test

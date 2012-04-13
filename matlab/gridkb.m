@@ -97,7 +97,7 @@ for b=1:sector_dim+1
     end
     sectors_test(b)=cnt;
 end
-sectors_test
+%sectors_test
 %% calculate indices of data elements in order to sort them
 data_ind = i-1;
 data_ind=[2*data_ind+1;2*data_ind+2];

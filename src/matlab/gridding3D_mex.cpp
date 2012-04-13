@@ -195,24 +195,26 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	loadGrid3Kernel(kern,kernel_entries,kernel_width,osr);
 	
 	//Output Grid
-    DType* gdata;
-	unsigned long dims_g[4];
-    dims_g[0] = 2; /* complex */
+  CufftType* gdata;
+	const int n_dims = 4;
+	unsigned long dims_g[n_dims];
+  dims_g[0] = 2; /* complex */
 	dims_g[1] = (unsigned long)(im_width * osr); 
-    dims_g[2] = (unsigned long)(im_width * osr);
-    dims_g[3] = (unsigned long)(im_width * osr);
+  dims_g[2] = (unsigned long)(im_width * osr);
+  dims_g[3] = (unsigned long)(im_width * osr);
 
-	long grid_size = dims_g[0]*dims_g[1]*dims_g[2]*dims_g[3];
+	long grid_size = dims_g[1]*dims_g[2]*dims_g[3];
 
-	plhs[0] = mxCreateNumericArray(4,(const mwSize*)dims_g,mxGetClassID(prhs[0]),mxREAL);
-    gdata = (DType*) mxGetData(plhs[0]);
-	
+	plhs[0] = mxCreateNumericArray(n_dims,(const mwSize*)dims_g,mxGetClassID(prhs[0]),mxREAL);
+  gdata = (CufftType*)mxGetData(plhs[0]);
+	if (gdata == NULL)
+     mexErrMsgTxt("Could not create output mxArray.\n");
+
 	gridding3D_gpu(data,data_cnt,coords,gdata,grid_size,kern,kernel_entries,sectors,sector_cnt,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1]);
-
+	
 	free(kern);
-
-    CUcontext  pctx ;
-    cuCtxPopCurrent(&pctx);	
+  CUcontext  pctx ;
+  cuCtxPopCurrent(&pctx);	
 }
 
 

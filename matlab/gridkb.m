@@ -130,7 +130,7 @@ m = m(:,:,ceil(n/2)+1);
 % zero out data at edges, which is probably due to data outside mtx
 m(:,1) = 0; m(:,osf*n) = 0;
 m(1,:) = 0; m(osf*n,:) = 0;
-flipud(m)
+%flipud(m);
 % stop here, if we just want the k-space data
 if strcmp(opt,'k-space') return; end;
 

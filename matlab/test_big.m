@@ -3,7 +3,7 @@
 clear all; close all; clc;
 
 %% add bin to path
-addpath ../bin ../bin/Debug
+addpath ../bin
 
 %% Load data
 load kspaceRadial.mat;
@@ -48,7 +48,7 @@ osf = 1;
 wg = 3;
 
 tic
-[imgRegrid_kb,kernel] = gridkb(kspace2,k,w,256,osf,wg,'image');
+[imgRegrid_kb,kernel] = gridkb(kspace2,k,w,128,osf,wg,'image');
 toc
 
 figure, imshow(abs(flipud(imgRegrid_kb)),[]);

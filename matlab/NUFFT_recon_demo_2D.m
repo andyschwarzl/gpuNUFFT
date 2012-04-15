@@ -2,7 +2,7 @@
 clear all; close all; clc;
 
 % 4 channel head coil image
-addpath ../bin ../bin/Debug;
+addpath ../bin;
 
 addpath(genpath('../../NUFFT_recon_demo_2D/NUFFT'));
 % load data
@@ -35,7 +35,7 @@ osf = 1;
 wg = 3;
 
 tic
-[imgRegrid_kb,kernel] = gridkb(dataRadial,k,w,256,osf,wg,'image');
+[imgRegrid_kb,kernel] = gridkb(dataRadial,k,w,128,osf,wg,'image');
 toc
 
 figure, imshow(abs(flipud(imgRegrid_kb)),[]);

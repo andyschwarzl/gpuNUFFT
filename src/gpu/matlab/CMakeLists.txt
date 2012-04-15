@@ -69,8 +69,8 @@ endmacro()
 
 matlab_config()
 
-MESSAGE('MATLAB libraries: ${MATLAB_LIBRARIES}')
-MESSAGE('MATLAB inc dir: ${MATLAB_INCLUDE_DIR}')
+MESSAGE("MATLAB libraries: ${MATLAB_LIBRARIES}")
+MESSAGE("MATLAB inc dir: ${MATLAB_INCLUDE_DIR}")
 INCLUDE_DIRECTORIES(${MATLAB_INCLUDE_DIR})
 
 set(MEX_FILE gridding3D_mex.cpp)

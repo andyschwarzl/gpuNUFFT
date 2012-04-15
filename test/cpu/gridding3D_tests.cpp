@@ -2,7 +2,7 @@
 #include <limits.h>
 #include "gridding_cpu.hpp"
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 #define epsilon 0.0001f
 

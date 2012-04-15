@@ -1,0 +1,5 @@
+ADD_SUBDIRECTORY(coarse)
+if(GPU_DOUBLE_PREC)
+	ADD_SUBDIRECTORY(atomic)
+endif()
+#ADD_SUBDIRECTORY(matlab)

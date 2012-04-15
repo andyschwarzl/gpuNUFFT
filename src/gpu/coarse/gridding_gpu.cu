@@ -21,7 +21,7 @@ __global__ void kernel_call(int *a)
 		}
 }
 
-#define N_THREADS_PER_SECTOR 5 //16x16
+#define N_THREADS_PER_SECTOR 2 //16x16
 #define SECTOR_WIDTH 10
 
 __global__ void griddingKernel( DType* data, 
@@ -259,9 +259,9 @@ void gridding3D_gpu(DType* data,
 	printf("allocate and copy sector_centers of size %d...\n",3*sector_count);
 	allocateAndCopyToDeviceMem<int>(&sector_centers_d,sector_centers,3*sector_count);
 	
-	dim3 block_dim(SECTOR_WIDTH,SECTOR_WIDTH,2);
+	dim3 block_dim(SECTOR_WIDTH,SECTOR_WIDTH,N_THREADS_PER_SECTOR);
 
-  griddingKernel<<<sector_count,block_dim>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d);
+    griddingKernel<<<sector_count,block_dim>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d);
 
 	//compose total output from local blocks 
 	composeOutput<<<1,block_dim>>>(temp_gdata_d,gdata_d,sector_centers_d);

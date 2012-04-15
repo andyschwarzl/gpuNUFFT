@@ -1,0 +1,18 @@
+INFO:
+GPU 3D regridding library with MATLAB(R) Mexfile output
+
+REQUIERMENTS:
+
+- CMAKE 2.8 or
+- google test framework 1.6
+- MATLAB 2008 or higher
+
+LINUX:
+
+build project via cmake 
+
+WINDOWS:
+
+build project using cmake 
+
+

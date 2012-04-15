@@ -1,15 +1,5 @@
-MESSAGE("------start creating project-------")
+MESSAGE("------start creating libraries-------")
+ADD_SUBDIRECTORY(gpu)
 
-MESSAGE(${CUDA_SDK_ROOT_DIR})
-
-#add exe to build from gridding3D
-if(WIN32)
-CUDA_ADD_LIBRARY(gridding3D gridding_gpu.cu griddingFunctions.cpp ../inc/cuda_utils.hpp ../inc/gridding_gpu.hpp ../inc/config.hpp)# SHARED) 
-else(WIN32)
-CUDA_ADD_LIBRARY(gridding3D gridding_gpu.cu griddingFunctions.cpp ../inc/cuda_utils.hpp ../inc/gridding_gpu.hpp ../inc/config.hpp SHARED) 
-endif(WIN32)
-
-CUDA_ADD_CUFFT_TO_TARGET(gridding3D)
-CUDA_ADD_CUBLAS_TO_TARGET(gridding3D)
-
-ADD_SUBDIRECTORY(matlab)
+#cpu not necessary
+#ADD_SUBDIRECTORY(cpu)

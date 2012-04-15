@@ -6,26 +6,6 @@
 
 #define epsilon 0.0001f
 
-TEST(TestKernel, LoadKernel) {
-	printf("start creating kernel...\n");
-	long kernel_entries = calculateGrid3KernelSize();
-	
-	assert(kernel_entries > 0);
-
-	DType *kern = (DType*) calloc(kernel_entries,sizeof(DType));
-	if (kern != NULL)
-	{
-		loadGrid3Kernel(kern,kernel_entries);
-		EXPECT_EQ(1.0f,kern[0]);
-		EXPECT_LT(0.9940f-kern[1],epsilon);
-		EXPECT_LT(0.0621f-kern[401],epsilon);
-		EXPECT_LT(0.0041f-kern[665],epsilon);
-		EXPECT_EQ(0.0f,kern[kernel_entries-1]);
-		free(kern);
-	}
-	EXPECT_EQ(1, 1);
-}
-
 #define get3DC2lin(_x,_y,_z,_width) 2*((_x) + (_width) * ( (_y) + (_z) * (_width)))
 
 TEST(TestGridding,CPUTest_1SectorKernel3)
@@ -928,7 +908,7 @@ TEST(TestGridding,MatlabTest_8SK3w32)
 
 	gridding3D_cpu(data,coords,gdata,kern,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1]);
 	
-	for (int j=0; j<im_width; j++)
+	/*for (int j=0; j<im_width; j++)
 	{
 		for (int i=0; i<im_width; i++)
 		{
@@ -939,7 +919,7 @@ TEST(TestGridding,MatlabTest_8SK3w32)
 				printf("(%d,%d)= %.4f + %.4f i ",i,im_width-1-j,dpr,dpi);
 		}
 		printf("\n");
-	}
+	}*/
 
 	/*EXPECT_NEAR(gdata[get3DC2lin(12,16,16,im_width)],0.4289f,epsilon);
 	EXPECT_NEAR(gdata[get3DC2lin(13,16,16,im_width)],0.6803f,epsilon);

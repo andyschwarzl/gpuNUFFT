@@ -4,7 +4,7 @@
  
 #define MATLAB_DEBUG false
 
-/* #undef GPU_DOUBLE_PREC */
+#define GPU_DOUBLE_PREC
 
 #ifdef GPU_DOUBLE_PREC
 	typedef double DType;

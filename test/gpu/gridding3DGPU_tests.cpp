@@ -28,7 +28,7 @@ TEST(TestKernel, LoadKernel) {
 	EXPECT_EQ(1, 1);
 }
 
-TEST(TestGPULib,KernelCall1Sector)
+TEST(TestGPUGridding,KernelCall1Sector)
 {
 	int kernel_width = 3;
 	long kernel_entries = calculateGrid3KernelSize();
@@ -113,7 +113,7 @@ TEST(TestGPULib,KernelCall1Sector)
 }
 
 
-TEST(TestGPULib,GPUTest_1SectorKernel5)
+TEST(TestGPUGridding,GPUTest_1SectorKernel5)
 {
 	//oversampling ratio
 	float osr = DEFAULT_OVERSAMPLING_RATIO;
@@ -195,7 +195,7 @@ TEST(TestGPULib,GPUTest_1SectorKernel5)
 
 
 
-TEST(TestGPULib,GPUTest_2SectorsKernel3nData)
+TEST(TestGPUGridding,GPUTest_2SectorsKernel3nData)
 {
 	//oversampling ratio
 	float osr = DEFAULT_OVERSAMPLING_RATIO;
@@ -316,7 +316,7 @@ TEST(TestGPULib,GPUTest_2SectorsKernel3nData)
 }
 
 
-TEST(TestGridding,GPUTest_8SectorsKernel3nData)
+TEST(TestGPUGridding,GPUTest_8SectorsKernel3nData)
 {
 	//oversampling ratio
 	float osr = DEFAULT_OVERSAMPLING_RATIO;
@@ -461,7 +461,7 @@ TEST(TestGridding,GPUTest_8SectorsKernel3nData)
 }
 
 
-TEST(DISABLED_TestGridding,GPUTest_8SectorsKernel4nData)
+TEST(DISABLED_TestGPUGridding,GPUTest_8SectorsKernel4nData)
 {
 	//oversampling ratio
 	float osr = DEFAULT_OVERSAMPLING_RATIO;
@@ -615,7 +615,7 @@ TEST(DISABLED_TestGridding,GPUTest_8SectorsKernel4nData)
 
 
 
-TEST(TestGridding,GPUTest_8SectorsKernel3nDataw128)
+TEST(TestGPUGridding,GPUTest_8SectorsKernel3nDataw128)
 {
 	//oversampling ratio
 	float osr = DEFAULT_OVERSAMPLING_RATIO;
@@ -751,7 +751,7 @@ TEST(TestGridding,GPUTest_8SectorsKernel3nDataw128)
 	free(sector_centers);
 }
 
-TEST(TestGridding,GPUTest_FactorTwoTest)
+TEST(TestGPUGridding,GPUTest_FactorTwoTest)
 {
 	//oversampling ratio
 	float osr = DEFAULT_OVERSAMPLING_RATIO;
@@ -889,7 +889,7 @@ TEST(TestGridding,GPUTest_FactorTwoTest)
 }
 
 
-TEST(TestGridding,GPUTest_8SectorsKernel3nDataw32)
+TEST(TestGPUGridding,GPUTest_8SectorsKernel3nDataw32)
 {
 	//oversampling ratio
 	float osr = DEFAULT_OVERSAMPLING_RATIO;
@@ -1011,7 +1011,7 @@ TEST(TestGridding,GPUTest_8SectorsKernel3nDataw32)
 }
 
 
-TEST(TestGridding,MatlabTest_8SK3w32)
+TEST(TestGPUGridding,MatlabTest_8SK3w32)
 {
 	//oversampling ratio
 	float osr = DEFAULT_OVERSAMPLING_RATIO;

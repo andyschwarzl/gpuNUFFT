@@ -33,6 +33,8 @@ CONFIGURE_FILE( ${CMAKE_SOURCE_DIR}/inc/config.hpp.cmake ${CMAKE_SOURCE_DIR}/inc
 
 #Include dirs
 include_directories (inc)
+SET(GRIDDING_INC_DIR ${CMAKE_SOURCE_DIR}/inc)
+SET(GRIDDING_INCLUDE ${GRIDDING_INC_DIR}/cuda_utils.hpp ${GRIDDING_INC_DIR}/gridding_gpu.hpp ${GRIDDING_INC_DIR}/config.hpp)
 
 #Adding src directory to the project
 ADD_SUBDIRECTORY(test)

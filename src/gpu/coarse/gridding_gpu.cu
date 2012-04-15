@@ -1,5 +1,7 @@
 #include "cuda_utils.hpp"
 
+#include "cuda_utils.cuh" 
+
 //Simple Test Kernel 
 #define N 1000 //DIM ^3 
 #define DIM 10

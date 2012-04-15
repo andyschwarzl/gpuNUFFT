@@ -10,6 +10,9 @@
 # include <windows.h>
 #endif
 
+//GRIDDING 3D
+#include "gridding_gpu.hpp"
+
 //#include "fftw3.h"
 #include "cufft.h"
 #include "cuda_runtime.h"
@@ -22,8 +25,6 @@
 
 #include <string.h>
 
-//GRIDDING 3D
-#include "gridding_gpu.hpp"
 
 #ifdef __unix__ 
 	#include <sys/time.h>

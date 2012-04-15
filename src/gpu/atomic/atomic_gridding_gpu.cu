@@ -1,4 +1,5 @@
 #include "cuda_utils.hpp"
+#include "cuda_utils.cuh" 
 
 #define N_THREADS_PER_SECTOR 5 //16x16
 #define SECTOR_WIDTH 10

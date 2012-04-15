@@ -79,30 +79,40 @@ set(CUDA_NVCC_FLAGS -arch sm_13;--ptxas-options=-v)
 CUDA_COMPILE( cuda_mex_kernel_generated ${MEX_FILE} SHARED)
 
 CUDA_ADD_LIBRARY(cuda_mex_kernel SHARED ${cuda_mex_kernel_generated} ${MEX_FILE})
-
 TARGET_LINK_LIBRARIES(cuda_mex_kernel ${MATLAB_MEX_LIBRARY} ${MATLAB_MX_LIBRARY} ${CUDA_LIBRARIES} gridding3D)
 SET_TARGET_PROPERTIES(cuda_mex_kernel PROPERTIES PREFIX "" LINKER_LANGUAGE CXX)
+
+CUDA_ADD_LIBRARY(cuda_atomic_mex_kernel SHARED ${cuda_mex_kernel_generated} ${MEX_FILE})
+TARGET_LINK_LIBRARIES(cuda_atomic_mex_kernel ${MATLAB_MEX_LIBRARY} ${MATLAB_MX_LIBRARY} ${CUDA_LIBRARIES} gridding3DATM)
+SET_TARGET_PROPERTIES(cuda_atomic_mex_kernel PROPERTIES PREFIX "" LINKER_LANGUAGE CXX)
+
 
 if(WIN32)
   if (CMAKE_CL_64)
           MESSAGE("Win 64")
           SET_TARGET_PROPERTIES(cuda_mex_kernel PROPERTIES
                   SUFFIX .mexw64
-                  LINK_FLAGS /export:mexFunction
-          )
+                  LINK_FLAGS /export:mexFunction)
+		  SET_TARGET_PROPERTIES(cuda_atomic_mex_kernel PROPERTIES
+                  SUFFIX .mexw64
+                  LINK_FLAGS /export:mexFunction)
   else()
           MESSAGE("Win 32")
           SET_TARGET_PROPERTIES(cuda_mex_kernel PROPERTIES
                   SUFFIX .mexw32
-                  LINK_FLAGS /export:mexFunction
-          )
+                  LINK_FLAGS /export:mexFunction)
+		  SET_TARGET_PROPERTIES(cuda_atomic_mex_kernel PROPERTIES
+                  SUFFIX .mexw32
+                  LINK_FLAGS /export:mexFunction)
   endif()
 else(UNIX)
   if (CMAKE_SIZEOF_VOID_P MATCHES "8")
-  MESSAGE("Linux 64")
+		  MESSAGE("Linux 64")
           SET_TARGET_PROPERTIES(cuda_mex_kernel PROPERTIES SUFFIX .mexa64)
+		  SET_TARGET_PROPERTIES(cuda_atomic_mex_kernel PROPERTIES SUFFIX .mexa64)
   else()
           MESSAGE("Linux 32")
           SET_TARGET_PROPERTIES(cuda_mex_kernel PROPERTIES SUFFIX .mexglx)
+		  SET_TARGET_PROPERTIES(cuda_atomic_mex_kernel PROPERTIES SUFFIX .mexglx)
   endif (CMAKE_SIZEOF_VOID_P MATCHES "8")
 endif()

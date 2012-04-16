@@ -16,6 +16,11 @@ FIND_PACKAGE(CUDA)
 
 #Searching MATLAB
 FIND_PACKAGE(Matlab)
+
+# For make-based builds, defines make target named test.
+# For Visual Studio builds, defines Visual Studio project named RUN_TESTS.
+enable_testing()
+
 #Options
 SET (MATLAB_DEBUG false)
 OPTION(WITH_MATLAB_DEBUG "Enable DEBUG messages for MATLAB calls" OFF)
@@ -48,16 +53,18 @@ SET(GRIDDING_INCLUDE ${GRIDDING_INC_DIR}/cuda_utils.hpp
 ADD_SUBDIRECTORY(test)
 ADD_SUBDIRECTORY(src)
 
-# For make-based builds, defines make target named test.
-# For Visual Studio builds, defines Visual Studio project named RUN_TESTS.
-enable_testing()
+add_test(
+    NAME runUnitTests
+    COMMAND runUnitTests
+)
 
 add_test(
     NAME runGPUUnitTests
     COMMAND runGPUUnitTests
 )
 
-add_test(
-    NAME runUnitTests
-    COMMAND runUnitTests
-)
+if(GPU_DOUBLE_PREC)
+	add_test(
+    NAME runGPUATMUnitTests
+    COMMAND runGPUATMUnitTests)
+endif()

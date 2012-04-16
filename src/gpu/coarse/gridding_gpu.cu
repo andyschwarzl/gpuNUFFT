@@ -229,12 +229,25 @@ void gridding3D_gpu(DType* data,
 	cufftPlan3d(&fft_plan, GI.width,GI.width,GI.width, CUFFT_C2C) ;
 	int err;
 	
+	// we need this because first fft fails
+	/*cufftComplex *tmp1,*tmp2;
+	cudaMalloc( (void **) &tmp1,sizeof(cufftComplex)*gdata_cnt);
+    cudaMalloc( (void **) &tmp2,sizeof(cufftComplex)*gdata_cnt);
+	cudaMemset( tmp1,0,sizeof(cufftComplex)*gdata_cnt);
+    cudaMemset( tmp2,0,sizeof(cufftComplex)*gdata_cnt);
+   
+	int _res = cufftExecC2C(fft_plan, tmp1, tmp2, CUFFT_FORWARD);
+	printf("first fft call ret: %i\n", _res);*/
+
 	//Inverse FFT
 	if (err=cufftExecC2C(fft_plan, gdata_d, gdata_d, CUFFT_INVERSE) != CUFFT_SUCCESS)
 	{
       printf("cufft has failed with err %i \n",err);
-      return;
+      //return;
 	}
+	/* Destroy the cuFFT plan. */
+	cufftDestroy(fft_plan);
+
 	if (gridding_out == FFT)
 	{
 		printf("stopping output after FFT step\n");

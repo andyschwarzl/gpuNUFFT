@@ -190,7 +190,6 @@ void gridding3D_gpu(DType* data,
 	allocateAndCopyToDeviceMem<DType>(&data_d,data,2*data_cnt);
 
 	int temp_grid_cnt = 2 * sector_count * gi_host->sector_dim;
-	//TODO delete
 	DType* temp_gdata = (DType*) calloc(temp_grid_cnt,sizeof(DType));
 
 	printf("allocate temp grid data of size %d...\n",temp_grid_cnt);
@@ -226,21 +225,14 @@ void gridding3D_gpu(DType* data,
 
 	//TODO Inverse fft
 	cufftHandle fft_plan;
-	cufftPlan3d(&fft_plan, GI.width,GI.width,GI.width, CUFFT_C2C) ;
+	cufftResult res = cufftPlan3d(&fft_plan, gi_host->width,gi_host->width,gi_host->width, CUFFT_C2C) ;
+
+	if (res != CUFFT_SUCCESS) 
+		printf("error on CUFFT Plan creation!!! %d\n",res);
 	int err;
 	
-	// we need this because first fft fails
-	/*cufftComplex *tmp1,*tmp2;
-	cudaMalloc( (void **) &tmp1,sizeof(cufftComplex)*gdata_cnt);
-    cudaMalloc( (void **) &tmp2,sizeof(cufftComplex)*gdata_cnt);
-	cudaMemset( tmp1,0,sizeof(cufftComplex)*gdata_cnt);
-    cudaMemset( tmp2,0,sizeof(cufftComplex)*gdata_cnt);
-   
-	int _res = cufftExecC2C(fft_plan, tmp1, tmp2, CUFFT_FORWARD);
-	printf("first fft call ret: %i\n", _res);*/
-
 	//Inverse FFT
-	if (err=cufftExecC2C(fft_plan, gdata_d, gdata_d, CUFFT_INVERSE) != CUFFT_SUCCESS)
+	if (err=cufftExecC2C(fft_plan, gdata_d, gdata_d, CUFFT_FORWARD) != CUFFT_SUCCESS)
 	{
       printf("cufft has failed with err %i \n",err);
       //return;

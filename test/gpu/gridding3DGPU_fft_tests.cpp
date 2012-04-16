@@ -36,7 +36,7 @@ TEST(TestGPUGriddingFFT,KernelCall1Sector)
 	float osr = DEFAULT_OVERSAMPLING_RATIO;
 
 	//Output Grid
-  CufftType* gdata;
+	CufftType* gdata;
 	unsigned long dims_g[4];
     dims_g[0] = 1; /* complex */
 	dims_g[1] = (unsigned long)(im_width * osr); 

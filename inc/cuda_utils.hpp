@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include "cufft.h"
 #include "gridding_gpu.hpp"
+#include <stdarg.h>
 
 #define HANDLE_ERROR(err) { \
 	if (err != cudaSuccess) \
@@ -43,6 +44,25 @@ template<typename TypeName>
 inline void copyFromDevice(TypeName* device_ptr, TypeName* host_ptr, int num_elements)
 {
 	HANDLE_ERROR(cudaMemcpy(host_ptr, device_ptr,num_elements*sizeof(TypeName),cudaMemcpyDeviceToHost ));
+}
+
+void freeTotalDeviceMemory(void* ptr,...)
+{
+	va_list list;
+	va_start(list,ptr); 
+	void* p = ptr;
+	int i =0;
+	while(true)
+	{	  
+	  if(p==NULL)
+		   break;
+	  //printf("free dev ptr...%p %d\n",p,i);
+	  freeDeviceMem(p);
+	  i++;
+	  p= va_arg(list,void*);
+	}
+	printf("%d device pointers freed\n",i);
+    va_end(list);
 }
 
 __device__ inline float atomicFloatAdd(float* address, float value)

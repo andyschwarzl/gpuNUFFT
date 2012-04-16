@@ -80,7 +80,7 @@ TEST(TestGPUGridding,KernelCall1Sector)
 	sector_centers[1] = 5;
 	sector_centers[2] = 5;
 
-	gridding3D_gpu(data,data_entries,coords,gdata,grid_size,kern,kernel_entries,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1]);
+	gridding3D_gpu(data,data_entries,coords,gdata,grid_size,kern,kernel_entries,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1],CONVOLUTION);
 	
 	printf("test %f \n",gdata[4].x);
 	int index = get3DC2lin(5,5,5,im_width);
@@ -165,7 +165,7 @@ TEST(TestGPUGridding,GPUTest_1SectorKernel5)
 	sector_centers[1] = 5;
 	sector_centers[2] = 5;
 
-	gridding3D_gpu(data,data_entries,coords,gdata,grid_size,kern,kernel_entries,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1]);
+	gridding3D_gpu(data,data_entries,coords,gdata,grid_size,kern,kernel_entries,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1],CONVOLUTION);
 
 	int index = get3DC2lin(5,5,5,im_width);
 	printf("index to test %d\n",index);
@@ -286,7 +286,7 @@ TEST(TestGPUGridding,GPUTest_2SectorsKernel3nData)
 	sector_centers[4] = 7;
 	sector_centers[5] = 5;
 
-	gridding3D_gpu(data,data_entries,coords,gdata,grid_size,kern,kernel_entries,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1]);
+	gridding3D_gpu(data,data_entries,coords,gdata,grid_size,kern,kernel_entries,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1],CONVOLUTION);
 
 	int index = get3DC2lin(5,5,5,im_width);
 	printf("index to test %d\n",index);
@@ -438,7 +438,7 @@ TEST(TestGPUGridding,GPUTest_8SectorsKernel3nData)
 	sector_centers[sector_cnt++] = 7;
 	sector_centers[sector_cnt++] = 7;
 
-	gridding3D_gpu(data,data_entries,coords,gdata,grid_size,kern,kernel_entries,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1]);
+	gridding3D_gpu(data,data_entries,coords,gdata,grid_size,kern,kernel_entries,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1],CONVOLUTION);
 
 	int index = get3DC2lin(5,5,5,im_width);
 	printf("index to test %d\n",index);
@@ -584,7 +584,7 @@ TEST(DISABLED_TestGPUGridding,GPUTest_8SectorsKernel4nData)
 	sector_centers[sector_cnt++] = 7;
 	sector_centers[sector_cnt++] = 7;
 
-	gridding3D_gpu(data,data_entries,coords,gdata,grid_size,kern,kernel_entries,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1]);
+	gridding3D_gpu(data,data_entries,coords,gdata,grid_size,kern,kernel_entries,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1],CONVOLUTION);
 
 	int index = get3DC2lin(5,5,5,im_width);
 	printf("index to test %d\n",index);
@@ -737,7 +737,7 @@ TEST(TestGPUGridding,GPUTest_8SectorsKernel3nDataw128)
 	sector_centers[sector_cnt++] = 7;
 	sector_centers[sector_cnt++] = 7;
 
-	gridding3D_gpu(data,data_entries,coords,gdata,grid_size,kern,kernel_entries,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1]);
+	gridding3D_gpu(data,data_entries,coords,gdata,grid_size,kern,kernel_entries,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1],CONVOLUTION);
 
 	int index = get3DC2lin(5,5,5,im_width);
 	printf("index to test %d\n",index);
@@ -873,7 +873,7 @@ TEST(TestGPUGridding,GPUTest_FactorTwoTest)
 	sector_centers[sector_cnt++] = 7;
 	sector_centers[sector_cnt++] = 7;
 
-	gridding3D_gpu(data,data_entries,coords,gdata,grid_size,kern,kernel_entries,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1]);
+	gridding3D_gpu(data,data_entries,coords,gdata,grid_size,kern,kernel_entries,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1],CONVOLUTION);
 
 	int index = get3DC2lin(5,5,5,im_width);
 	printf("index to test %d\n",index);
@@ -974,7 +974,7 @@ TEST(TestGPUGridding,GPUTest_8SectorsKernel3nDataw32)
 	
 	int sector_centers[3*sector_count] = {4,4,4,4,4,12,4,4,20,4,4,28,4,12,4,4,12,12,4,12,20,4,12,28,4,20,4,4,20,12,4,20,20,4,20,28,4,28,4,4,28,12,4,28,20,4,28,28,12,4,4,12,4,12,12,4,20,12,4,28,12,12,4,12,12,12,12,12,20,12,12,28,12,20,4,12,20,12,12,20,20,12,20,28,12,28,4,12,28,12,12,28,20,12,28,28,20,4,4,20,4,12,20,4,20,20,4,28,20,12,4,20,12,12,20,12,20,20,12,28,20,20,4,20,20,12,20,20,20,20,20,28,20,28,4,20,28,12,20,28,20,20,28,28,28,4,4,28,4,12,28,4,20,28,4,28,28,12,4,28,12,12,28,12,20,28,12,28,28,20,4,28,20,12,28,20,20,28,20,28,28,28,4,28,28,12,28,28,20,28,28,28};
 
-	gridding3D_gpu(data,data_entries,coords,gdata,grid_size,kern,kernel_entries,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1]);
+	gridding3D_gpu(data,data_entries,coords,gdata,grid_size,kern,kernel_entries,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1],CONVOLUTION);
 
 	/*for (int j=0; j<im_width; j++)
 	{
@@ -1068,7 +1068,7 @@ TEST(TestGPUGridding,MatlabTest_8SK3w32)
 	
 	int sector_centers[3*sector_count] = {4,4,4,4,4,12,4,4,20,4,4,28,4,12,4,4,12,12,4,12,20,4,12,28,4,20,4,4,20,12,4,20,20,4,20,28,4,28,4,4,28,12,4,28,20,4,28,28,12,4,4,12,4,12,12,4,20,12,4,28,12,12,4,12,12,12,12,12,20,12,12,28,12,20,4,12,20,12,12,20,20,12,20,28,12,28,4,12,28,12,12,28,20,12,28,28,20,4,4,20,4,12,20,4,20,20,4,28,20,12,4,20,12,12,20,12,20,20,12,28,20,20,4,20,20,12,20,20,20,20,20,28,20,28,4,20,28,12,20,28,20,20,28,28,28,4,4,28,4,12,28,4,20,28,4,28,28,12,4,28,12,12,28,12,20,28,12,28,28,20,4,28,20,12,28,20,20,28,20,28,28,28,4,28,28,12,28,28,20,28,28,28};
 
-	gridding3D_gpu(data,data_entries,coords,gdata,grid_size,kern,kernel_entries,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1]);
+	gridding3D_gpu(data,data_entries,coords,gdata,grid_size,kern,kernel_entries,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1],CONVOLUTION);
 
 	/*for (int j=0; j<im_width; j++)
 	{
@@ -1091,7 +1091,7 @@ TEST(TestGPUGridding,MatlabTest_8SK3w32)
 	EXPECT_NEAR(gdata[get3DC2lin(24,2,16,im_width)].x,0.0045f,epsilon);
 	EXPECT_NEAR(gdata[get3DC2lin(24,1,16,im_width)].x,0.0016f,epsilon);
 	EXPECT_NEAR(gdata[get3DC2lin(25,3,16,im_width)].x,0.0012f,epsilon);
-  EXPECT_NEAR(gdata[get3DC2lin(25,2,16,im_width)].x,0.0020f,epsilon);//Re
+	EXPECT_NEAR(gdata[get3DC2lin(25,2,16,im_width)].x,0.0020f,epsilon);//Re
 	EXPECT_NEAR(gdata[get3DC2lin(25,2,16,im_width)].y,-0.0009f,epsilon);//Im
 	EXPECT_NEAR(gdata[get3DC2lin(25,1,16,im_width)].x,0.0007f,epsilon);
 	

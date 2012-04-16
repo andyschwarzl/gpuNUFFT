@@ -1,6 +1,7 @@
 #include "cuda_utils.hpp"
+#include "cuda_utils.cuh"
 
-#include "cuda_utils.cuh" 
+#include "gridding_gpu.hpp"
 
 //Simple Test Kernel 
 #define N 1000 //DIM ^3 
@@ -29,8 +30,8 @@ __global__ void griddingKernel( DType* data,
 							    CufftType* gdata,
 							    DType* kernel, 
 							    int* sectors, 
-								  int* sector_centers,
-								  DType* temp_gdata
+								int* sector_centers,
+								DType* temp_gdata
 								)
 {
 	//TODO static or dynamic?
@@ -221,7 +222,8 @@ void gridding3D_gpu(DType* data,
 					int sector_width,
 					int kernel_width, 
 					int kernel_count, 
-					int width)
+					int width,
+					const GriddingOutput gridding_out)
 {
 	//runSimpleKernelCall();
 		
@@ -266,20 +268,40 @@ void gridding3D_gpu(DType* data,
 	//compose total output from local blocks 
 	composeOutput<<<1,block_dim>>>(temp_gdata_d,gdata_d,sector_centers_d);
 
+	if (gridding_out == CONVOLUTION)
+	{
+		printf("stopping output after CONVOLUTION step\n");
+		//get output
+		copyFromDevice<CufftType>(gdata_d,gdata,gdata_cnt);
+		//free memory //printf("%p\n%p\n%p\n%p\n%p\n%p\n%p\n",data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d);
+		freeTotalDeviceMemory(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d,NULL);//NULL as stop token
+		free(gi_host);
+		return;
+	}
+
 	//TODO Inverse fft
-	/*cufftHandle fft_plan;
+	cufftHandle fft_plan;
 	cufftPlan3d(&fft_plan, GI.width,GI.width,GI.width, CUFFT_C2C) ;
 	int err;
-	 //Inverse FFT
+	
+	//Inverse FFT
 	if (err=cufftExecC2C(fft_plan, gdata_d, gdata_d, CUFFT_INVERSE) != CUFFT_SUCCESS)
-  {
+	{
       printf("cufft has failed with err %i \n",err);
       return;
-  }*/
-
+	}
+	if (gridding_out == FFT)
+	{
+		printf("stopping output after FFT step\n");
+		//get output
+		copyFromDevice<CufftType>(gdata_d,gdata,gdata_cnt);
+		//free memory
+		freeTotalDeviceMemory(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d,NULL);//NULL as stop token
+		free(gi_host);
+		return;
+	}
+	
 	//TODO deapodization
-
-
 	copyFromDevice<CufftType>(gdata_d,gdata,gdata_cnt);
 	
 	freeDeviceMem(data_d);

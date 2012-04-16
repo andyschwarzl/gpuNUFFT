@@ -7,6 +7,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+enum GriddingOutput
+{
+	CONVOLUTION,
+	FFT,
+	DEAPODIZATION
+};
+
 void gridding3D_gpu(DType* data, 
 					int data_cnt,
 					DType* crds, 
@@ -20,7 +27,8 @@ void gridding3D_gpu(DType* data,
 					int sector_width,
 					int kernel_width, 
 					int kernel_count, 
-					int width);
+					int width,
+					const GriddingOutput gridding_out);
 
 struct GriddingInfo 
 {
@@ -40,5 +48,6 @@ struct GriddingInfo
 	DType radiusSquared;
 	DType dist_multiplier;
 };
+
 
 #endif  // GRIDDING_GPU_HPP_*/

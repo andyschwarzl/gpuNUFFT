@@ -641,11 +641,11 @@ TEST(TestGPUGriddingFFT,GPUTest_8SectorsKernel3nDataw128)
 
 	gridding3D_gpu(data,data_entries,coords,gdata,grid_size,kern,kernel_entries,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1],FFT);
 
-	int index = get3DC2lin(5,5,5,im_width);
-	printf("index to test %d\n",index);
-	//EXPECT_EQ(index,2*555);
-	
-	for (int j=0; j<im_width; j++)
+	EXPECT_NEAR(gdata[get3DC2lin(51,50,65,128)].x,0.0444f,epsilon);
+	EXPECT_NEAR(gdata[get3DC2lin(56,50,65,128)].x,-0.0269f,epsilon);
+	EXPECT_NEAR(gdata[get3DC2lin(60,50,65,128)].x,-0.0187f,epsilon);
+
+	/*for (int j=0; j<im_width; j++)
 	{
 		for (int i=0; i<im_width; i++)
 			if (i >= 50 && i <= 70 && j >= 50 && j <= 70)
@@ -653,7 +653,7 @@ TEST(TestGPUGriddingFFT,GPUTest_8SectorsKernel3nDataw128)
 		
 		if (j >= 50 && j <= 70)
 			printf("\n");
-	}
+	}*/
 	
 	free(data);
 	free(coords);

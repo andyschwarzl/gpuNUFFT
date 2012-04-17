@@ -1042,18 +1042,18 @@ TEST(TestGPUGriddingFFT,MatlabTest_8SK3w32)
 
 	gridding3D_gpu(data,data_entries,coords,gdata,grid_size,kern,kernel_entries,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1],FFT);
 
-	/*for (int j=0; j<im_width; j++)
+	for (int j=0; j<im_width; j++)
 	{
 		for (int i=0; i<im_width; i++)
 		{
-			float dpr = gdata[get3DC2lin(i,im_width-1-j,16,im_width)];
-			float dpi = gdata[get3DC2lin(i,im_width-1-j,16,im_width)+1];
+			float dpr = gdata[get3DC2lin(i,im_width-1-j,16,im_width)].x;
+			float dpi = gdata[get3DC2lin(i,im_width-1-j,16,im_width)].y;
 
 			if (abs(dpr) > 0.0f)
 				printf("(%d,%d)= %.4f + %.4f i ",i,im_width-1-j,dpr,dpi);
 		}
 		printf("\n");
-	}*/
+	}
 
 	/*EXPECT_NEAR(gdata[get3DC2lin(23,3,16,im_width)].x,0.0012f,epsilon);
 	EXPECT_NEAR(gdata[get3DC2lin(23,2,16,im_width)].x,0.0020f,epsilon);

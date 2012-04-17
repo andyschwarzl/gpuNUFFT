@@ -200,8 +200,8 @@ void gridding3D_gpu(DType* data,
 	
 	printf("allocate and copy kernel of size %d...\n",kernel_cnt);
 	allocateAndCopyToDeviceMem<DType>(&kernel_d,kernel,kernel_cnt);
-	printf("allocate and copy sectors of size %d...\n",2*sector_count);
-	allocateAndCopyToDeviceMem<int>(&sectors_d,sectors,2*sector_count);
+	printf("allocate and copy sectors of size %d...\n",sector_count+1);
+	allocateAndCopyToDeviceMem<int>(&sectors_d,sectors,sector_count+1);
 	printf("allocate and copy sector_centers of size %d...\n",3*sector_count);
 	allocateAndCopyToDeviceMem<int>(&sector_centers_d,sector_centers,3*sector_count);
 	

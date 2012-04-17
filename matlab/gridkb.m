@@ -135,7 +135,7 @@ m = m(:,:,ceil(n/2)+1);
 if strcmp(opt,'k-space') return; end;
 
 %im = fftshift(fft2(fftshift(m)));
-im = fftshift(m)
+im = fftshift(m);
 % compute deappodization function
 x = [-osf*n/2:osf*n/2-1]/(n);
 sqa = sqrt(pi*pi*kw*kw*x.*x-beta*beta);

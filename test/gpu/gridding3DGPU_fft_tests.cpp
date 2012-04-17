@@ -8,7 +8,7 @@
 
 #define get3DC2lin(_x,_y,_z,_width) ((_x) + (_width) * ( (_y) + (_z) * (_width)))
 
-TEST(DISABLED_TestGPUGriddingFFT,KernelCall1Sector)
+TEST(TestGPUGriddingFFT,KernelCall1Sector)
 {
 	int kernel_width = 3;
 	long kernel_entries = calculateGrid3KernelSize();
@@ -66,21 +66,17 @@ TEST(DISABLED_TestGPUGriddingFFT,KernelCall1Sector)
 	int index = get3DC2lin(5,5,5,im_width);
 	printf("index to test %d\n",index);
 	EXPECT_EQ(index,555);
-	/*EXPECT_NEAR(1.0f,gdata[index].x,epsilon);
-	EXPECT_NEAR(0.4502,gdata[get3DC2lin(5,4,5,im_width)].x,epsilon*10.0f);
-	EXPECT_NEAR(0.4502,gdata[get3DC2lin(4,5,5,im_width)].x,epsilon*10.0f);
-	EXPECT_NEAR(0.4502,gdata[get3DC2lin(5,6,5,im_width)].x,epsilon*10.0f);
-
-	EXPECT_NEAR(0.2027,gdata[get3DC2lin(6,6,5,im_width)].x,epsilon*10.0f);
-	EXPECT_NEAR(0.2027,gdata[get3DC2lin(4,4,5,im_width)].x,epsilon*10.0f);
-	EXPECT_NEAR(0.2027,gdata[get3DC2lin(4,6,5,im_width)].x,epsilon*10.0f);*/
+	EXPECT_NEAR(-0.0010f,gdata[index].x,epsilon);
+	EXPECT_NEAR(0.0027f,gdata[get3DC2lin(5,4,5,im_width)].x,epsilon*10.0f);
+	EXPECT_NEAR(0.0027f,gdata[get3DC2lin(4,5,5,im_width)].x,epsilon*10.0f);
+	EXPECT_NEAR(0.3262f,gdata[get3DC2lin(0,1,5,im_width)].x,epsilon*10.0f);
 	
-	for (int j=0; j<im_width; j++)
+	/*for (int j=0; j<im_width; j++)
 	{
 		for (int i=0; i<im_width; i++)
 			printf("%.4f ",gdata[get3DC2lin(i,j,5,im_width)].x);
 		printf("\n");
-	}
+	}*/
 
 	free(data);
 	free(coords);
@@ -725,7 +721,7 @@ TEST(DISABLED_TestGPUGriddingFFT,GPUTest_8SectorsKernel3nDataw128)
 	free(sector_centers);
 }
 
-TEST(DISABLED_TestGPUGriddingFFT,GPUTest_FactorTwoTest)
+TEST(TestGPUGriddingFFT,GPUTest_FactorTwoTest)
 {
 	//oversampling ratio
 	float osr = DEFAULT_OVERSAMPLING_RATIO;
@@ -852,8 +848,13 @@ TEST(DISABLED_TestGPUGriddingFFT,GPUTest_FactorTwoTest)
 	int index = get3DC2lin(5,5,5,im_width);
 	printf("index to test %d\n",index);
 	
-	EXPECT_NEAR(gdata[get3DC2lin(8,8,8,16)].x,2.0f,epsilon);
-
+/*	EXPECT_NEAR(gdata[get3DC2lin(8,8,8,16)].x,2.0f,epsilon);*/
+	for (int j=0; j<im_width; j++)
+	{
+		for (int i=0; i<im_width; i++)
+			printf("%.4f ",gdata[get3DC2lin(i,j,5,im_width)].x);
+		printf("\n");
+	}
 	free(data);
 	free(coords);
 	free(gdata);
@@ -983,7 +984,7 @@ TEST(DISABLED_TestGPUGriddingFFT,GPUTest_8SectorsKernel3nDataw32)
 	//free(sector_centers);
 }
 
-TEST(TestGPUGriddingFFT,MatlabTest_8SK3w32)
+TEST(DISABLED_TestGPUGriddingFFT,MatlabTest_8SK3w32)
 {
 	//oversampling ratio
 	float osr = DEFAULT_OVERSAMPLING_RATIO;

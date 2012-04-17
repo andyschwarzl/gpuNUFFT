@@ -233,7 +233,7 @@ void gridding3D_gpu(DType* data,
 	
 	if (err=cufftExecC2C(fft_plan, gdata_d, gdata_d, CUFFT_INVERSE) != CUFFT_SUCCESS)
 	{
-      printf("cufft has failed with err %i \n",err);
+	      printf("cufft has failed with err %i \n",err);
       //return;
 	}
 	/* Destroy the cuFFT plan. */
@@ -255,12 +255,6 @@ void gridding3D_gpu(DType* data,
 	//get result
 	copyFromDevice<CufftType>(gdata_d,gdata,gdata_cnt);
 	
-	freeDeviceMem(data_d);
-	freeDeviceMem(crds_d);
-	freeDeviceMem(gdata_d);
-	freeDeviceMem(kernel_d);
-	freeDeviceMem(sectors_d);
-	freeDeviceMem(sector_centers_d);
-	freeDeviceMem(temp_gdata_d);
+	freeTotalDeviceMemory(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d,NULL);//NULL as stop
 	free(gi_host);
 }

@@ -585,7 +585,7 @@ TEST(DISABLED_TestGPUGriddingFFT,GPUTest_8SectorsKernel4nData)
 	free(sector_centers);
 }
 
-TEST(DISABLED_TestGPUGriddingFFT,GPUTest_8SectorsKernel3nDataw128)
+TEST(TestGPUGriddingFFT,GPUTest_8SectorsKernel3nDataw128)
 {
 	//oversampling ratio
 	float osr = DEFAULT_OVERSAMPLING_RATIO;
@@ -712,6 +712,13 @@ TEST(DISABLED_TestGPUGriddingFFT,GPUTest_8SectorsKernel3nDataw128)
 	int index = get3DC2lin(5,5,5,im_width);
 	printf("index to test %d\n",index);
 	//EXPECT_EQ(index,2*555);
+	
+	for (int j=0; j<im_width; j++)
+	{
+		for (int i=0; i<im_width; i++)
+			printf("%.4f ",gdata[get3DC2lin(i,j,65,im_width)].x);
+		printf("\n");
+	}
 	
 	free(data);
 	free(coords);

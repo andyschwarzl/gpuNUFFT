@@ -848,13 +848,15 @@ TEST(TestGPUGriddingFFT,GPUTest_FactorTwoTest)
 	int index = get3DC2lin(5,5,5,im_width);
 	printf("index to test %d\n",index);
 	
-/*	EXPECT_NEAR(gdata[get3DC2lin(8,8,8,16)].x,2.0f,epsilon);*/
-	for (int j=0; j<im_width; j++)
+	EXPECT_NEAR(gdata[get3DC2lin(8,8,5,16)].x,-0.0129f,epsilon);
+	EXPECT_NEAR(gdata[get3DC2lin(2,2,5,16)].x,-3.5118f,epsilon);
+	EXPECT_NEAR(gdata[get3DC2lin(4,3,5,16)].x,1.7624f,epsilon);
+	/*for (int j=0; j<im_width; j++)
 	{
 		for (int i=0; i<im_width; i++)
 			printf("%.4f ",gdata[get3DC2lin(i,j,5,im_width)].x);
 		printf("\n");
-	}
+	}*/
 	free(data);
 	free(coords);
 	free(gdata);

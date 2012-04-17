@@ -51,4 +51,14 @@ tic
 [imgRegrid_kb,kernel] = gridkb(kspace2,k,w,128,osf,wg,'image');
 toc
 
+figure, imshow(abs((fliplr(imgRegrid_kb))),[]);
+
+%% Test FFT output
+osf=1
+ kspace_test = ([1]);
+ wg = 3;
+ k_test = ([0]);
+ w_test = ([1]);
+ 
+[imgRegrid_kb,kernel] = gridkb(kspace_test,k_test,w_test,16,osf,wg,'image');
 figure, imshow(abs(flipud(imgRegrid_kb)),[]);

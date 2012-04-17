@@ -223,7 +223,7 @@ void gridding3D_gpu(DType* data,
 		return;
 	}
 
-	//TODO Inverse fft
+	//Inverse fft plan and execution
 	cufftHandle fft_plan;
 	cufftResult res = cufftPlan3d(&fft_plan, gi_host->width,gi_host->width,gi_host->width, CUFFT_C2C) ;
 
@@ -231,8 +231,7 @@ void gridding3D_gpu(DType* data,
 		printf("error on CUFFT Plan creation!!! %d\n",res);
 	int err;
 	
-	//Inverse FFT
-	if (err=cufftExecC2C(fft_plan, gdata_d, gdata_d, CUFFT_FORWARD) != CUFFT_SUCCESS)
+	if (err=cufftExecC2C(fft_plan, gdata_d, gdata_d, CUFFT_INVERSE) != CUFFT_SUCCESS)
 	{
       printf("cufft has failed with err %i \n",err);
       //return;
@@ -252,6 +251,8 @@ void gridding3D_gpu(DType* data,
 	}
 	
 	//TODO deapodization
+
+	//get result
 	copyFromDevice<CufftType>(gdata_d,gdata,gdata_cnt);
 	
 	freeDeviceMem(data_d);

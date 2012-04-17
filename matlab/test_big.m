@@ -60,5 +60,5 @@ osf=1
  k_test = ([0]);
  w_test = ([1]);
  
-[imgRegrid_kb,kernel] = gridkb(kspace_test,k_test,w_test,16,osf,wg,'image');
+[imgRegrid_kb,kernel] = gridkb(kspace_test,k_test,w_test,128,osf,wg,'image');
 figure, imshow(abs(flipud(imgRegrid_kb)),[]);

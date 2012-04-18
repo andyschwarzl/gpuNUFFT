@@ -41,17 +41,32 @@ osf=1
  
  [imgRegrid_kb,kernel] = gridkb(kspace_test,k_test,w_test,32,osf,wg,'image');
  figure, imshow(abs(flipud(imgRegrid_kb)),[]);
-
-%% Perform Regridding with Kaiser Besser Kernel 256
+%% Perform Regridding with Kaiser Besser Kernel 128
 kspace2 = kspace;
 osf = 1;
 wg = 3;
-
 tic
-[imgRegrid_kb,kernel] = gridkb(kspace2,k,w,256,osf,wg,'image');
+[imgRegrid_kb,kernel] = gridkb(kspace2,k,w,128,osf,wg,'image');
+toc
+figure, imshow(abs(fliplr((imgRegrid_kb))),[]);
+%% Perform Regridding with Kaiser Besser Kernel 128, own deapo
+kspace2 = kspace;
+osf = 1;
+wg = 3;
+tic
+[imgRegrid_kb,kernel] = gridkb(kspace2,k,w,128,osf,wg,'deappo');
 toc
 
-figure, imshow(abs((fliplr(imgRegrid_kb))),[]);
+% alternative deappo
+kspace_de = [1];
+k_de = [0];
+w_de = [1];
+[deapo,kernel_deapo] = gridkb(kspace_de,k_de,w_de,128,osf,wg,'deappo');
+figure, imshow(abs(flipud((deapo(:,:,65)))),[]);
+
+imgRegrid_kb = imgRegrid_kb ./ deapo;
+
+figure, imshow(abs(fliplr((imgRegrid_kb(:,:,65)))),[]);
 
 %% Test FFT output
 osf=1

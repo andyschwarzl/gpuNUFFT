@@ -35,7 +35,7 @@ osf = 1;
 wg = 3;
 
 tic
-[imgRegrid_kb,kernel] = gridkb(dataRadial,k,w,128,osf,wg,'image');
+[imgRegrid_kb,kernel] = grid3D(dataRadial,k,w,128,osf,wg,'image');
 toc
 
 figure, imshow(abs(flipud(imgRegrid_kb)),[]);

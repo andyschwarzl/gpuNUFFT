@@ -1,6 +1,5 @@
 function [m, p] = gridkb(d,k,w,n,osf,wg,opt)
-
-% function m = gridkb(d,k,w,n,osf,kw,opt)
+% function m = grid3D(d,k,w,n,osf,kw,opt)
 %
 %     d -- k-space data
 %     k -- k-trajectory, scaled -0.5 to 0.5
@@ -17,10 +16,10 @@ function [m, p] = gridkb(d,k,w,n,osf,wg,opt)
 %    oversampling factor and kernel size
 %  Now uses Phil's numbers
 %
-
-
-%  Written by John Pauly, 2003, 2005, 2007, 2011
+%  extend from John Pauly, 2003, 2005, 2007, 2011
 %  (c)Board of Trustees, Leland Stanford Junior University
+%
+%  A. Schwarzl, Graz University of Technology
 
 if nargin < 7,
     opt = 'image';
@@ -59,28 +58,6 @@ ny = (n*osf/2+1) + osf*n*imag(k);
 
 m = zeros(osf*n,osf*n);
 
-% loop over samples in kernel at grid spacing
-% for lx = -kwidth:kwidth,
-%   for ly = -kwidth:kwidth,
-% 
-%     % find nearest samples
-%     nxt = round(nx+lx);
-%     nyt = round(ny+ly);
-% 
-%     % seperable kernel value
-%     kkx = min(round(kosf*abs(nx-nxt)+1), floor(kosf*kwidth)+1);
-%     kwx = p(kkx);
-%     kky = min(round(kosf*abs(ny-nyt)+1), floor(kosf*kwidth)+1);
-%     kwy = p(kky);
-% 
-%     % if data falls outside matrix, put it at the edge, zero out below
-%     nxt = max(nxt,1); nxt = min(nxt,osf*n);
-%     nyt = max(nyt,1); nyt = min(nyt,osf*n);
-% 
-%     % accumulate gridded data
-%     m = m+sparse(nxt,nyt,dw.*kwx'.*kwy',osf*n,osf*n);
-%   end;
-% end;
 'START precomputation'
 data = [real(dw(:))'; imag(dw(:))'];
 coords = [real(k(:))'; imag(k(:))';zeros(1,length(k(:)))];
@@ -125,9 +102,6 @@ toc
 size(m)
 m = squeeze(m(1,:,:,:) + 1j*(m(2,:,:,:)));
 
-m = m(:,:,ceil(n/2)+1);
-
-
 % zero out data at edges, which is probably due to data outside mtx
 %m(:,1) = 0; m(:,osf*n) = 0;
 %m(1,:) = 0; m(osf*n,:) = 0;
@@ -137,6 +111,9 @@ if strcmp(opt,'k-space') return; end;
 
 %im = fftshift(fft2(fftshift(m)));
 im = fftshift(m);
+m = im;
+if strcmp(opt,'deappo') return; end;
+im = m(:,:,ceil(n/2)+1);
 % compute deappodization function
 x = [-osf*n/2:osf*n/2-1]/(n);
 sqa = sqrt(pi*pi*kw*kw*x.*x-beta*beta);

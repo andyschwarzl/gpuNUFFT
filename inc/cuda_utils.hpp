@@ -41,6 +41,13 @@ inline void allocateAndCopyToDeviceMem(TypeName** device_ptr, TypeName* host_ptr
 }
 
 template<typename TypeName>
+inline void allocateAndSetMem(TypeName** device_ptr, int num_elements,int value)
+{
+	allocateDeviceMem<TypeName>(device_ptr,num_elements);
+	HANDLE_ERROR(cudaMemset(*device_ptr,value,num_elements*sizeof(TypeName)));
+}
+
+template<typename TypeName>
 inline void copyFromDevice(TypeName* device_ptr, TypeName* host_ptr, int num_elements)
 {
 	HANDLE_ERROR(cudaMemcpy(host_ptr, device_ptr,num_elements*sizeof(TypeName),cudaMemcpyDeviceToHost ));

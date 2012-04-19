@@ -134,7 +134,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 		mexPrintf("Starting GRIDDING 3D Function...\n");
 
 	//TODO check input params count first!
-  /*  if(nrhs != 9 ) {
+	/*  if(nrhs != 9 ) {
 	printf("\nUsage:\n");
     return;
 	} else if(nlhs>1) {
@@ -196,18 +196,18 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	loadGrid3Kernel(kern,kernel_entries,kernel_width,osr);
 	
 	//Output Grid
-  CufftType* gdata;
+	CufftType* gdata;
 	const int n_dims = 4;
 	unsigned long dims_g[n_dims];
-  dims_g[0] = 2; /* complex */
+	dims_g[0] = 2; /* complex */
 	dims_g[1] = (unsigned long)(im_width * osr); 
-  dims_g[2] = (unsigned long)(im_width * osr);
-  dims_g[3] = (unsigned long)(im_width * osr);
+	dims_g[2] = (unsigned long)(im_width * osr);
+	dims_g[3] = (unsigned long)(im_width * osr);
 
 	long grid_size = dims_g[1]*dims_g[2]*dims_g[3];
 
 	plhs[0] = mxCreateNumericArray(n_dims,(const mwSize*)dims_g,mxGetClassID(prhs[0]),mxREAL);
-  gdata = (CufftType*)mxGetData(plhs[0]);
+    gdata = (CufftType*)mxGetData(plhs[0]);
 	if (gdata == NULL)
      mexErrMsgTxt("Could not create output mxArray.\n");
 

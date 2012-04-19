@@ -190,10 +190,10 @@ void gridding3D_gpu(DType* data,
 	allocateAndCopyToDeviceMem<DType>(&data_d,data,2*data_cnt);
 
 	int temp_grid_cnt = 2 * sector_count * gi_host->sector_dim;
-	DType* temp_gdata = (DType*) calloc(temp_grid_cnt,sizeof(DType));
+//	DType* temp_gdata = (DType*) calloc(temp_grid_cnt,sizeof(DType));
 
 	printf("allocate temp grid data of size %d...\n",temp_grid_cnt);
-	allocateAndCopyToDeviceMem<DType>(&temp_gdata_d,temp_gdata,temp_grid_cnt);
+	allocateAndSetMem<DType>(&temp_gdata_d,temp_grid_cnt,0);
 	
 	printf("allocate and copy coords of size %d...\n",3*data_cnt);
 	allocateAndCopyToDeviceMem<DType>(&crds_d,crds,3*data_cnt);
@@ -220,6 +220,7 @@ void gridding3D_gpu(DType* data,
 		//free memory //printf("%p\n%p\n%p\n%p\n%p\n%p\n%p\n",data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d);
 		freeTotalDeviceMemory(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d,NULL);//NULL as stop token
 		free(gi_host);
+//		free(temp_gdata);
 		return;
 	}
 
@@ -247,6 +248,7 @@ void gridding3D_gpu(DType* data,
 		//free memory
 		freeTotalDeviceMemory(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d,NULL);//NULL as stop token
 		free(gi_host);
+//		free(temp_gdata);
 		return;
 	}
 	

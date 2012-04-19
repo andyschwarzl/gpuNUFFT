@@ -64,7 +64,7 @@ w_de = [1];
 [deapo,kernel_deapo] = gridkb(kspace_de,k_de,w_de,128,osf,wg,'deappo');
 figure, imshow(abs(flipud((deapo(:,:,65)))),[]);
 
-imgRegrid_kb = imgRegrid_kb ./ deapo;
+imgRegrid_kb = imgRegrid_kb ./ abs(deapo);
 
 figure, imshow(abs(fliplr((imgRegrid_kb(:,:,65)))),[]);
 

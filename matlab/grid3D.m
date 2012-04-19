@@ -30,46 +30,23 @@ d = d(:);
 %k = k(:);
 w = w(:);
 
-% width of the kernel on the original grid
-kw = wg/osf;
-
-% preweight
+% preweight, DCF
 dw = d.*w;
-
-% compute kernel, assume e1 is 0.001, assuming nearest neighbor
-kosf = floor(0.91/(osf*1e-3));
-
-% half width in oversampled grid units
-kwidth = osf*kw/2;
-
-% beta from the Beatty paper
-beta = pi*sqrt((kw*(osf-0.5)).^2-0.8);
-
-% compute kernel
-om = [0:kosf*kwidth]/(kosf*kwidth);
-p = besseli(0,beta*sqrt(1-om.*om));
-p = p./p(1);
-% last sample is zero so we can use min() below for samples bigger than kwidth
-p(end) = 0;
-
-% convert k-space samples to matrix indices
-nx = (n*osf/2+1) + osf*n*real(k);
-ny = (n*osf/2+1) + osf*n*imag(k);
-
+p = 0;
 m = zeros(osf*n,osf*n);
 
-'START precomputation'
+%START precomputation
 data = [real(dw(:))'; imag(dw(:))'];
 coords = k;%[real(k(:))'; imag(k(:))';zeros(1,length(k(:)))];
 
-[test_coords, test_sector_centers,sector_dim] = assign_sectors(n,8,coords);
+[test_coords, test_sector_centers,sector_dim] = assign_sectors(osf*n,8,coords);
 
 [v i] = sort(test_coords);
 v = v +1;
 sectors_test = zeros(1,sector_dim+1);
 cnt = 0;
 for b=1:sector_dim+1
-    while (cnt < length(v) && b == v(cnt+1))
+    while (cnt < length(v) && b == int32(v(cnt+1)))
         cnt = cnt +1;
     end
     sectors_test(b)=cnt;
@@ -102,7 +79,6 @@ toc
 size(m)
 m = squeeze(m(1,:,:,:) + 1j*(m(2,:,:,:)));
 
-
 % zero out data at edges, which is probably due to data outside mtx
 %m(:,1) = 0; m(:,osf*n) = 0;
 %m(1,:) = 0; m(osf*n,:) = 0;
@@ -110,22 +86,11 @@ m = squeeze(m(1,:,:,:) + 1j*(m(2,:,:,:)));
 % stop here, if we just want the k-space data
 if strcmp(opt,'k-space') return; end;
 
-%im = fftshift(fft2(fftshift(m)));
 im = fftshift(m);
 m = im;
-if strcmp(opt,'deappo') return; end;
-im = m(:,:,ceil(n/2)+1);
-% compute deappodization function
-x = [-osf*n/2:osf*n/2-1]/(n);
-sqa = sqrt(pi*pi*kw*kw*x.*x-beta*beta);
-dax = sin(sqa)./(sqa);
-% normalize by DC value
-dax = dax/dax(osf*n/2);
-% make it a 2D array
-da = dax'*dax;
 
-% deappodize
-im = im./da;
-figure, imshow(abs(flipud(da)),[]);
-%return the result
-m = im;
+ind_off = (n * (osf-1) / 2) + 1;
+ind_start = ind_off;
+ind_end = ind_start + n -1;
+m = m(ind_start:ind_end,ind_start:ind_end,ind_start:ind_end);
+

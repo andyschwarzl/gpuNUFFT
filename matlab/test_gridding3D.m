@@ -1,12 +1,9 @@
 %% Radial Regridding
-
 clear all; close all; clc;
 
 %% add bin to path
 addpath ../bin
-
 addpath ../../daten
-
 %% Load data
 load MREG_data_Graz;
 
@@ -27,13 +24,16 @@ kspace_de = [1];
 k_de = [0;0;0];
 w_de = [1];
 [deapo,kernel_deapo] = grid3D(kspace_de,k_de,w_de,64,osf,wg,'deappo');
-figure, imshow(abs(flipud((deapo(:,:,25)))),[]);
+figure, imshow(abs(flipud((deapo(:,:,35)))),[]);
+%%
 
+deapo = abs(deapo(:,:,11:54));
 %% Perform Regridding with Kaiser Besser Kernel 64
 k = E.nufftStruct.om'/(2*pi);
 w = ones(11685,1);
 res = zeros(E.imageDim);
 for coil = 1 : E.numCoils,
+        disp(['iteration ',num2str(coil)]);
         coil_start =  (coil-1) * E.trajectory_length +1;
         coil_end = coil_start +  E.trajectory_length - 1;
         % get kspace data and k trajectories
@@ -41,14 +41,15 @@ for coil = 1 : E.numCoils,
         tic
         [imgRegrid_kb,kernel] = grid3D(kspace,k,w,64,osf,wg,'deappo');
         toc
-        'SENS corr'
-        imgRegrid_kb = imgRegrid_kb(:,:,[11:54]) .* conj(smaps(:,:,:,coil));
-        imgRegrid_kb = imgRegrid_kb ./ deapo(:,:,[11:54]);
+        %SENS corr
+        imgRegrid_kb = imgRegrid_kb(:,:,[11:54]) .* smaps(:,:,:,coil);
+        imgRegrid_kb(deapo>0) = imgRegrid_kb(deapo>0) ./ deapo(deapo>0);
+        
         res = sqrt(abs(res).^2 + abs(imgRegrid_kb).^2);
 end
 %%
-figure, imshow(abs(fliplr((res(:,:,35)))),[]);
-figure, imshow(abs(((z(:,:,35)))),[]);
+figure, imshow(abs(fliplr((res(:,:,25)))),[]);
+figure, imshow(abs(((z(:,:,25)))),[]);
 
 %%
 for slice = 1:44

@@ -68,7 +68,7 @@ TEST(TestGPUGriddingConv,KernelCall1Sector)
 	gdata = (CufftType*) calloc(grid_size,sizeof(CufftType));
 	
 	//sectors of data, count and start indices
-	int sector_width = 10;
+	int sector_width = 9;
 	
 	int sector_count = 1;
 	int* sectors = (int*) calloc(2*sector_count,sizeof(int));

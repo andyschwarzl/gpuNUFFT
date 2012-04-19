@@ -4,7 +4,8 @@
 #include "gridding_gpu.hpp"
 
 #define N_THREADS_PER_SECTOR 2 //16x16
-#define SECTOR_WIDTH 10
+#define MAX_SECTOR_WIDTH 12 // 8x8x8 + Kernel with Width 5 -> 14x14x14
+#define MAX_SECTOR_DIM 1728 // 12x12x12
 
 __global__ void griddingKernel( DType* data, 
 							    DType* crds, 
@@ -15,7 +16,7 @@ __global__ void griddingKernel( DType* data,
 								DType* temp_gdata
 								)
 {
-	__shared__ DType sdata[2*SECTOR_WIDTH*SECTOR_WIDTH*SECTOR_WIDTH]; //ca. 8kB -> 2 Blöcke je SM ???
+	__shared__ DType sdata[2*MAX_SECTOR_DIM]; //ca. 13kB shared memory
 
 	int sec= blockIdx.x;
 	//init shared memory
@@ -94,8 +95,8 @@ __global__ void griddingKernel( DType* data,
 										//get kernel value
 										//Calculate Separable Filters 
 										val = kernel[(int) round(dz_sqr * GI.dist_multiplier)] *
-												kernel[(int) round(dy_sqr * GI.dist_multiplier)] *
-												kernel[(int) round(dx_sqr * GI.dist_multiplier)];
+											  kernel[(int) round(dy_sqr * GI.dist_multiplier)] *
+											  kernel[(int) round(dx_sqr * GI.dist_multiplier)];
 										ind = 2* getIndex(i,j,k,GI.sector_pad_width);
 								
 										// multiply data by current kernel val 
@@ -114,7 +115,7 @@ __global__ void griddingKernel( DType* data,
 		} //grid points per sector
 	
 	  //write shared data to temporary output grid
-		int sector_ind_offset = sec * GI.sector_pad_width*GI.sector_pad_width*GI.sector_pad_width;
+		int sector_ind_offset = sec * GI.sector_dim;
 		for (int z=threadIdx.z;z<GI.sector_pad_width; z += blockDim.z)
 		{
 			int y=threadIdx.y;
@@ -141,7 +142,7 @@ __global__ void composeOutput(DType* temp_gdata, CufftType* gdata, int* sector_c
 		__shared__ int sector_ind_offset;
 		sector_ind_offset = getIndex(center.x - GI.sector_offset,center.y - GI.sector_offset,center.z - GI.sector_offset,GI.width);
 		__shared__ int sector_grid_offset;
-		sector_grid_offset = sec * GI.sector_pad_width*GI.sector_pad_width*GI.sector_pad_width;
+		sector_grid_offset = sec * GI.sector_dim;
 		//write data from temp grid to overall output grid
 		for (int z=threadIdx.z;z<GI.sector_pad_width; z += blockDim.z)
 		{
@@ -150,7 +151,7 @@ __global__ void composeOutput(DType* temp_gdata, CufftType* gdata, int* sector_c
 			int s_ind = 2* (sector_grid_offset + getIndex(x,y,z,GI.sector_pad_width));
 			int ind = (sector_ind_offset + getIndex(x,y,z,GI.width));
 			if (isOutlier(x,y,z,center.x,center.y,center.z,GI.width,GI.sector_offset))
-						continue;
+				continue;
 			gdata[ind].x += temp_gdata[s_ind];//Re
 			gdata[ind].y += temp_gdata[s_ind+1];//Im
 		}
@@ -190,8 +191,6 @@ void gridding3D_gpu(DType* data,
 	allocateAndCopyToDeviceMem<DType>(&data_d,data,2*data_cnt);
 
 	int temp_grid_cnt = 2 * sector_count * gi_host->sector_dim;
-//	DType* temp_gdata = (DType*) calloc(temp_grid_cnt,sizeof(DType));
-
 	printf("allocate temp grid data of size %d...\n",temp_grid_cnt);
 	allocateAndSetMem<DType>(&temp_gdata_d,temp_grid_cnt,0);
 	
@@ -205,7 +204,7 @@ void gridding3D_gpu(DType* data,
 	printf("allocate and copy sector_centers of size %d...\n",3*sector_count);
 	allocateAndCopyToDeviceMem<int>(&sector_centers_d,sector_centers,3*sector_count);
 	
-	dim3 block_dim(SECTOR_WIDTH,SECTOR_WIDTH,N_THREADS_PER_SECTOR);
+	dim3 block_dim(gi_host->sector_pad_width,gi_host->sector_pad_width,N_THREADS_PER_SECTOR);
 
     griddingKernel<<<sector_count,block_dim>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d);
 
@@ -217,10 +216,8 @@ void gridding3D_gpu(DType* data,
 		printf("stopping output after CONVOLUTION step\n");
 		//get output
 		copyFromDevice<CufftType>(gdata_d,gdata,gdata_cnt);
-		//free memory //printf("%p\n%p\n%p\n%p\n%p\n%p\n%p\n",data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d);
 		freeTotalDeviceMemory(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d,NULL);//NULL as stop token
 		free(gi_host);
-//		free(temp_gdata);
 		return;
 	}
 
@@ -248,7 +245,6 @@ void gridding3D_gpu(DType* data,
 		//free memory
 		freeTotalDeviceMemory(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d,NULL);//NULL as stop token
 		free(gi_host);
-//		free(temp_gdata);
 		return;
 	}
 	

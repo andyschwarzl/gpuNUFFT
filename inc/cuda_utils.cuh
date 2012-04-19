@@ -25,7 +25,7 @@ GriddingInfo* initAndCopyGriddingInfo(int sector_count,
 	DType kernelRadius_invSqr = 1 / radiusSquared;
 	DType dist_multiplier = (kernel_count - 1) * kernelRadius_invSqr;
 	printf("radius rel. to grid width %f\n",radius);
-	int sector_pad_width = 10;//sector_width + 2*(int)(floor(kernel_width / 2.0f));
+	int sector_pad_width = sector_width + 2*(int)(floor(kernel_width / 2.0f));
 	int sector_dim = sector_pad_width  * sector_pad_width  * sector_pad_width ;
 	int sector_offset = (int)(floor(sector_pad_width / 2.0f));
 

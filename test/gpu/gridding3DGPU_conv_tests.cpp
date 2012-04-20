@@ -461,7 +461,7 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel3nData)
 }
 
 
-TEST(DISABLED_TestGPUGriddingConv,GPUTest_8SectorsKernel4nData)
+TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel4nData)
 {
 	//oversampling ratio
 	float osr = DEFAULT_OVERSAMPLING_RATIO;

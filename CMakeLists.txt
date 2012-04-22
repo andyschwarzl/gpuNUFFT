@@ -26,6 +26,8 @@ FIND_PACKAGE(Matlab)
 enable_testing()
 
 #Options
+#General DEBUG output 
+#Matlab DEBUG output
 SET (MATLAB_DEBUG false)
 OPTION(WITH_MATLAB_DEBUG "Enable DEBUG messages for MATLAB calls" OFF)
 if (WITH_MATLAB_DEBUG)
@@ -33,6 +35,7 @@ if (WITH_MATLAB_DEBUG)
 endif()
 MESSAGE(STATUS "Setting MATLAB DEBUG Option to ${MATLAB_DEBUG}")
 
+#Enable/Disable GPU double precision 
 SET(GPU_DOUBLE_PREC OFF CACHE BOOL "Enable double precision floating point operations on GPU")
 
 if(GPU_DOUBLE_PREC)

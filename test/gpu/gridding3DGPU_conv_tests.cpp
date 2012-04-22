@@ -742,22 +742,20 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel5nData)
 
 	int index = get3DC2lin(5,5,5,im_width);
 	printf("index to test %d\n",index);
-	//EXPECT_EQ(index,2*555);
-	/*EXPECT_NEAR(1.3558f,gdata[index].x,epsilon);
-	EXPECT_NEAR(0.3101f,gdata[get3DC2lin(3,6,5,im_width)].x,epsilon*10.0f);
 	
-	EXPECT_NEAR(0.2542f,gdata[get3DC2lin(1,7,5,im_width)].x,epsilon*10.0f);
-	EXPECT_NEAR(0.5084f,gdata[get3DC2lin(6,5,5,im_width)].x,epsilon*10.0f);
-
-	EXPECT_NEAR(1.0f,gdata[get3DC2lin(8,8,5,im_width)].x,epsilon*10.0f);
-	EXPECT_NEAR(0.2585f,gdata[get3DC2lin(9,9,5,im_width)].x,epsilon*10.0f);
-	*/
-	for (int j=0; j<im_width; j++)
+	EXPECT_NEAR(1.3970f,gdata[index].x,epsilon);
+	EXPECT_NEAR(0.4256f,gdata[get3DC2lin(3,6,5,im_width)].x,epsilon*10.0f);
+	
+	EXPECT_NEAR(0.0430,gdata[get3DC2lin(6,3,5,im_width)].x,epsilon*10.0f);
+	
+	EXPECT_NEAR(0.1093f,gdata[get3DC2lin(8,6,5,im_width)].x,epsilon*10.0f);
+	
+	/*for (int j=0; j<im_width; j++)
 	{
 		for (int i=0; i<im_width; i++)
 			printf("%.4f ",gdata[get3DC2lin(i,im_width-1-j,5,im_width)].x);
 		printf("\n");
-	}
+	}*/
 
 	free(data);
 	free(coords);

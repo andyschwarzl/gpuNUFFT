@@ -4,7 +4,7 @@
 #include "gridding_gpu.hpp"
 
 #define N_THREADS_PER_SECTOR 2 //16x16
-#define MAX_SECTOR_WIDTH 12 // 8x8x8 + Kernel with Width 5 -> 14x14x14
+#define MAX_SECTOR_WIDTH 12 // 8x8x8 + Kernel with Width 5 -> 12x12x12
 #define MAX_SECTOR_DIM 1728 // 12x12x12
 
 __global__ void griddingKernel( DType* data, 
@@ -175,7 +175,11 @@ void gridding3D_gpu(DType* data,
 					const GriddingOutput gridding_out)
 {
 	assert(sectors != NULL);
-	
+	cudaEvent_t start, stop;
+	cudaEventCreate(&start);
+	cudaEventCreate(&stop);
+	cudaEventRecord(start,0);
+    
 	//split and run sectors into blocks
 	//and each data point to one thread inside this block 
 	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,sector_width,kernel_width,kernel_count,width);
@@ -205,11 +209,18 @@ void gridding3D_gpu(DType* data,
 	allocateAndCopyToDeviceMem<int>(&sector_centers_d,sector_centers,3*sector_count);
 	
 	dim3 block_dim(gi_host->sector_pad_width,gi_host->sector_pad_width,N_THREADS_PER_SECTOR);
-
-    griddingKernel<<<sector_count,block_dim>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d);
+	
+	griddingKernel<<<sector_count,block_dim>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d);
 
 	//compose total output from local blocks 
 	composeOutput<<<1,block_dim>>>(temp_gdata_d,gdata_d,sector_centers_d);
+	cudaEventRecord(stop,0);
+	cudaEventSynchronize(stop);
+	float elapsed;
+	cudaEventElapsedTime(&elapsed,start,stop);
+	printf("Time elapsed: %3.1fms\n",elapsed);
+	cudaEventDestroy(start);
+	cudaEventDestroy(stop);
 
 	if (gridding_out == CONVOLUTION)
 	{

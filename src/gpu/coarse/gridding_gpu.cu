@@ -64,7 +64,7 @@ __global__ void griddingKernel( DType* data,
 			set_minmax(jy, &jmin, &jmax, max_y, GI.kernel_radius);
 			kz = (data_point.z + 0.5f) * (GI.width) - center.z + GI.sector_offset;
 			set_minmax(kz, &kmin, &kmax, max_z, GI.kernel_radius);
-
+				                
 			// grid this point onto the neighboring cartesian points
 			for (k=threadIdx.z;k<=kmax; k += blockDim.z)
 			{

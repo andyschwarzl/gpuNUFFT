@@ -17,8 +17,8 @@ end;
 smaps = squeeze(smaps_il(1,:,:,:,:) + 1i*smaps_il(2,:,:,:,:));
 
 %% calc deappo func: alternative deappo
-osf = 1; % 1 or 2
-wg = 3;  % 3 to 7
+osf = 1.5; % 1 or 2
+wg = 5;  % 3 to 7
 
 kspace_de = [1];
 k_de = [0;0;0];

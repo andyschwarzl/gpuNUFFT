@@ -20,7 +20,7 @@ GriddingInfo* initAndCopyGriddingInfo(int sector_count,
 
 	DType kernel_radius = static_cast<DType>(kernel_width) / 2.0f;
 	DType radius = kernel_radius / static_cast<DType>(width);
-	DType width_inv = 1.0f / width;
+	//DType width_inv = 1.0f / width;
 	DType radiusSquared = radius * radius;
 	DType kernelRadius_invSqr = 1 / radiusSquared;
 	DType dist_multiplier = (kernel_count - 1) * kernelRadius_invSqr;

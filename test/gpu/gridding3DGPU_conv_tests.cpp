@@ -750,12 +750,12 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel5nData)
 	
 	EXPECT_NEAR(0.1093f,gdata[get3DC2lin(8,6,5,im_width)].x,epsilon*10.0f);
 	
-	/*for (int j=0; j<im_width; j++)
+	for (int j=0; j<im_width; j++)
 	{
 		for (int i=0; i<im_width; i++)
 			printf("%.4f ",gdata[get3DC2lin(i,im_width-1-j,5,im_width)].x);
 		printf("\n");
-	}*/
+	}
 
 	free(data);
 	free(coords);

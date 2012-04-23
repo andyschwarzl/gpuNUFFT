@@ -21,9 +21,8 @@ test_data_z = data_coords(3,:);
 
 r1 = [sector_ranges(1:end-1)] ;
 r2 = [sector_ranges(2:end)] ;
-r2(end)=r2(end); %workaround damit wert bei 0.5 nicht weg fällt
-
 delta = 1 / im_width / 2;
+r2(end)=r2(end)+2*delta; %workaround damit wert bei 0.5 nicht weg fällt
 
 q1 = bsxfun(@ge,test_data_x(:)+delta,r1(:).');
 q2 = bsxfun(@lt,test_data_x(:)+delta,r2(:).');

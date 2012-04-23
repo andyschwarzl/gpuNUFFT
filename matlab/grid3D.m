@@ -1,5 +1,5 @@
-function [m, p] = grid3D(d,k,w,n,osf,wg,opt)
-% function m = grid3D(d,k,w,n,osf,kw,opt)
+function [m, p] = grid3D(d,k,w,n,osf,wg,sw,opt)
+% function m = grid3D(d,k,w,n,osf,kw,sw,opt)
 %
 %     d -- k-space data
 %     k -- k-trajectory, scaled -0.5 to 0.5
@@ -7,6 +7,7 @@ function [m, p] = grid3D(d,k,w,n,osf,wg,opt)
 %     n -- image size (m will be osf*n X osf*n)
 %     osf -- oversampling factor (usually between 1 and 2)
 %     wg -- full kernel width in oversampled grid samples (usually 3 to 7)
+%     sw -- sector width to use
 %     opt -- 'k-space', 'image', defaults it 'image' if not specified
 %
 %     m -- gridded k-space data
@@ -39,7 +40,7 @@ m = zeros(osf*n,osf*n);
 data = [real(dw(:))'; imag(dw(:))'];
 coords = k;%[real(k(:))'; imag(k(:))';zeros(1,length(k(:)))];
 
-[test_coords, test_sector_centers,sector_dim] = assign_sectors(osf*n,8,coords);
+[test_coords, test_sector_centers,sector_dim] = assign_sectors(osf*n,sw,coords);
 
 [v i] = sort(test_coords);
 v = v +1;
@@ -68,7 +69,7 @@ test_sector_centers = int32(reshape(test_sector_centers,[3,sector_dim]));
 params.im_width = uint32(n);
 params.osr = single(osf);
 params.kernel_width = uint32(wg);
-params.sector_width = uint32(8);
+params.sector_width = uint32(sw);
 
 %%
 'call gridding mex kernel'
@@ -82,7 +83,8 @@ m = squeeze(m(1,:,:,:) + 1j*(m(2,:,:,:)));
 % zero out data at edges, which is probably due to data outside mtx
 %m(:,1) = 0; m(:,osf*n) = 0;
 %m(1,:) = 0; m(osf*n,:) = 0;
-%flipud(m);
+%flipud(m(:,:,ceil(n/2)+1))
+
 % stop here, if we just want the k-space data
 if strcmp(opt,'k-space') return; end;
 

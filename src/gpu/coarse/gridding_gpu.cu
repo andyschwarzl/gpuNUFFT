@@ -3,7 +3,7 @@
 
 #include "gridding_gpu.hpp"
 
-#define N_THREADS_PER_SECTOR 2 //16x16
+#define N_THREADS_PER_SECTOR 1 //16x16
 #define MAX_SECTOR_WIDTH 12 // 8x8x8 + Kernel with Width 5 -> 12x12x12
 #define MAX_SECTOR_DIM 1728 // 12x12x12
 
@@ -207,7 +207,7 @@ void gridding3D_gpu(DType* data,
 	allocateAndCopyToDeviceMem<int>(&sectors_d,sectors,sector_count+1);
 	printf("allocate and copy sector_centers of size %d...\n",3*sector_count);
 	allocateAndCopyToDeviceMem<int>(&sector_centers_d,sector_centers,3*sector_count);
-	
+	printf("sector pad width: %d\n",gi_host->sector_pad_width);
 	dim3 block_dim(gi_host->sector_pad_width,gi_host->sector_pad_width,N_THREADS_PER_SECTOR);
 	
 	griddingKernel<<<sector_count,block_dim>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d);
@@ -234,6 +234,7 @@ void gridding3D_gpu(DType* data,
 
 	//Inverse fft plan and execution
 	cufftHandle fft_plan;
+	printf("creating cufft plan with %d,%d,%d dimensions\n",gi_host->width,gi_host->width,gi_host->width);
 	cufftResult res = cufftPlan3d(&fft_plan, gi_host->width,gi_host->width,gi_host->width, CUFFT_C2C) ;
 
 	if (res != CUFFT_SUCCESS) 

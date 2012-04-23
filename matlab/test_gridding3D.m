@@ -17,9 +17,9 @@ end;
 smaps = squeeze(smaps_il(1,:,:,:,:) + 1i*smaps_il(2,:,:,:,:));
 
 %% calc deappo func: alternative deappo
-osf = 1; % 1 or 2
-wg = 5;  % 3 to 7
-sw = 8;
+osf = 1.5; % 1 or 2
+wg = 7;  % 3 to 7
+sw = 4;
 im_width = 64;
 kspace_de = [1];
 k_de = [0;0;0];
@@ -42,13 +42,15 @@ for coil = 1 : E.numCoils,
         [imgRegrid_kb,kernel] = grid3D(kspace,k,w,64,osf,wg,sw,'deappo');
         toc
         %SENS corr
-        imgRegrid_kb = imgRegrid_kb(:,:,[11:54]) .* smaps(:,:,:,coil);
+        imgRegrid_kb = imgRegrid_kb(:,:,[11:54]) .* conj(smaps(:,:,:,coil));
         imgRegrid_kb = imgRegrid_kb ./ deapo;
         
+        %res = res + imgRegrid_kb; 
         res = sqrt(abs(res).^2 + abs(imgRegrid_kb).^2);
 end
 %%
 figure, imshow(abs(fliplr((res(:,:,25)))),[]);
+figure,title('gridding'), imshow(abs(fliplr((res_gridding(:,:,25)))),[]);
 figure, imshow(abs(((z(:,:,25)))),[]);
 
 %%

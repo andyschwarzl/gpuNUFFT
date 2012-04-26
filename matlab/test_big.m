@@ -83,8 +83,8 @@ osf=1;
 kspace_test = ([0.5+0.5i,0.7+1i,1+1i,1+1i,1+1i]);
 wg = 5;
 sw = 5;
-k_test = ([-0.3+0.2i,-0.1,0,0.5,0.3+0.3i]);
-w_test = ([1,1,1,1,1]);
+k_test = ([-0.3+0.2i,-0.05001,0.02,0.5,0.3+0.3i]);
+w_test = ([0,1,0,0,0]);
  
 [imgRegrid_kb,kernel] = gridkb(kspace_test,k_test,w_test,10,osf,wg,sw,'image');
-figure, imshow(abs(flipud(imgRegrid_kb)),[]);
+figure, imshow(log(abs(flipud(imgRegrid_kb))),[]);

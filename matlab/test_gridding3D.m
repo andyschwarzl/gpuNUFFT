@@ -5,6 +5,7 @@ clear all; close all; clc;
 addpath ../bin
 addpath ../../daten
 %% Load data
+%load 20111017_Daten_MREG;
 load MREG_data_Graz;
 
 %% sensmaps
@@ -17,15 +18,15 @@ end;
 smaps = squeeze(smaps_il(1,:,:,:,:) + 1i*smaps_il(2,:,:,:,:));
 
 %% calc deappo func: alternative deappo
-osf = 1.5; % 1 or 2
-wg = 7;  % 3 to 7
+osf = 2; % 1 or 2
+wg = 5;  % 3 to 7
 sw = 4;
 im_width = 64;
 kspace_de = [1];
 k_de = [0;0;0];
 w_de = [1];
 [deapo,kernel_deapo] = grid3D(kspace_de,k_de,w_de,im_width,osf,wg,sw,'deappo');
-figure, imshow(abs(fliplr((deapo(:,:,im_width/2)))),[]);
+figure, imshow(imresize(abs(deapo(:,:,im_width/2)),4),[]);
 
 deapo = abs(deapo(:,:,11:54));
 %% Perform Regridding with Kaiser Besser Kernel 64
@@ -49,9 +50,9 @@ for coil = 1 : E.numCoils,
         res = sqrt(abs(res).^2 + abs(imgRegrid_kb).^2);
 end
 %%
-figure, imshow(abs(fliplr((res(:,:,25)))),[]);
-figure,title('gridding'), imshow(abs(fliplr((res_gridding(:,:,25)))),[]);
-figure, imshow(abs(((z(:,:,25)))),[]);
+%figure, imshow(abs(fliplr((res(:,:,25)))),[]);
+figure,title('gridding'), imshow(imresize(abs(((res(:,:,25)))),4),[]);
+%figure, imshow(abs(((z(:,:,25)))),[]);
 
 %%
 for slice = 1:44
@@ -63,11 +64,12 @@ end
 osf = 1; % 1 or 2
 wg = 5;  % 3 to 7
 sw = 5;
+im_width = 10;
 kspace_de = [1];
 k_de = [0;0;0];
 w_de = [1];
-[deapo,kernel_deapo] = grid3D(kspace_de,k_de,w_de,10,osf,wg,sw,'deappo');
-figure, imshow(abs(flipud((deapo(:,:,10)))),[]);
+[deapo,kernel_deapo] = grid3D(kspace_de,k_de,w_de,im_width,osf,wg,sw,'deappo');
+figure, imshow(abs(flipud((deapo(:,:,im_width/2)))),[]);
 
 osf=1;
 kspace_test = ([0.5+0.5i,0.7+1i,1+1i,1+1i,1+1i]);
@@ -80,6 +82,6 @@ k_test = ([-0.3,0.2,0;
            0.3,0.3,0]');
 w_test = ([1,1,1,1,1]);
 
-[imgRegrid_kb,kernel] = grid3D(kspace_test,k_test,w_test,10,osf,wg,sw,'image');
+[imgRegrid_kb,kernel] = grid3D(kspace_test,k_test,w_test,im_width,osf,wg,sw,'image');
 imgRegrid_kb = imgRegrid_kb ./ deapo;
-figure, imshow(log(abs(fliplr((imgRegrid_kb(:,:,6))))),[]);
+figure, imshow(log(abs(fliplr((imgRegrid_kb(:,:,im_width/2))))),[]);

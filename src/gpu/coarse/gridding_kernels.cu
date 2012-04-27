@@ -1,6 +1,7 @@
-#include "gridding_kernels.cuh"
+#include "gridding_kernels.hpp"
+#include "cuda_utils.cuh"
 
-__global__ void griddingKernel( DType* data, 
+__global__ void convolutionKernel( DType* data, 
 							    DType* crds, 
 							    CufftType* gdata,
 							    DType* kernel, 
@@ -123,7 +124,7 @@ __global__ void griddingKernel( DType* data,
 	}//sec < sector_count	
 }
 
-__global__ void composeOutput(DType* temp_gdata, CufftType* gdata, int* sector_centers)
+__global__ void composeOutputKernel(DType* temp_gdata, CufftType* gdata, int* sector_centers)
 {
 	for (int sec = 0; sec < GI.sector_count; sec++)
 	{
@@ -151,7 +152,8 @@ __global__ void composeOutput(DType* temp_gdata, CufftType* gdata, int* sector_c
 	}
 }
 
-__global__ void performDeapodization(CufftType* gdata)
+
+__global__ void deapodizationKernel(CufftType* gdata)
 {
 		int x=blockIdx.x + blockDim.x * threadIdx.x;
 		int y=blockIdx.y + blockDim.y * threadIdx.y;
@@ -166,3 +168,27 @@ __global__ void performDeapodization(CufftType* gdata)
 }
 
 
+void performConvolution( DType* data_d, 
+						 DType* crds_d, 
+						 CufftType* gdata_d,
+						 DType* kernel_d, 
+						 int* sectors_d, 
+						 int* sector_centers_d,
+						 DType* temp_gdata_d,
+						 dim3 grid_dim,
+						 dim3 block_dim
+						)
+{
+	convolutionKernel<<<grid_dim,block_dim>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d);
+}
+
+void composeOutput(DType* temp_gdata_d, CufftType* gdata_d, int* sector_centers_d,dim3 grid_dim,dim3 block_dim)
+{
+	composeOutputKernel<<<grid_dim,block_dim>>>(temp_gdata_d,gdata_d,sector_centers_d);
+	
+}
+
+void performDeapodization(DType* gdata)
+{
+
+}

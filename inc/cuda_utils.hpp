@@ -128,14 +128,10 @@ GriddingInfo* initAndCopyGriddingInfo(int sector_count,
 	gi_host->radiusSquared = radiusSquared;
 	gi_host->dist_multiplier = dist_multiplier;
 
-	printf("sector offset = %d\n",sector_offset);
-	printf("radius squared = %f\n",radiusSquared);
-	
-
 	gi_host->sector_pad_width = sector_pad_width;
 	
 	printf("copy Gridding Info to symbol memory...\n");
-	cudaMemcpyToSymbol(GI, gi_host,sizeof(GriddingInfo));
+	HANDLE_ERROR(cudaMemcpyToSymbol(GI, gi_host,sizeof(GriddingInfo)));
 	//free(gi_host);
 	printf("...done!\n");
 	return gi_host;

@@ -910,8 +910,10 @@ TEST(TestGPUGriddingConv,GPUTest_FactorTwoTest)
 	int kernel_width = 3;
 
 	long kernel_entries = calculateGrid3KernelSize(osr, kernel_width/2.0f);
-
+	printf("Kernel Entries %d\n",kernel_entries);
+	
 	DType *kern = (DType*) calloc(kernel_entries,sizeof(DType));
+	
 	loadGrid3Kernel(kern,kernel_entries,kernel_width,osr);
 
 	//Image

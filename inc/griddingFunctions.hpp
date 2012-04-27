@@ -111,9 +111,9 @@ __inline__ __device__ __host__ bool isOutlier(int x, int y, int z, int center_x,
 
 __inline__ __device__ __host__ DType calculateDeapodizationAt(int x, int y, int z, DType grid_width_inv, DType osr, DType kernel_width)
 {
-	DType poly_x = sqrt(sqr((DType)M_PI) * sqr(kernel_width) * sqr(grid_width_inv) * sqr(x) - sqr(BETA(kernel_width,osr)));
-	DType poly_y = sqrt(sqr((DType)M_PI) * sqr(kernel_width) * sqr(grid_width_inv) * sqr(y) - sqr(BETA(kernel_width,osr)));
-	DType poly_z = sqrt(sqr((DType)M_PI) * sqr(kernel_width) * sqr(grid_width_inv) * sqr(z) - sqr(BETA(kernel_width,osr)));
+	DType poly_x = (DType)sqrt(sqr((DType)M_PI) * sqr(kernel_width) * sqr(grid_width_inv) * sqr(x) - sqr(BETA(kernel_width,osr)));
+	DType poly_y = (DType)sqrt(sqr((DType)M_PI) * sqr(kernel_width) * sqr(grid_width_inv) * sqr(y) - sqr(BETA(kernel_width,osr)));
+	DType poly_z = (DType)sqrt(sqr((DType)M_PI) * sqr(kernel_width) * sqr(grid_width_inv) * sqr(z) - sqr(BETA(kernel_width,osr)));
 	
 	DType val_x = sin(poly_x)/poly_x;
 	DType val_y = sin(poly_y)/poly_y;

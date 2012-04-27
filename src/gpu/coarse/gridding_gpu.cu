@@ -1,4 +1,4 @@
-#include "gridding_kernels.hpp"
+#include "gridding_kernels.cu"
 #include "cuda_utils.hpp"
 
 //TODO inverse gridding from grid to k-space

@@ -112,7 +112,10 @@ void gridding3D_gpu(DType* data,
 		return;
 	}
 
-	//TODO deapodization
+	performFFTShift(gdata_d,INVERSE,gi_host->width);
+
+	dim3 block_dim_deapo(gi_host->width,gi_host->width,1);	
+	performDeapodization(gdata_d,block_dim_deapo,gi_host->width,gi_host);
 
 	//get result
 	copyFromDevice<CufftType>(gdata_d,gdata,gdata_cnt);

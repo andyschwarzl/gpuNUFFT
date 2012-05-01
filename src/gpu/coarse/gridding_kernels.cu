@@ -153,18 +153,40 @@ __global__ void composeOutputKernel(DType* temp_gdata, CufftType* gdata, int* se
 }
 
 
-__global__ void deapodizationKernel(CufftType* gdata)
+__global__ void deapodizationKernel(CufftType* gdata, DType beta, DType norm_val)
 {
-		int x=blockIdx.x + blockDim.x * threadIdx.x;
-		int y=blockIdx.y + blockDim.y * threadIdx.y;
-		int z=threadIdx.z;
+	int x=blockIdx.x;
+	int y=blockIdx.y;
+	int z=threadIdx.x;
 
-		int ind = getIndex(x,y,z,GI.width);
-		
-		DType deapo_inv = calculateDeapodizationAt(x,y,z,GI.width,GI.osr,GI.kernel_width);
+	int ind = getIndex(x,y,z,GI.width);
+	
+	DType deapo = calculateDeapodizationAt(x,y,z,GI.width_offset,GI.width_inv,GI.kernel_width,beta,norm_val);
+	
+	//check if deapodization value is valid number
+	if (!isnan(deapo))// == deapo)
+	{
+		gdata[ind].x = gdata[ind].x / deapo;//Re
+		gdata[ind].y = gdata[ind].y / deapo;//Im
+	}
+}
 
-		gdata[ind].x *= deapo_inv;//Re
-		gdata[ind].y *= deapo_inv;//Im
+__global__ void fftShiftKernel(CufftType* gdata, int offset)
+{
+	int x = blockIdx.x;
+	int y = blockIdx.y;
+	int z = threadIdx.x;
+
+	//calculate "opposite" coord pair
+	int x_opp = (x + offset) % GI.width;
+	int y_opp = (y + offset) % GI.width;
+	int z_opp = (z + offset) % GI.width;
+
+	//swap points
+	CufftType temp = gdata[getIndex(x,y,z,GI.width)];
+	gdata[getIndex(x,y,z,GI.width)] = gdata[getIndex(x_opp,y_opp,z_opp,GI.width)];
+	gdata[getIndex(x_opp,y_opp,z_opp,GI.width)] = temp;
+
 }
 
 
@@ -185,10 +207,39 @@ void performConvolution( DType* data_d,
 void composeOutput(DType* temp_gdata_d, CufftType* gdata_d, int* sector_centers_d,dim3 grid_dim,dim3 block_dim)
 {
 	composeOutputKernel<<<grid_dim,block_dim>>>(temp_gdata_d,gdata_d,sector_centers_d);
-	
 }
 
-void performDeapodization(DType* gdata)
+//see BEATTY et al.: RAPID GRIDDING RECONSTRUCTION
+//eq. (4) and (5)
+void performDeapodization(CufftType* gdata,
+						 dim3 grid_dim,
+						 dim3 block_dim,
+						 GriddingInfo* gi_host)
 {
+	DType beta = (DType)BETA(gi_host->kernel_width,gi_host->osr);
 
+	//Calculate normalization value (should be at position 0 in interval [-N/2,N/2]) 
+	DType norm_val = calculateDeapodizationValue(0,gi_host->width_inv,gi_host->kernel_width,beta);
+	norm_val = norm_val * norm_val * norm_val;
+
+	deapodizationKernel<<<grid_dim,block_dim>>>(gdata,beta,norm_val);
+}
+
+void performFFTShift(CufftType* gdata_d,
+					 FFTShiftDir shift_dir,
+					 int width)
+{
+	dim3 grid_dim((int)ceil(width/(DType)2.0));
+	dim3 block_dim(width,width);
+	int offset= 0;
+
+	if (shift_dir == FORWARD)
+	{
+		offset = (int)ceil((DType)(width / (DType)2.0));
+	}
+	else
+	{
+		offset = (int)floor((DType)(width / (DType)2.0));
+	}
+	fftShiftKernel<<<block_dim,grid_dim>>>(gdata_d,offset);
 }

@@ -211,7 +211,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	if (gdata == NULL)
      mexErrMsgTxt("Could not create output mxArray.\n");
 
-	gridding3D_gpu(data,data_cnt,coords,gdata,grid_size,kern,kernel_entries,sectors,sector_cnt,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1],osr,DEAPODIZATION);
+	gridding3D_gpu(data,data_cnt,coords,gdata,grid_size,kern,kernel_entries,sectors,sector_cnt,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1],osr,DEAPODIZATION);//CONVOLUTION);
 	
 	free(kern);
   CUcontext  pctx ;

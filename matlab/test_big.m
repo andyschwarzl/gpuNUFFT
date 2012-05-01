@@ -86,11 +86,14 @@ figure, imshow(abs(flipud(imgRegrid_kb)),[]);
 
 %% Kernel of Size 5 test
 osf=1;
-kspace_test = ([0.5+0.5i,0.7+1i,1+1i,1+1i,1+1i]);
-wg = 5;
-sw = 5;
-k_test = ([-0.3+0.2i,-0.05001,0.02,0.5,0.3+0.3i]);
-w_test = ([0,1,0,0,0]);
+kspace_test = ([0.5+0.5i,1+1i,1+1i,1+1i,1+1i]);
+wg = 3;
+sw = 8;
+delta = 1 / 32 / 2;
+%k_test = ([-0.3+0.2i,0.24-0.25i,0.2-0.0313i,0.5,0.3+0.3i]);
+%w_test = ([0,1,0,0,0]);
+k_test = ([-0.5,-0.4063,-0.234375-delta,0,0.4375]);
+w_test = ([0,0,1,0,0]);
  
-[imgRegrid_kb,kernel] = gridkb(kspace_test,k_test,w_test,10,osf,wg,sw,'deappo');
-figure, imshow(log(abs(flipud(imgRegrid_kb(:,:,5)))),[]);
+[imgRegrid_kb,kernel] = gridkb(kspace_test,k_test,w_test,32,osf,wg,sw,'deappo');
+%figure, imshow(log(abs(flipud(imgRegrid_kb(:,:,5)))),[]);

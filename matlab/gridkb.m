@@ -100,19 +100,19 @@ tic
 m = cuda_mex_kernel(single(data(data_ind)),single(coords(coord_ind)),int32(sectors_test),int32(test_sector_centers),params);
 toc
 
-size(m)
+size(m);
 m = squeeze(m(1,:,:,:) + 1j*(m(2,:,:,:)));
 
 % zero out data at edges, which is probably due to data outside mtx
 %m(:,1) = 0; m(:,osf*n) = 0;
 %m(1,:) = 0; m(osf*n,:) = 0;
-flipud(m(:,:,ceil(n/2)+1))
+%flipud(m(:,:,ceil(n/2)+1))
 % stop here, if we just want the k-space data
 if strcmp(opt,'k-space') return; end;
 
 %im = fftshift(fft2(fftshift(m)));
-im = fftshift(m);
-m = im;
+%im = fftshift(m);
+%m = im;
 if strcmp(opt,'deappo') return; end;
 im = m(:,:,ceil(n/2)+1);
 % compute deappodization function
@@ -120,12 +120,13 @@ x = [-osf*n/2:osf*n/2-1]/(n);
 sqa = sqrt(pi*pi*kw*kw*x.*x-beta*beta);
 dax = sin(sqa)./(sqa);
 % normalize by DC value
-dax = dax/dax(osf*n/2);
+dax(osf*n/2)
+dax(osf*n/2+1)
+dax = dax/dax(osf*n/2+1);
 % make it a 2D array
 da = dax'*dax;
-
 % deappodize
-im = im./da;
+im = im./da
 figure, imshow(abs(flipud(da)),[]);
 %return the result
 m = im;

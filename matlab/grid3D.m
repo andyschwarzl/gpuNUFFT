@@ -88,8 +88,8 @@ m = squeeze(m(1,:,:,:) + 1j*(m(2,:,:,:)));
 % stop here, if we just want the k-space data
 if strcmp(opt,'k-space') return; end;
 
-im = fftshift(m);
-m = im;
+%im = fftshift(m);
+%m = im;
 
 ind_off = (n * (osf-1) / 2) + 1;
 ind_start = ind_off;

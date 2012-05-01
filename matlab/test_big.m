@@ -27,10 +27,11 @@ w = repmat(w, 1, numSpokes);
 %% Perform Regridding with Kaiser Besser Kernel 64
 osf = 1; % 1 or 2
 wg = 3;  % 3 to 7
+sw = 8;
 tic
-[imgRegrid_kb,kernel] = gridkb(kspace,k,w,64,osf,wg,'image');
+[imgRegrid_kb,kernel] = gridkb(kspace,k,w,64,osf,wg,sw,'deappo');
 toc
-figure, imshow(abs(flipud(imgRegrid_kb)),[]);
+figure, imshow(abs((imgRegrid_kb(:,:,33))),[]);
 
 %% MatlabTest_8SK3w32
 osf=1
@@ -45,10 +46,11 @@ osf=1
 kspace2 = kspace;
 osf = 1;
 wg = 3;
+sw = 8;
 tic
-[imgRegrid_kb,kernel] = gridkb(kspace2,k,w,128,osf,wg,'image');
+[imgRegrid_kb,kernel] = gridkb(kspace2,k,w,128,osf,wg,sw,'deappo');
 toc
-figure, imshow(abs(fliplr((imgRegrid_kb))),[]);
+figure, imshow(abs((imgRegrid_kb(:,:,65))),[]);
 %% Perform Regridding with Kaiser Besser Kernel 128, own deapo
 kspace2 = kspace;
 osf = 1;
@@ -86,5 +88,5 @@ sw = 5;
 k_test = ([-0.3+0.2i,-0.05001,0.02,0.5,0.3+0.3i]);
 w_test = ([0,1,0,0,0]);
  
-[imgRegrid_kb,kernel] = gridkb(kspace_test,k_test,w_test,10,osf,wg,sw,'image');
-figure, imshow(log(abs(flipud(imgRegrid_kb))),[]);
+[imgRegrid_kb,kernel] = gridkb(kspace_test,k_test,w_test,10,osf,wg,sw,'deappo');
+figure, imshow(log(abs(flipud(imgRegrid_kb(:,:,5)))),[]);

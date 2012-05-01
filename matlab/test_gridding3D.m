@@ -17,18 +17,18 @@ for k = 1:length(smaps),
 end;
 smaps = squeeze(smaps_il(1,:,:,:,:) + 1i*smaps_il(2,:,:,:,:));
 
-%% calc deappo func: alternative deappo
+%% test oversampling
 osf = 2; % 1 or 2
 wg = 5;  % 3 to 7
-sw = 4;
+sw = 8;
 im_width = 64;
 kspace_de = [1];
 k_de = [0;0;0];
 w_de = [1];
 [deapo,kernel_deapo] = grid3D(kspace_de,k_de,w_de,im_width,osf,wg,sw,'deappo');
-figure, imshow(imresize(abs(deapo(:,:,im_width/2)),4),[]);
+figure, imshow(imresize(abs(deapo(:,:,im_width/2 +1)),4),[]);
 
-deapo = abs(deapo(:,:,11:54));
+%deapo = abs(deapo(:,:,11:54));
 %% Perform Regridding with Kaiser Besser Kernel 64
 k = E.nufftStruct.om'./(2*pi);
 w = ones(11685,1);

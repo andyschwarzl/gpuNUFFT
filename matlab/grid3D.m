@@ -80,17 +80,10 @@ toc
 size(m)
 m = squeeze(m(1,:,:,:) + 1j*(m(2,:,:,:)));
 
-% zero out data at edges, which is probably due to data outside mtx
-%m(:,1) = 0; m(:,osf*n) = 0;
-%m(1,:) = 0; m(osf*n,:) = 0;
-%flipud(m(:,:,ceil(n/2)+1));
-
 % stop here, if we just want the k-space data
 if strcmp(opt,'k-space') return; end;
 
-%im = fftshift(m);
-%m = im;
-
+%crop data 
 ind_off = (n * (osf-1) / 2) + 1;
 ind_start = ind_off;
 ind_end = ind_start + n -1;

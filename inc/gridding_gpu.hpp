@@ -19,6 +19,12 @@ enum GriddingOutput
 	DEAPODIZATION
 };
 
+enum FFTShiftDir
+{
+	FORWARD,
+	INVERSE
+};
+
 void gridding3D_gpu(DType* data, 
 					int data_cnt,
 					DType* crds, 
@@ -48,6 +54,7 @@ struct GriddingInfo
 	DType kernel_radius;
 
 	int width;
+	int width_offset;
 	DType width_inv;
 	DType osr;
 	

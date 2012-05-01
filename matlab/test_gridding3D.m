@@ -56,7 +56,7 @@ figure,title('gridding'), imshow(imresize(abs(((res(:,:,25)))),4),[]);
 
 %%
 for slice = 1:44
-    figure, imshow(abs(fliplr((res(:,:,slice)))),[]);
+    figure, imshow(abs(((res(:,:,slice)))),[]);
 end
 
 %% Kernel of Size 5 test
@@ -69,7 +69,7 @@ kspace_de = [1];
 k_de = [0;0;0];
 w_de = [1];
 [deapo,kernel_deapo] = grid3D(kspace_de,k_de,w_de,im_width,osf,wg,sw,'deappo');
-figure, imshow(abs(flipud((deapo(:,:,im_width/2)))),[]);
+figure, imshow(abs(((deapo(:,:,im_width/2)))),[]);
 
 osf=1;
 kspace_test = ([0.5+0.5i,0.7+1i,1+1i,1+1i,1+1i]);
@@ -84,4 +84,4 @@ w_test = ([1,1,1,1,1]);
 
 [imgRegrid_kb,kernel] = grid3D(kspace_test,k_test,w_test,im_width,osf,wg,sw,'image');
 imgRegrid_kb = imgRegrid_kb ./ deapo;
-figure, imshow(log(abs(fliplr((imgRegrid_kb(:,:,im_width/2))))),[]);
+figure, imshow(log(abs(((imgRegrid_kb(:,:,im_width/2))))),[]);

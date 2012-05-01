@@ -18,9 +18,10 @@ end;
 smaps = squeeze(smaps_il(1,:,:,:,:) + 1i*smaps_il(2,:,:,:,:));
 
 %% Perform Regridding with Kaiser Besser Kernel 64
-osf = 1.5;
+osf = 2;
 wg = 5;
 sw = 8;
+imwidth = 64;
 k = E.nufftStruct.om'./(2*pi);
 w = ones(11685,1);
 res = zeros(E.imageDim);
@@ -31,7 +32,7 @@ for coil = 1 : E.numCoils,
         % get kspace data and k trajectories
         kspace = data(coil_start:coil_end);
         tic
-        [imgRegrid_kb,kernel] = grid3D(kspace,k,w,64,osf,wg,sw,'deappo');
+        [imgRegrid_kb,kernel] = grid3D(kspace,k,w,imwidth,osf,wg,sw,'deappo');
         toc
         %SENS corr
         imgRegrid_kb = imgRegrid_kb(:,:,[11:54]) .* conj(smaps(:,:,:,coil));
@@ -40,8 +41,11 @@ for coil = 1 : E.numCoils,
         res = sqrt(abs(res).^2 + abs(imgRegrid_kb).^2);
 end
 %%
+res_test = res .* conj(E.nufftStruct.sn) / sqrt(prod(size(res)));
+figure, imshow(imresize(abs(((res_test(:,:,25)))),4),[]), title('gridding');
+%%
 %figure, imshow(abs(fliplr((res(:,:,25)))),[]);
-figure,title('gridding'), imshow(imresize(abs(((res(:,:,25)))),4),[]);
+figure, imshow(imresize(abs(((res(:,:,25)))),4),[]), title('gridding');
 %figure, imshow(abs(((z(:,:,25)))),[]);
 
 %%

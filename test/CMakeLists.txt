@@ -20,7 +20,8 @@ set(CPU_SOURCES cpu/gridding3D_tests.cpp
 
 #gpu test sources
 set(GPU_SOURCES gpu/gridding3DGPU_conv_tests.cpp
-				gpu/gridding3DGPU_fft_tests.cpp)
+				gpu/gridding3DGPU_fft_tests.cpp
+				gpu/gridding3DGPU_deapo_tests.cpp)
 
 #add source dir
 add_executable(runUnitTests ${CPU_SOURCES} ../inc/gridding_cpu.hpp)

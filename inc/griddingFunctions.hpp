@@ -109,18 +109,30 @@ __inline__ __device__ __host__ bool isOutlier(int x, int y, int z, int center_x,
 						(center_z - sector_offset + z) < 0);
 }
 
-__inline__ __device__ __host__ DType calculateDeapodizationAt(int x, int y, int z, DType grid_width_inv, DType osr, DType kernel_width)
+__inline__ __device__ __host__ DType calculateDeapodizationValue(int coord, DType grid_width_inv, int kernel_width, DType beta)
 {
-	DType poly_x = (DType)sqrt(sqr((DType)M_PI) * sqr(kernel_width) * sqr(grid_width_inv) * sqr(x) - sqr(BETA(kernel_width,osr)));
-	DType poly_y = (DType)sqrt(sqr((DType)M_PI) * sqr(kernel_width) * sqr(grid_width_inv) * sqr(y) - sqr(BETA(kernel_width,osr)));
-	DType poly_z = (DType)sqrt(sqr((DType)M_PI) * sqr(kernel_width) * sqr(grid_width_inv) * sqr(z) - sqr(BETA(kernel_width,osr)));
+	DType poly = sqr((DType)M_PI) * sqr(kernel_width) * sqr(grid_width_inv) * sqr(coord) - sqr(beta);
+	DType val;
+	//sqrt for negative values not defined -> workaround with sinh
+	if (poly >= 0)
+		val = sin(sqrt(poly))/sqrt(poly);
+	else
+		val = sinh(sqrt((DType)-1.0 * poly))/sqrt((DType)-1.0 * poly);
 	
-	DType val_x = sin(poly_x)/poly_x;
-	DType val_y = sin(poly_y)/poly_y;
-	DType val_z = sin(poly_z)/poly_z;
-	
-	return val_x * val_y * val_z;
+	return val;
 }
 
+__inline__ __device__ __host__ DType calculateDeapodizationAt(int x, int y, int z, int width_offset, DType grid_width_inv, int kernel_width, DType beta, DType norm_val)
+{
+	int x_shifted = x - width_offset;
+	int y_shifted = y - width_offset;
+	int z_shifted = z - width_offset;
+	
+	DType val_x = calculateDeapodizationValue(x_shifted,grid_width_inv,kernel_width,beta);
+	DType val_y = calculateDeapodizationValue(y_shifted,grid_width_inv,kernel_width,beta);
+	DType val_z = calculateDeapodizationValue(z_shifted,grid_width_inv,kernel_width,beta);
+	
+	return val_x * val_y *  val_z / norm_val;
+}
 
 #endif  // GRIDDING_FUNCTIONS_H_

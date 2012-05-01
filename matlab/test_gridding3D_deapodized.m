@@ -41,9 +41,6 @@ for coil = 1 : E.numCoils,
         res = sqrt(abs(res).^2 + abs(imgRegrid_kb).^2);
 end
 %%
-res_test = res .* conj(E.nufftStruct.sn) / sqrt(prod(size(res)));
-figure, imshow(imresize(abs(((res_test(:,:,25)))),4),[]), title('gridding');
-%%
 %figure, imshow(abs(fliplr((res(:,:,25)))),[]);
 figure, imshow(imresize(abs(((res(:,:,25)))),4),[]), title('gridding');
 %figure, imshow(abs(((z(:,:,25)))),[]);

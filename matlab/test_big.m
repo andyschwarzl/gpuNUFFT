@@ -26,14 +26,14 @@ w = repmat(w, 1, numSpokes);
 
 %% Perform Regridding with Kaiser Besser Kernel 64
 osf = 1.25; % 1 or 2
-wg = 5;  % 3 to 7
+wg = 3;  % 3 to 7
 sw = 8;
 imwidth = 64;
 k_traj = [real(k(:))'; imag(k(:))';zeros(1,length(k(:)))];
 tic
 [imgRegrid_kb,kernel] = grid3D(kspace,k_traj,w,imwidth,osf,wg,sw,'deappo');
 toc
-figure, imshow(imresize(abs((imgRegrid_kb(:,:,imwidth/2 +1))),4),[]);
+figure, imshow(imresize(abs((imgRegrid_kb(:,:,imwidth/2 +1))),4),[]), title('gridding3D recon');
 
 %% MatlabTest_8SK3w32
 osf=1

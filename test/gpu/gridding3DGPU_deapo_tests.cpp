@@ -60,15 +60,17 @@ TEST(TestGPUGriddingDeapo,KernelCall1Sector)
 	printf("test %f \n",gdata[4].x);
 	int index = get3DC2lin(5,5,5,im_width);
 	printf("index to test %d\n",index);
-	EXPECT_EQ(index,555);
-	EXPECT_NEAR(1.0f,gdata[index].x,epsilon);
-
-	for (int j=0; j<im_width; j++)
+	EXPECT_NEAR(0.0926f,gdata[get3DC2lin(10,0,32,im_width)].x,epsilon);
+	EXPECT_NEAR(-0.5601f,gdata[get3DC2lin(0,5,32,im_width)].x,epsilon);
+	EXPECT_NEAR(-0.0051f,gdata[get3DC2lin(4,4,32,im_width)].x,epsilon);
+	EXPECT_NEAR(0.0681f,gdata[get3DC2lin(15,14,32,im_width)].x,epsilon);
+	
+	/*for (int j=0; j<im_width; j++)
 	{
 		for (int i=0; i<im_width; i++)
 			printf("%.4f ",gdata[get3DC2lin(i,j,32,im_width)].x);
 		printf("\n");
-	}
+	}*/
 
 	free(data);
 	free(coords);

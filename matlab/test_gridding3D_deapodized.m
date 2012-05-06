@@ -18,8 +18,8 @@ end;
 smaps = squeeze(smaps_il(1,:,:,:,:) + 1i*smaps_il(2,:,:,:,:));
 
 %% Perform Regridding with Kaiser Besser Kernel 64
-osf = 1.25;
-wg = 5;
+osf = 2;%1,1.25,1.5,1.75,2
+wg = 5;%3-7
 sw = 8;
 imwidth = 64;
 k = E.nufftStruct.om'./(2*pi);
@@ -43,7 +43,7 @@ end
 %%
 %figure, imshow(abs(fliplr((res(:,:,25)))),[]);
 figure, imshow(imresize(abs(res(:,:,25)),4),[]), title('gridding');
-figure, imshow(imresize(abs(res_gridding(:,:,25)),4),[]), title('gridding');
+%figure, imshow(imresize(abs(res_gridding(:,:,25)),4),[]), title('gridding');
 %figure, imshow(abs(((z(:,:,25)))),[]);
 
 %%

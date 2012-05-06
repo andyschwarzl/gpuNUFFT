@@ -30,7 +30,7 @@ wg = 3;  % 3 to 7
 sw = 8;
 imwidth = 64;
 k_traj = [real(k(:))'; imag(k(:))';zeros(1,length(k(:)))];
-tic
+tict
 [imgRegrid_kb,kernel] = grid3D(kspace,k_traj,w,imwidth,osf,wg,sw,'deappo');
 toc
 figure, imshow(imresize(abs((imgRegrid_kb(:,:,imwidth/2 +1))),4),[]), title('gridding3D recon');

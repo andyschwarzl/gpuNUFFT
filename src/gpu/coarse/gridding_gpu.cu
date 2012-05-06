@@ -59,7 +59,7 @@ void gridding3D_gpu(DType* data,
 	dim3 block_dim(gi_host->sector_pad_width,gi_host->sector_pad_width,N_THREADS_PER_SECTOR);
 	
 	//convolutionKernel<<<sector_count,block_dim>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d);
-	performConvolution(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d,sector_count,block_dim);
+	performConvolution(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d,sector_count,block_dim,gi_host);
 
 	//compose total output from local blocks 
 	composeOutput(temp_gdata_d,gdata_d,sector_centers_d,1,block_dim);

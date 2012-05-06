@@ -10,7 +10,7 @@ __global__ void convolutionKernel( DType* data,
 								DType* temp_gdata
 								)
 {
-	__shared__ DType sdata[2*MAX_SECTOR_DIM]; //ca. 13kB shared memory
+	extern __shared__ DType sdata[];//externally managed shared memory
 
 	int sec= blockIdx.x;
 	//init shared memory
@@ -198,10 +198,13 @@ void performConvolution( DType* data_d,
 						 int* sector_centers_d,
 						 DType* temp_gdata_d,
 						 dim3 grid_dim,
-						 dim3 block_dim
+						 dim3 block_dim,
+						 GriddingInfo* gi_host
 						)
 {
-	convolutionKernel<<<grid_dim,block_dim>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d);
+	long shared_mem_size = 2*gi_host->sector_dim*sizeof(DType);
+	printf("convolution requires %d bytes of shared memory!\n",shared_mem_size);
+	convolutionKernel<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d);
 }
 
 void composeOutput(DType* temp_gdata_d, CufftType* gdata_d, int* sector_centers_d,dim3 grid_dim,dim3 block_dim)

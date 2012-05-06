@@ -12,13 +12,13 @@ load MREG_data_Graz;
 smaps = getfield(E,'sensmaps');
 smaps_il = zeros([2,size(smaps{1}),length(smaps)]);
 for k = 1:length(smaps),
-    smaps_il(1,:,:,:,k) = real(smaps{k});%.*E.nufftStruct.sn;
-    smaps_il(2,:,:,:,k) = imag(smaps{k});%.*E.nufftStruct.sn;
+    smaps_il(1,:,:,:,k) = real(smaps{k});%.*E.nufftStruct.sn ./ max(E.nufftStruct.sn(:));
+    smaps_il(2,:,:,:,k) = imag(smaps{k});%.*E.nufftStruct.sn./ max(E.nufftStruct.sn(:));
 end;
 smaps = squeeze(smaps_il(1,:,:,:,:) + 1i*smaps_il(2,:,:,:,:));
 
 %% Perform Regridding with Kaiser Besser Kernel 64
-osf = 2;
+osf = 1.25;
 wg = 5;
 sw = 8;
 imwidth = 64;
@@ -42,7 +42,8 @@ for coil = 1 : E.numCoils,
 end
 %%
 %figure, imshow(abs(fliplr((res(:,:,25)))),[]);
-figure, imshow(imresize(abs(((res(:,:,25)))),4),[]), title('gridding');
+figure, imshow(imresize(abs(res(:,:,25)),4),[]), title('gridding');
+figure, imshow(imresize(abs(res_gridding(:,:,25)),4),[]), title('gridding');
 %figure, imshow(abs(((z(:,:,25)))),[]);
 
 %%

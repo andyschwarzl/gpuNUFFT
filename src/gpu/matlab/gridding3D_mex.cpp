@@ -45,13 +45,20 @@
 template <typename TType>
 void readMatlabInputArray(const mxArray *prhs[], int input_index, int highest_varying_dim, const char* name,TType** data, int* data_entries)
 {
+	int dummy;
+	readMatlabInputArray<TType>(prhs, input_index, highest_varying_dim,name,data, data_entries,2,&dummy);
+}
+
+template <typename TType>
+void readMatlabInputArray(const mxArray *prhs[], int input_index, int highest_varying_dim, const char* name,TType** data, int* data_entries, int max_nd, int* n_coils)
+{
 	int nd = mxGetNumberOfDimensions(prhs[input_index]); /* get coordinate dimensions */
 	
 	if (MATLAB_DEBUG)
 		mexPrintf("number of dims %d\n",nd);
 
 	const mwSize *dims = mxGetDimensions(prhs[input_index]);
-    
+    *n_coils = 1;
 	if (nd == 2)
 	{
 		if(dims[0] != highest_varying_dim)//total: highest_varying_dim x N = 2
@@ -59,6 +66,13 @@ void readMatlabInputArray(const mxArray *prhs[], int input_index, int highest_va
 			mexPrintf("dimensions of '%s' input array don't fit. Need to be %d x N but are %d x %d\n",name, highest_varying_dim, dims[0],dims[1]);
 			mexErrMsgTxt ("Error occured!\n");
 		}
+	}
+	else if (max_nd == 3 && nd == 3)
+	{
+		//multiple coil data passed
+		*n_coils = dims[2];
+		if (MATLAB_DEBUG)
+			mexPrintf("number of coils %d\n",*n_coils);
 	}
 	else
 	{
@@ -105,17 +119,17 @@ void readMatlabInputArray(const mxArray *prhs[], int input_index, int highest_va
 	}
 }
 
-template <typename TName>
-inline TName getParamField(const mxArray* params, const char* fieldname)
+template <typename TType>
+inline TType getParamField(const mxArray* params, const char* fieldname)
 {
 	const mxArray* data = mxGetField(params, 0, fieldname);
 	if (mxIsInt32(data))
 	{
-		return (TName)(((TName*)mxGetData(data))[0]); 
+		return (TType)(((TType*)mxGetData(data))[0]); 
 	}
 	else
 	{
-		return (TName)(((TName*)mxGetPr(data))[0]); 
+		return (TType)(((TType*)mxGetPr(data))[0]); 
 	}
 }
 
@@ -149,7 +163,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	//Data
 	DType* data = NULL;
 	int data_cnt;
-	readMatlabInputArray<DType>(prhs, pcnt++, 2,"data",&data, &data_cnt);
+	int n_coils;
+	readMatlabInputArray<DType>(prhs, pcnt++, 2,"data",&data, &data_cnt,3,&n_coils);
 	
 	//Coords
 	DType* coords = NULL;
@@ -197,12 +212,13 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	
 	//Output Grid
 	CufftType* gdata;
-	const int n_dims = 4;
+	const int n_dims = 5;//2 * w * h * d * ncoils, 2 -> Re + Im
 	unsigned long dims_g[n_dims];
 	dims_g[0] = 2; /* complex */
 	dims_g[1] = (unsigned long)(im_width * osr); 
 	dims_g[2] = (unsigned long)(im_width * osr);
 	dims_g[3] = (unsigned long)(im_width * osr);
+	dims_g[4] = (unsigned long)(n_coils);
 
 	long grid_size = dims_g[1]*dims_g[2]*dims_g[3];
 
@@ -211,8 +227,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	if (gdata == NULL)
      mexErrMsgTxt("Could not create output mxArray.\n");
 
-	gridding3D_gpu(data,data_cnt,coords,gdata,grid_size,kern,kernel_entries,sectors,sector_cnt,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1],osr,DEAPODIZATION);//CONVOLUTION);
-	
+	gridding3D_gpu(data,data_cnt,n_coils,coords,gdata,grid_size,kern,kernel_entries,sectors,sector_cnt,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1],osr,DEAPODIZATION);//CONVOLUTION);
+
 	free(kern);
   CUcontext  pctx ;
   cuCtxPopCurrent(&pctx);	

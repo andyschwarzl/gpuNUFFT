@@ -4,10 +4,11 @@ clear all; close all; clc;
 %% add bin to path
 addpath ../bin
 addpath ../../daten
-addpath GRIDDING3D
+addpath(genpath('./GRIDDING3D'));
 %% Load data
 %load 20111017_Daten_MREG;
-load MREG_data_Graz;
+%load MREG_data_Graz;
+load 20111013_MREG_data_Graz_SoS;
 
 %% sensmaps
 smaps = getfield(E,'sensmaps');
@@ -19,16 +20,27 @@ end;
 smaps = squeeze(smaps_il(1,:,:,:,:) + 1i*smaps_il(2,:,:,:,:));
 
 %% Perform Regridding with Kaiser Besser Kernel 64
-osf = 2;%1,1.25,1.5,1.75,2
-wg = 5;%3-7
+osf = 1;%1,1.25,1.5,1.75,2
+wg = 3;%3-7
 sw = 8;
 imwidth = 64;
 k = E.nufftStruct.om'./(2*pi);
-w = ones(11685,1);
+w = ones(E.trajectory_length,1);
 
 G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw,'deappo');
 
-%%
+%% one call for all coils
+res = zeros(E.imageDim);
+kspace = reshape(data,[E.trajectory_length E.numCoils]);
+%[imgRegrid_kb,kernel] = grid3D(kspace,k,w,imwidth,osf,wg,sw,'deappo');
+imgRegrid_kb = G3D'*kspace;
+
+%SENS corr
+imgRegrid_kb = imgRegrid_kb(:,:,:,:) .* conj(smaps(:,:,:,:));
+
+%% res = SoS of coil data
+res = sqrt(sum(abs(imgRegrid_kb).^2,4));
+%% single call per coil 
 res = zeros(E.imageDim);
 for coil = 1 : E.numCoils,
         disp(['iteration ',num2str(coil)]);
@@ -41,7 +53,7 @@ for coil = 1 : E.numCoils,
         imgRegrid_kb = G3D'*kspace;
         toc
         %SENS corr
-        imgRegrid_kb = imgRegrid_kb(:,:,[11:54]) .* conj(smaps(:,:,:,coil));
+        imgRegrid_kb = imgRegrid_kb(:,:,:) .* conj(smaps(:,:,:,coil));
         
         %res = res + imgRegrid_kb; 
         res = sqrt(abs(res).^2 + abs(imgRegrid_kb).^2);
@@ -50,6 +62,6 @@ end
 figure, imshow(imresize(abs(res(:,:,25)),4),[]), title('gridding');
 
 %%
-for slice = 1:44
-    figure, imshow(imresize(abs(res(:,:,slice)),4),[]);
+for slice = 1:64
+    figure, imshow(imresize(abs(z(:,:,slice)),4),[]);
 end

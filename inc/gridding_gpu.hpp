@@ -25,8 +25,9 @@ enum FFTShiftDir
 	INVERSE
 };
 
-void gridding3D_gpu(DType* data, 
-					int data_cnt,
+void gridding3D_gpu(DType* data, //kspace data array 
+					int data_cnt,//data count, samples per trajectory
+					int n_coils, //number of coils 
 					DType* crds, 
 					CufftType* gdata,
 					int gdata_cnt,
@@ -54,6 +55,7 @@ struct GriddingInfo
 	DType kernel_radius;
 
 	int width;
+	int width_dim;
 	int width_offset;
 	DType width_inv;
 	DType osr;

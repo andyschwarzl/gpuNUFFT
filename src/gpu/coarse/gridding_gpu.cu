@@ -76,7 +76,7 @@ void gridding3D_gpu(DType* data,
 		cudaMemset(temp_gdata_d,0, sizeof(DType)*temp_grid_cnt);
 		cudaMemset(gdata_d,0, sizeof(CufftType)*gdata_cnt);
 		
-		performConvolution(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d,sector_count,block_dim,gi_host);
+		performConvolution(data_d+data_coil_offset,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d,sector_count,block_dim,gi_host);
 
 		//compose total output from local blocks 
 		composeOutput(temp_gdata_d,gdata_d,sector_centers_d,1,block_dim);

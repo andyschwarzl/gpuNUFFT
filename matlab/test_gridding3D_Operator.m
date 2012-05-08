@@ -40,24 +40,27 @@ imgRegrid_kb = imgRegrid_kb(:,:,:,:) .* conj(smaps(:,:,:,:));
 
 %% res = SoS of coil data
 res = sqrt(sum(abs(imgRegrid_kb).^2,4));
+figure, imshow(imresize(abs(res(:,:,25)),4),[]), title('gridding all coils at once');
+
 %% single call per coil 
 res = zeros(E.imageDim);
+tic
 for coil = 1 : E.numCoils,
         disp(['iteration ',num2str(coil)]);
         coil_start =  (coil-1) * E.trajectory_length +1;
         coil_end = coil_start +  E.trajectory_length - 1;
         % get kspace data and k trajectories
         kspace = data(coil_start:coil_end);
-        tic
         %[imgRegrid_kb,kernel] = grid3D(kspace,k,w,imwidth,osf,wg,sw,'deappo');
         imgRegrid_kb = G3D'*kspace;
-        toc
+
         %SENS corr
         imgRegrid_kb = imgRegrid_kb(:,:,:) .* conj(smaps(:,:,:,coil));
         
         %res = res + imgRegrid_kb; 
         res = sqrt(abs(res).^2 + abs(imgRegrid_kb).^2);
 end
+toc
 %%
 figure, imshow(imresize(abs(res(:,:,25)),4),[]), title('gridding');
 

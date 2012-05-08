@@ -31,7 +31,7 @@ res.sector_data_cnt = sector_data_cnt;
 %sector_data_cnt
 % calculate indices of data elements in order to sort them
 data_ind = i-1;
-res.data_ind=[2*data_ind+1;2*data_ind+2];
+res.data_ind=data_ind+1;%[2*data_ind+1;2*data_ind+2];
 
 % calculate indices of coord elements in order to sort them
 coord_ind = i-1;

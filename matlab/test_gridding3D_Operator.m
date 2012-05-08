@@ -33,11 +33,12 @@ G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw,'deappo');
 res = zeros(E.imageDim);
 kspace = reshape(data,[E.trajectory_length E.numCoils]);
 %[imgRegrid_kb,kernel] = grid3D(kspace,k,w,imwidth,osf,wg,sw,'deappo');
+tic
 imgRegrid_kb = G3D'*kspace;
 
 %SENS corr
 imgRegrid_kb = imgRegrid_kb(:,:,:,:) .* conj(smaps(:,:,:,:));
-
+toc
 %% res = SoS of coil data
 res = sqrt(sum(abs(imgRegrid_kb).^2,4));
 figure, imshow(imresize(abs(res(:,:,25)),4),[]), title('gridding all coils at once');
@@ -65,6 +66,6 @@ toc
 figure, imshow(imresize(abs(res(:,:,25)),4),[]), title('gridding');
 
 %%
-for slice = 1:64
-    figure, imshow(imresize(abs(z(:,:,slice)),4),[]);
-end
+%for slice = 1:64
+%    figure, imshow(imresize(abs(z(:,:,slice)),4),[]);
+%end

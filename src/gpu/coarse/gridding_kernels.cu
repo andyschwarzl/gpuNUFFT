@@ -52,11 +52,11 @@ __global__ void convolutionKernel( DType* data,
 			max_z = GI.sector_pad_width-1;
 
 			// set the boundaries of final dataset for gridding this point
-			ix = (data_point.x + 0.5f) * (GI.width) - center.x + GI.sector_offset;
+			ix = (data_point.x + 0.5f) * (GI.grid_width) - center.x + GI.sector_offset;
 			set_minmax(ix, &imin, &imax, max_x, GI.kernel_radius);
-			jy = (data_point.y + 0.5f) * (GI.width) - center.y + GI.sector_offset;
+			jy = (data_point.y + 0.5f) * (GI.grid_width) - center.y + GI.sector_offset;
 			set_minmax(jy, &jmin, &jmax, max_y, GI.kernel_radius);
-			kz = (data_point.z + 0.5f) * (GI.width) - center.z + GI.sector_offset;
+			kz = (data_point.z + 0.5f) * (GI.grid_width) - center.z + GI.sector_offset;
 			set_minmax(kz, &kmin, &kmax, max_z, GI.kernel_radius);
 				                
 			// grid this point onto the neighboring cartesian points
@@ -64,7 +64,7 @@ __global__ void convolutionKernel( DType* data,
 			{
 				if (k<=kmax && k>=kmin)
 				{
-					kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.width)) - 0.5f;//(k - center_z) *width_inv;
+					kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.grid_width)) - 0.5f;//(k - center_z) *width_inv;
 					dz_sqr = kz - data_point.z;
 					dz_sqr *= dz_sqr;
 					if (dz_sqr < GI.radiusSquared)
@@ -72,7 +72,7 @@ __global__ void convolutionKernel( DType* data,
 						j=threadIdx.y;
 						if (j<=jmax && j>=jmin)
 						{
-							jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.width)) - 0.5f;   //(j - center_y) *width_inv;
+							jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.grid_width)) - 0.5f;   //(j - center_y) *width_inv;
 							dy_sqr = jy - data_point.y;
 							dy_sqr *= dy_sqr;
 							if (dy_sqr < GI.radiusSquared)	
@@ -81,7 +81,7 @@ __global__ void convolutionKernel( DType* data,
 								
 								if (i<=imax && i>=imin)
 								{
-									ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.width)) - 0.5f;// (i - center_x) *width_inv;
+									ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.grid_width)) - 0.5f;// (i - center_x) *width_inv;
 									dx_sqr = ix - data_point.x;
 									dx_sqr *= dx_sqr;
 									if (dx_sqr < GI.radiusSquared)	
@@ -134,7 +134,7 @@ __global__ void composeOutputKernel(DType* temp_gdata, CufftType* gdata, int* se
 		center.y = sector_centers[sec * 3 + 1];
 		center.z = sector_centers[sec * 3 + 2];
 		__shared__ int sector_ind_offset;
-		sector_ind_offset = getIndex(center.x - GI.sector_offset,center.y - GI.sector_offset,center.z - GI.sector_offset,GI.width);
+		sector_ind_offset = getIndex(center.x - GI.sector_offset,center.y - GI.sector_offset,center.z - GI.sector_offset,GI.grid_width);
 		__shared__ int sector_grid_offset;
 		sector_grid_offset = sec * GI.sector_dim;
 		//write data from temp grid to overall output grid
@@ -143,8 +143,8 @@ __global__ void composeOutputKernel(DType* temp_gdata, CufftType* gdata, int* se
 			int y=threadIdx.y;
 			int x=threadIdx.x;
 			int s_ind = 2* (sector_grid_offset + getIndex(x,y,z,GI.sector_pad_width));
-			int ind = (sector_ind_offset + getIndex(x,y,z,GI.width));
-			if (isOutlier(x,y,z,center.x,center.y,center.z,GI.width,GI.sector_offset))
+			int ind = (sector_ind_offset + getIndex(x,y,z,GI.grid_width));
+			if (isOutlier(x,y,z,center.x,center.y,center.z,GI.grid_width,GI.sector_offset))
 				continue;
 			gdata[ind].x += temp_gdata[s_ind];//Re
 			gdata[ind].y += temp_gdata[s_ind+1];//Im
@@ -159,9 +159,9 @@ __global__ void deapodizationKernel(CufftType* gdata, DType beta, DType norm_val
 	int y=blockIdx.y;
 	int z=threadIdx.x;
 
-	int ind = getIndex(x,y,z,GI.width);
+	int ind = getIndex(x,y,z,GI.grid_width);
 	
-	DType deapo = calculateDeapodizationAt(x,y,z,GI.width_offset,GI.width_inv,GI.kernel_width,beta,norm_val);
+	DType deapo = calculateDeapodizationAt(x,y,z,GI.grid_width_offset,GI.grid_width_inv,GI.kernel_width,beta,norm_val);
 	
 	//check if deapodization value is valid number
 	if (!isnan(deapo))// == deapo)
@@ -178,14 +178,14 @@ __global__ void fftShiftKernel(CufftType* gdata, int offset)
 	int z = threadIdx.x;
 
 	//calculate "opposite" coord pair
-	int x_opp = (x + offset) % GI.width;
-	int y_opp = (y + offset) % GI.width;
-	int z_opp = (z + offset) % GI.width;
+	int x_opp = (x + offset) % GI.grid_width;
+	int y_opp = (y + offset) % GI.grid_width;
+	int z_opp = (z + offset) % GI.grid_width;
 
 	//swap points
-	CufftType temp = gdata[getIndex(x,y,z,GI.width)];
-	gdata[getIndex(x,y,z,GI.width)] = gdata[getIndex(x_opp,y_opp,z_opp,GI.width)];
-	gdata[getIndex(x_opp,y_opp,z_opp,GI.width)] = temp;
+	CufftType temp = gdata[getIndex(x,y,z,GI.grid_width)];
+	gdata[getIndex(x,y,z,GI.grid_width)] = gdata[getIndex(x_opp,y_opp,z_opp,GI.grid_width)];
+	gdata[getIndex(x_opp,y_opp,z_opp,GI.grid_width)] = temp;
 
 }
 
@@ -222,7 +222,7 @@ void performDeapodization(CufftType* gdata,
 	DType beta = (DType)BETA(gi_host->kernel_width,gi_host->osr);
 
 	//Calculate normalization value (should be at position 0 in interval [-N/2,N/2]) 
-	DType norm_val = calculateDeapodizationValue(0,gi_host->width_inv,gi_host->kernel_width,beta);
+	DType norm_val = calculateDeapodizationValue(0,gi_host->grid_width_inv,gi_host->kernel_width,beta);
 	norm_val = norm_val * norm_val * norm_val;
 
 	deapodizationKernel<<<grid_dim,block_dim>>>(gdata,beta,norm_val);

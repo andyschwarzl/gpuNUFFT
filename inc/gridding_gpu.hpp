@@ -45,21 +45,22 @@ void gridding3D_gpu(DType*		data,			//kspace data array
 
 struct GriddingInfo 
 {
-	int sector_count;
-	int sector_width;
-	
 	int kernel_width; 
 	int kernel_widthSquared;
 	DType kernel_widthInvSquared;
 	int kernel_count;
 	DType kernel_radius;
 
-	int width;
-	int width_dim;
-	int width_offset;
-	DType width_inv;
+	int grid_width;		
+	int grid_width_dim;  
+	int grid_width_offset;
+	DType grid_width_inv;
+
+	int im_width;
 	DType osr;
 	
+	int sector_count;
+	int sector_width;
 	int sector_dim;
 	int sector_pad_width;
 	int sector_offset;

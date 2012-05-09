@@ -103,9 +103,9 @@ GriddingInfo* initAndCopyGriddingInfo(int sector_count,
 	gi_host->kernel_width = kernel_width; 
 	gi_host->kernel_widthSquared = kernel_width * kernel_width;
 	gi_host->kernel_count = kernel_count;
-	gi_host->width = width;
-	gi_host->width_dim = width * width * width;
-	gi_host->width_offset= (int)(floor(width / (DType)2.0));
+	gi_host->grid_width = width;
+	gi_host->grid_width_dim = width * width * width;
+	gi_host->grid_width_offset= (int)(floor(width / (DType)2.0));
 
 	DType kernel_radius = static_cast<DType>(kernel_width) / (DType)2.0;
 	DType radius = kernel_radius / static_cast<DType>(width);
@@ -121,7 +121,7 @@ GriddingInfo* initAndCopyGriddingInfo(int sector_count,
 	int sector_dim = sector_pad_width  * sector_pad_width  * sector_pad_width ;
 	int sector_offset = (int)(floor(sector_pad_width / (DType)2.0));
 
-	gi_host->width_inv = width_inv;
+	gi_host->grid_width_inv = width_inv;
 	gi_host->kernel_widthInvSquared = kernel_width_inv * kernel_width_inv;
 	gi_host->osr = osr;
 	gi_host->kernel_radius = kernel_radius;

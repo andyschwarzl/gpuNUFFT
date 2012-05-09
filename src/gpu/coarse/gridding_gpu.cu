@@ -61,8 +61,8 @@ void gridding3D_gpu(DType*		data,			//kspace data array
 	
 	//Inverse fft plan and execution
 	cufftHandle fft_plan;
-	printf("creating cufft plan with %d,%d,%d dimensions\n",gi_host->width,gi_host->width,gi_host->width);
-	cufftResult res = cufftPlan3d(&fft_plan, gi_host->width,gi_host->width,gi_host->width, CUFFT_C2C) ;
+	printf("creating cufft plan with %d,%d,%d dimensions\n",gi_host->grid_width,gi_host->grid_width,gi_host->grid_width);
+	cufftResult res = cufftPlan3d(&fft_plan, gi_host->grid_width,gi_host->grid_width,gi_host->grid_width, CUFFT_C2C) ;
 	if (res != CUFFT_SUCCESS) 
 		printf("error on CUFFT Plan creation!!! %d\n",res);
 	int err;
@@ -114,13 +114,13 @@ void gridding3D_gpu(DType*		data,			//kspace data array
 			return;
 		}
 
-		performFFTShift(gdata_d,INVERSE,gi_host->width);
+		performFFTShift(gdata_d,INVERSE,gi_host->grid_width);
 
 		//TODO crop
 
 
-		dim3 block_dim_deapo(gi_host->width,gi_host->width,1);	
-		performDeapodization(gdata_d,block_dim_deapo,gi_host->width,gi_host);
+		dim3 block_dim_deapo(gi_host->grid_width,gi_host->grid_width,1);	
+		performDeapodization(gdata_d,block_dim_deapo,gi_host->grid_width,gi_host);
 
 		//get result
 		copyFromDevice<CufftType>(gdata_d,gdata+grid_coil_offset,gdata_count);

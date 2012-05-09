@@ -181,7 +181,6 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	readMatlabInputArray<int>(prhs, pcount++, 3,"sectors-centers",&sector_centers, &sector_count);
 
 	//Parameters
-    mwIndex j;
     const mxArray *matParams = prhs[pcount++];
 	
 	if (!mxIsStruct (matParams))
@@ -197,7 +196,6 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
    /**************** Init Cuda *****************/
     
-    cudaError_t rv; 
     CUdevice dev; 
     
     if (cuCtxGetDevice(&dev) == CUDA_SUCCESS)
@@ -231,6 +229,9 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	gridding3D_gpu(data,data_count,n_coils,coords,gdata,grid_count,grid_width,kernel,kernel_count,kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,DEAPODIZATION);//CONVOLUTION);
 
 	free(kernel);
+
+	mexPrintf("%s\n", cudaGetErrorString(cudaGetLastError()));
+
 	CUcontext  pctx ;
 	cuCtxPopCurrent(&pctx);	
 }

@@ -1,25 +1,25 @@
 #include "gridding_kernels.cu"
 #include "cuda_utils.hpp"
 
-//TODO inverse gridding from grid to k-space
+//TODO forward gridding from grid to k-space
 
-//grid from k-space to grid
-void gridding3D_gpu(DType* data, 
-					int data_cnt,
-					int n_coils,
-					DType* crds, 
-					CufftType* gdata,
-					int gdata_cnt,
-					DType* kernel,
-					int kernel_cnt,
-					int* sectors, 
-					int sector_count, 
-					int* sector_centers,
-					int sector_width,
-					int kernel_width, 
-					int kernel_count, 
-					int width,
-					DType osr,
+//adjoint gridding from k-space to grid
+void gridding3D_gpu(DType*		data,			//kspace data array 
+					int			data_count,		//data count, samples per trajectory
+					int			n_coils,		//number of coils 
+					DType*		crds,			//
+					CufftType*	gdata,			//
+					int			gdata_count,	//			
+					int			grid_width,		//
+					DType*		kernel,			//
+					int			kernel_count,	//
+					int			kernel_width,	//
+					int*		sectors,		//
+					int			sector_count,	//
+					int*		sector_centers,	//
+					int			sector_width,	//
+					int			im_width,		//
+					DType		osr,			//
 					const GriddingOutput gridding_out)
 {
 	assert(sectors != NULL);
@@ -30,27 +30,27 @@ void gridding3D_gpu(DType* data,
     
 	//split and run sectors into blocks
 	//and each data point to one thread inside this block 
-	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,sector_width,kernel_width,kernel_count,width,osr);
+	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,sector_width,kernel_width,kernel_count,grid_width,osr);
 	
 	DType* data_d, *crds_d, *kernel_d, *temp_gdata_d;
 	CufftType *gdata_d;
 	int* sector_centers_d, *sectors_d;
 
-	printf("allocate and copy gdata of size %d...\n",gdata_cnt);
-	allocateAndCopyToDeviceMem<CufftType>(&gdata_d,gdata,gdata_cnt);//Konvention!!!
+	printf("allocate and copy gdata of size %d...\n",gdata_count);
+	allocateAndCopyToDeviceMem<CufftType>(&gdata_d,gdata,gdata_count);//Konvention!!!
 
-	printf("allocate and copy data of size %d...\n",2*data_cnt*n_coils);
-	allocateAndCopyToDeviceMem<DType>(&data_d,data,2*data_cnt*n_coils);
+	printf("allocate and copy data of size %d...\n",2*data_count*n_coils);
+	allocateAndCopyToDeviceMem<DType>(&data_d,data,2*data_count*n_coils);
 
-	int temp_grid_cnt = 2 * sector_count * gi_host->sector_dim;
-	printf("allocate temp grid data of size %d...\n",temp_grid_cnt);
-	allocateAndSetMem<DType>(&temp_gdata_d,temp_grid_cnt,0);
+	int temp_grid_count = 2 * sector_count * gi_host->sector_dim;
+	printf("allocate temp grid data of size %d...\n",temp_grid_count);
+	allocateAndSetMem<DType>(&temp_gdata_d,temp_grid_count,0);
 	
-	printf("allocate and copy coords of size %d...\n",3*data_cnt);
-	allocateAndCopyToDeviceMem<DType>(&crds_d,crds,3*data_cnt);
+	printf("allocate and copy coords of size %d...\n",3*data_count);
+	allocateAndCopyToDeviceMem<DType>(&crds_d,crds,3*data_count);
 	
-	printf("allocate and copy kernel of size %d...\n",kernel_cnt);
-	allocateAndCopyToDeviceMem<DType>(&kernel_d,kernel,kernel_cnt);
+	printf("allocate and copy kernel of size %d...\n",kernel_count);
+	allocateAndCopyToDeviceMem<DType>(&kernel_d,kernel,kernel_count);
 	printf("allocate and copy sectors of size %d...\n",sector_count+1);
 	allocateAndCopyToDeviceMem<int>(&sectors_d,sectors,sector_count+1);
 	printf("allocate and copy sector_centers of size %d...\n",3*sector_count);
@@ -70,11 +70,11 @@ void gridding3D_gpu(DType* data,
 	//iterate over coils and compute result
 	for (int coil_it = 0; coil_it < n_coils; coil_it++)
 	{
-		int data_coil_offset = 2 * coil_it * data_cnt;
-		int grid_coil_offset = coil_it * gdata_cnt;//gi_host->width_dim;
+		int data_coil_offset = 2 * coil_it * data_count;
+		int grid_coil_offset = coil_it * gdata_count;//gi_host->width_dim;
 		//reset temp array
-		cudaMemset(temp_gdata_d,0, sizeof(DType)*temp_grid_cnt);
-		cudaMemset(gdata_d,0, sizeof(CufftType)*gdata_cnt);
+		cudaMemset(temp_gdata_d,0, sizeof(DType)*temp_grid_count);
+		cudaMemset(gdata_d,0, sizeof(CufftType)*gdata_count);
 		
 		performConvolution(data_d+data_coil_offset,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d,sector_count,block_dim,gi_host);
 
@@ -85,7 +85,7 @@ void gridding3D_gpu(DType* data,
 		{
 			printf("stopping output after CONVOLUTION step\n");
 			//get output
-			copyFromDevice<CufftType>(gdata_d,gdata,gdata_cnt);
+			copyFromDevice<CufftType>(gdata_d,gdata,gdata_count);
 			printf("test value at point zero: %f\n",gdata[0].x);
 			freeTotalDeviceMemory(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d,NULL);//NULL as stop token
 			free(gi_host);
@@ -105,7 +105,7 @@ void gridding3D_gpu(DType* data,
 		{
 			printf("stopping output after FFT step\n");
 			//get output
-			copyFromDevice<CufftType>(gdata_d,gdata,gdata_cnt);
+			copyFromDevice<CufftType>(gdata_d,gdata,gdata_count);
 			//free memory
 			freeTotalDeviceMemory(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d,NULL);//NULL as stop token
 			free(gi_host);
@@ -116,11 +116,14 @@ void gridding3D_gpu(DType* data,
 
 		performFFTShift(gdata_d,INVERSE,gi_host->width);
 
+		//TODO crop
+
+
 		dim3 block_dim_deapo(gi_host->width,gi_host->width,1);	
 		performDeapodization(gdata_d,block_dim_deapo,gi_host->width,gi_host);
 
 		//get result
-		copyFromDevice<CufftType>(gdata_d,gdata+grid_coil_offset,gdata_cnt);
+		copyFromDevice<CufftType>(gdata_d,gdata+grid_coil_offset,gdata_count);
 	}//iterate over coils
 
 	cudaEventRecord(stop,0);

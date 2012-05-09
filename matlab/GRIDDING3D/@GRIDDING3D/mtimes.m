@@ -13,10 +13,11 @@ if (kspace_data_dim > 1)
     m = squeeze(m(1,:,:,:,:) + 1j*(m(2,:,:,:,:)));
     
     %crop data 
-    ind_off = (a.params.im_width * (double(a.params.osr)-1) / 2) + 1;
-    ind_start = ind_off;
-    ind_end = ind_start + a.params.im_width -1;
-    ress = m(ind_start:ind_end,ind_start:ind_end,ind_start:ind_end,:);
+    %ind_off = (a.params.im_width * (double(a.params.osr)-1) / 2) + 1;
+    %ind_start = ind_off;
+    %ind_end = ind_start + a.params.im_width -1;
+    %ress = m(ind_start:ind_end,ind_start:ind_end,ind_start:ind_end,:);
+    ress = m;
 else
     %prepare data
     kspace = bb(a.op.data_ind);

@@ -20,7 +20,7 @@ end;
 smaps = squeeze(smaps_il(1,:,:,:,:) + 1i*smaps_il(2,:,:,:,:));
 
 %% Perform Regridding with Kaiser Besser Kernel 64
-osf = 1;%1,1.25,1.5,1.75,2
+osf = 1.25;%1,1.25,1.5,1.75,2
 wg = 3;%3-7
 sw = 8;
 imwidth = 64;
@@ -41,7 +41,7 @@ imgRegrid_kb = imgRegrid_kb(:,:,:,:) .* conj(smaps(:,:,:,:));
 
 %% res = SoS of coil data
 res = sqrt(sum(abs(imgRegrid_kb).^2,4));
-figure, imshow(imresize(abs(z(:,:,25)),4),[]), title('gridding all coils at once');
+figure, imshow(imresize(abs(res(:,:,25)),4),[]), title('gridding all coils at once');
 
 %% single call per coil 
 res = zeros(E.imageDim);

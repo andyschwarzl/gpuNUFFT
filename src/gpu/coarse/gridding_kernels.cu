@@ -197,30 +197,34 @@ void performConvolution( DType* data_d,
 						 int* sectors_d, 
 						 int* sector_centers_d,
 						 DType* temp_gdata_d,
-						 dim3 grid_dim,
-						 dim3 block_dim,
 						 GriddingInfo* gi_host
 						)
 {
 	long shared_mem_size = 2*gi_host->sector_dim*sizeof(DType);
+
+	dim3 block_dim(gi_host->sector_pad_width,gi_host->sector_pad_width,N_THREADS_PER_SECTOR);
+	dim3 grid_dim(gi_host->sector_count);
+	
 	printf("convolution requires %d bytes of shared memory!\n",shared_mem_size);
 	convolutionKernel<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d);
 }
 
-void composeOutput(DType* temp_gdata_d, CufftType* gdata_d, int* sector_centers_d,dim3 grid_dim,dim3 block_dim)
+void composeOutput(DType* temp_gdata_d, CufftType* gdata_d, int* sector_centers_d, GriddingInfo* gi_host)
 {
+	dim3 grid_dim(1);
+	dim3 block_dim(gi_host->sector_pad_width,gi_host->sector_pad_width,N_THREADS_PER_SECTOR);
+	
 	composeOutputKernel<<<grid_dim,block_dim>>>(temp_gdata_d,gdata_d,sector_centers_d);
 }
 
 //see BEATTY et al.: RAPID GRIDDING RECONSTRUCTION
 //eq. (4) and (5)
 void performDeapodization(CufftType* gdata,
-						 dim3 grid_dim,
-						 dim3 block_dim,
-						 GriddingInfo* gi_host)
+						  GriddingInfo* gi_host)
 {
 	DType beta = (DType)BETA(gi_host->kernel_width,gi_host->osr);
-
+	dim3 block_dim(gi_host->grid_width,gi_host->grid_width,1);	
+	dim3 grid_dim(gi_host->grid_width);
 	//Calculate normalization value (should be at position 0 in interval [-N/2,N/2]) 
 	DType norm_val = calculateDeapodizationValue(0,gi_host->grid_width_inv,gi_host->kernel_width,beta);
 	norm_val = norm_val * norm_val * norm_val;

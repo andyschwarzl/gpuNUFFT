@@ -57,8 +57,6 @@ void gridding3D_gpu(DType*		data,			//kspace data array
 	allocateAndCopyToDeviceMem<int>(&sector_centers_d,sector_centers,3*sector_count);
 	printf("sector pad width: %d\n",gi_host->sector_pad_width);
 	
-	dim3 block_dim(gi_host->sector_pad_width,gi_host->sector_pad_width,N_THREADS_PER_SECTOR);
-	
 	//Inverse fft plan and execution
 	cufftHandle fft_plan;
 	printf("creating cufft plan with %d,%d,%d dimensions\n",gi_host->grid_width,gi_host->grid_width,gi_host->grid_width);
@@ -76,10 +74,10 @@ void gridding3D_gpu(DType*		data,			//kspace data array
 		cudaMemset(temp_gdata_d,0, sizeof(DType)*temp_grid_count);
 		cudaMemset(gdata_d,0, sizeof(CufftType)*gdata_count);
 		
-		performConvolution(data_d+data_coil_offset,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d,sector_count,block_dim,gi_host);
+		performConvolution(data_d+data_coil_offset,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d,gi_host);
 
 		//compose total output from local blocks 
-		composeOutput(temp_gdata_d,gdata_d,sector_centers_d,1,block_dim);
+		composeOutput(temp_gdata_d,gdata_d,sector_centers_d,gi_host);
 	
 		if (gridding_out == CONVOLUTION)
 		{
@@ -118,9 +116,7 @@ void gridding3D_gpu(DType*		data,			//kspace data array
 
 		//TODO crop
 
-
-		dim3 block_dim_deapo(gi_host->grid_width,gi_host->grid_width,1);	
-		performDeapodization(gdata_d,block_dim_deapo,gi_host->grid_width,gi_host);
+		performDeapodization(gdata_d,gi_host);
 
 		//get result
 		copyFromDevice<CufftType>(gdata_d,gdata+grid_coil_offset,gdata_count);

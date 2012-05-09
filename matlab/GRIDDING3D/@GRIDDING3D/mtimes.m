@@ -8,7 +8,7 @@ if (kspace_data_dim > 1)
     'call gridding mex kernel'
     
     %data_ind = repmat(a.op.data_ind,[1 1 kspace_data_dim]);
-    m = cuda_mex_kernel(single(kspace),single(a.op.coords(a.op.coord_ind)),int32(a.op.sector_data_cnt),int32(a.op.sector_centers),a.params);
+    m = cuda_mex_kernel(single(kspace),single(a.op.coords),int32(a.op.sector_data_cnt),int32(a.op.sector_centers),a.params);
     size(m)
     m = squeeze(m(1,:,:,:,:) + 1j*(m(2,:,:,:,:)));
     
@@ -26,9 +26,8 @@ else
     %dw = d.*w;
 
     % performs the normal nufft
-
     'call gridding mex kernel'
-    m = cuda_mex_kernel(single(data),single(a.op.coords(a.op.coord_ind)),int32(a.op.sector_data_cnt),int32(a.op.sector_centers),a.params);
+    m = cuda_mex_kernel(single(data),single(a.op.coords),int32(a.op.sector_data_cnt),int32(a.op.sector_centers),a.params);
 
     size(m)
     m = squeeze(m(1,:,:,:) + 1j*(m(2,:,:,:)));

@@ -5,7 +5,7 @@ function [res] = gridding3D_init(k,n,osf,sw)
 %
 coords = k;
 [data_sector_idx, sector_centers,sector_dim] = assign_sectors(osf*n,sw,coords);
-res.coords = coords;
+
 [v i] = sort(data_sector_idx);
 v = v +1;
 % calculate offset of data entries for each sector, starts with 0
@@ -38,6 +38,7 @@ coord_ind = i-1;
 res.coord_ind = [3*coord_ind+1;
              3*coord_ind+2;
              3*coord_ind+3];
+res.coords = coords(res.coord_ind);
 %
 res.sector_centers = int32(reshape(sector_centers,[3,sector_dim]));
 

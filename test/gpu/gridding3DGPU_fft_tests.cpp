@@ -60,7 +60,7 @@ TEST(TestGPUGriddingFFT,KernelCall1Sector)
 	sector_centers[1] = 5;
 	sector_centers[2] = 5;
 
-	gridding3D_gpu(data,data_entries,1,coords,gdata,grid_size,kern,kernel_entries,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1],osr,FFT);
+gridding3D_gpu(data,data_entries,1,coords,gdata,grid_size,dims_g[1],kern,kernel_entries, kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,FFT);
 	
 	printf("test %f \n",gdata[4].x);
 	int index = get3DC2lin(5,5,5,im_width);
@@ -136,7 +136,7 @@ TEST(TestGPUGriddingFFT,GPUTest_Kernel5w64)
 
 	int sector_centers[sector_count*3] = {4,4,4,4,4,12,4,4,20,4,4,28,4,4,36,4,4,44,4,4,52,4,4,60,4,12,4,4,12,12,4,12,20,4,12,28,4,12,36,4,12,44,4,12,52,4,12,60,4,20,4,4,20,12,4,20,20,4,20,28,4,20,36,4,20,44,4,20,52,4,20,60,4,28,4,4,28,12,4,28,20,4,28,28,4,28,36,4,28,44,4,28,52,4,28,60,4,36,4,4,36,12,4,36,20,4,36,28,4,36,36,4,36,44,4,36,52,4,36,60,4,44,4,4,44,12,4,44,20,4,44,28,4,44,36,4,44,44,4,44,52,4,44,60,4,52,4,4,52,12,4,52,20,4,52,28,4,52,36,4,52,44,4,52,52,4,52,60,4,60,4,4,60,12,4,60,20,4,60,28,4,60,36,4,60,44,4,60,52,4,60,60,12,4,4,12,4,12,12,4,20,12,4,28,12,4,36,12,4,44,12,4,52,12,4,60,12,12,4,12,12,12,12,12,20,12,12,28,12,12,36,12,12,44,12,12,52,12,12,60,12,20,4,12,20,12,12,20,20,12,20,28,12,20,36,12,20,44,12,20,52,12,20,60,12,28,4,12,28,12,12,28,20,12,28,28,12,28,36,12,28,44,12,28,52,12,28,60,12,36,4,12,36,12,12,36,20,12,36,28,12,36,36,12,36,44,12,36,52,12,36,60,12,44,4,12,44,12,12,44,20,12,44,28,12,44,36,12,44,44,12,44,52,12,44,60,12,52,4,12,52,12,12,52,20,12,52,28,12,52,36,12,52,44,12,52,52,12,52,60,12,60,4,12,60,12,12,60,20,12,60,28,12,60,36,12,60,44,12,60,52,12,60,60,20,4,4,20,4,12,20,4,20,20,4,28,20,4,36,20,4,44,20,4,52,20,4,60,20,12,4,20,12,12,20,12,20,20,12,28,20,12,36,20,12,44,20,12,52,20,12,60,20,20,4,20,20,12,20,20,20,20,20,28,20,20,36,20,20,44,20,20,52,20,20,60,20,28,4,20,28,12,20,28,20,20,28,28,20,28,36,20,28,44,20,28,52,20,28,60,20,36,4,20,36,12,20,36,20,20,36,28,20,36,36,20,36,44,20,36,52,20,36,60,20,44,4,20,44,12,20,44,20,20,44,28,20,44,36,20,44,44,20,44,52,20,44,60,20,52,4,20,52,12,20,52,20,20,52,28,20,52,36,20,52,44,20,52,52,20,52,60,20,60,4,20,60,12,20,60,20,20,60,28,20,60,36,20,60,44,20,60,52,20,60,60,28,4,4,28,4,12,28,4,20,28,4,28,28,4,36,28,4,44,28,4,52,28,4,60,28,12,4,28,12,12,28,12,20,28,12,28,28,12,36,28,12,44,28,12,52,28,12,60,28,20,4,28,20,12,28,20,20,28,20,28,28,20,36,28,20,44,28,20,52,28,20,60,28,28,4,28,28,12,28,28,20,28,28,28,28,28,36,28,28,44,28,28,52,28,28,60,28,36,4,28,36,12,28,36,20,28,36,28,28,36,36,28,36,44,28,36,52,28,36,60,28,44,4,28,44,12,28,44,20,28,44,28,28,44,36,28,44,44,28,44,52,28,44,60,28,52,4,28,52,12,28,52,20,28,52,28,28,52,36,28,52,44,28,52,52,28,52,60,28,60,4,28,60,12,28,60,20,28,60,28,28,60,36,28,60,44,28,60,52,28,60,60,36,4,4,36,4,12,36,4,20,36,4,28,36,4,36,36,4,44,36,4,52,36,4,60,36,12,4,36,12,12,36,12,20,36,12,28,36,12,36,36,12,44,36,12,52,36,12,60,36,20,4,36,20,12,36,20,20,36,20,28,36,20,36,36,20,44,36,20,52,36,20,60,36,28,4,36,28,12,36,28,20,36,28,28,36,28,36,36,28,44,36,28,52,36,28,60,36,36,4,36,36,12,36,36,20,36,36,28,36,36,36,36,36,44,36,36,52,36,36,60,36,44,4,36,44,12,36,44,20,36,44,28,36,44,36,36,44,44,36,44,52,36,44,60,36,52,4,36,52,12,36,52,20,36,52,28,36,52,36,36,52,44,36,52,52,36,52,60,36,60,4,36,60,12,36,60,20,36,60,28,36,60,36,36,60,44,36,60,52,36,60,60,44,4,4,44,4,12,44,4,20,44,4,28,44,4,36,44,4,44,44,4,52,44,4,60,44,12,4,44,12,12,44,12,20,44,12,28,44,12,36,44,12,44,44,12,52,44,12,60,44,20,4,44,20,12,44,20,20,44,20,28,44,20,36,44,20,44,44,20,52,44,20,60,44,28,4,44,28,12,44,28,20,44,28,28,44,28,36,44,28,44,44,28,52,44,28,60,44,36,4,44,36,12,44,36,20,44,36,28,44,36,36,44,36,44,44,36,52,44,36,60,44,44,4,44,44,12,44,44,20,44,44,28,44,44,36,44,44,44,44,44,52,44,44,60,44,52,4,44,52,12,44,52,20,44,52,28,44,52,36,44,52,44,44,52,52,44,52,60,44,60,4,44,60,12,44,60,20,44,60,28,44,60,36,44,60,44,44,60,52,44,60,60,52,4,4,52,4,12,52,4,20,52,4,28,52,4,36,52,4,44,52,4,52,52,4,60,52,12,4,52,12,12,52,12,20,52,12,28,52,12,36,52,12,44,52,12,52,52,12,60,52,20,4,52,20,12,52,20,20,52,20,28,52,20,36,52,20,44,52,20,52,52,20,60,52,28,4,52,28,12,52,28,20,52,28,28,52,28,36,52,28,44,52,28,52,52,28,60,52,36,4,52,36,12,52,36,20,52,36,28,52,36,36,52,36,44,52,36,52,52,36,60,52,44,4,52,44,12,52,44,20,52,44,28,52,44,36,52,44,44,52,44,52,52,44,60,52,52,4,52,52,12,52,52,20,52,52,28,52,52,36,52,52,44,52,52,52,52,52,60,52,60,4,52,60,12,52,60,20,52,60,28,52,60,36,52,60,44,52,60,52,52,60,60,60,4,4,60,4,12,60,4,20,60,4,28,60,4,36,60,4,44,60,4,52,60,4,60,60,12,4,60,12,12,60,12,20,60,12,28,60,12,36,60,12,44,60,12,52,60,12,60,60,20,4,60,20,12,60,20,20,60,20,28,60,20,36,60,20,44,60,20,52,60,20,60,60,28,4,60,28,12,60,28,20,60,28,28,60,28,36,60,28,44,60,28,52,60,28,60,60,36,4,60,36,12,60,36,20,60,36,28,60,36,36,60,36,44,60,36,52,60,36,60,60,44,4,60,44,12,60,44,20,60,44,28,60,44,36,60,44,44,60,44,52,60,44,60,60,52,4,60,52,12,60,52,20,60,52,28,60,52,36,60,52,44,60,52,52,60,52,60,60,60,4,60,60,12,60,60,20,60,60,28,60,60,36,60,60,44,60,60,52,60,60,60};
 
-	gridding3D_gpu(data,data_entries,1,coords,gdata,grid_size,kern,kernel_entries,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1],osr,FFT);
+gridding3D_gpu(data,data_entries,1,coords,gdata,grid_size,dims_g[1],kern,kernel_entries, kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,FFT);
 
 	EXPECT_NEAR(-0.0010,gdata[get3DC2lin(57,33,32,im_width)].x,epsilon*10.0f);
 	
@@ -247,7 +247,7 @@ TEST(DISABLED_TestGPUGriddingFFT,GPUTest_2SectorsKernel3nData)
 	sector_centers[4] = 7;
 	sector_centers[5] = 5;
 
-	gridding3D_gpu(data,data_entries,1,coords,gdata,grid_size,kern,kernel_entries,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1],osr,FFT);
+gridding3D_gpu(data,data_entries,1,coords,gdata,grid_size,dims_g[1],kern,kernel_entries, kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,FFT);
 
 	int index = get3DC2lin(5,5,5,im_width);
 	printf("index to test %d\n",index);
@@ -398,7 +398,7 @@ TEST(DISABLED_TestGPUGriddingFFT,GPUTest_8SectorsKernel3nData)
 	sector_centers[sector_cnt++] = 7;
 	sector_centers[sector_cnt++] = 7;
 
-	gridding3D_gpu(data,data_entries,1,coords,gdata,grid_size,kern,kernel_entries,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1],osr,FFT);
+gridding3D_gpu(data,data_entries,1,coords,gdata,grid_size,dims_g[1],kern,kernel_entries, kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,FFT);
 
 	int index = get3DC2lin(5,5,5,im_width);
 	printf("index to test %d\n",index);
@@ -543,7 +543,7 @@ TEST(DISABLED_TestGPUGriddingFFT,GPUTest_8SectorsKernel4nData)
 	sector_centers[sector_cnt++] = 7;
 	sector_centers[sector_cnt++] = 7;
 
-	gridding3D_gpu(data,data_entries,1,coords,gdata,grid_size,kern,kernel_entries,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1],osr,FFT);
+gridding3D_gpu(data,data_entries,1,coords,gdata,grid_size,dims_g[1],kern,kernel_entries, kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,FFT);
 
 	int index = get3DC2lin(5,5,5,im_width);
 	printf("index to test %d\n",index);
@@ -626,7 +626,7 @@ TEST(TestGPUGriddingFFT,GPUTest_8SectorsKernel3nDataw128)
 
 	int sector_cnt = 0;
 
-	gridding3D_gpu(data,data_entries,1,coords,gdata,grid_size,kern,kernel_entries,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1],osr,FFT);
+gridding3D_gpu(data,data_entries,1,coords,gdata,grid_size,dims_g[1],kern,kernel_entries, kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,FFT);
 
 	EXPECT_NEAR(gdata[get3DC2lin(51,50,65,128)].x,0.0444f,epsilon);
 	EXPECT_NEAR(gdata[get3DC2lin(56,50,65,128)].x,-0.0269f,epsilon);
@@ -770,7 +770,7 @@ TEST(TestGPUGriddingFFT,GPUTest_FactorTwoTest)
 	sector_centers[sector_cnt++] = 7;
 	sector_centers[sector_cnt++] = 7;
 
-	gridding3D_gpu(data,data_entries,1,coords,gdata,grid_size,kern,kernel_entries,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1],osr,FFT);
+gridding3D_gpu(data,data_entries,1,coords,gdata,grid_size,dims_g[1],kern,kernel_entries, kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,FFT);
 
 	int index = get3DC2lin(5,5,5,im_width);
 	printf("index to test %d\n",index);
@@ -877,7 +877,7 @@ TEST(DISABLED_TestGPUGriddingFFT,GPUTest_8SectorsKernel3nDataw32)
 	
 	int sector_centers[3*sector_count] = {4,4,4,4,4,12,4,4,20,4,4,28,4,12,4,4,12,12,4,12,20,4,12,28,4,20,4,4,20,12,4,20,20,4,20,28,4,28,4,4,28,12,4,28,20,4,28,28,12,4,4,12,4,12,12,4,20,12,4,28,12,12,4,12,12,12,12,12,20,12,12,28,12,20,4,12,20,12,12,20,20,12,20,28,12,28,4,12,28,12,12,28,20,12,28,28,20,4,4,20,4,12,20,4,20,20,4,28,20,12,4,20,12,12,20,12,20,20,12,28,20,20,4,20,20,12,20,20,20,20,20,28,20,28,4,20,28,12,20,28,20,20,28,28,28,4,4,28,4,12,28,4,20,28,4,28,28,12,4,28,12,12,28,12,20,28,12,28,28,20,4,28,20,12,28,20,20,28,20,28,28,28,4,28,28,12,28,28,20,28,28,28};
 
-	gridding3D_gpu(data,data_entries,1,coords,gdata,grid_size,kern,kernel_entries,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1],osr,FFT);
+gridding3D_gpu(data,data_entries,1,coords,gdata,grid_size,dims_g[1],kern,kernel_entries, kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,FFT);
 
 	/*for (int j=0; j<im_width; j++)
 	{
@@ -970,7 +970,7 @@ TEST(DISABLED_TestGPUGriddingFFT,MatlabTest_8SK3w32)
 	
 	int sector_centers[3*sector_count] = {4,4,4,4,4,12,4,4,20,4,4,28,4,12,4,4,12,12,4,12,20,4,12,28,4,20,4,4,20,12,4,20,20,4,20,28,4,28,4,4,28,12,4,28,20,4,28,28,12,4,4,12,4,12,12,4,20,12,4,28,12,12,4,12,12,12,12,12,20,12,12,28,12,20,4,12,20,12,12,20,20,12,20,28,12,28,4,12,28,12,12,28,20,12,28,28,20,4,4,20,4,12,20,4,20,20,4,28,20,12,4,20,12,12,20,12,20,20,12,28,20,20,4,20,20,12,20,20,20,20,20,28,20,28,4,20,28,12,20,28,20,20,28,28,28,4,4,28,4,12,28,4,20,28,4,28,28,12,4,28,12,12,28,12,20,28,12,28,28,20,4,28,20,12,28,20,20,28,20,28,28,28,4,28,28,12,28,28,20,28,28,28};
 
-	gridding3D_gpu(data,data_entries,1,coords,gdata,grid_size,kern,kernel_entries,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1],osr,FFT);
+gridding3D_gpu(data,data_entries,1,coords,gdata,grid_size,dims_g[1],kern,kernel_entries, kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,FFT);
 
 	for (int j=0; j<im_width; j++)
 	{

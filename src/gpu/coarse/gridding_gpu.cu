@@ -8,8 +8,8 @@ void gridding3D_gpu(DType*		data,			//kspace data array
 					int			data_count,		//data count, samples per trajectory
 					int			n_coils,		//number of coils 
 					DType*		crds,			//
-					CufftType*	gdata,			//
-					int			gdata_count,	//			
+					CufftType*	imdata,			//
+					int			imdata_count,	//			
 					int			grid_width,		//
 					DType*		kernel,			//
 					int			kernel_count,	//
@@ -30,14 +30,17 @@ void gridding3D_gpu(DType*		data,			//kspace data array
     
 	//split and run sectors into blocks
 	//and each data point to one thread inside this block 
-	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,sector_width,kernel_width,kernel_count,grid_width,osr);
+	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,sector_width,kernel_width,kernel_count,grid_width,im_width,osr);
 	
 	DType* data_d, *crds_d, *kernel_d, *temp_gdata_d;
-	CufftType *gdata_d;
+	CufftType *gdata_d, *imdata_d;
 	int* sector_centers_d, *sectors_d;
 
-	printf("allocate and copy gdata of size %d...\n",gdata_count);
-	allocateAndCopyToDeviceMem<CufftType>(&gdata_d,gdata,gdata_count);//Konvention!!!
+	printf("allocate and copy imdata of size %d...\n",imdata_count);
+	allocateAndCopyToDeviceMem<CufftType>(&imdata_d,imdata,imdata_count);//Konvention!!!
+
+	printf("allocate and copy gdata of size %d...\n",gi_host->grid_width_dim);
+	allocateAndSetMem<CufftType>(&gdata_d,gi_host->grid_width_dim,0);//Konvention!!!
 
 	printf("allocate and copy data of size %d...\n",2*data_count*n_coils);
 	allocateAndCopyToDeviceMem<DType>(&data_d,data,2*data_count*n_coils);
@@ -69,10 +72,11 @@ void gridding3D_gpu(DType*		data,			//kspace data array
 	for (int coil_it = 0; coil_it < n_coils; coil_it++)
 	{
 		int data_coil_offset = 2 * coil_it * data_count;
-		int grid_coil_offset = coil_it * gdata_count;//gi_host->width_dim;
+		int im_coil_offset = coil_it * imdata_count;//gi_host->width_dim;
 		//reset temp array
 		cudaMemset(temp_gdata_d,0, sizeof(DType)*temp_grid_count);
-		cudaMemset(gdata_d,0, sizeof(CufftType)*gdata_count);
+		cudaMemset(gdata_d,0, sizeof(CufftType)*gi_host->grid_width_dim);
+		cudaMemset(imdata_d,0, sizeof(CufftType)*imdata_count);
 		
 		performConvolution(data_d+data_coil_offset,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d,gi_host);
 
@@ -83,9 +87,9 @@ void gridding3D_gpu(DType*		data,			//kspace data array
 		{
 			printf("stopping output after CONVOLUTION step\n");
 			//get output
-			copyFromDevice<CufftType>(gdata_d,gdata,gdata_count);
-			printf("test value at point zero: %f\n",gdata[0].x);
-			freeTotalDeviceMemory(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d,NULL);//NULL as stop token
+			copyFromDevice<CufftType>(gdata_d,imdata,gi_host->grid_width_dim);
+			printf("test value at point zero: %f\n",imdata[0].x);
+			freeTotalDeviceMemory(data_d,crds_d,imdata_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d,NULL);//NULL as stop token
 			free(gi_host);
 			/* Destroy the cuFFT plan. */
 			cufftDestroy(fft_plan);
@@ -95,7 +99,7 @@ void gridding3D_gpu(DType*		data,			//kspace data array
 		//Inverse FFT
 		if (err=cufftExecC2C(fft_plan, gdata_d, gdata_d, CUFFT_INVERSE) != CUFFT_SUCCESS)
 		{
-			  printf("cufft has failed with err %i \n",err);
+			printf("cufft has failed with err %i \n",err);
 		  //return;
 		}
 	
@@ -103,9 +107,9 @@ void gridding3D_gpu(DType*		data,			//kspace data array
 		{
 			printf("stopping output after FFT step\n");
 			//get output
-			copyFromDevice<CufftType>(gdata_d,gdata,gdata_count);
+			copyFromDevice<CufftType>(gdata_d,imdata,gi_host->grid_width_dim);
 			//free memory
-			freeTotalDeviceMemory(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d,NULL);//NULL as stop token
+			freeTotalDeviceMemory(data_d,crds_d,imdata_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d,NULL);//NULL as stop token
 			free(gi_host);
 			/* Destroy the cuFFT plan. */
 			cufftDestroy(fft_plan);
@@ -115,11 +119,15 @@ void gridding3D_gpu(DType*		data,			//kspace data array
 		performFFTShift(gdata_d,INVERSE,gi_host->grid_width);
 
 		//TODO crop
+		//if (grid_width != im_width)
+		{
+			performCrop(gdata_d,imdata_d,gi_host);
+		}
 
-		performDeapodization(gdata_d,gi_host);
+		performDeapodization(imdata_d,gi_host);
 
 		//get result
-		copyFromDevice<CufftType>(gdata_d,gdata+grid_coil_offset,gdata_count);
+		copyFromDevice<CufftType>(imdata_d,imdata+im_coil_offset,imdata_count);
 	}//iterate over coils
 
 	cudaEventRecord(stop,0);
@@ -132,6 +140,6 @@ void gridding3D_gpu(DType*		data,			//kspace data array
 
 	/* Destroy the cuFFT plan. */
 	cufftDestroy(fft_plan);
-	freeTotalDeviceMemory(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d,NULL);//NULL as stop
+	freeTotalDeviceMemory(data_d,crds_d,imdata_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d,NULL);//NULL as stop
 	free(gi_host);
 }

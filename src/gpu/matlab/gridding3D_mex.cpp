@@ -208,25 +208,27 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	DType* kernel = (DType*) calloc(kernel_count,sizeof(float));
 	loadGrid3Kernel(kernel,kernel_count,kernel_width,osr);
 	
-	//Output Grid
-	CufftType* gdata;
+	//calc grid width -> oversampling
 	int grid_width = (unsigned long)(im_width * osr);
-	const int n_dims = 5;//2 * w * h * d * ncoils, 2 -> Re + Im
-	unsigned long dims_g[n_dims];
-	dims_g[0] = 2; /* complex */
-	dims_g[1] = grid_width;
-	dims_g[2] = grid_width;
-	dims_g[3] = grid_width;
-	dims_g[4] = (unsigned long)(n_coils);
-
-	long grid_count = dims_g[1]*dims_g[2]*dims_g[3];
 	
-	plhs[0] = mxCreateNumericArray(n_dims,(const mwSize*)dims_g,mxGetClassID(prhs[0]),mxREAL);
-    gdata = (CufftType*)mxGetData(plhs[0]);
-	if (gdata == NULL)
+	//Output Image
+	CufftType* imdata;
+	const int n_dims = 5;//2 * w * h * d * ncoils, 2 -> Re + Im
+	unsigned long dims_im[n_dims];
+	dims_im[0] = 2; /* complex */
+	dims_im[1] = im_width;
+	dims_im[2] = im_width;
+	dims_im[3] = im_width;
+	dims_im[4] = (unsigned long)(n_coils);
+
+	long im_count = dims_im[1]*dims_im[2]*dims_im[3];
+	
+	plhs[0] = mxCreateNumericArray(n_dims,(const mwSize*)dims_im,mxGetClassID(prhs[0]),mxREAL);
+    imdata = (CufftType*)mxGetData(plhs[0]);
+	if (imdata == NULL)
      mexErrMsgTxt("Could not create output mxArray.\n");
 
-	gridding3D_gpu(data,data_count,n_coils,coords,gdata,grid_count,grid_width,kernel,kernel_count,kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,DEAPODIZATION);//CONVOLUTION);
+	gridding3D_gpu(data,data_count,n_coils,coords,imdata,im_count,grid_width,kernel,kernel_count,kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,DEAPODIZATION);//CONVOLUTION);
 
 	free(kernel);
 

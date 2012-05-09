@@ -159,9 +159,9 @@ __global__ void deapodizationKernel(CufftType* gdata, DType beta, DType norm_val
 	int y=blockIdx.y;
 	int z=threadIdx.x;
 
-	int ind = getIndex(x,y,z,GI.grid_width);
+	int ind = getIndex(x,y,z,GI.im_width);
 	
-	DType deapo = calculateDeapodizationAt(x,y,z,GI.grid_width_offset,GI.grid_width_inv,GI.kernel_width,beta,norm_val);
+	DType deapo = calculateDeapodizationAt(x,y,z,GI.im_width_offset,GI.grid_width_inv,GI.kernel_width,beta,norm_val);
 	
 	//check if deapodization value is valid number
 	if (!isnan(deapo))// == deapo)
@@ -169,6 +169,17 @@ __global__ void deapodizationKernel(CufftType* gdata, DType beta, DType norm_val
 		gdata[ind].x = gdata[ind].x / deapo;//Re
 		gdata[ind].y = gdata[ind].y / deapo;//Im
 	}
+}
+
+__global__ void cropKernel(CufftType* gdata,CufftType* imdata, int offset)
+{
+	int x=blockIdx.x; //[0,N-1] N...im_width
+	int y=blockIdx.y; //[0,N-1] N...im_width
+	int z=threadIdx.x;//[0,N-1] N...im_width
+	int grid_ind = getIndex(offset+x,offset+y,offset+z,GI.grid_width);
+	int im_ind = getIndex(x,y,z,GI.im_width);
+
+	imdata[im_ind] = gdata[grid_ind];
 }
 
 __global__ void fftShiftKernel(CufftType* gdata, int offset)
@@ -223,13 +234,32 @@ void performDeapodization(CufftType* gdata,
 						  GriddingInfo* gi_host)
 {
 	DType beta = (DType)BETA(gi_host->kernel_width,gi_host->osr);
-	dim3 block_dim(gi_host->grid_width,gi_host->grid_width,1);	
-	dim3 grid_dim(gi_host->grid_width);
+
+	dim3 grid_dim(gi_host->im_width,gi_host->im_width,1);	
+	dim3 block_dim(gi_host->im_width);
 	//Calculate normalization value (should be at position 0 in interval [-N/2,N/2]) 
 	DType norm_val = calculateDeapodizationValue(0,gi_host->grid_width_inv,gi_host->kernel_width,beta);
 	norm_val = norm_val * norm_val * norm_val;
 
 	deapodizationKernel<<<grid_dim,block_dim>>>(gdata,beta,norm_val);
+}
+
+void performCrop(CufftType* gdata_d,
+				 CufftType* imdata_d,
+				 GriddingInfo* gi_host)
+{
+	//TODO
+	/*crop data 
+    ind_off = (a.params.im_width * (double(a.params.osr)-1) / 2) + 1;
+    ind_start = ind_off;
+    ind_end = ind_start + a.params.im_width -1;
+    ress = m(ind_start:ind_end,ind_start:ind_end,ind_start:ind_end,:);*/
+	int ind_off = gi_host->im_width * ((DType)gi_host->osr -1)/(DType)2;
+	printf("start cropping image with offset %d\n",ind_off);
+
+	dim3 grid_dim(gi_host->im_width,gi_host->im_width,1);
+	dim3 block_dim(gi_host->im_width);
+	cropKernel<<<grid_dim,block_dim>>>(gdata_d,imdata_d,ind_off);
 }
 
 void performFFTShift(CufftType* gdata_d,

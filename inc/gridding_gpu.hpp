@@ -29,8 +29,8 @@ void gridding3D_gpu(DType*		data,			//kspace data array
 					int			data_count,		//data count, samples per trajectory
 					int			n_coils,		//number of coils 
 					DType*		crds,			//
-					CufftType*	gdata,			//
-					int			gdata_count,	//			
+					CufftType*	imdata,			//
+					int			imdata_count,	//			
 					int			grid_width,		//
 					DType*		kernel,			//
 					int			kernel_count,	//
@@ -57,6 +57,8 @@ struct GriddingInfo
 	DType grid_width_inv;
 
 	int im_width;
+	int im_width_offset;
+
 	DType osr;
 	
 	int sector_count;

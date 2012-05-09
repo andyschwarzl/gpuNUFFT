@@ -158,31 +158,31 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
     //////////////////////////////////// fetching data from MATLAB
 
-	int pcnt = 0;  //Parametercounter
+	int pcount = 0;  //Parametercounter
     
 	//Data
 	DType* data = NULL;
-	int data_cnt;
+	int data_count;
 	int n_coils;
-	readMatlabInputArray<DType>(prhs, pcnt++, 2,"data",&data, &data_cnt,3,&n_coils);
+	readMatlabInputArray<DType>(prhs, pcount++, 2,"data",&data, &data_count,3,&n_coils);
 	
 	//Coords
 	DType* coords = NULL;
-	int coord_cnt;
-	readMatlabInputArray<DType>(prhs, pcnt++, 3,"coords",&coords, &coord_cnt);
+	int coord_count;
+	readMatlabInputArray<DType>(prhs, pcount++, 3,"coords",&coords, &coord_count);
 
 	//Sectors
 	int* sectors = NULL;
-	int sector_cnt;
-	readMatlabInputArray<int>(prhs, pcnt++, 1,"sectors",&sectors, &sector_cnt);
+	int sector_count;
+	readMatlabInputArray<int>(prhs, pcount++, 1,"sectors",&sectors, &sector_count);
 
 	//Sector centers
 	int* sector_centers = NULL;
-	readMatlabInputArray<int>(prhs, pcnt++, 3,"sectors-centers",&sector_centers, &sector_cnt);
+	readMatlabInputArray<int>(prhs, pcount++, 3,"sectors-centers",&sector_centers, &sector_count);
 
 	//Parameters
     mwIndex j;
-    const mxArray *matParams = prhs[pcnt++];
+    const mxArray *matParams = prhs[pcount++];
 	
 	if (!mxIsStruct (matParams))
          mexErrMsgTxt ("expects struct containing parameters!");
@@ -206,32 +206,33 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     //   cuCtxPopCurrent(&pctx);	      
     }   
    
-	long kernel_entries = calculateGrid3KernelSize(osr, kernel_width/2.0f);
-	DType* kern = (DType*) calloc(kernel_entries,sizeof(float));
-	loadGrid3Kernel(kern,kernel_entries,kernel_width,osr);
+	long kernel_count = calculateGrid3KernelSize(osr, kernel_width/2.0f);
+	DType* kernel = (DType*) calloc(kernel_count,sizeof(float));
+	loadGrid3Kernel(kernel,kernel_count,kernel_width,osr);
 	
 	//Output Grid
 	CufftType* gdata;
+	int grid_width = (unsigned long)(im_width * osr);
 	const int n_dims = 5;//2 * w * h * d * ncoils, 2 -> Re + Im
 	unsigned long dims_g[n_dims];
 	dims_g[0] = 2; /* complex */
-	dims_g[1] = (unsigned long)(im_width * osr); 
-	dims_g[2] = (unsigned long)(im_width * osr);
-	dims_g[3] = (unsigned long)(im_width * osr);
+	dims_g[1] = grid_width;
+	dims_g[2] = grid_width;
+	dims_g[3] = grid_width;
 	dims_g[4] = (unsigned long)(n_coils);
 
-	long grid_size = dims_g[1]*dims_g[2]*dims_g[3];
-
+	long grid_count = dims_g[1]*dims_g[2]*dims_g[3];
+	
 	plhs[0] = mxCreateNumericArray(n_dims,(const mwSize*)dims_g,mxGetClassID(prhs[0]),mxREAL);
     gdata = (CufftType*)mxGetData(plhs[0]);
 	if (gdata == NULL)
      mexErrMsgTxt("Could not create output mxArray.\n");
 
-	gridding3D_gpu(data,data_cnt,n_coils,coords,gdata,grid_size,kern,kernel_entries,sectors,sector_cnt,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1],osr,DEAPODIZATION);//CONVOLUTION);
+	gridding3D_gpu(data,data_count,n_coils,coords,gdata,grid_count,grid_width,kernel,kernel_count,kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,DEAPODIZATION);//CONVOLUTION);
 
-	free(kern);
-  CUcontext  pctx ;
-  cuCtxPopCurrent(&pctx);	
+	free(kernel);
+	CUcontext  pctx ;
+	cuCtxPopCurrent(&pctx);	
 }
 
 

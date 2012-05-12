@@ -220,6 +220,7 @@ void performConvolution( DType* data_d,
 	convolutionKernel<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d);
 }
 
+//very slow way of composing the output 
 void composeOutput(DType* temp_gdata_d, CufftType* gdata_d, int* sector_centers_d, GriddingInfo* gi_host)
 {
 	dim3 grid_dim(1);
@@ -230,7 +231,7 @@ void composeOutput(DType* temp_gdata_d, CufftType* gdata_d, int* sector_centers_
 
 //see BEATTY et al.: RAPID GRIDDING RECONSTRUCTION
 //eq. (4) and (5)
-void performDeapodization(CufftType* gdata,
+void performDeapodization(CufftType* imdata_d,
 						  GriddingInfo* gi_host)
 {
 	DType beta = (DType)BETA(gi_host->kernel_width,gi_host->osr);
@@ -241,14 +242,14 @@ void performDeapodization(CufftType* gdata,
 	DType norm_val = calculateDeapodizationValue(0,gi_host->grid_width_inv,gi_host->kernel_width,beta);
 	norm_val = norm_val * norm_val * norm_val;
 
-	deapodizationKernel<<<grid_dim,block_dim>>>(gdata,beta,norm_val);
+	deapodizationKernel<<<grid_dim,block_dim>>>(imdata_d,beta,norm_val);
 }
+
 
 void performCrop(CufftType* gdata_d,
 				 CufftType* imdata_d,
 				 GriddingInfo* gi_host)
 {
-	//TODO
 	/*crop data 
     ind_off = (a.params.im_width * (double(a.params.osr)-1) / 2) + 1;
     ind_start = ind_off;

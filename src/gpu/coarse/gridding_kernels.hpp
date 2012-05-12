@@ -23,10 +23,10 @@ void performFFTShift(CufftType* gdata_d,
 					 int width);
 
 void performCrop(CufftType* gdata_d,
-				 CufftType* im_data_d,
+				 CufftType* imdata_d,
 				 GriddingInfo* gi_host);
 
-void performDeapodization(CufftType* gdata,
+void performDeapodization(CufftType* imdata_d,
 						 GriddingInfo* gi_host);
 
 #endif

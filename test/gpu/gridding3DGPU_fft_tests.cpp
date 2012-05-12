@@ -572,7 +572,7 @@ gridding3D_gpu(data,data_entries,1,coords,gdata,grid_size,dims_g[1],kern,kernel_
 	free(sector_centers);
 }
 
-TEST(TestGPUGriddingFFT,GPUTest_8SectorsKernel3nDataw128)
+TEST(DISABLED_TestGPUGriddingFFT,GPUTest_8SectorsKernel3nDataw128)
 {
 	//oversampling ratio
 	float osr = DEFAULT_OVERSAMPLING_RATIO;

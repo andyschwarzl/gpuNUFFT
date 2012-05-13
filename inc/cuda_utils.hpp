@@ -87,6 +87,13 @@ __device__ inline float atomicFloatAdd(float* address, float value)
   return ret;
 }
 
+inline void showMemoryInfo()
+{
+	size_t free_mem = 0;
+	size_t total_mem = 0;
+	cudaMemGetInfo(&free_mem, &total_mem);
+	printf("memory usage, free: %lu total: %lu\n",free_mem,total_mem);
+}	
 
 GriddingInfo* initAndCopyGriddingInfo(int sector_count, 
 									  int sector_width,

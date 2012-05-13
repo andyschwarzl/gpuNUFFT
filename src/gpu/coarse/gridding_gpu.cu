@@ -1,10 +1,11 @@
 #include "gridding_kernels.cu"
 #include "cuda_utils.hpp"
+#include "gridding_gpu.hpp"
 
 //TODO forward gridding from grid to k-space
 
 //adjoint gridding from k-space to grid
-void gridding3D_gpu(DType*		data,			//kspace data array 
+void gridding3D_gpu_adj(DType*		data,			//kspace data array 
 					int			data_count,		//data count, samples per trajectory
 					int			n_coils,		//number of coils 
 					DType*		crds,			//

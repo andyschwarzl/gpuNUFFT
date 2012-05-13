@@ -23,27 +23,12 @@ void gridding3D_gpu(DType*		data,			//kspace data array
 					const GriddingOutput gridding_out)
 {
 	assert(sectors != NULL);
-	/*cudaEvent_t start, stop;
-	cudaEventCreate(&start);
-	cudaEventCreate(&stop);
-	cudaEventRecord(start,0);*/
+	
 	size_t free_mem = 0;
 	size_t total_mem = 0;
-	cuInit(0);
-	CUdevice dev; 
-	CUcontext ctx;
-	cuDeviceGet(&dev,0);
-	CUresult cuRes;
-    if ((cuRes = cuCtxCreate(&ctx,0,dev)) != CUDA_SUCCESS)
-    {
-		printf("get device failed\n");
-		printf("%d\n", cuRes);//cudaGetErrorString(cudaGetLastError()));
-
-	}
 	cudaMemGetInfo(&free_mem, &total_mem);
 	printf("memory usage, free: %lu total: %lu\n",free_mem,total_mem);
 	
-
 	//split and run sectors into blocks
 	//and each data point to one thread inside this block 
 	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,sector_width,kernel_width,kernel_count,grid_width,im_width,osr);
@@ -56,7 +41,6 @@ void gridding3D_gpu(DType*		data,			//kspace data array
 	allocateAndCopyToDeviceMem<CufftType>(&imdata_d,imdata,imdata_count);//Konvention!!!
 
 	printf("allocate and copy gdata of size %d...\n",gi_host->grid_width_dim);
-	//allocateAndSetMem<CufftType>(&gdata_d,gi_host->grid_width_dim,0);//Konvention!!! set mem in loop
 	allocateDeviceMem<CufftType>(&gdata_d,gi_host->grid_width_dim);
 
 	printf("allocate and copy data of size %d...\n",2*data_count*n_coils);
@@ -64,7 +48,6 @@ void gridding3D_gpu(DType*		data,			//kspace data array
 
 	int temp_grid_count = 2 * sector_count * gi_host->sector_dim;
 	printf("allocate temp grid data of size %d...\n",temp_grid_count);
-	//allocateAndSetMem<DType>(&temp_gdata_d,temp_grid_count,0);
 	allocateDeviceMem<DType>(&temp_gdata_d,temp_grid_count);
 
 	printf("allocate and copy coords of size %d...\n",3*data_count);
@@ -94,7 +77,6 @@ void gridding3D_gpu(DType*		data,			//kspace data array
 		//reset temp array
 		cudaMemset(temp_gdata_d,0, sizeof(DType)*temp_grid_count);
 		cudaMemset(gdata_d,0, sizeof(CufftType)*gi_host->grid_width_dim);
-		//cudaMemset(imdata_d,0, sizeof(CufftType)*imdata_count);
 		
 		performConvolution(data_d+data_coil_offset,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d,gi_host);
 
@@ -112,7 +94,6 @@ void gridding3D_gpu(DType*		data,			//kspace data array
 			free(gi_host);
 			/* Destroy the cuFFT plan. */
 			cufftDestroy(fft_plan);
-			cuCtxDestroy(ctx);
 			return;
 		}
 
@@ -120,7 +101,6 @@ void gridding3D_gpu(DType*		data,			//kspace data array
 		if (err=cufftExecC2C(fft_plan, gdata_d, gdata_d, CUFFT_INVERSE) != CUFFT_SUCCESS)
 		{
 			printf("cufft has failed with err %i \n",err);
-		  //return;
 		}
 	
 		if (gridding_out == FFT)
@@ -128,41 +108,29 @@ void gridding3D_gpu(DType*		data,			//kspace data array
 			printf("stopping output after FFT step\n");
 			//get output
 			copyFromDevice<CufftType>(gdata_d,imdata,gi_host->grid_width_dim);
+			
 			//free memory
+			if (cufftDestroy(fft_plan) != CUFFT_SUCCESS)
+				printf("error on destroying cufft plan\n");
 			freeTotalDeviceMemory(data_d,crds_d,imdata_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d,NULL);//NULL as stop token
 			free(gi_host);
 			/* Destroy the cuFFT plan. */
-			cufftDestroy(fft_plan);
 			printf("last cuda error: %s\n", cudaGetErrorString(cudaGetLastError()));
-			cuCtxDestroy(ctx);
 			return;
 		}
 
 		performFFTShift(gdata_d,INVERSE,gi_host->grid_width);
 
-		//TODO crop
-		//if (grid_width != im_width)
-		{
-			performCrop(gdata_d,imdata_d,gi_host);
-		}
-
+		performCrop(gdata_d,imdata_d,gi_host);
+		
 		performDeapodization(imdata_d,gi_host);
 
 		//get result
 		copyFromDevice<CufftType>(imdata_d,imdata+im_coil_offset,imdata_count);
 	}//iterate over coils
 
-/*	cudaEventRecord(stop,0);
-	cudaEventSynchronize(stop);
-	float elapsed;
-	cudaEventElapsedTime(&elapsed,start,stop);
-	printf("Time elapsed: %3.1fms\n",elapsed);
-	cudaEventDestroy(start);
-	cudaEventDestroy(stop);*/
-
-	/* Destroy the cuFFT plan. */
+	// Destroy the cuFFT plan.
 	cufftDestroy(fft_plan);
 	freeTotalDeviceMemory(data_d,crds_d,gdata_d,imdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d,NULL);//NULL as stop
 	free(gi_host);
-	cuCtxDestroy(ctx);
 }

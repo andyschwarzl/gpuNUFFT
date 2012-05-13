@@ -2,7 +2,7 @@
 #define GRIDDING_KERNELS_H
 #include "gridding_gpu.hpp"
 
-//forward declarations
+//INVERSE Operations
 void performConvolution( DType* data_d, 
 						 DType* crds_d, 
 						 CufftType* gdata_d,
@@ -28,5 +28,13 @@ void performCrop(CufftType* gdata_d,
 
 void performDeapodization(CufftType* imdata_d,
 						 GriddingInfo* gi_host);
+
+//FORWARD Operations
+
+void performPadding(CufftType* imdata_d,
+					CufftType* gdata_d,					
+					GriddingInfo* gi_host);
+
+
 
 #endif

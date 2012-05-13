@@ -84,8 +84,8 @@ m = squeeze(m(1,:,:,:) + 1j*(m(2,:,:,:)));
 if strcmp(opt,'k-space') return; end;
 
 %crop data 
-ind_off = (n * (osf-1) / 2) + 1;
-ind_start = ind_off;
-ind_end = ind_start + n -1;
-m = m(ind_start:ind_end,ind_start:ind_end,ind_start:ind_end);
+%ind_off = (n * (osf-1) / 2) + 1;
+%ind_start = ind_off;
+%ind_end = ind_start + n -1;
+%m = m(ind_start:ind_end,ind_start:ind_end,ind_start:ind_end);
 

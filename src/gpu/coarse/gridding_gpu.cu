@@ -21,26 +21,23 @@ void gridding3D_gpu(CufftType*	data,			//kspace data array
 					DType		osr,			//
 					const GriddingOutput gridding_out)
 {
-	size_t free_mem = 0;
-	size_t total_mem = 0;
-	cudaMemGetInfo(&free_mem, &total_mem);
-	printf("memory usage, free: %lu total: %lu\n",free_mem,total_mem);
-	
+	showMemoryInfo();
+
 	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,sector_width,kernel_width,kernel_count,grid_width,im_width,osr);
 
 	//TODO cuda mem allocation
-	DType* data_d, *crds_d, *kernel_d, *temp_gdata_d;
-	CufftType *gdata_d, *imdata_d;
+	DType *imdata_d, *crds_d, *kernel_d, *temp_gdata_d;
+	CufftType *gdata_d, *data_d;
 	int* sector_centers_d, *sectors_d;
 	
 	printf("allocate and copy imdata of size %d...\n",imdata_count);
-	allocateAndCopyToDeviceMem<CufftType>(&imdata_d,imdata,imdata_count);//Konvention!!!
+	allocateAndCopyToDeviceMem<DType>(&imdata_d,imdata,imdata_count);//Konvention!!!
 
 	printf("allocate and copy gdata of size %d...\n",gi_host->grid_width_dim);
 	allocateDeviceMem<CufftType>(&gdata_d,gi_host->grid_width_dim);
 
 	printf("allocate and copy data of size %d...\n",2*data_count*n_coils);
-	allocateAndCopyToDeviceMem<DType>(&data_d,data,2*data_count*n_coils);
+	allocateAndCopyToDeviceMem<CufftType>(&data_d,data,2*data_count*n_coils);
 
 	int temp_grid_count = 2 * sector_count * gi_host->sector_dim;
 	printf("allocate temp grid data of size %d...\n",temp_grid_count);
@@ -75,7 +72,7 @@ void gridding3D_gpu(CufftType*	data,			//kspace data array
 		cudaMemset(gdata_d,0, sizeof(CufftType)*gi_host->grid_width_dim);
 		
 		// Apodization Correction
-		performDeapodization(imdata_d,gi_host);
+		performForwardDeapodization(imdata_d,gi_host);
 
 		// resize by oversampling factor and zero pad
 		performPadding(imdata_d,gdata_d,gi_host);
@@ -94,7 +91,7 @@ void gridding3D_gpu(CufftType*	data,			//kspace data array
 		composeOutput(temp_gdata_d,gdata_d,sector_centers_d,gi_host);
 	
 		//get result
-		copyFromDevice<CufftType>(imdata_d,imdata+im_coil_offset,imdata_count);
+		copyFromDevice<CufftType>(gdata_d,data+im_coil_offset,data_count);
 	}//iterate over coils
 
 	// Destroy the cuFFT plan.
@@ -124,11 +121,8 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 {
 	assert(sectors != NULL);
 	
-	size_t free_mem = 0;
-	size_t total_mem = 0;
-	cudaMemGetInfo(&free_mem, &total_mem);
-	printf("memory usage, free: %lu total: %lu\n",free_mem,total_mem);
-	
+	showMemoryInfo();
+
 	//split and run sectors into blocks
 	//and each data point to one thread inside this block 
 	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,sector_width,kernel_width,kernel_count,grid_width,im_width,osr);

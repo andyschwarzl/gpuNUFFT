@@ -31,9 +31,22 @@ void performDeapodization(CufftType* imdata_d,
 
 //FORWARD Operations
 
-void performPadding(CufftType* imdata_d,
+void performForwardDeapodization(DType* imdata_d,
+						  GriddingInfo* gi_host);
+
+void performPadding(DType* imdata_d,
 					CufftType* gdata_d,					
 					GriddingInfo* gi_host);
+
+void performForwardConvolution( CufftType* data_d, 
+								 DType* crds_d, 
+								 CufftType* gdata_d,
+								 DType* kernel_d, 
+								 int* sectors_d, 
+								 int* sector_centers_d,
+								 DType* temp_gdata_d,
+								 GriddingInfo* gi_host
+								);
 
 
 

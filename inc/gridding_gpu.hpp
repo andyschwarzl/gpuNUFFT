@@ -43,7 +43,7 @@ void gridding3D_gpu(CufftType*	data,			//kspace data array
 					DType		osr,			//
 					const GriddingOutput gridding_out);
 
-void gridding3D_gpu_adj(DType*		data,			//kspace data array 
+void gridding3D_gpu_adj(DType*		data,		//kspace data array 
 					int			data_count,		//data count, samples per trajectory
 					int			n_coils,		//number of coils 
 					DType*		crds,			//

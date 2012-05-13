@@ -626,7 +626,7 @@ TEST(DISABLED_TestGPUGriddingFFT,GPUTest_8SectorsKernel3nDataw128)
 
 	int sector_cnt = 0;
 
-gridding3D_gpu(data,data_entries,1,coords,gdata,grid_size,dims_g[1],kern,kernel_entries, kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,FFT);
+	gridding3D_gpu(data,data_entries,1,coords,gdata,grid_size,dims_g[1],kern,kernel_entries, kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,DEAPODIZATION);
 
 	EXPECT_NEAR(gdata[get3DC2lin(51,50,65,128)].x,0.0444f,epsilon);
 	EXPECT_NEAR(gdata[get3DC2lin(56,50,65,128)].x,-0.0269f,epsilon);

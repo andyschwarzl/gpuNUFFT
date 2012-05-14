@@ -25,7 +25,7 @@ void gridding3D_gpu(CufftType*	data,			//kspace data array
 	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,sector_width,kernel_width,kernel_count,grid_width,im_width,osr);
 
 	//cuda mem allocation
-	DType *imdata_d, *crds_d, *kernel_d, *temp_gdata_d;
+	DType *imdata_d, *crds_d, *kernel_d;//, *temp_gdata_d;
 	CufftType *gdata_d, *data_d;
 	int* sector_centers_d, *sectors_d;
 	
@@ -86,7 +86,7 @@ void gridding3D_gpu(CufftType*	data,			//kspace data array
 		performFFTShift(gdata_d,FORWARD,gi_host->grid_width);
 
 		// convolution and resampling to non-standard trajectory
-		performForwardConvolution(data_d,crds_d,gdata_d + im_coil_offset,kernel_d,sectors_d,sector_centers_d,temp_gdata_d,gi_host);
+		performForwardConvolution(data_d,crds_d,gdata_d + im_coil_offset,kernel_d,sectors_d,sector_centers_d,gi_host);
 		//compose total output from local blocks 
 		//composeOutput(temp_gdata_d,gdata_d,sector_centers_d,gi_host);
 	
@@ -96,7 +96,7 @@ void gridding3D_gpu(CufftType*	data,			//kspace data array
 
 	// Destroy the cuFFT plan.
 	cufftDestroy(fft_plan);
-	freeTotalDeviceMemory(data_d,crds_d,gdata_d,imdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d,NULL);//NULL as stop
+	freeTotalDeviceMemory(data_d,crds_d,gdata_d,imdata_d,kernel_d,sectors_d,sector_centers_d,NULL);//NULL as stop
 	free(gi_host);
 }
 

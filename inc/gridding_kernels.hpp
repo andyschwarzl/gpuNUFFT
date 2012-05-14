@@ -44,7 +44,6 @@ void performForwardConvolution( CufftType* data_d,
 								 DType* kernel_d, 
 								 int* sectors_d, 
 								 int* sector_centers_d,
-								 DType* temp_gdata_d,
 								 GriddingInfo* gi_host
 								);
 

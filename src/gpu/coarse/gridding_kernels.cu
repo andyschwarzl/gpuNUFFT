@@ -323,8 +323,7 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 										  CufftType* gdata,
 										  DType* kernel, 
 										  int* sectors, 
-										  int* sector_centers,
-										  DType* temp_gdata
+										  int* sector_centers
 											)
 {
 	extern __shared__ CufftType out_data[];//externally managed shared memory
@@ -459,7 +458,6 @@ void performForwardConvolution( CufftType*		data_d,
 								DType*			kernel_d, 
 								int*			sectors_d, 
 								int*			sector_centers_d,
-								DType*			temp_gdata_d,
 								GriddingInfo*	gi_host
 								)
 {
@@ -470,5 +468,5 @@ void performForwardConvolution( CufftType*		data_d,
 	dim3 grid_dim(gi_host->sector_count);
 	
 	printf("convolution requires %d bytes of shared memory!\n",shared_mem_size);
-	forwardConvolutionKernel<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d);
+	forwardConvolutionKernel<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d);
 }

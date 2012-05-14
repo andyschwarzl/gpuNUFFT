@@ -34,17 +34,18 @@ TEST(TestGPUGriddingForwardConv,KernelCall1Sector)
 	//oversampling ratio
 	float osr = DEFAULT_OVERSAMPLING_RATIO;
 
-	DType* gdata;
+	DType* im_data;
 	unsigned long dims_g[4];
     dims_g[0] = 2; /* complex */
-	dims_g[1] = (unsigned long)(im_width * osr); 
-    dims_g[2] = (unsigned long)(im_width * osr);
-    dims_g[3] = (unsigned long)(im_width * osr);
+	dims_g[1] = (unsigned long)(im_width); 
+    dims_g[2] = (unsigned long)(im_width);
+    dims_g[3] = (unsigned long)(im_width);
 
-	long grid_size = dims_g[0]*dims_g[1]*dims_g[2]*dims_g[3];
+	long im_size = dims_g[1]*dims_g[2]*dims_g[3];
 
-	gdata = (DType*) calloc(grid_size,sizeof(DType));
-	
+	im_data = (DType*) calloc(2*im_size,sizeof(DType));
+	long grid_width = (unsigned long)(im_width * osr);
+
 	//sectors of data, count and start indices
 	int sector_width = 9;
 	
@@ -58,21 +59,21 @@ TEST(TestGPUGriddingForwardConv,KernelCall1Sector)
 	sector_centers[1] = 5;
 	sector_centers[2] = 5;
 
-	gridding3D_gpu(data,data_entries,1,coords,gdata,grid_size,dims_g[1],kern,kernel_entries, kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,CONVOLUTION);
+	gridding3D_gpu(data,data_entries,1,coords,im_data,im_size,grid_width,kern,kernel_entries, kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,CONVOLUTION);
 	
 	printf("test %f \n",data[4].x);
 	int index = get3DC2lin(5,5,5,im_width);
 	
-	for (int j=0; j<im_width; j++)
+	for (int j=0; j<data_entries; j++)
 	{
-		for (int i=0; i<im_width; i++)
-			printf("%.4f ",data[get3DC2lin(i,j,5,im_width)].x);
-		printf("\n");
+		printf("%.4f ",data[j].x);
 	}
+
+	printf("\n");
 
 	free(data);
 	free(coords);
-	free(gdata);
+	free(im_data);
 	free(kern);
 	free(sectors);
 	free(sector_centers);

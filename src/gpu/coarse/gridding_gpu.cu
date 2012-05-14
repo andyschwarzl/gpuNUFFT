@@ -2,7 +2,7 @@
 #include "cuda_utils.hpp"
 #include "gridding_gpu.hpp"
 
-//forward gridding from grid/image to k-space
+//forward gridding from image to grid/k-space
 void gridding3D_gpu(CufftType*	data,			//kspace data array 
 					int			data_count,		//data count, samples per trajectory
 					int			n_coils,		//number of coils 
@@ -22,27 +22,26 @@ void gridding3D_gpu(CufftType*	data,			//kspace data array
 					const GriddingOutput gridding_out)
 {
 	showMemoryInfo();
-
 	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,sector_width,kernel_width,kernel_count,grid_width,im_width,osr);
 
-	//TODO cuda mem allocation
+	//cuda mem allocation
 	DType *imdata_d, *crds_d, *kernel_d, *temp_gdata_d;
 	CufftType *gdata_d, *data_d;
 	int* sector_centers_d, *sectors_d;
 	
-	printf("allocate and copy imdata of size %d...\n",imdata_count);
-	allocateAndCopyToDeviceMem<DType>(&imdata_d,imdata,imdata_count);//Konvention!!!
+	printf("allocate and copy imdata of size %d...\n",2*imdata_count*n_coils);
+	allocateAndCopyToDeviceMem<DType>(&imdata_d,imdata,2*imdata_count*n_coils);
 
-	printf("allocate and copy gdata of size %d...\n",gi_host->grid_width_dim);
-	allocateDeviceMem<CufftType>(&gdata_d,gi_host->grid_width_dim);
+	printf("allocate and copy gdata of size %d...\n",gi_host->grid_width_dim * n_coils);
+	allocateDeviceMem<CufftType>(&gdata_d,gi_host->grid_width_dim * n_coils);
 
-	printf("allocate and copy data of size %d...\n",2*data_count*n_coils);
-	allocateAndCopyToDeviceMem<CufftType>(&data_d,data,2*data_count*n_coils);
+	printf("allocate and copy data of size %d...\n",data_count);
+	allocateDeviceMem<CufftType>(&data_d,data_count);
 
-	int temp_grid_count = 2 * sector_count * gi_host->sector_dim;
+	/*int temp_grid_count = 2 * sector_count * gi_host->sector_dim;
 	printf("allocate temp grid data of size %d...\n",temp_grid_count);
 	allocateDeviceMem<DType>(&temp_gdata_d,temp_grid_count);
-
+	*/
 	printf("allocate and copy coords of size %d...\n",3*data_count);
 	allocateAndCopyToDeviceMem<DType>(&crds_d,crds,3*data_count);
 	
@@ -65,18 +64,19 @@ void gridding3D_gpu(CufftType*	data,			//kspace data array
 	//iterate over coils and compute result
 	for (int coil_it = 0; coil_it < n_coils; coil_it++)
 	{
-		int data_coil_offset = 2 * coil_it * data_count;
-		int im_coil_offset = coil_it * imdata_count;//gi_host->width_dim;
+		int data_coil_offset = coil_it * data_count;
+		int im_coil_offset = 2 * coil_it * imdata_count;//gi_host->width_dim;
 		//reset temp array
-		cudaMemset(temp_gdata_d,0, sizeof(DType)*temp_grid_count);
-		cudaMemset(gdata_d,0, sizeof(CufftType)*gi_host->grid_width_dim);
+		//cudaMemset(temp_gdata_d,0, sizeof(DType)*temp_grid_count);
+		cudaMemset(data_d,0, sizeof(CufftType)*data_count);
 		
 		// Apodization Correction
-		performForwardDeapodization(imdata_d,gi_host);
+		performForwardDeapodization(imdata_d + im_coil_offset,gi_host);
 
 		// resize by oversampling factor and zero pad
-		performPadding(imdata_d,gdata_d,gi_host);
-		
+		performPadding(imdata_d + im_coil_offset,gdata_d,gi_host);
+		//eventually free imdata_d
+
 		// Forward FFT to kspace domain
 		if (err=cufftExecC2C(fft_plan, gdata_d, gdata_d, CUFFT_FORWARD) != CUFFT_SUCCESS)
 		{
@@ -86,12 +86,12 @@ void gridding3D_gpu(CufftType*	data,			//kspace data array
 		performFFTShift(gdata_d,FORWARD,gi_host->grid_width);
 
 		// convolution and resampling to non-standard trajectory
-		performForwardConvolution(data_d+data_coil_offset,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d,gi_host);
+		performForwardConvolution(data_d,crds_d,gdata_d + im_coil_offset,kernel_d,sectors_d,sector_centers_d,temp_gdata_d,gi_host);
 		//compose total output from local blocks 
-		composeOutput(temp_gdata_d,gdata_d,sector_centers_d,gi_host);
+		//composeOutput(temp_gdata_d,gdata_d,sector_centers_d,gi_host);
 	
 		//get result
-		copyFromDevice<CufftType>(gdata_d,data+im_coil_offset,data_count);
+		copyFromDevice<CufftType>(data_d, data + data_coil_offset,data_count);
 	}//iterate over coils
 
 	// Destroy the cuFFT plan.
@@ -102,22 +102,22 @@ void gridding3D_gpu(CufftType*	data,			//kspace data array
 
 //adjoint gridding from k-space to grid
 void gridding3D_gpu_adj(DType*		data,			//kspace data array 
-					int			data_count,		//data count, samples per trajectory
-					int			n_coils,		//number of coils 
-					DType*		crds,			//
-					CufftType*	imdata,			//
-					int			imdata_count,	//			
-					int			grid_width,		//
-					DType*		kernel,			//
-					int			kernel_count,	//
-					int			kernel_width,	//
-					int*		sectors,		//
-					int			sector_count,	//
-					int*		sector_centers,	//
-					int			sector_width,	//
-					int			im_width,		//
-					DType		osr,			//
-					const GriddingOutput gridding_out)
+						int			data_count,		//data count, samples per trajectory
+						int			n_coils,		//number of coils 
+						DType*		crds,			//
+						CufftType*	imdata,			//
+						int			imdata_count,	//			
+						int			grid_width,		//
+						DType*		kernel,			//
+						int			kernel_count,	//
+						int			kernel_width,	//
+						int*		sectors,		//
+						int			sector_count,	//
+						int*		sector_centers,	//
+						int			sector_width,	//
+						int			im_width,		//
+						DType		osr,			//
+						const GriddingOutput gridding_out)
 {
 	assert(sectors != NULL);
 	

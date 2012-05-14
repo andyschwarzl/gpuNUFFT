@@ -324,7 +324,7 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 										  DType* kernel, 
 										  int* sectors, 
 										  int* sector_centers,
-										  CufftType* temp_gdata
+										  DType* temp_gdata
 											)
 {
 	extern __shared__ CufftType out_data[];//externally managed shared memory
@@ -459,7 +459,7 @@ void performForwardConvolution( CufftType*		data_d,
 								DType*			kernel_d, 
 								int*			sectors_d, 
 								int*			sector_centers_d,
-								CufftType*		temp_gdata_d,
+								DType*			temp_gdata_d,
 								GriddingInfo*	gi_host
 								)
 {

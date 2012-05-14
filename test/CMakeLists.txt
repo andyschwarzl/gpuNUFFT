@@ -21,7 +21,8 @@ set(CPU_SOURCES cpu/gridding3D_tests.cpp
 #gpu test sources
 set(GPU_SOURCES gpu/gridding3DGPU_conv_tests.cpp
 				gpu/gridding3DGPU_fft_tests.cpp
-				gpu/gridding3DGPU_deapo_tests.cpp)
+				gpu/gridding3DGPU_deapo_tests.cpp
+				gpu/forward/gridding3DGPU_forward_tests.cpp)
 
 #add source dir
 add_executable(runUnitTests ${CPU_SOURCES} ../inc/gridding_cpu.hpp)
@@ -29,10 +30,10 @@ target_link_libraries(runUnitTests ${GTEST_LIB} ${GTESTMAIN_LIB})
 set_target_properties(runUnitTests PROPERTIES LINK_FLAGS -lpthread)
 
 
-cuda_add_executable(runGPUUnitTests ${GPU_SOURCES} ../inc/gridding_gpu.hpp)
+cuda_add_executable(runGPUUnitTests ${GPU_SOURCES} ../inc/gridding_gpu.hpp ../inc/gridding_kernels.hpp)
 target_link_libraries(runGPUUnitTests gridding3D ${GTEST_LIB} ${GTESTMAIN_LIB})
 
 if(GPU_DOUBLE_PREC)
-	cuda_add_executable(runGPUATMUnitTests ${GPU_SOURCES} ../inc/gridding_gpu.hpp)
+	cuda_add_executable(runGPUATMUnitTests ${GPU_SOURCES} ../inc/gridding_gpu.hpp ../inc/gridding_kernels.hpp)
 	target_link_libraries(runGPUATMUnitTests gridding3DATM ${GTEST_LIB} ${GTESTMAIN_LIB})
 endif()

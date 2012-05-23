@@ -77,7 +77,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	DType osr = getParamField<DType>(matParams,"osr"); 
 	int kernel_width = getParamField<int>(matParams,"kernel_width");
 	int sector_width = getParamField<int>(matParams,"sector_width");
-	int data_entries = getParamField<int>(matParams,"data_entries");
+	int data_entries = getParamField<int>(matParams,"trajectory_length");
 
 	if (MATLAB_DEBUG)
 		mexPrintf("passed Params, IM_WIDTH: %d, IM_COUNT: %d, OSR: %f, KERNEL_WIDTH: %d, SECTOR_WIDTH: %d, DATA_ENTRIES: %d\n",im_width,im_count,osr,kernel_width,sector_width,data_entries);

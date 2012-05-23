@@ -32,10 +32,11 @@ if (a.adjoint)
 else
     imspace = bb;
     imdata = [real(imspace(:))'; imag(imspace(:))'];
+    n_coils = size(bb,4);
     size(imdata)
     'multiple coil data passed'
-    %kspace = reshape(imdata,[2 a.params.trajectory_length kspace_data_dim]);
-    'call gridding mex kernel'
+    imdata = reshape(imdata,[2 a.params.im_width*a.params.im_width*a.params.im_width n_coils]);
+    'call forward gridding mex kernel'
 
     %data_ind = repmat(a.op.data_ind,[1 1 kspace_data_dim]);
     data = mex_gridding3D_forw(single(imdata),single(a.op.coords),int32(a.op.sector_data_cnt),int32(a.op.sector_centers),a.params);

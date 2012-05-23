@@ -39,7 +39,7 @@ res.params.im_width = uint32(n);
 res.params.osr = single(osf);
 res.params.kernel_width = uint32(wg);
 res.params.sector_width = uint32(sw);
-res.params.trajectory_length = length(k);
+res.params.trajectory_length = uint32(length(k));
 res.adjoint = 0;
 %res.opt = opt;
 

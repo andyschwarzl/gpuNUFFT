@@ -32,7 +32,7 @@ prhs Array of pointers to the input mxArrays. Do not modify any prhs values in y
 void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 {
 	if (MATLAB_DEBUG)
-		mexPrintf("Starting GRIDDING 3D Function...\n");
+		mexPrintf("Starting Forward GRIDDING 3D Function...\n");
 
 	//TODO check input params count first!
 	/*  if(nrhs != 9 ) {
@@ -48,10 +48,10 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	int pcount = 0;  //Parametercounter
     
 	//Data
-	DType* data = NULL;
-	int data_count;
+	DType* imdata = NULL;
+	int im_count;
 	int n_coils;
-	readMatlabInputArray<DType>(prhs, pcount++, 2,"data",&data, &data_count,3,&n_coils);
+	readMatlabInputArray<DType>(prhs, pcount++, 2,"imdata",&imdata, &im_count,3,&n_coils);
 	
 	//Coords
 	DType* coords = NULL;
@@ -77,9 +77,10 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	DType osr = getParamField<DType>(matParams,"osr"); 
 	int kernel_width = getParamField<int>(matParams,"kernel_width");
 	int sector_width = getParamField<int>(matParams,"sector_width");
-		
+	int data_entries = getParamField<int>(matParams,"data_entries");
+
 	if (MATLAB_DEBUG)
-		mexPrintf("passed Params, IM_WIDTH: %d, OSR: %f, KERNEL_WIDTH: %d, SECTOR_WIDTH: %d\n",im_width,osr,kernel_width,sector_width);
+		mexPrintf("passed Params, IM_WIDTH: %d, IM_COUNT: %d, OSR: %f, KERNEL_WIDTH: %d, SECTOR_WIDTH: %d, DATA_ENTRIES: %d\n",im_width,im_count,osr,kernel_width,sector_width,data_entries);
 
    /**************** Init Cuda *****************/
     
@@ -99,24 +100,22 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	int grid_width = (unsigned long)(im_width * osr);
 	
 	//Output Image
-	CufftType* imdata;
-	const int n_dims = 5;//2 * w * h * d * ncoils, 2 -> Re + Im
-	unsigned long dims_im[n_dims];
-	dims_im[0] = 2; /* complex */
-	dims_im[1] = im_width;
-	dims_im[2] = im_width;
-	dims_im[3] = im_width;
-	dims_im[4] = (unsigned long)(n_coils);
+	CufftType* data;
+	const int n_dims = 3;//2 * data_cnt * ncoils, 2 -> Re + Im
+	unsigned long dims_data[n_dims];
+	dims_data[0] = 2; /* complex */
+	dims_data[1] = data_entries;
+	dims_data[2] = (unsigned long)(n_coils);
 
-	long im_count = dims_im[1]*dims_im[2]*dims_im[3];
+	//long im_count = im_width * im_width * im_width;
 	
-	plhs[0] = mxCreateNumericArray(n_dims,(const mwSize*)dims_im,mxGetClassID(prhs[0]),mxREAL);
-    imdata = (CufftType*)mxGetData(plhs[0]);
-	if (imdata == NULL)
+	plhs[0] = mxCreateNumericArray(n_dims,(const mwSize*)dims_data,mxGetClassID(prhs[0]),mxREAL);
+    data = (CufftType*)mxGetData(plhs[0]);
+	if (data == NULL)
      mexErrMsgTxt("Could not create output mxArray.\n");
 
-	gridding3D_gpu_adj(data,data_count,n_coils,coords,imdata,im_count,grid_width,kernel,kernel_count,kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,DEAPODIZATION);//CONVOLUTION);
-
+	gridding3D_gpu(data,data_entries,n_coils,coords,imdata,im_count,grid_width,kernel,kernel_count,kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,CONVOLUTION);
+	
 	free(kernel);
 
 	mexPrintf("%s\n", cudaGetErrorString(cudaGetLastError()));

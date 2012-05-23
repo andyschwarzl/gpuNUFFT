@@ -74,13 +74,21 @@ MESSAGE("MATLAB inc dir: ${MATLAB_INCLUDE_DIR}")
 INCLUDE_DIRECTORIES(${MATLAB_INCLUDE_DIR})
 
 set(MEX_FILE gridding3D_mex.cpp)
+set(MEX_FILE_FORW gridding3D_forw.cpp)
+
 set(CUDA_NVCC_FLAGS -arch sm_13;--ptxas-options=-v)
 
 CUDA_COMPILE( cuda_mex_kernel_generated ${MEX_FILE} SHARED)
+CUDA_COMPILE( mex_gridding3D_forw_generated ${MEX_FILE_FORW} SHARED)
 
 CUDA_ADD_LIBRARY(cuda_mex_kernel SHARED ${cuda_mex_kernel_generated} ${MEX_FILE})
 TARGET_LINK_LIBRARIES(cuda_mex_kernel ${MATLAB_MEX_LIBRARY} ${MATLAB_MX_LIBRARY} ${CUDA_LIBRARIES} gridding3D)
 SET_TARGET_PROPERTIES(cuda_mex_kernel PROPERTIES PREFIX "" LINKER_LANGUAGE CXX)
+
+CUDA_ADD_LIBRARY(mex_gridding3D_forw SHARED ${mex_gridding3D_forw_generated} ${MEX_FILE_FORW})
+TARGET_LINK_LIBRARIES(mex_gridding3D_forw ${MATLAB_MEX_LIBRARY} ${MATLAB_MX_LIBRARY} ${CUDA_LIBRARIES} gridding3D)
+SET_TARGET_PROPERTIES(mex_gridding3D_forw PROPERTIES PREFIX "" LINKER_LANGUAGE CXX)
+
 
 #determine mex suffix
 if(WIN32)
@@ -105,9 +113,12 @@ if(WIN32)
   SET_TARGET_PROPERTIES(cuda_mex_kernel PROPERTIES
 						SUFFIX ${MEX_SUFFIX}
 						LINK_FLAGS /export:mexFunction)
+  SET_TARGET_PROPERTIES(mex_gridding3D_forw PROPERTIES
+						SUFFIX ${MEX_SUFFIX}
+						LINK_FLAGS /export:mexFunction)
 else(UNIX)
   SET_TARGET_PROPERTIES(cuda_mex_kernel PROPERTIES SUFFIX ${MEX_SUFFIX})
-  
+  SET_TARGET_PROPERTIES(mex_gridding3D_forw PROPERTIES SUFFIX ${MEX_SUFFIX})  
 endif()
 
 if(GPU_DOUBLE_PREC)
@@ -115,12 +126,21 @@ if(GPU_DOUBLE_PREC)
   TARGET_LINK_LIBRARIES(cuda_atomic_mex_kernel ${MATLAB_MEX_LIBRARY} ${MATLAB_MX_LIBRARY} ${CUDA_LIBRARIES} gridding3DATM)
   SET_TARGET_PROPERTIES(cuda_atomic_mex_kernel PROPERTIES PREFIX "" LINKER_LANGUAGE CXX)
 
+  CUDA_ADD_LIBRARY(mex_gridding3D_forw_atomic SHARED ${mex_gridding3D_forw_generated} ${MEX_FILE_FORW})
+  TARGET_LINK_LIBRARIES(mex_gridding3D_forw_atomic ${MATLAB_MEX_LIBRARY} ${MATLAB_MX_LIBRARY} ${CUDA_LIBRARIES} gridding3DATM)
+  SET_TARGET_PROPERTIES(mex_gridding3D_forw_atomic PROPERTIES PREFIX "" LINKER_LANGUAGE CXX)
+
+  
   if(WIN32)
 	SET_TARGET_PROPERTIES(cuda_atomic_mex_kernel PROPERTIES
 						SUFFIX ${MEX_SUFFIX}
 						LINK_FLAGS /export:mexFunction)
+	SET_TARGET_PROPERTIES(mex_gridding3D_forw_atomic PROPERTIES
+						SUFFIX ${MEX_SUFFIX}
+						LINK_FLAGS /export:mexFunction)
   else(UNIX)						
 	SET_TARGET_PROPERTIES(cuda_atomic_mex_kernel PROPERTIES SUFFIX ${MEX_SUFFIX})
+	SET_TARGET_PROPERTIES(mex_gridding3D_forw_atomic PROPERTIES SUFFIX ${MEX_SUFFIX})
   endif()
 endif()
 

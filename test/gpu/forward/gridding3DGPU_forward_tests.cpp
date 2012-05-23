@@ -44,6 +44,17 @@ TEST(TestGPUGriddingForwardConv,KernelCall1Sector)
 	long im_size = dims_g[1]*dims_g[2]*dims_g[3];
 
 	im_data = (DType*) calloc(2*im_size,sizeof(DType));
+	
+	im_data[2*get3DC2lin(5,5,5,im_width)] = 6.8670f;
+
+	im_data[2*get3DC2lin(5,4,5,im_width)] = -6.8158f;
+	im_data[2*get3DC2lin(4,5,5,im_width)] = -6.8158f;
+	im_data[2*get3DC2lin(5,6,5,im_width)] = -6.8158f;
+
+	im_data[2*get3DC2lin(6,6,5,im_width)] = 0.2027f;
+	im_data[2*get3DC2lin(4,4,5,im_width)] = 0.2027f; 
+	im_data[2*get3DC2lin(4,6,5,im_width)] = 0.2027f;
+	
 	long grid_width = (unsigned long)(im_width * osr);
 
 	//sectors of data, count and start indices
@@ -60,9 +71,6 @@ TEST(TestGPUGriddingForwardConv,KernelCall1Sector)
 	sector_centers[2] = 5;
 
 	gridding3D_gpu(data,data_entries,1,coords,im_data,im_size,grid_width,kern,kernel_entries, kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,CONVOLUTION);
-	
-	printf("test %f \n",data[4].x);
-	int index = get3DC2lin(5,5,5,im_width);
 	
 	for (int j=0; j<data_entries; j++)
 	{

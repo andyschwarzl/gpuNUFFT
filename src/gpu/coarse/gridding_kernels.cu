@@ -407,8 +407,8 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 									if (isOutlier(i,j,k,center.x,center.y,center.z,GI.grid_width,GI.sector_offset))
 										continue;
 				
-									out_data[data_cnt].x += val * gdata[ind].x;
-									out_data[data_cnt].y += val * gdata[ind].y;									
+									out_data[data_cnt].x += /*val **/ gdata[ind].x;
+									out_data[data_cnt].y += /*val **/ gdata[ind].y;									
 								}// kernel bounds check x, spherical support 
 								i++;
 							} // x loop
@@ -420,6 +420,8 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 			} // z loop
 			data[data_cnt] = out_data[data_cnt];
 			data_cnt += blockDim.x;
+			out_data[data_cnt].x = 0.0f;
+			out_data[data_cnt].y = 0.0f;
 		} //data points per sector
 	} //sector check
 }

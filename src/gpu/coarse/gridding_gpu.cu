@@ -76,7 +76,6 @@ void gridding3D_gpu(CufftType*	data,			//kspace data array
 		// resize by oversampling factor and zero pad
 		performPadding(imdata_d + im_coil_offset,gdata_d,gi_host);
 		//eventually free imdata_d
-
 		// Forward FFT to kspace domain
 		if (err=cufftExecC2C(fft_plan, gdata_d, gdata_d, CUFFT_FORWARD) != CUFFT_SUCCESS)
 		{
@@ -84,7 +83,7 @@ void gridding3D_gpu(CufftType*	data,			//kspace data array
 		}
 	
 		performFFTShift(gdata_d,FORWARD,gi_host->grid_width);
-
+		
 		// convolution and resampling to non-standard trajectory
 		performForwardConvolution(data_d,crds_d,gdata_d + im_coil_offset,kernel_d,sectors_d,sector_centers_d,gi_host);
 		//compose total output from local blocks 

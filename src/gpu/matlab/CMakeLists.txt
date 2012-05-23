@@ -73,8 +73,8 @@ MESSAGE("MATLAB libraries: ${MATLAB_LIBRARIES}")
 MESSAGE("MATLAB inc dir: ${MATLAB_INCLUDE_DIR}")
 INCLUDE_DIRECTORIES(${MATLAB_INCLUDE_DIR})
 
-set(MEX_FILE gridding3D_mex.cpp)
-set(MEX_FILE_FORW gridding3D_forw.cpp)
+set(MEX_FILE gridding3D_mex.cpp ${MATLAB_HELPER_INCLUDE})
+set(MEX_FILE_FORW gridding3D_forw.cpp ${MATLAB_HELPER_INCLUDE})
 
 set(CUDA_NVCC_FLAGS -arch sm_13;--ptxas-options=-v)
 

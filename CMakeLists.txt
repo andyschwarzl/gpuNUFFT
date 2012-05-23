@@ -57,6 +57,8 @@ SET(GRIDDING_INCLUDE ${GRIDDING_INC_DIR}/cuda_utils.hpp
 					 ${GRIDDING_INC_DIR}/config.hpp
 					 ${GRIDDING_INC_DIR}/griddingFunctions.hpp
 					 ${GRIDDING_INC_DIR}/gridding_kernels.hpp)
+					 
+SET(MATLAB_HELPER_INCLUDE ${GRIDDING_INC_DIR}/matlab_helper.h)
 
 #Adding src directory to the project
 ADD_SUBDIRECTORY(test)

@@ -32,11 +32,11 @@ void gridding3D_gpu(CufftType*	data,			//kspace data array
 	printf("allocate and copy imdata of size %d...\n",2*imdata_count*n_coils);
 	allocateAndCopyToDeviceMem<DType>(&imdata_d,imdata,2*imdata_count*n_coils);
 
-	printf("allocate and copy gdata of size %d...\n",gi_host->grid_width_dim * n_coils);
-	allocateDeviceMem<CufftType>(&gdata_d,gi_host->grid_width_dim * n_coils);
+	printf("allocate and copy gdata of size %d...\n",gi_host->grid_width_dim );
+	allocateDeviceMem<CufftType>(&gdata_d,gi_host->grid_width_dim);
 
-	printf("allocate and copy data of size %d...\n",data_count);
-	allocateDeviceMem<CufftType>(&data_d,data_count);
+	printf("allocate and copy data of size %d...\n",data_count * n_coils);
+	allocateDeviceMem<CufftType>(&data_d,data_count * n_coils);
 
 	/*int temp_grid_count = 2 * sector_count * gi_host->sector_dim;
 	printf("allocate temp grid data of size %d...\n",temp_grid_count);
@@ -72,7 +72,7 @@ void gridding3D_gpu(CufftType*	data,			//kspace data array
 		
 		// Apodization Correction
 		performForwardDeapodization(imdata_d + im_coil_offset,gi_host);
-
+		
 		// resize by oversampling factor and zero pad
 		performPadding(imdata_d + im_coil_offset,gdata_d,gi_host);
 		//eventually free imdata_d
@@ -81,11 +81,11 @@ void gridding3D_gpu(CufftType*	data,			//kspace data array
 		{
 			printf("cufft has failed with err %i \n",err);
 		}
-	
+		
 		performFFTShift(gdata_d,FORWARD,gi_host->grid_width);
 		
 		// convolution and resampling to non-standard trajectory
-		performForwardConvolution(data_d,crds_d,gdata_d + im_coil_offset,kernel_d,sectors_d,sector_centers_d,gi_host);
+		performForwardConvolution(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,gi_host);
 		//compose total output from local blocks 
 		//composeOutput(temp_gdata_d,gdata_d,sector_centers_d,gi_host);
 	

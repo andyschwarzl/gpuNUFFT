@@ -348,6 +348,9 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 
 		//Grid Points over Threads
 		int data_cnt = sectors[sec] + threadIdx.x;
+		out_data[data_cnt].x = 0.0f;//Re
+		out_data[data_cnt].y = 0.0f;//Im
+	
 		int sector_grid_offset = sec * GI.sector_dim;
 		
 		while (data_cnt < sectors[sec+1])
@@ -405,10 +408,13 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 									// multiply data by current kernel val 
 									// grid complex or scalar 
 									if (isOutlier(i,j,k,center.x,center.y,center.z,GI.grid_width,GI.sector_offset))
+									{
+										i++;
 										continue;
+									}
 				
-									out_data[data_cnt].x += /*val **/ gdata[ind].x;
-									out_data[data_cnt].y += /*val **/ gdata[ind].y;									
+									out_data[data_cnt].x += val * gdata[ind].x;
+									out_data[data_cnt].y += val * gdata[ind].y;									
 								}// kernel bounds check x, spherical support 
 								i++;
 							} // x loop
@@ -420,8 +426,10 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 			} // z loop
 			data[data_cnt] = out_data[data_cnt];
 			data_cnt += blockDim.x;
-			out_data[data_cnt].x = 0.0f;
-			out_data[data_cnt].y = 0.0f;
+			out_data[data_cnt].x = (DType)0.0f;
+			out_data[data_cnt].y = (DType)0.0f;
+			//data[data_cnt] = out_data[data_cnt];
+			//data_cnt++;
 		} //data points per sector
 	} //sector check
 }

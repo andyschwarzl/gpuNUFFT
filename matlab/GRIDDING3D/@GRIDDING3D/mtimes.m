@@ -41,6 +41,6 @@ else
     %data_ind = repmat(a.op.data_ind,[1 1 kspace_data_dim]);
     data = mex_gridding3D_forw(single(imdata),single(a.op.coords),int32(a.op.sector_data_cnt),int32(a.op.sector_centers),a.params);
     size(data)
-    data = squeeze(data(1,:,:,:,:) + 1j*(data(2,:,:,:,:)));
-    ress = data;
+    data = squeeze(data(1,:) + 1j*(data(2,:)));
+    ress = data';
 end

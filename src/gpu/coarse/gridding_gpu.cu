@@ -34,6 +34,7 @@ void gridding3D_gpu(CufftType*	data,			//kspace data array
 
 	printf("allocate and copy gdata of size %d...\n",gi_host->grid_width_dim );
 	allocateDeviceMem<CufftType>(&gdata_d,gi_host->grid_width_dim);
+	//allocateAndSetMem<CufftType>(&gdata_d, gi_host->grid_width_dim,0);
 
 	printf("allocate and copy data of size %d...\n",data_count * n_coils);
 	allocateDeviceMem<CufftType>(&data_d,data_count * n_coils);
@@ -75,6 +76,7 @@ void gridding3D_gpu(CufftType*	data,			//kspace data array
 		
 		// resize by oversampling factor and zero pad
 		performPadding(imdata_d + im_coil_offset,gdata_d,gi_host);
+
 		//eventually free imdata_d
 		// Forward FFT to kspace domain
 		if (err=cufftExecC2C(fft_plan, gdata_d, gdata_d, CUFFT_FORWARD) != CUFFT_SUCCESS)
@@ -83,7 +85,6 @@ void gridding3D_gpu(CufftType*	data,			//kspace data array
 		}
 		
 		performFFTShift(gdata_d,FORWARD,gi_host->grid_width);
-		
 		// convolution and resampling to non-standard trajectory
 		performForwardConvolution(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,gi_host);
 		//compose total output from local blocks 
@@ -94,8 +95,8 @@ void gridding3D_gpu(CufftType*	data,			//kspace data array
 	}//iterate over coils
 
 	// Destroy the cuFFT plan.
-	cufftDestroy(fft_plan);
 	freeTotalDeviceMemory(data_d,crds_d,gdata_d,imdata_d,kernel_d,sectors_d,sector_centers_d,NULL);//NULL as stop
+	cufftDestroy(fft_plan);
 	free(gi_host);
 }
 

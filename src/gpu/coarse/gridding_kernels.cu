@@ -259,7 +259,7 @@ void performCrop(CufftType* gdata_d,
     ind_start = ind_off;
     ind_end = ind_start + a.params.im_width -1;
     ress = m(ind_start:ind_end,ind_start:ind_end,ind_start:ind_end,:);*/
-	int ind_off = (int)(gi_host->im_width * ((DType)gi_host->osr -1)/(DType)2);
+	int ind_off = (int)(gi_host->im_width * ((DType)gi_host->osr - 1.0f)/(DType)2);
 	printf("start cropping image with offset %d\n",ind_off);
 
 	dim3 grid_dim(gi_host->im_width,gi_host->im_width,1);
@@ -311,7 +311,8 @@ __global__ void paddingKernel(DType* imdata,CufftType* gdata, int offset)
 	int x=blockIdx.x; //[0,N-1] N...im_width
 	int y=blockIdx.y; //[0,N-1] N...im_width
 	int z=threadIdx.x;//[0,N-1] N...im_width
-	int grid_ind = getIndex(offset+x,offset+y,offset+z,GI.grid_width);
+	//int grid_ind = getIndex(offset+x,offset+y,offset+z,GI.grid_width);
+	int grid_ind = getIndex(x,y,z,GI.grid_width);
 	int im_ind = 2*getIndex(x,y,z,GI.im_width);
 
 	gdata[grid_ind].x = imdata[im_ind];
@@ -326,12 +327,19 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 										  int* sector_centers
 											)
 {
-	extern __shared__ CufftType out_data[];//externally managed shared memory
+	extern __shared__ CufftType shared_out_data[];//externally managed shared memory
+	//test
+	CufftType out_data;
+
 
 	int sec= blockIdx.x;
 	//init shared memory
-	out_data[threadIdx.x].x = 0.0f;//Re
-	out_data[threadIdx.x].y = 0.0f;//Im
+	//out_data[threadIdx.x].x = 0.0f;//Re
+	//out_data[threadIdx.x].y = 0.0f;//Im
+
+	out_data.x = 0.0f;//Re
+	out_data.y = 0.0f;//Im
+
 	__syncthreads();
 
 	//start convolution
@@ -341,17 +349,19 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 		int ind, max_x, max_y, max_z, imin, imax, jmin, jmax,kmin,kmax, k, i, j;
 		DType dx_sqr, dy_sqr, dz_sqr, val, ix, jy, kz;
 
-		__shared__ int3 center;
+		int3 center;
 		center.x = sector_centers[sec * 3];
 		center.y = sector_centers[sec * 3 + 1];
 		center.z = sector_centers[sec * 3 + 2];
 
 		//Grid Points over Threads
 		int data_cnt = sectors[sec] + threadIdx.x;
-		out_data[data_cnt].x = 0.0f;//Re
-		out_data[data_cnt].y = 0.0f;//Im
-	
-		int sector_grid_offset = sec * GI.sector_dim;
+		//out_data[data_cnt].x = 0.0f;//Re
+		//out_data[data_cnt].y = 0.0f;//Im
+		out_data.x = 0.0f;//Re
+		out_data.y = 0.0f;//Im
+		//int sector_grid_offset = sec * GI.sector_dim;
+		int sector_ind_offset = getIndex(center.x - GI.sector_offset,center.y - GI.sector_offset,center.z - GI.sector_offset,GI.grid_width);
 		
 		while (data_cnt < sectors[sec+1])
 		{
@@ -403,7 +413,7 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 											kernel[(int) round(dy_sqr * GI.dist_multiplier)] *
 											kernel[(int) round(dx_sqr * GI.dist_multiplier)];
 									
-									ind = (sector_grid_offset + getIndex(i,j,k,GI.grid_width));
+									ind = (sector_ind_offset + getIndex(i,j,k,GI.grid_width));
 
 									// multiply data by current kernel val 
 									// grid complex or scalar 
@@ -413,8 +423,10 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 										continue;
 									}
 				
-									out_data[data_cnt].x += val * gdata[ind].x;
-									out_data[data_cnt].y += val * gdata[ind].y;									
+									//out_data[data_cnt].x = 1.0f; //val * gdata[ind].x;
+									//out_data[data_cnt].y = 1.0f; //val * gdata[ind].y;									
+									out_data.x += val * gdata[ind].x; //+= /*val **/ gdata[ind].x;
+									out_data.y += val * gdata[ind].y; //+= /*val **/ gdata[ind].y;
 								}// kernel bounds check x, spherical support 
 								i++;
 							} // x loop
@@ -424,10 +436,16 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 				} //kernel bounds check z 
 				k++;
 			} // z loop
-			data[data_cnt] = out_data[data_cnt];
+			//data[data_cnt] = out_data[data_cnt];
+			data[data_cnt].x = out_data.x;
+			data[data_cnt].y = out_data.y;
+			
 			data_cnt += blockDim.x;
-			out_data[data_cnt].x = (DType)0.0f;
-			out_data[data_cnt].y = (DType)0.0f;
+
+			//out_data[data_cnt].x = (DType)0.0f;
+			//out_data[data_cnt].y = (DType)0.0f;
+			out_data.x = 0.0f;//Re
+			out_data.y = 0.0f;//Im
 			//data[data_cnt] = out_data[data_cnt];
 			//data_cnt++;
 		} //data points per sector
@@ -454,7 +472,7 @@ void performPadding(DType* imdata_d,
 					CufftType* gdata_d,					
 					GriddingInfo* gi_host)
 {
-	int ind_off = (int)(gi_host->im_width * ((DType)gi_host->osr -1)/(DType)2);
+	int ind_off = (int)(gi_host->im_width * ((DType)gi_host->osr -1.0f)/(DType)2);
 	printf("start cropping image with offset %d\n",ind_off);
 
 	dim3 grid_dim(gi_host->im_width,gi_host->im_width,1);

@@ -91,6 +91,14 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     //   CUcontext  pctx ;
     //   cuCtxPopCurrent(&pctx);	      
     }   
+
+	if (MATLAB_DEBUG)
+	{
+		size_t free_mem = 0;
+		size_t total_mem = 0;
+		cudaMemGetInfo(&free_mem, &total_mem);
+		mexPrintf("memory usage on device, free: %lu total: %lu\n",free_mem,total_mem);
+	}
    
 	long kernel_count = calculateGrid3KernelSize(osr, kernel_width/2.0f);
 	DType* kernel = (DType*) calloc(kernel_count,sizeof(float));

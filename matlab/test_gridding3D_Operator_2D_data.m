@@ -49,8 +49,8 @@ imgRegrid_kb = FT'*dataRadial;
 imgRegrid_kb_dc = FT'*dataRadial_dc;
 
 %% show results
-figure, imshow(imresize(abs((imgRegrid_kb(:,:,1))),4),[]), title('gridding');
-figure, imshow(imresize(abs((imgRegrid_kb_dc(:,:,1))),4),[]), title('gridding dc');
+figure, imshow(imresize(abs((imgRegrid_kb(:,:,1))),5),[]), title('gridding');
+figure, imshow(imresize(abs((imgRegrid_kb_dc(:,:,1))),5),[]), title('gridding dc');
 
 %% show results shifted
 imgRegrid_kb_sh = fftshift(imgRegrid_kb);

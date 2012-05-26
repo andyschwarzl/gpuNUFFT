@@ -87,9 +87,7 @@ void gridding3D_gpu(CufftType*	data,			//kspace data array
 		performFFTShift(gdata_d,FORWARD,gi_host->grid_width);
 		// convolution and resampling to non-standard trajectory
 		performForwardConvolution(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,gi_host);
-		//compose total output from local blocks 
-		//composeOutput(temp_gdata_d,gdata_d,sector_centers_d,gi_host);
-	
+
 		//get result
 		copyFromDevice<CufftType>(data_d, data + data_coil_offset,data_count);
 	}//iterate over coils

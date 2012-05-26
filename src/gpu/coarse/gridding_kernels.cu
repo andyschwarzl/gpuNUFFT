@@ -301,8 +301,8 @@ __global__ void forwardDeapodizationKernel(DType* imdata, DType beta, DType norm
 	//check if deapodization value is valid number
 	if (!isnan(deapo))// == deapo)
 	{
-		imdata[ind] = imdata[ind] / deapo;//Re
-		imdata[ind+1] = imdata[ind+1] / deapo;//Im
+		imdata[ind] = imdata[ind] / deapo; // / deapo;//Re
+		imdata[ind+1] = imdata[ind+1] / deapo ; /// deapo;//Im
 	}
 }
 
@@ -349,7 +349,7 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 		int ind, max_x, max_y, max_z, imin, imax, jmin, jmax,kmin,kmax, k, i, j;
 		DType dx_sqr, dy_sqr, dz_sqr, val, ix, jy, kz;
 
-		int3 center;
+		__shared__ int3 center;
 		center.x = sector_centers[sec * 3];
 		center.y = sector_centers[sec * 3 + 1];
 		center.z = sector_centers[sec * 3 + 2];
@@ -424,9 +424,10 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 									}
 				
 									//out_data[data_cnt].x = 1.0f; //val * gdata[ind].x;
-									//out_data[data_cnt].y = 1.0f; //val * gdata[ind].y;									
-									out_data.x += val * gdata[ind].x; //+= /*val **/ gdata[ind].x;
-									out_data.y += val * gdata[ind].y; //+= /*val **/ gdata[ind].y;
+									//out_data[data_cnt].y = 1.0f; //val * gdata[ind].y;		
+									out_data.x += gdata[ind].x * val; //+= /*val **/ gdata[ind].x;
+									out_data.y -= gdata[ind].y * val; //+= /*val **/ gdata[ind].y;
+									
 								}// kernel bounds check x, spherical support 
 								i++;
 							} // x loop
@@ -437,10 +438,10 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 				k++;
 			} // z loop
 			//data[data_cnt] = out_data[data_cnt];
-			data[data_cnt].x = out_data.x;
-			data[data_cnt].y = out_data.y;
+			data[data_cnt].x = out_data.x;// / sqrt((DType)GI.kernel_width*GI.kernel_width*GI.kernel_width);
+			data[data_cnt].y = out_data.y;// / sqrt((DType)GI.kernel_width*GI.kernel_width*GI.kernel_width);
 			
-			data_cnt += blockDim.x;
+			data_cnt = data_cnt + blockDim.x;
 
 			//out_data[data_cnt].x = (DType)0.0f;
 			//out_data[data_cnt].y = (DType)0.0f;

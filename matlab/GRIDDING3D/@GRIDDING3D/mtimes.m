@@ -4,11 +4,11 @@ if (a.adjoint)
     if (kspace_data_dim > 1)
         kspace = bb(a.op.data_ind,:);
         data = [real(kspace(:))'; imag(kspace(:))'];
-        'multiple coil data passed'
+        
+        disp('multiple coil data passed');
         kspace = reshape(data,[2 a.params.trajectory_length kspace_data_dim]);
-        'call gridding mex kernel'
 
-        %data_ind = repmat(a.op.data_ind,[1 1 kspace_data_dim]);
+        disp('call gridding mex kernel');
         m = cuda_mex_kernel(single(kspace),single(a.op.coords),int32(a.op.sector_data_cnt),int32(a.op.sector_centers),a.params);
         size(m)
         m = squeeze(m(1,:,:,:,:) + 1j*(m(2,:,:,:,:)));
@@ -34,15 +34,17 @@ else
     imdata = [real(imspace(:))'; imag(imspace(:))'];
     n_coils = size(bb,4);
     size(imdata)
-    'multiple coil data passed'
+    disp('multiple coil data passed');
     imdata = reshape(imdata,[2 a.params.im_width*a.params.im_width*a.params.im_width n_coils]);
-    'call forward gridding mex kernel'
+    disp('call forward gridding mex kernel');
 
     %data_ind = repmat(a.op.data_ind,[1 1 kspace_data_dim]);
     data = mex_gridding3D_forw(single(imdata),single(a.op.coords),int32(a.op.sector_data_cnt),int32(a.op.sector_centers),a.params);
     size(data)
     data = squeeze(data(1,:) + 1j*(data(2,:)));
-    [i j] = sort(a.op.data_ind)
-    data_test = data(j);
+    
+    %put data in correct order
+    data_test = zeros(1,length(data));
+    data_test(a.op.data_ind) = data;
     ress = data_test';
 end

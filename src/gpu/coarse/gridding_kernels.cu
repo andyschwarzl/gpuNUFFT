@@ -311,8 +311,9 @@ __global__ void paddingKernel(DType* imdata,CufftType* gdata, int offset)
 	int x=blockIdx.x; //[0,N-1] N...im_width
 	int y=blockIdx.y; //[0,N-1] N...im_width
 	int z=threadIdx.x;//[0,N-1] N...im_width
-	//int grid_ind = getIndex(offset+x,offset+y,offset+z,GI.grid_width);
-	int grid_ind = getIndex(x,y,z,GI.grid_width);
+
+	int grid_ind =  getIndex(offset + x,offset + y,offset +z,GI.grid_width);
+
 	int im_ind = 2*getIndex(x,y,z,GI.im_width);
 
 	gdata[grid_ind].x = imdata[im_ind];
@@ -473,7 +474,8 @@ void performPadding(DType* imdata_d,
 					CufftType* gdata_d,					
 					GriddingInfo* gi_host)
 {
-	int ind_off = (int)(gi_host->im_width * ((DType)gi_host->osr -1.0f)/(DType)2);
+	int ind_off = (int)(gi_host->im_width * ((DType)gi_host->osr -1.0f)/(DType)2.0f);
+
 	printf("start cropping image with offset %d\n",ind_off);
 
 	dim3 grid_dim(gi_host->im_width,gi_host->im_width,1);

@@ -115,8 +115,6 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	dims_data[1] = data_entries;
 	dims_data[2] = (unsigned long)(n_coils);
 
-	//long im_count = im_width * im_width * im_width;
-	
 	plhs[0] = mxCreateNumericArray(n_dims,(const mwSize*)dims_data,mxGetClassID(prhs[0]),mxREAL);
     data = (CufftType*)mxGetData(plhs[0]);
 	if (data == NULL)

@@ -33,16 +33,12 @@ void gridding3D_gpu(CufftType*	data,			//kspace data array
 	allocateAndCopyToDeviceMem<DType>(&imdata_d,imdata,2*imdata_count*n_coils);
 
 	printf("allocate and copy gdata of size %d...\n",gi_host->grid_width_dim );
-	allocateDeviceMem<CufftType>(&gdata_d,gi_host->grid_width_dim);
-	//allocateAndSetMem<CufftType>(&gdata_d, gi_host->grid_width_dim,0);
+
+	allocateAndSetMem<CufftType>(&gdata_d, gi_host->grid_width_dim,(DType)0.0f);
 
 	printf("allocate and copy data of size %d...\n",data_count * n_coils);
 	allocateDeviceMem<CufftType>(&data_d,data_count * n_coils);
 
-	/*int temp_grid_count = 2 * sector_count * gi_host->sector_dim;
-	printf("allocate temp grid data of size %d...\n",temp_grid_count);
-	allocateDeviceMem<DType>(&temp_gdata_d,temp_grid_count);
-	*/
 	printf("allocate and copy coords of size %d...\n",3*data_count);
 	allocateAndCopyToDeviceMem<DType>(&crds_d,crds,3*data_count);
 	
@@ -71,13 +67,16 @@ void gridding3D_gpu(CufftType*	data,			//kspace data array
 		//cudaMemset(temp_gdata_d,0, sizeof(DType)*temp_grid_count);
 		cudaMemset(data_d,0, sizeof(CufftType)*data_count);
 		
-		// Apodization Correction
+		// apodization Correction
 		performForwardDeapodization(imdata_d + im_coil_offset,gi_host);
 		
 		// resize by oversampling factor and zero pad
 		performPadding(imdata_d + im_coil_offset,gdata_d,gi_host);
-
-		//eventually free imdata_d
+		
+		// shift image to get correct zero frequency position
+		performFFTShift(gdata_d,FORWARD,gi_host->grid_width);
+		
+		// eventually free imdata_d
 		// Forward FFT to kspace domain
 		if (err=cufftExecC2C(fft_plan, gdata_d, gdata_d, CUFFT_FORWARD) != CUFFT_SUCCESS)
 		{
@@ -85,6 +84,7 @@ void gridding3D_gpu(CufftType*	data,			//kspace data array
 		}
 		
 		performFFTShift(gdata_d,FORWARD,gi_host->grid_width);
+		
 		// convolution and resampling to non-standard trajectory
 		performForwardConvolution(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,gi_host);
 

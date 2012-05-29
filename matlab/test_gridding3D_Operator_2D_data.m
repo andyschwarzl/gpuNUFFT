@@ -11,10 +11,12 @@ load img_brain_4ch;
 trimmed_size = 64;
 img = img(128-trimmed_size/2+1:128+trimmed_size/2,128-trimmed_size/2+1:128+trimmed_size/2,:);
 img_a = repmat(img(:,:,1),[1 1 trimmed_size]);
+%img_a(1:10,1:10,:) = 0;
+%img_a = flipdim(img_a,1);
 %img_a = padarray(img(:,:,1),[0 0 trimmed_size/2]);
-
+%%
 size(img_a)
-figure, imshow(imresize(abs(img_a(:,:,1)),4),[]), title('gridding');
+figure, imshow(imresize(abs(img_a(:,:,1)),4),[]), title('gridding input');
 
 [nPE,nFE,nCh]=size(img_a);
 
@@ -49,12 +51,4 @@ imgRegrid_kb = FT'*dataRadial;
 imgRegrid_kb_dc = FT'*dataRadial_dc;
 
 %% show results
-figure, imshow(imresize(abs((imgRegrid_kb(:,:,1))),5),[]), title('gridding');
-figure, imshow(imresize(abs((imgRegrid_kb_dc(:,:,1))),5),[]), title('gridding dc');
-
-%% show results shifted
-imgRegrid_kb_sh = fftshift(imgRegrid_kb);
-imgRegrid_kb_dc_sh = fftshift(imgRegrid_kb_dc);
-
-figure, imshow(imresize(abs((imgRegrid_kb_sh(:,:,1))),4),[]), title('gridding');
-figure, imshow(imresize(abs((imgRegrid_kb_dc_sh(:,:,1))),4),[]), title('gridding dc');
+figure, imshow(imresize((abs(imgRegrid_kb_dc(:,:,1))),4),[]), title('gridding dc');

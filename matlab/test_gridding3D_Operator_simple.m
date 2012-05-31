@@ -19,7 +19,9 @@ img(7,7,3) = 1;
 img(13,13,3) = 1;
 
 size(img)
-figure, imshow(imresize(abs(img(:,:,9)),4),[]), title('gridding input');
+figure, imshow(imresize(abs(img(:,:,9)),4),[]), title('gridding input slice 9');
+figure, imshow(imresize(abs(img(:,:,3)),4),[]), title('gridding input slice 3');
+figure, imshow(imresize(abs(img(:,:,6)),4),[]), title('gridding input slice 6');
 
 [nPE,nFE,nCh]=size(img);
 
@@ -51,3 +53,4 @@ dataRadial_dc = dataRadial.*w(:);
 %% recon
 imgRegrid_kb = FT'*dataRadial_dc;
 figure, imshow(imresize(abs((imgRegrid_kb(:,:,1))),4),[]), title('gridding');
+figure, imshow(imresize(abs((imgRegrid_kb(:,:,9))),4),[]), title('gridding slice 9');

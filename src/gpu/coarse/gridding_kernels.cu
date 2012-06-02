@@ -57,11 +57,11 @@ __global__ void convolutionKernel( DType* data,
 
 			// set the boundaries of final dataset for gridding this point
 			ix = (data_point.x + 0.5f) * (GI.grid_width) - center.x + GI.sector_offset;
-			set_minmax(ix, &imin, &imax, max_x, GI.kernel_radius);
+			set_minmax(&ix, &imin, &imax, max_x, GI.kernel_radius);
 			jy = (data_point.y + 0.5f) * (GI.grid_width) - center.y + GI.sector_offset;
-			set_minmax(jy, &jmin, &jmax, max_y, GI.kernel_radius);
+			set_minmax(&jy, &jmin, &jmax, max_y, GI.kernel_radius);
 			kz = (data_point.z + 0.5f) * (GI.grid_width) - center.z + GI.sector_offset;
-			set_minmax(kz, &kmin, &kmax, max_z, GI.kernel_radius);
+			set_minmax(&kz, &kmin, &kmax, max_z, GI.kernel_radius);
 				                
 			// grid this point onto the neighboring cartesian points
 			for (k=threadIdx.z;k<=kmax; k += blockDim.z)
@@ -350,7 +350,7 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 		int ind, max_x, max_y, max_z, imin, imax, jmin, jmax,kmin,kmax, k, i, j;
 		DType dx_sqr, dy_sqr, dz_sqr, val, ix, jy, kz;
 
-		__shared__ int3 center;
+		int3 center;
 		center.x = sector_centers[sec * 3];
 		center.y = sector_centers[sec * 3 + 1];
 		center.z = sector_centers[sec * 3 + 2];
@@ -377,37 +377,52 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 
 			// set the boundaries of final dataset for gridding this point
 			ix = (data_point.x + 0.5f) * (GI.grid_width) - center.x + GI.sector_offset;
-			set_minmax(ix, &imin, &imax, max_x, GI.kernel_radius);
+			set_minmax(&ix, &imin, &imax, max_x, GI.kernel_radius);
 			jy = (data_point.y + 0.5f) * (GI.grid_width) - center.y + GI.sector_offset;
-			set_minmax(jy, &jmin, &jmax, max_y, GI.kernel_radius);
+			set_minmax(&jy, &jmin, &jmax, max_y, GI.kernel_radius);
 			kz = (data_point.z + 0.5f) * (GI.grid_width) - center.z + GI.sector_offset;
-			set_minmax(kz, &kmin, &kmax, max_z, GI.kernel_radius);
+			set_minmax(&kz, &kmin, &kmax, max_z, GI.kernel_radius);
 
 			// convolve neighboring cartesian points to this data point
 			k = kmin;
+			//data[data_cnt].x = -1.0f;//(float)k;
+			//data[data_cnt].y =-1.0f;// (float)kmax;
 			while (k<=kmax && k>=kmin)
 			{
 				kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.grid_width)) - 0.5f;//(k - center_z) *width_inv;
 				dz_sqr = kz - data_point.z;
 				dz_sqr *= dz_sqr;
+				
+				//data[data_cnt].x = kz;
+				//data[data_cnt].y = center.z;//static_cast<DType>((k + center.z - 8 - GI.sector_offset)) / static_cast<DType>((GI.grid_width)) - 0.5f;
 				if (dz_sqr < GI.radiusSquared)
 				{
+					//data[data_cnt].x = 1.1f;
+					//data[data_cnt].y = 1.1f;
 					j=jmin;
 					while (j<=jmax && j>=jmin)
 					{
+						//data[data_cnt].x = 1.2f;
+						//data[data_cnt].y = 1.2f;
 						jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.grid_width)) - 0.5f;   //(j - center_y) *width_inv;
 						dy_sqr = jy - data_point.y;
 						dy_sqr *= dy_sqr;
 						if (dy_sqr < GI.radiusSquared)	
 						{
+							//data[data_cnt].x = 1.3f;
+							//data[data_cnt].y = 1.3f;
 							i=imin;								
 							while (i<=imax && i>=imin)
 							{
+								//data[data_cnt].x = 1.4f;
+								//data[data_cnt].y = 1.4f;
 								ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.grid_width)) - 0.5f;// (i - center_x) *width_inv;
 								dx_sqr = ix - data_point.x;
 								dx_sqr *= dx_sqr;
 								if (dx_sqr < GI.radiusSquared)	
 								{
+									//data[data_cnt].x = 1.5f;
+									//data[data_cnt].y = 1.5f;
 									// get kernel value
 									//Berechnung mit Separable Filters 
 									val = kernel[(int) round(dz_sqr * GI.dist_multiplier)] *
@@ -427,7 +442,7 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 									//out_data[data_cnt].x = 1.0f; //val * gdata[ind].x;
 									//out_data[data_cnt].y = 1.0f; //val * gdata[ind].y;		
 									out_data.x += gdata[ind].x * val; //+= /*val **/ gdata[ind].x;
-									out_data.y -= gdata[ind].y * val; //+= /*val **/ gdata[ind].y;
+									out_data.y += gdata[ind].y * val; //+= /*val **/ gdata[ind].y;
 									
 								}// kernel bounds check x, spherical support 
 								i++;
@@ -474,9 +489,9 @@ void performPadding(DType* imdata_d,
 					CufftType* gdata_d,					
 					GriddingInfo* gi_host)
 {
-	int ind_off = (int)(gi_host->im_width * ((DType)gi_host->osr -1.0f)/(DType)2.0f);
+	int ind_off = (int)(gi_host->im_width * ((DType)gi_host->osr -1.0f)/(DType)2);
 
-	printf("start cropping image with offset %d\n",ind_off);
+	printf("start padding image with offset %d\n",ind_off);
 
 	dim3 grid_dim(gi_host->im_width,gi_host->im_width,1);
 	dim3 block_dim(gi_host->im_width);

@@ -2,7 +2,11 @@
 #include "cuda_utils.hpp"
 #include "gridding_gpu.hpp"
 
-//forward gridding from image to grid/k-space
+/** gridding3D_gpu
+  * forward gridding from image to grid/k-space
+  * TODO
+  * NFFT
+**/
 void gridding3D_gpu(CufftType*	data,			//kspace data array 
 					int			data_count,		//data count, samples per trajectory
 					int			n_coils,		//number of coils 
@@ -98,7 +102,11 @@ void gridding3D_gpu(CufftType*	data,			//kspace data array
 	free(gi_host);
 }
 
-//adjoint gridding from k-space to grid
+/** gridding3D_gpu
+  * adjoint gridding from k-space to grid
+  * TODO
+  * NFFT^H
+**/
 void gridding3D_gpu_adj(DType*		data,			//kspace data array 
 						int			data_count,		//data count, samples per trajectory
 						int			n_coils,		//number of coils 

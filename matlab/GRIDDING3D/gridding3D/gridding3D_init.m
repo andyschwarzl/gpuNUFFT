@@ -21,11 +21,12 @@ v = v +1;
 
 sector_data_cnt = zeros(1,sector_dim+1);
 cnt = 0;
+sector_data_cnt(1) = 0;
 for b=1:sector_dim+1
     while (cnt < length(v) && b == int32(v(cnt+1)))
         cnt = cnt +1;
     end
-    sector_data_cnt(b)=cnt;
+    sector_data_cnt(b+1)=cnt;
 end
 res.sector_data_cnt = sector_data_cnt;
 %sector_data_cnt

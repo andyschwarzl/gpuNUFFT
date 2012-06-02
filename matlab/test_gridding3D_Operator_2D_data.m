@@ -35,8 +35,8 @@ k=rho*exp(-1j*theta);
 %FT = GRIDDING3D(k, 1, 1, 0, [nPE,nFE], 2);
 k_traj = [real(k(:))'; imag(k(:))';zeros(1,length(k(:)))];
 imwidth = nPE;
-osf = 2;
-wg = 3;
+osf = 1.75;
+wg = 5;
 sw = 8;
 w = ones(1,length(k(:)));
 FT = gridding3D(k_traj,w,imwidth,osf,wg,sw,'deappo');
@@ -54,4 +54,4 @@ imgRegrid_kb = FT'*dataRadial;
 imgRegrid_kb_dc = FT'*dataRadial_dc;
 
 %% show results
-figure, imshow(imresize(fliplr(flipud(abs(imgRegrid_kb_dc(:,:,1)))),4),[]), title('gridding dc');
+figure, imshow(imresize(((abs(imgRegrid_kb_dc(:,:,1)))),4),[]), title('gridding dc');

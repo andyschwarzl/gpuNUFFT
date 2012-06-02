@@ -11,7 +11,7 @@ if (a.adjoint)
         disp('call gridding mex kernel');
         m = cuda_mex_kernel(single(kspace),single(a.op.coords),int32(a.op.sector_data_cnt),int32(a.op.sector_centers),a.params);
         size(m)
-        m = squeeze(m(1,:,:,:,:) + 1j*(m(2,:,:,:,:)));
+        m = squeeze(m(1,:,:,:,:) + 1i*(m(2,:,:,:,:)));
         ress = m;
     else
         %prepare data
@@ -44,7 +44,8 @@ else
     data = squeeze(data(1,:) + 1j*(data(2,:)));
     
     %put data in correct order
-    data_test = zeros(1,length(data));
+    data_test = zeros(1,length(a.op.data_ind));
     data_test(a.op.data_ind) = data;
-    ress = data_test';
+    ress = transpose(data_test);
+    return;
 end

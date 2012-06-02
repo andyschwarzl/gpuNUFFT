@@ -78,13 +78,16 @@ static DType i0( DType x )
 
 /*END Zwart*/
 
-__inline__ __device__ __host__ void set_minmax (DType x, int *min, int *max, int maximum, DType radius)
+__inline__ __device__ __host__ void set_minmax (DType *x, int *min, int *max, int maximum, DType radius)
 {
-	*min = (int) ceil (x - radius);
-	*max = (int) floor (x + radius);
+	*min = (int) ceil (*x - radius);
+	*max = (int) floor (*x + radius);
 	//check boundaries
 	if (*min < 0) *min = 0;
 	if (*max >= maximum) *max = maximum;
+	//if (*x >= (DType)maximum) *x = (DType)(maximum-radius);
+	if (*min >= (DType)maximum) *min = (DType)(maximum-2*radius);
+
 }
 
 long calculateGrid3KernelSize();

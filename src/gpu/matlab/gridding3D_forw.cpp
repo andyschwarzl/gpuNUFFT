@@ -101,12 +101,12 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	}
    
 	long kernel_count = calculateGrid3KernelSize(osr, kernel_width/2.0f);
-	DType* kernel = (DType*) calloc(kernel_count,sizeof(float));
+	DType* kernel = (DType*) calloc(kernel_count,sizeof(DType));
 	loadGrid3Kernel(kernel,kernel_count,kernel_width,osr);
 	
 	//calc grid width -> oversampling
 	int grid_width = (unsigned long)(im_width * osr);
-	
+	mexPrintf("grid width (incl. osr) = %d\n",grid_width);
 	//Output Image
 	CufftType* data;
 	const int n_dims = 3;//2 * data_cnt * ncoils, 2 -> Re + Im

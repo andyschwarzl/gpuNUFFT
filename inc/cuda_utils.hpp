@@ -125,7 +125,7 @@ GriddingInfo* initAndCopyGriddingInfo(int sector_count,
 	DType kernel_width_inv = (DType)1.0 / static_cast<DType>(kernel_width);
 
 	DType radiusSquared = radius * radius;
-	DType kernelRadius_invSqr = 1 / radiusSquared;
+	DType kernelRadius_invSqr = (DType)1.0 / radiusSquared;
 	DType dist_multiplier = (kernel_count - 1) * kernelRadius_invSqr;
 	printf("radius rel. to grid width %f\n",radius);
 	int sector_pad_width = sector_width + 2*(int)(floor(kernel_width / (DType)2.0));

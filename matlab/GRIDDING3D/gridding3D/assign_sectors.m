@@ -19,7 +19,13 @@ function [data_sector_idx,sector_centers,sector_dim] = assign_sectors(im_width,s
 %--------------------------------------------------------------------------
 
 %% x, y, z count
+if (mod(im_width,sector_width) ~= 0)
+    error('ERROR: GRID width %d (image width * OSR) is no multiple of sector width %d',im_width,sector_width);
+end 
+
 sectors = (im_width / sector_width);
+
+
 sector_count = (sectors).^3;
 sector_dim = sector_count;
 

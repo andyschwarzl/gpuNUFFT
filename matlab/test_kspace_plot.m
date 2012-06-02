@@ -1,9 +1,10 @@
 %close all;
-im_w = 32;
+im_w = 16;
 %% test plot of k space
-x = k_traj(1,:,:);
-y = k_traj(2,:,:);
-v =abs(double(dataRadial'));
+i_sl = 9;
+x = test(1,:,i_sl);
+y = test(2,:,i_sl);
+v =abs(double(dataRadial(3072*(i_sl-1) + [1:3072])'));
 size(x)
 
 [xq,yq] = meshgrid(linspace(-0.5,0.5,im_w+1),linspace(-0.5,0.5,im_w+1));
@@ -12,10 +13,12 @@ size(x)
 vq = griddata(x,y,v,xq,yq,'nearest');
 
 figure, surf(xq,yq,vq);
+title(['test slice ' num2str(i_sl)]);
 colorbar;
 %%
-x_set = x(find(dataRadial));
-y_set = y(find(dataRadial));
+x_set = x(find(dataRadial(3072*(i_sl-1) + [1:3072])));
+y_set = y(find(dataRadial(3072*(i_sl-1) + [1:3072])));
 
 figure;
 scatter(x_set,y_set);
+title(['pos test slice ' num2str(i_sl)]);

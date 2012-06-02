@@ -8,6 +8,9 @@ addpath(genpath('./GRIDDING3D'));
 
 %% Load data
 load img_brain_4ch;
+%load noisy_phantom;
+%load calf_data_cs;
+%%
 trimmed_size = 64;
 img = img(128-trimmed_size/2+1:128+trimmed_size/2,128-trimmed_size/2+1:128+trimmed_size/2,:);
 img_a = repmat(img(:,:,1),[1 1 trimmed_size]);
@@ -26,7 +29,7 @@ numSpokes = 96;
 % Trajectory
 theta=linspace(0,pi-pi/numSpokes,numSpokes);
 rho=linspace(-0.5,0.5,nPE*2)';
-k=rho*exp(-j*theta);
+k=rho*exp(-1j*theta);
 
 %% generate Fourier sampling operator
 %FT = GRIDDING3D(k, 1, 1, 0, [nPE,nFE], 2);
@@ -51,4 +54,4 @@ imgRegrid_kb = FT'*dataRadial;
 imgRegrid_kb_dc = FT'*dataRadial_dc;
 
 %% show results
-figure, imshow(imresize((abs(imgRegrid_kb_dc(:,:,1))),4),[]), title('gridding dc');
+figure, imshow(imresize(fliplr(flipud(abs(imgRegrid_kb_dc(:,:,1)))),4),[]), title('gridding dc');

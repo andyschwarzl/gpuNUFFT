@@ -6,8 +6,8 @@ addpath ../bin
 addpath ../../daten
 addpath(genpath('./GRIDDING3D'));
 %% Load data
-load 20111017_Daten_MREG;
-%load MREG_data_Graz;
+%load 20111017_Daten_MREG;
+load MREG_data_Graz;
 %load 20111013_MREG_data_Graz_SoS;
 %load 20111024_MREG_Data_MID_65_2mm_Full_Brain;
 
@@ -25,7 +25,7 @@ clear smaps_il;
 osf = 1.25;%1,1.25,1.5,1.75,2
 wg = 3;%3-7
 sw = 8;
-imwidth = 96;
+imwidth = 64;
 k = E.nufftStruct.om'./(2*pi);
 w = ones(E.trajectory_length,1);
 
@@ -44,9 +44,10 @@ imgRegrid_kb = imgRegrid_kb(:,:,1:44,:) .* conj(smaps(:,:,:,:));
 
 %% res = SoS of coil data
 res = sqrt(sum(abs(imgRegrid_kb).^2,4));
-slice = 30;
+%%
+slice = 1;
 figure, imshow(imresize(abs(res(:,:,slice)),4),[]), title('gridding all coils at once');
-figure, imshow(imresize(abs(z4em9(:,:,slice)),4),[]), title('reference (TGV)');
+figure, imshow(imresize(abs(z(:,:,slice)),4),[]), title('reference (CG)');
 
 %% single call per coil 
 res = zeros(E.imageDim);
@@ -76,22 +77,25 @@ figure, imshow(imresize(abs(res(:,:,25)),4),[]), title('gridding');
 %end
 
 %% check forward gridding using solution z
+z_pad = padarray(z,[0 0 10]);
+%%
+
 imwidth = E.imageDim(1);
 osf = 2;
 wg = 3;
 sw = 8;
 k = E.nufftStruct.om'./(2*pi);
 w = ones(1,E.trajectory_length);
-FT = gridding3D(k,w,imwidth,osf,wg,sw,'deappo');
+G3D = gridding3D(k,w,imwidth,osf,wg,sw,'deappo');
 
-dataRadial = FT*z;
+dataRadial = G3D*z_pad;
 %% calculate density compensation
 dc = sqrt(sum(abs(k').^2,2));
 %dc = dc / max(dc);
 dataRadial_dc = dataRadial .* dc;
 %%
-imgRegrid_dc = FT'*dataRadial_dc;
-imgRegrid = FT'*dataRadial;
+imgRegrid_dc = G3D'*dataRadial_dc;
+imgRegrid = G3D'*dataRadial;
 %%
 slice = 25;
 figure, imshow(imresize(abs(imgRegrid(:,:,slice)),4),[]), title('gridding');

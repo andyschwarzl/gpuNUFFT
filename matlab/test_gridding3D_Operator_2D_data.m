@@ -13,13 +13,19 @@ load img_brain_4ch;
 %%
 trimmed_size = 64;
 img = img(128-trimmed_size/2+1:128+trimmed_size/2,128-trimmed_size/2+1:128+trimmed_size/2,:);
-img_a = repmat(img(:,:,1),[1 1 trimmed_size]);
+%%
+n_chn = 4;
+img_a = zeros([trimmed_size,trimmed_size,trimmed_size,n_chn]);
+%%
+for chn = 1:4,
+    img_a(:,:,:,chn) = repmat(img(:,:,chn),[1 1 trimmed_size]);
+end
 %img_a(1:10,1:10,:) = 0;
 %img_a = flipdim(img_a,1);
 %img_a = padarray(img(:,:,1),[0 0 trimmed_size/2]);
 %%
 size(img_a)
-figure, imshow(imresize(abs(img_a(:,:,1)),4),[]), title('gridding input');
+figure, imshow(imresize(abs(img_a(:,:,1,4)),4),[]), title('gridding input');
 
 [nPE,nFE,nCh]=size(img_a);
 
@@ -46,7 +52,8 @@ dataRadial = FT*img_a;
 %% density compensation
 w = abs(rho);
 w = repmat(w, [1, numSpokes,1]);
-dataRadial_dc = dataRadial.*w(:);
+w_mc = repmat(w(:),[1 4]);
+dataRadial_dc = dataRadial.*w_mc;
 %% recon
 %no density compnesation
 imgRegrid_kb = FT'*dataRadial;
@@ -54,4 +61,9 @@ imgRegrid_kb = FT'*dataRadial;
 imgRegrid_kb_dc = FT'*dataRadial_dc;
 
 %% show results
-figure, imshow(imresize(((abs(imgRegrid_kb_dc(:,:,1)))),4),[]), title('gridding dc');
+figure, imshow(imresize(((abs(imgRegrid_kb_dc(:,:,32,4)))),4),[]), title('gridding dc');
+
+%% merge channels
+recon_sos_dc = sqrt(sum(abs(imgRegrid_kb_dc).^2,4));
+figure, imshow(imresize(((abs(recon_sos_dc(:,:,32)))),4),[]), title('gridding dc');
+

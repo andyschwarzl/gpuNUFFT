@@ -32,20 +32,31 @@ if (a.adjoint)
 else
     imspace = bb;
     imdata = [real(imspace(:))'; imag(imspace(:))'];
-    n_coils = size(bb,4);
+   
+    n_chnls = size(bb,4);
     size(imdata)
-    disp('multiple coil data passed');
-    imdata = reshape(imdata,[2 a.params.im_width*a.params.im_width*a.params.im_width n_coils]);
+    imdata = reshape(imdata,[2 a.params.im_width*a.params.im_width*a.params.im_width n_chnls]);
+        
+    if (n_chnls > 1)
+        disp('multiple channel image data passed');
+    end    
     disp('call forward gridding mex kernel');
 
-    %data_ind = repmat(a.op.data_ind,[1 1 kspace_data_dim]);
     data = mex_gridding3D_forw(single(imdata),single(a.op.coords),int32(a.op.sector_data_cnt),int32(a.op.sector_centers),a.params);
-    size(data)
-    data = squeeze(data(1,:) + 1j*(data(2,:)));
     
     %put data in correct order
-    data_test = zeros(1,length(a.op.data_ind));
-    data_test(a.op.data_ind) = data;
-    ress = transpose(data_test);
+    %data_test = zeros(1,length(a.op.data_ind));
+    disp(['returned data dimensions:' size(data)]);
+    if (n_chnls > 1)
+        data = squeeze(data(1,:,:) + 1j*(data(2,:,:)));
+        data_test = zeros([length(a.op.data_ind),n_chnls]);
+        data_test(a.op.data_ind,:) = data;
+        ress = data_test;
+    else
+        data = squeeze(data(1,:) + 1j*(data(2,:)));
+        data_test = zeros(1,length(a.op.data_ind));
+        data_test(a.op.data_ind) = data;
+        ress = transpose(data_test);
+    end
     return;
 end

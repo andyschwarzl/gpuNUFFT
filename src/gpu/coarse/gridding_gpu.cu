@@ -70,6 +70,7 @@ void gridding3D_gpu(CufftType*	data,			//kspace data array
 		//reset temp array
 		//cudaMemset(temp_gdata_d,0, sizeof(DType)*temp_grid_count);
 		cudaMemset(data_d,0, sizeof(CufftType)*data_count);
+		cudaMemset(gdata_d,0, sizeof(CufftType)*gi_host->grid_width_dim);
 		
 		// apodization Correction
 		performForwardDeapodization(imdata_d + im_coil_offset,gi_host);

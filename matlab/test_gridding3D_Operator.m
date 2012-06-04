@@ -7,8 +7,8 @@ addpath ../../daten
 addpath(genpath('./GRIDDING3D'));
 %% Load data
 %load 20111017_Daten_MREG;
-load MREG_data_Graz;
-%load 20111013_MREG_data_Graz_SoS;
+%load MREG_data_Graz;
+load 20111013_MREG_data_Graz_SoS;
 %load 20111024_MREG_Data_MID_65_2mm_Full_Brain;
 
 %% sensmaps
@@ -40,12 +40,13 @@ imgRegrid_kb = G3D'*kspace;
 size(imgRegrid_kb);
 toc
 %% SENS corr
-imgRegrid_kb = imgRegrid_kb(:,:,1:44,:) .* conj(smaps(:,:,:,:));
+%imgRegrid_kb = imgRegrid_kb(:,:,1:44,:) .* conj(smaps(:,:,:,:));
+imgRegrid_kb = imgRegrid_kb(:,:,:,:) .* conj(smaps(:,:,:,:));
 
 %% res = SoS of coil data
 res = sqrt(sum(abs(imgRegrid_kb).^2,4));
 %%
-slice = 1;
+slice = 25;
 figure, imshow(imresize(abs(res(:,:,slice)),4),[]), title('gridding all coils at once');
 figure, imshow(imresize(abs(z(:,:,slice)),4),[]), title('reference (CG)');
 

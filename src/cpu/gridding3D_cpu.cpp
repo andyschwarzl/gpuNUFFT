@@ -57,12 +57,12 @@ void gridding3D_cpu(DType* data, DType* crds, DType* gdata, DType* kernel, int* 
 
 			/* set the boundaries of final dataset for gridding this point */
 			ix = (x + 0.5f) * (width) - center_x + sector_offset;
-			set_minmax(ix, &imin, &imax, max_x, kernel_radius);
+			set_minmax(&ix, &imin, &imax, max_x, kernel_radius);
 			printf("ix=%f, imin = %d, imax = %d, max_x = %d\n",ix,imin,imax,max_x);
 			jy = (y + 0.5f) * (width) - center_y + sector_offset;
-			set_minmax(jy, &jmin, &jmax, max_y, kernel_radius);
+			set_minmax(&jy, &jmin, &jmax, max_y, kernel_radius);
 			kz = (z + 0.5f) * (width) - center_z + sector_offset;
-			set_minmax(kz, &kmin, &kmax, max_z, kernel_radius);
+			set_minmax(&kz, &kmin, &kmax, max_z, kernel_radius);
 
 			printf("sector grid position of data point: %f,%f,%f\n",ix,jy,kz);
 			

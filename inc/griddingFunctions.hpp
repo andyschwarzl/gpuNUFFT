@@ -86,7 +86,7 @@ __inline__ __device__ __host__ void set_minmax (DType *x, int *min, int *max, in
 	if (*min < 0) *min = 0;
 	if (*max >= maximum) *max = maximum;
 	//if (*x >= (DType)maximum) *x = (DType)(maximum-radius);
-	if (*min >= (DType)maximum) *min = (DType)(maximum-2*radius);
+	if (*min >= (DType)maximum) *min = (int)(maximum-2*radius);
 
 }
 

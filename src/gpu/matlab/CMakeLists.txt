@@ -144,4 +144,4 @@ if(GPU_DOUBLE_PREC)
   endif()
 endif()
 
-  
+ADD_SUBDIRECTORY(sparse)

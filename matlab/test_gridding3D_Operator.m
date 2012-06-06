@@ -89,7 +89,7 @@ k = E.nufftStruct.om'./(2*pi);
 w = ones(1,E.trajectory_length);
 G3D = gridding3D(k,w,imwidth,osf,wg,sw,'deappo');
 
-dataRadial = G3D*z_pad;
+dataRadial = G3D*z;
 %% calculate density compensation
 dc = sqrt(sum(abs(k').^2,2));
 %dc = dc / max(dc);

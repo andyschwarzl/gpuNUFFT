@@ -141,7 +141,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	mexPrintf("Number of Coils: %d\n",numsens);
 	
     const int numdim =5;
-    const int dims_sz[] = {2, image_dims[0], image_dims[1], image_dims[2],numsens };//2x64x64x44
+    const int dims_sz[] = {2, (int)image_dims[0], (int)image_dims[1], (int)image_dims[2],numsens };//2x64x64x44
     int w = (int)dims_sz[1];//64
     int h = (int)dims_sz[2];//64
     int d = (int)dims_sz[3];//44
@@ -199,10 +199,10 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     
     if (cuCtxGetDevice(&dev) == CUDA_SUCCESS)
     {
-    //   CUcontext  pctx ;
-    //   cuCtxPopCurrent(&pctx);	      
+		//   CUcontext  pctx ;
+		//   cuCtxPopCurrent(&pctx);	      
     }   
-    
+	
     mexPrintf("dev:%i\n",dev);
        
     /////////////////////////////////////// MALLOCs
@@ -320,12 +320,15 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     if (VERBOSE == 1) {
         mexPrintf("num active Vox: %i\n",numVox);    
         mexPrintf("alloc/copy time: %f\n",finish-start);
-    }
+		mexPrintf("creating cufft plan with %d %d %d dimensions\n",d_pad,h_pad,w_pad);
+	}
     
 	int err;
+	
 	if (err=cufftPlan3d(&plan, d_pad, h_pad, w_pad, CUFFT_C2C) != CUFFT_SUCCESS)
 	{
 		mexPrintf("create cufft plan has failed with err %i \n",err);
+		mexPrintf("%s\n", cudaGetErrorString(cudaGetLastError()));
 		return;
 	}
     // thread managements 
@@ -368,6 +371,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 		if (err=cufftExecC2C(plan, tmp1, tmp2, CUFFT_INVERSE) != CUFFT_SUCCESS)
         {
             mexPrintf("cufft has failed with err %i \n",err);
+			mexPrintf("%s\n", cudaGetErrorString(cudaGetLastError()));
             return;
         }
 		//Multiplikation mit SN Matrix
@@ -408,6 +412,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     free(bpsize);
     free(bponset);
  
+	mexPrintf("%s\n", cudaGetErrorString(cudaGetLastError()));
+
      CUcontext  pctx ;
      cuCtxPopCurrent(&pctx);	
 }

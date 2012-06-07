@@ -1,7 +1,7 @@
 MESSAGE("Sparse GPU Gridding Library (Freiburg)")
 
-set(SPARSE_MEX_FILE tikreg_gridding_gpu_f.cu ${MATLAB_HELPER_INCLUDE})
-set(SPARSE_MEX_FILE_FORW tikreg_gridding_forward_gpu_f.cu ${MATLAB_HELPER_INCLUDE})
+set(SPARSE_MEX_FILE tikreg_gridding_gpu_f.cu )
+set(SPARSE_MEX_FILE_FORW tikreg_gridding_forward_gpu_f.cu )
 
 CUDA_COMPILE( mex_gridding3D_sparse_gen ${SPARSE_MEX_FILE} SHARED)
 CUDA_COMPILE( mex_gridding3D_sparse_forw_gen ${SPARSE_MEX_FILE_FORW} SHARED)

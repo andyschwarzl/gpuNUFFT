@@ -4,106 +4,17 @@
 #include <complex>
 #include <vector>
 
-#ifdef __unix__ 
-# include <unistd.h>
-#elif defined _WIN32 
-# include <windows.h>
-#endif
-
 #include "cufft.h"
 #include "cuda_runtime.h"
 #include <cuda.h> 
 #include <cublas.h>
 
-
 #include <stdio.h>
-#include <string>
 #include <iostream>
-
-
-#include <string.h>
-
-#ifdef __unix__ 
-	#include <sys/time.h>
-#elif defined _WIN32 
-	#include <time.h>
-#endif
-
-#define GET_TIME(now) { \
-   struct timeval t; \
-   gettimeofday(&t, NULL); \
-   now = t.tv_sec + t.tv_usec/1000000.0; \
-}
 
 #define MAX_BLOCK_SZ 512
 
 #include "tikreg_gridding_kernels.cu"
-
-#ifdef _WIN32 
-
-	#if defined(_MSC_VER) || defined(_MSC_EXTENSIONS)
-	  #define DELTA_EPOCH_IN_MICROSECS  11644473600000000Ui64
-	#else
-	  #define DELTA_EPOCH_IN_MICROSECS  11644473600000000ULL
-	#endif
-
-	struct timezone
-	{
-	  int  tz_minuteswest; /* minutes W of Greenwich */
-	  int  tz_dsttime;     /* type of dst correction */
-	};
- 
-	// Definition of a gettimeofday function
- 
-	int gettimeofday(struct timeval *tv, struct timezone *tz)
-	{
-	// Define a structure to receive the current Windows filetime
-	  FILETIME ft;
- 
-	// Initialize the present time to 0 and the timezone to UTC
-	  unsigned __int64 tmpres = 0;
-	  static int tzflag = 0;
- 
-	  if (NULL != tv)
-	  {
-		GetSystemTimeAsFileTime(&ft);
- 
-	// The GetSystemTimeAsFileTime returns the number of 100 nanosecond 
-	// intervals since Jan 1, 1601 in a structure. Copy the high bits to 
-	// the 64 bit tmpres, shift it left by 32 then or in the low 32 bits.
-		tmpres |= ft.dwHighDateTime;
-		tmpres <<= 32;
-		tmpres |= ft.dwLowDateTime;
- 
-	// Convert to microseconds by dividing by 10
-		tmpres /= 10;
- 
-	// The Unix epoch starts on Jan 1 1970.  Need to subtract the difference 
-	// in seconds from Jan 1 1601.
-		tmpres -= DELTA_EPOCH_IN_MICROSECS;
- 
-	// Finally change microseconds to seconds and place in the seconds value. 
-	// The modulus picks up the microseconds.
-		tv->tv_sec = (long)(tmpres / 1000000UL);
-		tv->tv_usec = (long)(tmpres % 1000000UL);
-	  }
- 
-	  if (NULL != tz)
-	  {
-		if (!tzflag)
-		{
-		  _tzset();
-		  tzflag++;
-		}
-  
-	// Adjust for the timezone west of Greenwich
-		  tz->tz_minuteswest = _timezone / 60;
-		tz->tz_dsttime = _daylight;
-	  }
- 
-	  return 0;
-	}
-#endif
 
 /**
  * Forward Gridding using sparse Matrix
@@ -113,7 +24,7 @@
 */
 void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 {
- 	
+	//check count of passed arguments
     if(nrhs != 11 ) 
 	{
 		printf("\nUsage:\n");
@@ -124,7 +35,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 		return;
 	}
 
-    //////////////////////////////////// fetching data from MATLAB
+    // fetching data from MATLAB
     int pcnt = 0;  
     const mxArray *ImageData;
     ImageData = prhs[pcnt++];//0...Image Daten       
@@ -147,7 +58,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	numsens = (int) num_sens[0];
 	mexPrintf("Number of Coils: %d\n",numsens);
 	
-    const int dims_sz[] = {2, image_dims[0], image_dims[1], image_dims[2],numsens };//2x64x64x44
+    const int dims_sz[] = {2, (int)image_dims[0], (int)image_dims[1], (int)image_dims[2],numsens };//2x64x64x44
     int w = (int)dims_sz[1];//64
     int h = (int)dims_sz[2];//64
     int d = (int)dims_sz[3];//44
@@ -203,24 +114,16 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
         mexPrintf("gpuDevice: %i  lambda^2: %f\n",device_num,lambda);
 
    /**************** Init Cuda *****************/
-    
-    cudaError_t rv; 
     CUdevice dev; 
-    
+
     if (cuCtxGetDevice(&dev) == CUDA_SUCCESS)
     {
-    //   CUcontext  pctx ;
-    //   cuCtxPopCurrent(&pctx);	      
+		//   CUcontext  pctx ;
+		//   cuCtxPopCurrent(&pctx);	      
     }   
-    
     mexPrintf("dev:%i\n",dev);
        
-    /////////////////////////////////////// MALLOCs
-    
-    double start,finish;
-     
-    GET_TIME(start);
-    
+    // MALLOCs    
     cufftComplex *tmp1,*tmp2, *_r , *_img, *_ipk_we;
 	float* _sn;
 	
@@ -248,17 +151,12 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     cudaMemset( tmp2,0,sizeof(cufftComplex)*totsz_pad);
     cudaMemset( _img,0,sizeof(cufftComplex)*totsz*numsens);
 	 
-     cudaThreadSynchronize();
+    cudaThreadSynchronize();
  
-  
      /************** copy data on device **********************/
-
-	 mexPrintf("copying image data...\n");
-     cudaMemcpy( _img, img, sizeof(cufftComplex)*numsens*totsz, cudaMemcpyHostToDevice);
-     mexPrintf("copying ipk we...\n");
-	 cudaMemcpy( _ipk_we, ipk_we, sizeof(cufftComplex)*numP*numK, cudaMemcpyHostToDevice);
-     mexPrintf("copying the index...\n");
-	 cudaMemcpy( _the_index, the_index, sizeof(int)*numP*numK, cudaMemcpyHostToDevice);
+	 cudaMemcpy( _img, img, sizeof(cufftComplex)*numsens*totsz, cudaMemcpyHostToDevice);
+     cudaMemcpy( _ipk_we, ipk_we, sizeof(cufftComplex)*numP*numK, cudaMemcpyHostToDevice);
+     cudaMemcpy( _the_index, the_index, sizeof(int)*numP*numK, cudaMemcpyHostToDevice);
 	 cudaMemcpy( _sn, sn, sizeof(float)*totsz, cudaMemcpyHostToDevice);
      
      cudaMemcpy( ipk_we, _ipk_we, sizeof(cufftComplex)*numP*numK, cudaMemcpyDeviceToHost);
@@ -268,76 +166,16 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     
     if (VERBOSE == 1) 
         mexPrintf("numP: %i  numK: %i whd %i %i %i pad %i %i %i numsens: %i\n",numP,numK,w,h,d,w_pad,h_pad,d_pad,numsens);
-            
-      
-    /************** copy bpidx on device **********************/
-    int *_bpmidx;
-    cufftComplex *_bpweight;
-    int *bpsize = (int*) malloc(sizeof(int)*numVox);
-    int *bponset  = (int*) malloc(sizeof(int)*(numVox+1));
-    int *_bpsize, *_bponset, *_bpidx;
-    bponset[0] = 0;
-    for (int j = 0; j < numVox;j++)
-    {
-        mxArray *Midx = mxGetCell(BPmidx,j);
-        bpsize[j] = mxGetM(Midx);
-        bponset[j+1] = bponset[j] + bpsize[j];
-    }
-    
-    int *tmp_bpmidx;
-    cufftComplex *tmp_bpweight;
-    tmp_bpmidx = (int*) malloc(sizeof(int)*bponset[numVox]);
-    tmp_bpweight = (cufftComplex*) malloc(sizeof(cufftComplex)*bponset[numVox]);
-    if (tmp_bpmidx == 0)
-    {
-        mexPrintf("out of mem (host)\n");
-        return;
-    }
-    if (tmp_bpweight == 0)
-    {
-        mexPrintf("out of mem (host)\n");
-        return;
-    }
-    
-    for (int j = 0; j < numVox;j++)
-    {
-        mxArray *Midx = mxGetCell(BPmidx,j);
-        mxArray *Weight = mxGetCell(BPweight,j);
-        int *midx = (int*)  mxGetData(Midx);
-        cufftComplex *bpwei = (cufftComplex*) mxGetData(Weight);
-        memcpy(tmp_bpmidx + bponset[j] , midx, sizeof(int)* bpsize[j]);
-        memcpy(tmp_bpweight + bponset[j] , bpwei, sizeof(cufftComplex)* bpsize[j]);    
-    }
-    
-    cudaMalloc( (void **) &_bpmidx,sizeof(int)* bponset[numVox]);
-    cudaMalloc( (void **) &_bpweight,sizeof(cufftComplex)* bponset[numVox]);
-    mexPrintf("copying tmp bpmidx...\n");  
-    cudaMemcpy(_bpmidx,tmp_bpmidx,sizeof(int)*bponset[numVox], cudaMemcpyHostToDevice);
-    mexPrintf("copying tmp bpweight...\n");
-	cudaMemcpy(_bpweight,tmp_bpweight,sizeof(cufftComplex)*bponset[numVox], cudaMemcpyHostToDevice);
- 
-    free(tmp_bpmidx);
-    free(tmp_bpweight);
-
-    cudaMalloc( (void **) &_bpsize,sizeof(int)* numVox);   
-    cudaMalloc( (void **) &_bpidx,sizeof(int)* numVox);
-    cudaMalloc( (void **) &_bponset,sizeof(int)* numVox+1);    
-    cudaMemcpy(_bpsize,bpsize,sizeof(int)* numVox, cudaMemcpyHostToDevice);
-    cudaMemcpy(_bpidx,bpidx,sizeof(int)* numVox, cudaMemcpyHostToDevice);
-    cudaMemcpy(_bponset,bponset,sizeof(int)* numVox+1, cudaMemcpyHostToDevice);
-            
-    GET_TIME(finish);
-
-    
+          
     if (VERBOSE == 1) {
         mexPrintf("num active Vox: %i\n",numVox);    
-        mexPrintf("alloc/copy time: %f\n",finish-start);
     }
     
 	int err;
 	if (err=cufftPlan3d(&plan, d_pad, h_pad, w_pad, CUFFT_C2C) != CUFFT_SUCCESS)
 	{
 		mexPrintf("create cufft plan has failed with err %i \n",err);
+		mexPrintf("%s\n", cudaGetErrorString(cudaGetLastError()));
 		return;
 	}
     // thread managements 
@@ -355,10 +193,6 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     int sens_block = 256;
     dim3 dimBlock_se(sens_block,1);
     dim3 dimGrid_se (numK/sens_block + 1,1);
-   
-     double AA_time = 0;
-     double cg_time = 0;
-     
 
     // we need this because first fft fails
     int _res = cufftExecC2C(plan, tmp1, tmp2, CUFFT_FORWARD);
@@ -369,7 +203,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	cudaMemset( tmp2,0,sizeof(cufftComplex)*totsz_pad);
     cudaMemset(_r,0, sizeof(cufftComplex)*numK*numsens);            
 	
-	mexPrintf("start forward gridding...\n");
+	if (VERBOSE == 1)
+		mexPrintf("start forward gridding...\n");
     // do sens -- b=A x
     for (int i = 0; i < numsens; i++)
     { 
@@ -383,26 +218,15 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
         if (err=cufftExecC2C(plan, tmp1, tmp2, CUFFT_FORWARD) != CUFFT_SUCCESS)
         {
 			mexPrintf("cufft has failed with err %i \n",err);
+			mexPrintf("%s\n", cudaGetErrorString(cudaGetLastError()));
             return;
         }
-		mexPrintf("hello, running...\n");
+
         cudaMemset(_r,0, sizeof(cufftComplex)*numK*numsens);
         dosens<<<dimGrid_se,dimBlock_se>>>(_r,tmp2,_ipk_we,_the_index,numP,numK);
-            
-		//add -> without sense 
-		//addcoiltores<<<dimGrid_dw,dimBlock_dw>>>(_r,tmp2, totsz*numsens,i*totsz);
-		//Quadratisch Summieren in Image Domain
-		//quadradd<<<dimGrid_dw,dimBlock_dw>>>(_r,tmp2, w, h, d, w_pad, h_pad, d_pad);
      }
   
-     cudaMemcpy( res, _r, sizeof(cufftComplex)*numK*numsens,cudaMemcpyDeviceToHost);    
-        
-    if (VERBOSE == 1)
-    {
-        mexPrintf("\n");        
-        mexPrintf(" AA time: %f \n",AA_time);
-        mexPrintf(" cg  time: %f \n",cg_time);
-    }
+    cudaMemcpy( res, _r, sizeof(cufftComplex)*numK*numsens,cudaMemcpyDeviceToHost);    
 
     cudaFree(tmp1);
     cudaFree(tmp2);
@@ -413,19 +237,11 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	
     cudaFree(_ipk_we);
     cudaFree(_the_index);
-	
-    cudaFree(_bpmidx);
-    cudaFree(_bpweight);
-    cudaFree(_bpsize);
-    cudaFree(_bpidx);
-    cudaFree(_bponset);    
-    
+	    
     cufftDestroy(plan);
-    free(bpsize);
-    free(bponset);
- 
-     CUcontext  pctx ;
-     cuCtxPopCurrent(&pctx);	
+    
+    CUcontext  pctx ;
+    cuCtxPopCurrent(&pctx);	
 }
 
 

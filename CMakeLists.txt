@@ -35,18 +35,39 @@ if (WITH_MATLAB_DEBUG)
 endif()
 MESSAGE(STATUS "Setting MATLAB DEBUG Option to ${MATLAB_DEBUG}")
 
+#Enable ATOMIC kernel  
+SET(GEN_ATOMIC OFF CACHE BOOL "Enable atomic kernel generation (Compute Capability 2.0 needed)")
+
 #Enable/Disable GPU double precision 
-SET(GPU_DOUBLE_PREC OFF CACHE BOOL "Enable double precision floating point operations on GPU")
+SET(GPU_DOUBLE_PREC OFF CACHE BOOL "Enable double precision floating point operations on GPU (Compute Capability 1.3 needed)")
 
 if(GPU_DOUBLE_PREC)
-  SET(CUDA_NVCC_FLAGS "-arch;sm_20")
+  SET(PREC_SUFFIX "_d")
+  SET(CUDA_NVCC_FLAGS "-arch;sm_13")
 else(GPU_DOUBLE_PREC)
+  SET(PREC_SUFFIX "_f")
   SET(CUDA_NVCC_FLAGS "-arch;sm_11")
 endif(GPU_DOUBLE_PREC)
+if(GEN_ATOMIC)
+  SET(CUDA_NVCC_FLAGS "-arch;sm_20")
+endif(GEN_ATOMIC)
 
 MESSAGE("setting NVCC FLAGS to: ${CUDA_NVCC_FLAGS}")
 
+#LIB and MEX-file names
+SET(GRID_LIB_NAME "gridding3D${PREC_SUFFIX}")
+SET(GRID_LIB_ATM_NAME "gridding3D_ATM${PREC_SUFFIX}")
+
+SET(GRID_MEX_FORW_NAME "mex_gridding3D_forw${PREC_SUFFIX}")
+SET(GRID_MEX_ADJ_NAME "mex_gridding3D_adj${PREC_SUFFIX}")
+
+SET(GRID_MEX_FORW_ATM_NAME "mex_gridding3D_forw_ATM${PREC_SUFFIX}")
+SET(GRID_MEX_ADJ_ATM_NAME "mex_gridding3D_adj_ATM${PREC_SUFFIX}")
+
+MESSAGE("creating lib with name: ${GRID_LIB_NAME}")
+
 CONFIGURE_FILE( ${CMAKE_SOURCE_DIR}/inc/config.hpp.cmake ${CMAKE_SOURCE_DIR}/inc/config.hpp)
+CONFIGURE_FILE( ${CMAKE_SOURCE_DIR}/inc/cufft_config.hpp.cmake ${CMAKE_SOURCE_DIR}/inc/cufft_config.hpp)
 
 #Include dirs
 include_directories (inc)
@@ -74,7 +95,7 @@ add_test(
     COMMAND runGPUUnitTests
 )
 
-if(GPU_DOUBLE_PREC)
+if(GEN_ATOMIC)
 	add_test(
     NAME runGPUATMUnitTests
     COMMAND runGPUATMUnitTests)

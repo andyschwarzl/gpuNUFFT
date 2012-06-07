@@ -39,7 +39,7 @@ void loadGrid3Kernel(DType *kernTab,long kernel_entries, int kernel_width, DType
     /* load table */
 	for (i=1; i<kernel_entries-1; i++)	
     {
-		rsqr = sqrt(i/(DType)(kernel_entries-1));//*(i/(float)(size-1));
+		rsqr = (DType)sqrt(i/(DType)(kernel_entries-1));//*(i/(float)(size-1));
 		kernTab[i] = static_cast<DType>(kernel(rsqr,kernel_width,osr)); /* kernel table for radius squared */
 		//assert(kernTab[i]!=kernTab[i]); //check is NaN
 	}

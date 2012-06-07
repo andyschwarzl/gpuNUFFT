@@ -97,12 +97,12 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     int numVox= mxGetM(BPidx); //Anzahl Zeilen
     int * bpidx = (int*) mxGetData(BPidx);
     
-    const mxArray *BPmidx;
-    BPmidx = prhs[pcnt++]; //6...Backprojection MidX 
-   
-    const mxArray *BPweight;
-    BPweight = prhs[pcnt++]; //7...Backprojection Weight  
-
+    //const mxArray *BPmidx;
+    //BPmidx = prhs[pcnt++]; //6...Backprojection MidX 
+    pcnt++;
+    //const mxArray *BPweight;
+    //BPweight = prhs[pcnt++]; //7...Backprojection Weight  
+	pcnt++;
     const mxArray *Params;
     Params = prhs[pcnt++]; //8... Parameter   
     float *params = (float*) mxGetData(Params);

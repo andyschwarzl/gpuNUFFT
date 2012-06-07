@@ -49,11 +49,11 @@
  */
 static DType i0( DType x )
 {
-	float ax = fabs(x);
-	float ans;
-	float y;
+	DType ax = fabs(x);
+	DType ans;
+	DType y;
 
-	if (ax < 3.75f) 
+	if (ax < (DType)3.75f) 
     {
 		y=x/3.75f,y=y*y;
 		ans=1.0f+y*(3.5156229f+y*(3.0899424f+y*(1.2067492f

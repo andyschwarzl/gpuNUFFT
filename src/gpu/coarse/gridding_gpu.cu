@@ -1,7 +1,7 @@
 #include "gridding_kernels.cu"
 #include "cuda_utils.hpp"
 #include "gridding_gpu.hpp"
-
+#include "cufft_config.hpp"
 /** gridding3D_gpu
   * forward gridding from image to grid/k-space
   * TODO
@@ -38,7 +38,7 @@ void gridding3D_gpu(CufftType*	data,			//kspace data array
 
 	printf("allocate and copy gdata of size %d...\n",gi_host->grid_width_dim );
 
-	allocateAndSetMem<CufftType>(&gdata_d, gi_host->grid_width_dim,(DType)0.0f);
+	allocateAndSetMem<CufftType>(&gdata_d, gi_host->grid_width_dim,0);
 
 	printf("allocate and copy data of size %d...\n",data_count * n_coils);
 	allocateDeviceMem<CufftType>(&data_d,data_count * n_coils);
@@ -57,7 +57,7 @@ void gridding3D_gpu(CufftType*	data,			//kspace data array
 	//Inverse fft plan and execution
 	cufftHandle fft_plan;
 	printf("creating cufft plan with %d,%d,%d dimensions\n",gi_host->grid_width,gi_host->grid_width,gi_host->grid_width);
-	cufftResult res = cufftPlan3d(&fft_plan, gi_host->grid_width,gi_host->grid_width,gi_host->grid_width, CUFFT_C2C) ;
+	cufftResult res = cufftPlan3d(&fft_plan, gi_host->grid_width,gi_host->grid_width,gi_host->grid_width, CufftTransformType) ;
 	if (res != CUFFT_SUCCESS) 
 		printf("error on CUFFT Plan creation!!! %d\n",res);
 	int err;
@@ -83,7 +83,8 @@ void gridding3D_gpu(CufftType*	data,			//kspace data array
 		
 		// eventually free imdata_d
 		// Forward FFT to kspace domain
-		if (err=cufftExecC2C(fft_plan, gdata_d, gdata_d, CUFFT_FORWARD) != CUFFT_SUCCESS)
+		//if (err=cufftExecC2C(fft_plan, gdata_d, gdata_d, CUFFT_FORWARD) != CUFFT_SUCCESS)
+		if (err=pt2CufftExec(fft_plan, gdata_d, gdata_d, CUFFT_FORWARD) != CUFFT_SUCCESS)
 		{
 			printf("cufft has failed with err %i \n",err);
 		}
@@ -165,7 +166,7 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 	//Inverse fft plan and execution
 	cufftHandle fft_plan;
 	printf("creating cufft plan with %d,%d,%d dimensions\n",gi_host->grid_width,gi_host->grid_width,gi_host->grid_width);
-	cufftResult res = cufftPlan3d(&fft_plan, gi_host->grid_width,gi_host->grid_width,gi_host->grid_width, CUFFT_C2C) ;
+	cufftResult res = cufftPlan3d(&fft_plan, gi_host->grid_width,gi_host->grid_width,gi_host->grid_width, CufftTransformType) ;
 	if (res != CUFFT_SUCCESS) 
 		printf("error on CUFFT Plan creation!!! %d\n",res);
 	int err;
@@ -199,7 +200,7 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 		}
 
 		//Inverse FFT
-		if (err=cufftExecC2C(fft_plan, gdata_d, gdata_d, CUFFT_INVERSE) != CUFFT_SUCCESS)
+		if (err=pt2CufftExec(fft_plan, gdata_d, gdata_d, CUFFT_INVERSE) != CUFFT_SUCCESS)
 		{
 			printf("cufft has failed with err %i \n",err);
 		}

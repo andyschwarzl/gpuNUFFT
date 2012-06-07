@@ -9,7 +9,7 @@ if (a.adjoint)
         kspace = reshape(data,[2 a.params.trajectory_length kspace_data_dim]);
 
         disp('call gridding mex kernel');
-        m = cuda_mex_kernel(single(kspace),single(a.op.coords),int32(a.op.sector_data_cnt),int32(a.op.sector_centers),a.params);
+        m = mex_gridding3D_adj_f(single(kspace),single(a.op.coords),int32(a.op.sector_data_cnt),int32(a.op.sector_centers),a.params);
         size(m)
         m = squeeze(m(1,:,:,:,:) + 1i*(m(2,:,:,:,:)));
         ress = m;
@@ -23,7 +23,7 @@ if (a.adjoint)
 
         % performs the normal nufft
         'call gridding mex kernel'
-        m = cuda_mex_kernel(single(data),single(a.op.coords),int32(a.op.sector_data_cnt),int32(a.op.sector_centers),a.params);
+        m = mex_gridding3D_adj_f(single(data),single(a.op.coords),int32(a.op.sector_data_cnt),int32(a.op.sector_centers),a.params);
 
         size(m)
         m = squeeze(m(1,:,:,:) + 1j*(m(2,:,:,:)));
@@ -42,7 +42,7 @@ else
     end    
     disp('call forward gridding mex kernel');
 
-    data = mex_gridding3D_forw(single(imdata),single(a.op.coords),int32(a.op.sector_data_cnt),int32(a.op.sector_centers),a.params);
+    data = mex_gridding3D_forw_f(single(imdata),single(a.op.coords),int32(a.op.sector_data_cnt),int32(a.op.sector_centers),a.params);
     
     %put data in correct order
     %data_test = zeros(1,length(a.op.data_ind));

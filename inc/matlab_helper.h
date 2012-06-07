@@ -6,24 +6,6 @@
 
 #include "config.hpp" 
 
-#ifdef __unix__ 
-#include <unistd.h>
-#elif defined _WIN32 
-# include <windows.h>
-#endif
-
-#ifdef __unix__ 
-	#include <sys/time.h>
-#elif defined _WIN32 
-	#include <time.h>
-#endif
-
-#define GET_TIME(now) { \
-   struct timeval t; \
-   gettimeofday(&t, NULL); \
-   now = t.tv_sec + t.tv_usec/1000000.0; \
-}
-
 #define MIN(X,Y) ((X) < (Y) ? (X) : (Y))
 
 template <typename TType>

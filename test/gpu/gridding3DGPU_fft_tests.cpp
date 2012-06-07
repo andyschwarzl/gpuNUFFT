@@ -976,8 +976,8 @@ gridding3D_gpu_adj(data,data_entries,1,coords,gdata,grid_size,dims_g[1],kern,ker
 	{
 		for (int i=0; i<im_width; i++)
 		{
-			float dpr = gdata[get3DC2lin(i,im_width-1-j,16,im_width)].x;
-			float dpi = gdata[get3DC2lin(i,im_width-1-j,16,im_width)].y;
+			DType dpr = gdata[get3DC2lin(i,im_width-1-j,16,im_width)].x;
+			DType dpi = gdata[get3DC2lin(i,im_width-1-j,16,im_width)].y;
 
 			if (abs(dpr) > 0.0f)
 				printf("(%d,%d)= %.4f + %.4f i ",i,im_width-1-j,dpr,dpi);

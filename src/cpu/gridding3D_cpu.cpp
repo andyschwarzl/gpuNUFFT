@@ -20,11 +20,9 @@ void gridding3D_cpu(DType* data, DType* crds, DType* gdata, DType* kernel, int* 
 	DType dist_multiplier = (kernel_count - 1) * kernelRadius_invSqr;
 	//int sector_width = 10;
 	
-	
-	//TODO passt das?
 	int sector_pad_width = sector_width + 2*(int)floor(kernel_width / 2.0f);
 	int sector_dim = sector_pad_width  * sector_pad_width  * sector_pad_width ;
-	int sector_offset = floor(sector_pad_width / 2.0f);
+	int sector_offset = (int)floor(sector_pad_width / 2.0f);
 
 	printf("sector offset = %d",sector_offset);
 	DType** sdata =  (DType**)malloc(sector_count*sizeof(DType*));
@@ -89,7 +87,7 @@ void gridding3D_cpu(DType* data, DType* crds, DType* gdata, DType* kernel, int* 
 								if (dx_sqr < radiusSquared)	
 								{
 									/* get kernel value */
-									//Berechnung mit Separable Filters 
+									//separable Filters 
 									val = kernel[(int) round(dz_sqr * dist_multiplier)] *
 										  kernel[(int) round(dy_sqr * dist_multiplier)] *
 										  kernel[(int) round(dx_sqr * dist_multiplier)];
@@ -109,7 +107,6 @@ void gridding3D_cpu(DType* data, DType* crds, DType* gdata, DType* kernel, int* 
 	
 	}/*sectors*/
 	
-	//TODO copy data from sectors to original grid
 	int max_im_index = width;
 	for (int sec = 0; sec < sector_count; sec++)
 	{
@@ -128,16 +125,13 @@ void gridding3D_cpu(DType* data, DType* crds, DType* gdata, DType* kernel, int* 
 				{
 					int s_ind = 2*getIndex(x,y,z,sector_pad_width) ;
 					ind = 2*(sector_ind_offset + getIndex(x,y,z,width));
-					//if (z==3)
-					//	printf("%.4f ",sdata[sec][s_ind]);
-					//TODO auslagern
+					
 					if (isOutlier(x,y,z,center_x,center_y,center_z,width,sector_offset))
 						continue;
 					
 					gdata[ind] += sdata[sec][s_ind]; //Re
 					gdata[ind+1] += sdata[sec][s_ind+1];//Im
 				}
-				//if (z==3) printf("\n");
 			}
 			//printf("----------------------------------------------------\n");
 		free(sdata[sec]);

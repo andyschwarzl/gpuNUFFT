@@ -6,8 +6,8 @@ addpath ../bin
 addpath ../../daten
 addpath(genpath('./GRIDDING3D'));
 %% Load data
-load 20111017_Daten_MREG;
-%load MREG_data_Graz;
+%load 20111017_Daten_MREG;
+load MREG_data_Graz;
 %load 20111013_MREG_data_Graz_SoS;
 %load 20111024_MREG_Data_MID_65_2mm_Full_Brain;
 

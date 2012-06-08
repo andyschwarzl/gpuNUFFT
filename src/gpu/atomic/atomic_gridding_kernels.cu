@@ -272,7 +272,6 @@ __global__ void convolutionKernel( DType* data,
 				}
 		}
 	}//sec < sector_count
-	
 }
 
 void performConvolution( DType* data_d, 

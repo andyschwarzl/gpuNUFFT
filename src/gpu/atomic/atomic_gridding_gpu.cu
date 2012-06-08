@@ -1,187 +1,238 @@
+#include "atomic_gridding_kernels.cu"
+#include "../std_gridding_kernels.cu"
+
 #include "cuda_utils.hpp"
-#include "cuda_utils.cuh" 
+#include "gridding_gpu.hpp"
+#include "cufft_config.hpp"
 
-__global__ void griddingKernel( DType* data, 
-							    DType* crds, 
-							    CufftType* gdata,
-							    DType* kernel, 
-							    int* sectors, 
-								int* sector_centers
-								)
+/** gridding3D_gpu
+  * forward gridding from image to grid/k-space
+  * TODO
+  * NFFT
+**/
+void gridding3D_gpu(CufftType*	data,			//kspace data array 
+					int			data_count,		//data count, samples per trajectory
+					int			n_coils,		//number of coils 
+					DType*		crds,			//
+					DType*		imdata,			//
+					int			imdata_count,	//			
+					int			grid_width,		//
+					DType*		kernel,			//
+					int			kernel_count,	//
+					int			kernel_width,	//
+					int*		sectors,		//
+					int			sector_count,	//
+					int*		sector_centers,	//
+					int			sector_width,	//
+					int			im_width,		//
+					DType		osr,			//
+					const GriddingOutput gridding_out)
 {
-	__shared__ DType sdata[2*SECTOR_WIDTH*SECTOR_WIDTH*SECTOR_WIDTH]; //ca. 8kB -> 2 Blöcke je SM ???
+	showMemoryInfo();
+	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,sector_width,kernel_width,kernel_count,grid_width,im_width,osr);
 
-	int  sec= blockIdx.x;
-	//TODO static or dynamic?
-	//manually cast to correct type/pos
-	//DType* sdata = (DType*)sdata_arr;
-	for (int i=0; i<2*SECTOR_WIDTH*SECTOR_WIDTH*SECTOR_WIDTH;i++)
-		sdata[i]=0.0f;
-
-	if (sec < GI.sector_count)
-	{
-		int ind, max_x, max_y, max_z, imin, imax, jmin, jmax,kmin,kmax, k, i, j;
-
-		DType dx_sqr, dy_sqr, dz_sqr, val, ix, jy, kz;
-
-		__shared__ int3 center;
-		center.x = sector_centers[sec * 3];
-		center.y = sector_centers[sec * 3 + 1];
-		center.z = sector_centers[sec * 3 + 2];
-
-			//Grid Points ueber Threads abwickeln
-			int data_cnt = sectors[sec];
-			while (data_cnt < sectors[sec+1])
-			{
-				__shared__ DType3 data_point; //datapoint shared in every thread
-				data_point.x = crds[3*data_cnt];
-				data_point.y = crds[3*data_cnt +1];
-				data_point.z = crds[3*data_cnt +2];
-
-				max_x = GI.sector_pad_width-1;
-				max_y = GI.sector_pad_width-1;
-				max_z = GI.sector_pad_width-1;
-
-				// set the boundaries of final dataset for gridding this point
-				ix = (data_point.x + 0.5f) * (GI.width) - center.x + GI.sector_offset;
-				set_minmax(ix, &imin, &imax, max_x, GI.kernel_radius);
-				jy = (data_point.y + 0.5f) * (GI.width) - center.y + GI.sector_offset;
-				set_minmax(jy, &jmin, &jmax, max_y, GI.kernel_radius);
-				kz = (data_point.z + 0.5f) * (GI.width) - center.z + GI.sector_offset;
-				set_minmax(kz, &kmin, &kmax, max_z, GI.kernel_radius);
-
-				// grid this point onto the neighboring cartesian points
-				for (k=threadIdx.z;k<=kmax; k += blockDim.z)
-				{
-					if (k<=kmax && k>=kmin)
-					{
-						kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.width)) - 0.5f;//(k - center_z) *width_inv;
-						dz_sqr = kz - data_point.z;
-						dz_sqr *= dz_sqr;
-						if (dz_sqr < GI.radiusSquared)
-						{
-							j=threadIdx.y;
-							if (j<=jmax && j>=jmin)
-							{
-								jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.width)) - 0.5f;   //(j - center_y) *width_inv;
-								dy_sqr = jy - data_point.y;
-								dy_sqr *= dy_sqr;
-								if (dy_sqr < GI.radiusSquared)	
-								{
-									i=threadIdx.x;
-								
-									if (i<=imax && i>=imin)
-									{
-										ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.width)) - 0.5f;// (i - center_x) *width_inv;
-										dx_sqr = ix - data_point.x;
-										dx_sqr *= dx_sqr;
-										if (dx_sqr < GI.radiusSquared)	
-										{
-											// get kernel value
-											//Berechnung mit Separable Filters 
-											val = kernel[(int) round(dz_sqr * GI.dist_multiplier)] *
-													kernel[(int) round(dy_sqr * GI.dist_multiplier)] *
-													kernel[(int) round(dx_sqr * GI.dist_multiplier)];
-											ind = 2* getIndex(i,j,k,GI.sector_pad_width);
-								
-											// multiply data by current kernel val 
-											// grid complex or scalar 
-										
-										atomicAdd((float*)(&sdata[ind]), val * data[2*data_cnt]);
-										atomicAdd((float*)&sdata[ind+1], val * data[2*data_cnt+1]);
-										
-										__syncthreads();
-										}
-									} // kernel bounds check x, spherical support 
-								} // x 	 
-							} // kernel bounds check y, spherical support 
-						} // y 
-					} //kernel bounds check z 
-				} // z 
-				data_cnt += N_THREADS_PER_SECTOR;
-				}
-			//} //data points per sector
-		__syncthreads();
-
-		//TODO copy data from sectors to original grid
-		if (threadIdx.x == 0 && threadIdx.y == 0 && threadIdx.z == 0)
-		{
-			//int max_im_index = GI.width;
-			//int sector_ind_offset = getIndex(center.x - GI.sector_offset,center.y - GI.sector_offset,center.z - GI.sector_offset,GI.width);
-			int sector_ind_offset = sec * GI.sector_pad_width*GI.sector_pad_width*GI.sector_pad_width;
-			for (int z = 0; z < GI.sector_pad_width; z++)
-				for (int y = 0; y < GI.sector_pad_width; y++)
-				{
-					for (int x = 0; x < GI.sector_pad_width; x++)
-					{
-						int s_ind = 2* getIndex(x,y,z,GI.sector_pad_width) ;
-						ind = 2*(sector_ind_offset + getIndex(x,y,z,GI.width));
-						//TODO auslagern
-						if (isOutlier(x,y,z,center.x,center.y,center.z,GI.width,GI.sector_offset))
-							continue;
-						
-						atomicAdd((float*)&gdata[ind],sdata[s_ind]); //Re
-						atomicAdd((float*)&gdata[ind+1],sdata[s_ind+1]);//Im
-					}
-				}
-		}
-	}//sec < sector_count
+	//cuda mem allocation
+	DType *imdata_d, *crds_d, *kernel_d;//, *temp_gdata_d;
+	CufftType *gdata_d, *data_d;
+	int* sector_centers_d, *sectors_d;
 	
+	printf("allocate and copy imdata of size %d...\n",2*imdata_count*n_coils);
+	allocateAndCopyToDeviceMem<DType>(&imdata_d,imdata,2*imdata_count*n_coils);
+
+	printf("allocate and copy gdata of size %d...\n",gi_host->grid_width_dim );
+
+	allocateAndSetMem<CufftType>(&gdata_d, gi_host->grid_width_dim,0);
+
+	printf("allocate and copy data of size %d...\n",data_count * n_coils);
+	allocateDeviceMem<CufftType>(&data_d,data_count * n_coils);
+
+	printf("allocate and copy coords of size %d...\n",3*data_count);
+	allocateAndCopyToDeviceMem<DType>(&crds_d,crds,3*data_count);
+	
+	printf("allocate and copy kernel of size %d...\n",kernel_count);
+	allocateAndCopyToDeviceMem<DType>(&kernel_d,kernel,kernel_count);
+	printf("allocate and copy sectors of size %d...\n",sector_count+1);
+	allocateAndCopyToDeviceMem<int>(&sectors_d,sectors,sector_count+1);
+	printf("allocate and copy sector_centers of size %d...\n",3*sector_count);
+	allocateAndCopyToDeviceMem<int>(&sector_centers_d,sector_centers,3*sector_count);
+	printf("sector pad width: %d\n",gi_host->sector_pad_width);
+	
+	//Inverse fft plan and execution
+	cufftHandle fft_plan;
+	printf("creating cufft plan with %d,%d,%d dimensions\n",gi_host->grid_width,gi_host->grid_width,gi_host->grid_width);
+	cufftResult res = cufftPlan3d(&fft_plan, gi_host->grid_width,gi_host->grid_width,gi_host->grid_width, CufftTransformType) ;
+	if (res != CUFFT_SUCCESS) 
+		printf("error on CUFFT Plan creation!!! %d\n",res);
+	int err;
+
+	//iterate over coils and compute result
+	for (int coil_it = 0; coil_it < n_coils; coil_it++)
+	{
+		int data_coil_offset = coil_it * data_count;
+		int im_coil_offset = 2 * coil_it * imdata_count;//gi_host->width_dim;
+		//reset temp array
+		//cudaMemset(temp_gdata_d,0, sizeof(DType)*temp_grid_count);
+		cudaMemset(data_d,0, sizeof(CufftType)*data_count);
+		cudaMemset(gdata_d,0, sizeof(CufftType)*gi_host->grid_width_dim);
+		
+		// apodization Correction
+		performForwardDeapodization(imdata_d + im_coil_offset,gi_host);
+		
+		// resize by oversampling factor and zero pad
+		performPadding(imdata_d + im_coil_offset,gdata_d,gi_host);
+		
+		// shift image to get correct zero frequency position
+		performFFTShift(gdata_d,FORWARD,gi_host->grid_width);
+		
+		// eventually free imdata_d
+		// Forward FFT to kspace domain
+		//if (err=cufftExecC2C(fft_plan, gdata_d, gdata_d, CUFFT_FORWARD) != CUFFT_SUCCESS)
+		if (err=pt2CufftExec(fft_plan, gdata_d, gdata_d, CUFFT_FORWARD) != CUFFT_SUCCESS)
+		{
+			printf("cufft has failed with err %i \n",err);
+		}
+		
+		performFFTShift(gdata_d,FORWARD,gi_host->grid_width);
+		
+		// convolution and resampling to non-standard trajectory
+		performForwardConvolution(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,gi_host);
+
+		//get result
+		copyFromDevice<CufftType>(data_d, data + data_coil_offset,data_count);
+	}//iterate over coils
+
+	// Destroy the cuFFT plan.
+	freeTotalDeviceMemory(data_d,crds_d,gdata_d,imdata_d,kernel_d,sectors_d,sector_centers_d,NULL);//NULL as stop
+	cufftDestroy(fft_plan);
+	free(gi_host);
 }
 
-void gridding3D_gpu(DType* data, 
-					int data_cnt,
-					DType* crds, 
-					CufftType* gdata,
-					int gdata_cnt,
-					DType* kernel,
-					int kernel_cnt,
-					int* sectors, 
-					int sector_count, 
-					int* sector_centers,
-					int sector_width,
-					int kernel_width, 
-					int kernel_count, 
-					int width)
+/** gridding3D_gpu
+  * adjoint gridding from k-space to grid
+  * TODO
+  * NFFT^H
+**/
+void gridding3D_gpu_adj(DType*		data,			//kspace data array 
+						int			data_count,		//data count, samples per trajectory
+						int			n_coils,		//number of coils 
+						DType*		crds,			//
+						CufftType*	imdata,			//
+						int			imdata_count,	//			
+						int			grid_width,		//
+						DType*		kernel,			//
+						int			kernel_count,	//
+						int			kernel_width,	//
+						int*		sectors,		//
+						int			sector_count,	//
+						int*		sector_centers,	//
+						int			sector_width,	//
+						int			im_width,		//
+						DType		osr,			//
+						const GriddingOutput gridding_out)
 {
 	assert(sectors != NULL);
 	
+	showMemoryInfo();
+
 	//split and run sectors into blocks
 	//and each data point to one thread inside this block 
-
-	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,sector_width,kernel_width,kernel_count,width);
+	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,sector_width,kernel_width,kernel_count,grid_width,im_width,osr);
 	
 	DType* data_d, *crds_d, *kernel_d;
-	CufftType* gdata_d;
+	CufftType *gdata_d, *imdata_d;
 	int* sector_centers_d, *sectors_d;
 
-	printf("allocate and copy gdata of size %d...\n",gdata_cnt);
-	allocateAndCopyToDeviceMem<CufftType>(&gdata_d,gdata,gdata_cnt);//Konvention!!!
+	printf("allocate and copy imdata of size %d...\n",imdata_count);
+	allocateAndCopyToDeviceMem<CufftType>(&imdata_d,imdata,imdata_count);//Konvention!!!
 
-	printf("allocate and copy data of size %d...\n",2*data_cnt);
-	allocateAndCopyToDeviceMem<DType>(&data_d,data,2*data_cnt);
+	printf("allocate and copy gdata of size %d...\n",gi_host->grid_width_dim);
+	allocateDeviceMem<CufftType>(&gdata_d,gi_host->grid_width_dim);
 
-	printf("allocate and copy coords of size %d...\n",3*data_cnt);
-	allocateAndCopyToDeviceMem<DType>(&crds_d,crds,3*data_cnt);
+	printf("allocate and copy data of size %d...\n",2*data_count*n_coils);
+	allocateAndCopyToDeviceMem<DType>(&data_d,data,2*data_count*n_coils);
+
+	/*int temp_grid_count = 2 * sector_count * gi_host->sector_dim;
+	printf("allocate temp grid data of size %d...\n",temp_grid_count);
+	allocateDeviceMem<DType>(&temp_gdata_d,temp_grid_count);
+*/
+	printf("allocate and copy coords of size %d...\n",3*data_count);
+	allocateAndCopyToDeviceMem<DType>(&crds_d,crds,3*data_count);
 	
-	printf("allocate and copy kernel of size %d...\n",kernel_cnt);
-	allocateAndCopyToDeviceMem<DType>(&kernel_d,kernel,kernel_cnt);
-	printf("allocate and copy sectors of size %d...\n",2*sector_count);
-	allocateAndCopyToDeviceMem<int>(&sectors_d,sectors,2*sector_count);
+	printf("allocate and copy kernel of size %d...\n",kernel_count);
+	allocateAndCopyToDeviceMem<DType>(&kernel_d,kernel,kernel_count);
+	printf("allocate and copy sectors of size %d...\n",sector_count+1);
+	allocateAndCopyToDeviceMem<int>(&sectors_d,sectors,sector_count+1);
 	printf("allocate and copy sector_centers of size %d...\n",3*sector_count);
 	allocateAndCopyToDeviceMem<int>(&sector_centers_d,sector_centers,3*sector_count);
+	printf("sector pad width: %d\n",gi_host->sector_pad_width);
 	
-	dim3 block_dim(SECTOR_WIDTH,SECTOR_WIDTH,2);
+	//Inverse fft plan and execution
+	cufftHandle fft_plan;
+	printf("creating cufft plan with %d,%d,%d dimensions\n",gi_host->grid_width,gi_host->grid_width,gi_host->grid_width);
+	cufftResult res = cufftPlan3d(&fft_plan, gi_host->grid_width,gi_host->grid_width,gi_host->grid_width, CufftTransformType) ;
+	if (res != CUFFT_SUCCESS) 
+		printf("error on CUFFT Plan creation!!! %d\n",res);
+	int err;
 
-    griddingKernel<<<sector_count,block_dim>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d);
+	//iterate over coils and compute result
+	for (int coil_it = 0; coil_it < n_coils; coil_it++)
+	{
+		int data_coil_offset = 2 * coil_it * data_count;
+		int im_coil_offset = coil_it * imdata_count;//gi_host->width_dim;
+		//reset temp array
+		//cudaMemset(temp_gdata_d,0, sizeof(DType)*temp_grid_count);
+		cudaMemset(gdata_d,0, sizeof(CufftType)*gi_host->grid_width_dim);
+		
+		performConvolution(data_d+data_coil_offset,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,NULL,gi_host);
 
-	copyFromDevice<CufftType>(gdata_d,gdata,gdata_cnt);
+		if (gridding_out == CONVOLUTION)
+		{
+			printf("stopping output after CONVOLUTION step\n");
+			//get output
+			copyFromDevice<CufftType>(gdata_d,imdata,gi_host->grid_width_dim);
+			printf("test value at point zero: %f\n",imdata[0].x);
+			freeTotalDeviceMemory(data_d,crds_d,imdata_d,gdata_d,kernel_d,sectors_d,sector_centers_d,NULL);//NULL as stop token
+
+			free(gi_host);
+			/* Destroy the cuFFT plan. */
+			cufftDestroy(fft_plan);
+			return;
+		}
+
+		//Inverse FFT
+		if (err=pt2CufftExec(fft_plan, gdata_d, gdata_d, CUFFT_INVERSE) != CUFFT_SUCCESS)
+		{
+			printf("cufft has failed with err %i \n",err);
+		}
 	
-	freeDeviceMem(data_d);
-	freeDeviceMem(crds_d);
-	freeDeviceMem(gdata_d);
-	freeDeviceMem(kernel_d);
-	freeDeviceMem(sectors_d);
-	freeDeviceMem(sector_centers_d);
+		if (gridding_out == FFT)
+		{
+			printf("stopping output after FFT step\n");
+			//get output
+			copyFromDevice<CufftType>(gdata_d,imdata,gi_host->grid_width_dim);
+			
+			//free memory
+			if (cufftDestroy(fft_plan) != CUFFT_SUCCESS)
+				printf("error on destroying cufft plan\n");
+			freeTotalDeviceMemory(data_d,crds_d,imdata_d,gdata_d,kernel_d,sectors_d,sector_centers_d,NULL);//NULL as stop token
+			free(gi_host);
+			/* Destroy the cuFFT plan. */
+			printf("last cuda error: %s\n", cudaGetErrorString(cudaGetLastError()));
+			return;
+		}
+
+		performFFTShift(gdata_d,INVERSE,gi_host->grid_width);
+
+		performCrop(gdata_d,imdata_d,gi_host);
+		
+		performDeapodization(imdata_d,gi_host);
+
+		//get result
+		copyFromDevice<CufftType>(imdata_d,imdata+im_coil_offset,imdata_count);
+	}//iterate over coils
+
+	// Destroy the cuFFT plan.
+	cufftDestroy(fft_plan);
+	freeTotalDeviceMemory(data_d,crds_d,gdata_d,imdata_d,kernel_d,sectors_d,sector_centers_d,NULL);//NULL as stop
 	free(gi_host);
 }

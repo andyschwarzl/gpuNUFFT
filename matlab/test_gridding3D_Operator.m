@@ -7,8 +7,8 @@ addpath ../../daten
 addpath(genpath('./GRIDDING3D'));
 %% Load data
 %load 20111017_Daten_MREG;
-load MREG_data_Graz;
-%load 20111013_MREG_data_Graz_SoS;
+%load MREG_data_Graz;
+load 20111013_MREG_data_Graz_SoS;
 %load 20111024_MREG_Data_MID_65_2mm_Full_Brain;
 
 %% sensmaps
@@ -90,7 +90,7 @@ k = E.nufftStruct.om'./(2*pi);
 w = ones(1,E.trajectory_length);
 G3D = gridding3D(k,w,imwidth,osf,wg,sw,'deappo');
 
-dataRadial = G3D*z4em9;
+dataRadial = G3D*z;
 %% calculate density compensation
 dc = sqrt(sum(abs(k').^2,2));
 %dc = dc / max(dc);
@@ -102,7 +102,7 @@ imgRegrid = G3D'*dataRadial;
 slice = 45;
 figure, imshow(imresize(abs(imgRegrid(:,:,slice)),4),[]), title('gridding');
 figure, imshow(imresize(abs(imgRegrid_dc(:,:,slice)),4),[]), title('gridding dc');
-figure, imshow(imresize(abs(z4em9(:,:,slice)),4),[]), title('input z');
+figure, imshow(imresize(abs(z(:,:,slice)),4),[]), title('input z');
 
 %show3DImageasArray([4 4],imgRegrid,'gridding','slice ');
 %show3DImageasArray([4 4],imgRegrid_dc,'gridding dc','slice ');

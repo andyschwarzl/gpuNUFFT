@@ -61,8 +61,12 @@ SET(GRID_LIB_ATM_NAME "gridding3D_ATM${PREC_SUFFIX}")
 SET(GRID_MEX_FORW_NAME "mex_gridding3D_forw${PREC_SUFFIX}")
 SET(GRID_MEX_ADJ_NAME "mex_gridding3D_adj${PREC_SUFFIX}")
 
-SET(GRID_MEX_FORW_ATM_NAME "mex_gridding3D_forw_ATM${PREC_SUFFIX}")
-SET(GRID_MEX_ADJ_ATM_NAME "mex_gridding3D_adj_ATM${PREC_SUFFIX}")
+SET(GRID_MEX_FORW_ATM_NAME "mex_gridding3D_forw_atomic${PREC_SUFFIX}")
+SET(GRID_MEX_ADJ_ATM_NAME "mex_gridding3D_adj_atomci${PREC_SUFFIX}")
+
+#Freiburg Reference Implementation
+SET(GRID_MEX_FORW_SPARSE_NAME "mex_gridding3D_forw_sparse${PREC_SUFFIX}")
+SET(GRID_MEX_ADJ_SPARSE_NAME "mex_gridding3D_adj_sparse${PREC_SUFFIX}")
 
 MESSAGE("creating lib with name: ${GRID_LIB_NAME}")
 
@@ -80,6 +84,7 @@ SET(GRIDDING_INCLUDE ${GRIDDING_INC_DIR}/cuda_utils.hpp
 					 ${GRIDDING_INC_DIR}/gridding_kernels.hpp)
 					 
 SET(MATLAB_HELPER_INCLUDE ${GRIDDING_INC_DIR}/matlab_helper.h)
+SET(CONFIG_INCLUDE ${GRIDDING_INC_DIR}/config.hpp ${GRIDDING_INC_DIR}/cufft_config.hpp)
 
 #Adding src directory to the project
 ADD_SUBDIRECTORY(test)

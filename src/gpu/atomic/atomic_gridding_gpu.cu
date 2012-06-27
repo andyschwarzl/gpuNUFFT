@@ -203,6 +203,7 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 		if (err=pt2CufftExec(fft_plan, gdata_d, gdata_d, CUFFT_INVERSE) != CUFFT_SUCCESS)
 		{
 			printf("cufft has failed with err %i \n",err);
+			printf("cuda error: %s\n", cudaGetErrorString(cudaGetLastError()));
 		}
 	
 		if (gridding_out == FFT)

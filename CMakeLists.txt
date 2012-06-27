@@ -62,7 +62,7 @@ SET(GRID_MEX_FORW_NAME "mex_gridding3D_forw${PREC_SUFFIX}")
 SET(GRID_MEX_ADJ_NAME "mex_gridding3D_adj${PREC_SUFFIX}")
 
 SET(GRID_MEX_FORW_ATM_NAME "mex_gridding3D_forw_atomic${PREC_SUFFIX}")
-SET(GRID_MEX_ADJ_ATM_NAME "mex_gridding3D_adj_atomci${PREC_SUFFIX}")
+SET(GRID_MEX_ADJ_ATM_NAME "mex_gridding3D_adj_atomic${PREC_SUFFIX}")
 
 #Freiburg Reference Implementation
 SET(GRID_MEX_FORW_SPARSE_NAME "mex_gridding3D_forw_sparse${PREC_SUFFIX}")

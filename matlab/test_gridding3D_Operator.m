@@ -6,10 +6,10 @@ addpath ../bin
 addpath ../../daten
 addpath(genpath('./GRIDDING3D'));
 %% Load data
-%load 20111017_Daten_MREG;
+load 20111017_Daten_MREG;
 %load MREG_data_Graz;
 %load 20111013_MREG_data_Graz_SoS;
-load 20111024_MREG_Data_MID_65_2mm_Full_Brain;
+%load 20111024_MREG_Data_MID_65_2mm_Full_Brain;
 
 %% sensmaps
 smaps = getfield(E,'sensmaps');
@@ -49,7 +49,7 @@ res = sqrt(sum(abs(imgRegrid_kb).^2,4));
 %%
 slice = 48;
 figure, imshow(imresize(abs(res(:,:,slice)),4),[]), title('gridding all coils at once');
-%figure, imshow(imresize(abs(z(:,:,slice)),4),[]), title('reference (CG)');
+figure, imshow(imresize(abs(z4em9(:,:,slice)),4),[]), title('reference (CG)');
 
 %% single call per coil 
 res = zeros(E.imageDim);

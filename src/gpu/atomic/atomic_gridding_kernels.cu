@@ -286,11 +286,11 @@ void performConvolution( DType* data_d,
 {
 	long shared_mem_size = 2*gi_host->sector_dim*sizeof(DType);
 
-	dim3 block_dim(gi_host->sector_pad_width,gi_host->sector_pad_width,N_THREADS_PER_SECTOR);
+	dim3 block_dim(gi_host->sector_pad_width,gi_host->sector_pad_width,1);
 	dim3 grid_dim(gi_host->sector_count);
 	
-	printf("convolution requires %d bytes of shared memory!\n",shared_mem_size);
-	convolutionKernel<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d);
+	printf("adjoint convolution requires %d bytes of shared memory!\n",shared_mem_size);
+	convolutionKernelFromGrid<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d);
 }
 
 __global__ void forwardConvolutionKernel( CufftType* data, 

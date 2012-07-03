@@ -25,7 +25,7 @@ clear smaps_il;
 osf = 1.25;%1,1.25,1.5,1.75,2
 wg = 3;%3-7
 sw = 8;
-imwidth = 64;
+imwidth = 96;
 k = E.nufftStruct.om'./(2*pi);
 w = ones(E.trajectory_length,1);
 
@@ -48,9 +48,9 @@ imgRegrid_kb = imgRegrid_kb(:,:,offset+1:(offset+size(smaps,3)),:) .* conj(smaps
 %% res = SoS of coil data
 res = sqrt(sum(abs(imgRegrid_kb).^2,4));
 %%
-slice = 25;
+slice = 48;
 figure, imshow(imresize(abs(res(:,:,slice)),4),[]), title('gridding all coils at once');
-figure, imshow(imresize(abs(z(:,:,slice)),4),[]), title('reference (CG)');
+figure, imshow(imresize(abs(z4em9(:,:,slice)),4),[]), title('reference (CG)');
 
 %% single call per coil 
 res = zeros(E.imageDim);
@@ -90,8 +90,9 @@ sw = 8;
 k = E.nufftStruct.om'./(2*pi);
 w = ones(1,E.trajectory_length);
 G3D = gridding3D(k,w,imwidth,osf,wg,sw,'deappo');
-
+tic
 dataRadial = G3D*z;
+toc
 %% calculate density compensation
 dc = sqrt(sum(abs(k').^2,2));
 %dc = dc / max(dc);

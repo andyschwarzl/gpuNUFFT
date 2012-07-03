@@ -7,8 +7,8 @@ addpath ../../daten
 addpath(genpath('./GRIDDING3D'));
 %% Load data
 %load 20111017_Daten_MREG;
-%load MREG_data_Graz;
-load 20111013_MREG_data_Graz_SoS;
+load MREG_data_Graz;
+%load 20111013_MREG_data_Graz_SoS;
 %load 20111024_MREG_Data_MID_65_2mm_Full_Brain;
 
 %% sensmaps
@@ -29,8 +29,8 @@ imwidth = 64;
 k = E.nufftStruct.om'./(2*pi);
 w = ones(E.trajectory_length,1);
 
-G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw,'deappo');
-
+G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw);
+%G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw,'sparse',E);
 %% one call for all coils
 res = zeros(E.imageDim);
 kspace = reshape(data,[E.trajectory_length E.numCoils]);

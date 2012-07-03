@@ -1,4 +1,4 @@
-function [res] = gridding3D(k,w,n,osf,wg,sw,opt)
+function [res] = gridding3D(k,w,n,osf,wg,sw,varargin)
 % function m = GRIDDING3D(d,k,w,n,osf,kw,sw,opt)
 %
 %     d -- k-space data
@@ -9,7 +9,7 @@ function [res] = gridding3D(k,w,n,osf,wg,sw,opt)
 %     wg -- full kernel width in oversampled grid samples (usually 3 to 7)
 %     sw -- sector width to use
 %     opt -- 'k-space', 'image', defaults it 'image' if not specified
-%
+%         -- 'sparse', E operator
 %     m -- gridded k-space data
 %     p -- gridding kernel, optional
 %
@@ -23,24 +23,34 @@ function [res] = gridding3D(k,w,n,osf,wg,sw,opt)
 %  A. Schwarzl, Graz University of Technology
 
 if nargin < 7,
-    opt = 'image';
+    method = 'gridding';
+    E = 0;
+elseif nargin == 8
+    method = varargin{1};
+    E = varargin{2};
 end
 
-% convert to single column
-w = w(:);
-
-p = 0;
-m = zeros(osf*n,osf*n);
-
-
-res.op = gridding3D_init(k,n,osf,sw);
-
-res.params.im_width = uint32(n);
-res.params.osr = single(osf);
-res.params.kernel_width = uint32(wg);
-res.params.sector_width = uint32(sw);
-res.params.trajectory_length = uint32(length(k));
+res.method = method;
 res.adjoint = 0;
-%res.opt = opt;
+
+if strcmp(method,'gridding')
+    % convert to single column
+    w = w(:);
+
+    p = 0;
+    m = zeros(osf*n,osf*n);
+
+    res.op = gridding3D_init(k,n,osf,sw);
+
+    res.params.im_width = uint32(n);
+    res.params.osr = single(osf);
+    res.params.kernel_width = uint32(wg);
+    res.params.sector_width = uint32(sw);
+    res.params.trajectory_length = uint32(length(k));
+    
+    %res.opt = opt;
+elseif strcmp(method,'sparse')
+    res.op = E;
+end
 
 res = class(res,'GRIDDING3D');

@@ -39,7 +39,8 @@ kspace = reshape(data,[E.trajectory_length E.numCoils]);
 tic
 imgRegrid_kb = G3D'*kspace;
 size(imgRegrid_kb);
-toc
+exec_time = toc;
+disp(['execution time adjoint: ', num2str(exec_time)]);
 %% SENS corr
 offset = (imwidth - size(smaps,3))/2;
 imgRegrid_kb = imgRegrid_kb(:,:,offset+1:(offset+size(smaps,3)),:) .* conj(smaps(:,:,:,:));
@@ -93,14 +94,18 @@ w = ones(1,E.trajectory_length);
 G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw);
 tic
 dataRadial = G3D*z_pad;
-toc
+exec_time = toc;
+disp(['execution time forward: ', num2str(exec_time)]);
 %% calculate density compensation
 dc = sqrt(sum(abs(k').^2,2));
 %dc = dc / max(dc);
 dataRadial_dc = dataRadial .* dc;
 %%
 imgRegrid_dc = G3D'*dataRadial_dc;
+tic
 imgRegrid = G3D'*dataRadial;
+exec_time = toc;
+disp(['execution time adjoint: ', num2str(exec_time)]);
 %%
 figure, imshow(imresize(abs(imgRegrid(:,:,slice)),4),[]), title('gridding');
 figure, imshow(imresize(abs(imgRegrid_dc(:,:,slice)),4),[]), title('gridding dc');

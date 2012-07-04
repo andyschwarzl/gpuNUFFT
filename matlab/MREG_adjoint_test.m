@@ -2,6 +2,8 @@
 
 clear all; close all; clc;
 load ../../daten/MREG_data_Graz;
+addpath(genpath('GRIDDING3D'));
+addpath(genpath('../bin'));
 
 % test for adjoint property: looks good
 z_pad = padarray(z,[0 0 10]);

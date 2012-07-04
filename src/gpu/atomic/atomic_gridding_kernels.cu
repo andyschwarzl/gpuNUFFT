@@ -6,6 +6,7 @@
 //
 // like non atomic gridding, but without temporaray grid
 // atomic write to global output grid
+// TODO evaluate performance
 __global__ void convolutionKernelFromGrid(  DType* data, 
 											DType* crds, 
 											CufftType* gdata,
@@ -123,13 +124,13 @@ __global__ void convolutionKernelFromGrid(  DType* data,
 			int x=threadIdx.x;
 			
 			int s_ind = 2 * getIndex(x,y,z,GI.sector_pad_width) ;//index in shared grid
-			int ind = sector_ind_offset + getIndex(x,y,z,GI.grid_width);//index in temp output grid
+			int ind = sector_ind_offset + getIndex(x,y,z,GI.grid_width);//index in output grid
 			
 			if (isOutlier(x,y,z,center.x,center.y,center.z,GI.grid_width,GI.sector_offset))
 				continue;
 
-			atomicAdd(&gdata[ind].x,sdata[s_ind]);//Re
-			atomicAdd(&gdata[ind].y,sdata[s_ind+1]);//Im
+			atomicAdd(&(gdata[ind].x),sdata[s_ind]);//Re
+			atomicAdd(&(gdata[ind].y),sdata[s_ind+1]);//Im
 		}
 	}//sec < sector_count	
 }
@@ -286,7 +287,7 @@ void performConvolution( DType* data_d,
 {
 	long shared_mem_size = 2*gi_host->sector_dim*sizeof(DType);
 
-	dim3 block_dim(gi_host->sector_pad_width,gi_host->sector_pad_width,1);
+	dim3 block_dim(gi_host->sector_pad_width,gi_host->sector_pad_width,N_THREADS_PER_SECTOR);
 	dim3 grid_dim(gi_host->sector_count);
 	
 	printf("adjoint convolution requires %d bytes of shared memory!\n",shared_mem_size);

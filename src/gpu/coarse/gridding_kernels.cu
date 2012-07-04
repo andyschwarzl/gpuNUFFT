@@ -112,7 +112,7 @@ __global__ void convolutionKernel( DType* data,
 			data_cnt++;
 		} //grid points per sector
 	
-	  //write shared data to temporary output grid
+	    //write shared data to temporary output grid
 		int sector_ind_offset = sec * GI.sector_dim;
 		for (int z=threadIdx.z;z<GI.sector_pad_width; z += blockDim.z)
 		{
@@ -125,7 +125,7 @@ __global__ void convolutionKernel( DType* data,
 			temp_gdata[ind] = sdata[s_ind];//Re
 			temp_gdata[ind+1] = sdata[s_ind+1];//Im
 		}
-	}//sec < sector_count	
+	}//sec < sector_coun, gtx 260
 }
 
 __global__ void composeOutputKernel(DType* temp_gdata, CufftType* gdata, int* sector_centers)

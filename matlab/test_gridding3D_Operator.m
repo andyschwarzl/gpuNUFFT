@@ -25,7 +25,7 @@ clear smaps_il;
 osf = 1.25;%1,1.25,1.5,1.75,2
 wg = 3;%3-7
 sw = 8;
-imwidth = 96;
+imwidth = 64;
 k = E.nufftStruct.om'./(2*pi);
 w = ones(E.trajectory_length,1);
 
@@ -48,31 +48,32 @@ imgRegrid_kb = imgRegrid_kb(:,:,offset+1:(offset+size(smaps,3)),:) .* conj(smaps
 %% res = SoS of coil data
 res = sqrt(sum(abs(imgRegrid_kb).^2,4));
 %%
-slice = 48;
+slice = 25;
+z_ref = z; %z4em9
 figure, imshow(imresize(abs(res(:,:,slice)),4),[]), title('gridding all coils at once');
-figure, imshow(imresize(abs(z4em9(:,:,slice)),4),[]), title('reference (CG)');
+figure, imshow(imresize(abs(z_ref(:,:,slice)),4),[]), title('reference (CG)');
 
 %% single call per coil 
-res = zeros(E.imageDim);
-tic
-for coil = 1 : E.numCoils,
-        disp(['iteration ',num2str(coil)]);
-        coil_start =  (coil-1) * E.trajectory_length +1;
-        coil_end = coil_start +  E.trajectory_length - 1;
-        % get kspace data and k trajectories
-        kspace = data(coil_start:coil_end);
-        %[imgRegrid_kb,kernel] = grid3D(kspace,k,w,imwidth,osf,wg,sw,'deappo');
-        imgRegrid_kb = G3D'*kspace;
-
-        %SENS corr
-        imgRegrid_kb = imgRegrid_kb(:,:,:) .* conj(smaps(:,:,:,coil));
-        
-        %res = res + imgRegrid_kb; 
-        res = sqrt(abs(res).^2 + abs(imgRegrid_kb).^2);
-end
-toc
-%%
-figure, imshow(imresize(abs(res(:,:,25)),4),[]), title('gridding');
+% res = zeros(E.imageDim);
+% tic
+% for coil = 1 : E.numCoils,
+%         disp(['iteration ',num2str(coil)]);
+%         coil_start =  (coil-1) * E.trajectory_length +1;
+%         coil_end = coil_start +  E.trajectory_length - 1;
+%         % get kspace data and k trajectories
+%         kspace = data(coil_start:coil_end);
+%         %[imgRegrid_kb,kernel] = grid3D(kspace,k,w,imwidth,osf,wg,sw,'deappo');
+%         imgRegrid_kb = G3D'*kspace;
+% 
+%         %SENS corr
+%         imgRegrid_kb = imgRegrid_kb(:,:,:) .* conj(smaps(:,:,:,coil));
+%         
+%         %res = res + imgRegrid_kb; 
+%         res = sqrt(abs(res).^2 + abs(imgRegrid_kb).^2);
+% end
+% toc
+% %%
+% figure, imshow(imresize(abs(res(:,:,25)),4),[]), title('gridding');
 
 %%
 %for slice = 1:64
@@ -80,18 +81,18 @@ figure, imshow(imresize(abs(res(:,:,25)),4),[]), title('gridding');
 %end
 
 %% check forward gridding using solution z
-z_pad = padarray(z,[0 0 10]);
+z_pad = padarray(z_ref,[0 0 10]);
 %%
 
-imwidth = E.imageDim(1);
+imwidth = 64; %E.imageDim(1);
 osf = 1.25;
 wg = 3;
 sw = 8;
 k = E.nufftStruct.om'./(2*pi);
 w = ones(1,E.trajectory_length);
-G3D = gridding3D(k,w,imwidth,osf,wg,sw,'deappo');
+G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw);
 tic
-dataRadial = G3D*z;
+dataRadial = G3D*z_pad;
 toc
 %% calculate density compensation
 dc = sqrt(sum(abs(k').^2,2));
@@ -101,10 +102,9 @@ dataRadial_dc = dataRadial .* dc;
 imgRegrid_dc = G3D'*dataRadial_dc;
 imgRegrid = G3D'*dataRadial;
 %%
-slice = 45;
 figure, imshow(imresize(abs(imgRegrid(:,:,slice)),4),[]), title('gridding');
 figure, imshow(imresize(abs(imgRegrid_dc(:,:,slice)),4),[]), title('gridding dc');
-figure, imshow(imresize(abs(z(:,:,slice)),4),[]), title('input z');
+figure, imshow(imresize(abs(z_ref(:,:,slice)),4),[]), title('input z');
 
 %show3DImageasArray([4 4],imgRegrid,'gridding','slice ');
 %show3DImageasArray([4 4],imgRegrid_dc,'gridding dc','slice ');

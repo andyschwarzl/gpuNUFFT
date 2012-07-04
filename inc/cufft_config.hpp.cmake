@@ -6,7 +6,7 @@
 #ifdef GPU_DOUBLE_PREC
 	static cufftType_t CufftTransformType = CUFFT_Z2Z;
 	
-	#ifdef __WIN32
+	#ifdef WIN32
 		static cufftResult (__stdcall*pt2CufftExec)(cufftHandle, cufftDoubleComplex*, cufftDoubleComplex*,int) = &cufftExecZ2Z;
 	#else
 		static cufftResult (*pt2CufftExec)(cufftHandle, cufftDoubleComplex*, cufftDoubleComplex*,int) = &cufftExecZ2Z;
@@ -14,7 +14,7 @@
 #else
 	static cufftType_t CufftTransformType = CUFFT_C2C;
 	
-	#ifdef __WIN32
+	#ifdef WIN32
 		static cufftResult (__stdcall*pt2CufftExec)(cufftHandle, cufftComplex*, cufftComplex*,int) = &cufftExecC2C;
 	#else
 		static cufftResult (*pt2CufftExec)(cufftHandle, cufftComplex*, cufftComplex*,int) = &cufftExecC2C;

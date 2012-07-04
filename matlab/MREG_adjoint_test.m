@@ -1,12 +1,12 @@
 % MREG Test
 
 clear all; close all; clc;
-load ../daten/MREG_data_Graz;
+load ../../daten/MREG_data_Graz;
 
 % test for adjoint property: looks good
-x1 = randn(size(z));
+z_pad = padarray(z,[0 0 10]);
+x1 = randn(size(z_pad));
 y2 = randn(size(data));
-
 
 osf = 1.25;%1,1.25,1.5,1.75,2
 wg = 3;%3-7

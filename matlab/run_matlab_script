@@ -1,4 +1,4 @@
 test command to execute matlab script:
 
-matlab -nojvm -nosplash -r test_gridding3D_Operator_script.m
+matlab -nojvm -nosplash -r test_gridding3D_Operator_script
 

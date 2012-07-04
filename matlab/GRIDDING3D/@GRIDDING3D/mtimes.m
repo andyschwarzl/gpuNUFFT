@@ -8,8 +8,8 @@ if strcmp(a.method,'sparse')
     end    
 elseif strcmp(a.method,'gridding')
     if (a.adjoint)
-        ress = gridding3D_adj(a,bb);
+        ress = gridding3D_adj(a.op,bb);
     else
-        ress = gridding3D_forw(a,bb);
+        ress = gridding3D_forw(a.op,bb);
     end
 end

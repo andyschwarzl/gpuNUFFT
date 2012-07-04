@@ -42,11 +42,11 @@ if strcmp(method,'gridding')
 
     res.op = gridding3D_init(k,n,osf,sw);
 
-    res.params.im_width = uint32(n);
-    res.params.osr = single(osf);
-    res.params.kernel_width = uint32(wg);
-    res.params.sector_width = uint32(sw);
-    res.params.trajectory_length = uint32(length(k));
+    res.op.params.im_width = uint32(n);
+    res.op.params.osr = single(osf);
+    res.op.params.kernel_width = uint32(wg);
+    res.op.params.sector_width = uint32(sw);
+    res.op.params.trajectory_length = uint32(length(k));
     
     %res.opt = opt;
 elseif strcmp(method,'sparse')

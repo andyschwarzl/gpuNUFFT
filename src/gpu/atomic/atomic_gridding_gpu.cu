@@ -183,7 +183,7 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 		//cudaMemset(temp_gdata_d,0, sizeof(DType)*temp_grid_count);
 		cudaMemset(gdata_d,0, sizeof(CufftType)*gi_host->grid_width_dim);
 		
-		performConvolution(data_d+data_coil_offset,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,NULL,gi_host);
+		performConvolution(data_d+0*data_coil_offset,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,NULL,gi_host);
 
 		if (gridding_out == CONVOLUTION)
 		{

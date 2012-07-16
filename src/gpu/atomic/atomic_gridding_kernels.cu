@@ -292,6 +292,7 @@ void performConvolution( DType* data_d,
 	
 	printf("adjoint convolution requires %d bytes of shared memory!\n",shared_mem_size);
 	convolutionKernelFromGrid<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d);
+	printf("...finished with: %s\n", cudaGetErrorString(cudaGetLastError()));
 }
 
 __global__ void forwardConvolutionKernel( CufftType* data, 

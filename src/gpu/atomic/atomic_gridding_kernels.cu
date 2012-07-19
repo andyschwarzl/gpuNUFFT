@@ -116,6 +116,7 @@ __global__ void convolutionKernelFromGrid(  DType* data,
 		} //grid points per sector
 	
 		//write shared data to output grid
+		__syncthreads();
 		int sector_ind_offset = sec * GI.sector_dim;
 		//each thread position
 		for (int z=threadIdx.z;z<GI.sector_pad_width; z += blockDim.z)
@@ -129,8 +130,8 @@ __global__ void convolutionKernelFromGrid(  DType* data,
 			if (isOutlier(x,y,z,center.x,center.y,center.z,GI.grid_width,GI.sector_offset))
 				continue;
 
-			atomicAdd(&(gdata[ind].x),sdata[s_ind]);//Re
-			atomicAdd(&(gdata[ind].y),sdata[s_ind+1]);//Im
+			atomicAdd(&(gdata[ind].x),0.0f);//sdata[s_ind]);//Re
+			atomicAdd(&(gdata[ind].y),0.0f);//sdata[s_ind+1]);//Im
 		}
 	}//sec < sector_count	
 }

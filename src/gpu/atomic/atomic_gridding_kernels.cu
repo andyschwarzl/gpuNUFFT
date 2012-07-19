@@ -130,8 +130,8 @@ __global__ void convolutionKernelFromGrid(  DType* data,
 			if (isOutlier(x,y,z,center.x,center.y,center.z,GI.grid_width,GI.sector_offset))
 				continue;
 
-			atomicAdd(&(gdata[ind].x),0.0f);//sdata[s_ind]);//Re
-			atomicAdd(&(gdata[ind].y),0.0f);//sdata[s_ind+1]);//Im
+			atomicAdd(&(gdata[0].x),0.0f);//sdata[s_ind]);//Re
+			atomicAdd(&(gdata[0].y),0.0f);//sdata[s_ind+1]);//Im
 		}
 	}//sec < sector_count	
 }

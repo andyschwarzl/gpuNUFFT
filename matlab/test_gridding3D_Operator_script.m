@@ -67,7 +67,7 @@ wg = 3;
 sw = 8;
 k = E.nufftStruct.om'./(2*pi);
 w = ones(1,E.trajectory_length);
-G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw);
+G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw,'false');
 tic
 dataRadial = G3D*z_pad;
 exec_time = toc;

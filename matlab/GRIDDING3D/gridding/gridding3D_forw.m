@@ -11,8 +11,11 @@ if (n_chnls > 1)
 end    
 disp('call forward gridding mex kernel');
 
-data = mex_gridding3D_forw_f(single(imdata),single(a.coords),int32(a.sector_data_cnt),int32(a.sector_centers),a.params);
-
+if a.atomic == true
+    data = mex_gridding3D_forw_atomic_f(single(imdata),single(a.coords),int32(a.sector_data_cnt),int32(a.sector_centers),a.params);
+else
+    data = mex_gridding3D_forw_f(single(imdata),single(a.coords),int32(a.sector_data_cnt),int32(a.sector_centers),a.params);
+end
 %put data in correct order
 %data_test = zeros(1,length(a.op.data_ind));
 disp(['returned data dimensions:' size(data)]);

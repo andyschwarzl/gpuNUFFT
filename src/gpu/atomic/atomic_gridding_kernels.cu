@@ -137,6 +137,134 @@ __global__ void convolutionKernelFromGrid(  DType* data,
 	}//sec < sector_count	
 }
 
+__global__ void convolutionKernel2( DType* data, 
+									DType* crds, 
+									CufftType* gdata,
+									DType* kernel, 
+									int* sectors, 
+									int* sector_centers
+									)
+{
+	extern __shared__ DType sdata[];//externally managed shared memory
+	int sec= blockIdx.x;
+
+	if (sec < GI.sector_count)
+	{
+		//init shared memory
+		for (int s_ind=threadIdx.x;s_ind<GI.sector_dim; s_ind+= blockDim.x)
+		{
+			sdata[2*s_ind] = 0.0f;//Re
+			sdata[2*s_ind+1]=0.0f;//Im
+		}
+		__syncthreads();
+	
+		//start convolution
+		int ind, k, i, j;
+		__shared__ int max_x, max_y, max_z, imin, imax,jmin,jmax,kmin,kmax;
+
+		DType dx_sqr, dy_sqr, dz_sqr, val, ix, jy, kz;
+
+		__shared__ int3 center;
+		center.x = sector_centers[sec * 3];
+		center.y = sector_centers[sec * 3 + 1];
+		center.z = sector_centers[sec * 3 + 2];
+
+		//Grid Points over Threads
+		int data_cnt = sectors[sec] + threadIdx.x;
+
+		//loop over all data points of the current sector, and check if grid position lies inside 
+		//affected region, if so, add data point weighted to grid position value
+		while (data_cnt < sectors[sec+1])
+		{
+			__shared__ DType3 data_point; //datapoint shared in every thread
+			data_point.x = crds[3*data_cnt];
+			data_point.y = crds[3*data_cnt +1];
+			data_point.z = crds[3*data_cnt +2];
+
+			max_x = GI.sector_pad_width-1;
+			max_y = GI.sector_pad_width-1;
+			max_z = GI.sector_pad_width-1;
+
+			// set the boundaries of final dataset for gridding this point
+			ix = (data_point.x + 0.5f) * (GI.grid_width) - center.x + GI.sector_offset;
+			set_minmax(&ix, &imin, &imax, max_x, GI.kernel_radius);
+			jy = (data_point.y + 0.5f) * (GI.grid_width) - center.y + GI.sector_offset;
+			set_minmax(&jy, &jmin, &jmax, max_y, GI.kernel_radius);
+			kz = (data_point.z + 0.5f) * (GI.grid_width) - center.z + GI.sector_offset;
+			set_minmax(&kz, &kmin, &kmax, max_z, GI.kernel_radius);
+				                
+			// grid this point onto its cartesian points neighbors
+			k =kmin;
+			while (k<=kmax && k>=kmin)
+			{
+				kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.grid_width)) - 0.5f;//(k - center_z) *width_inv;
+				dz_sqr = kz - data_point.z;
+				dz_sqr *= dz_sqr;
+				if (dz_sqr < GI.radiusSquared)
+				{
+					j=jmin;
+					while (j<=jmax && j>=jmin)
+					{
+						jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.grid_width)) - 0.5f;   //(j - center_y) *width_inv;
+						dy_sqr = jy - data_point.y;
+						dy_sqr *= dy_sqr;
+						if (dy_sqr < GI.radiusSquared)	
+						{
+							i= imin;						
+							while (i<=imax && i>=imin)
+							{
+								ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.grid_width)) - 0.5f;// (i - center_x) *width_inv;
+								dx_sqr = ix - data_point.x;
+								dx_sqr *= dx_sqr;
+								if (dx_sqr < GI.radiusSquared)	
+								{
+									//get kernel value
+									//Calculate Separable Filters 
+									val = kernel[(int) round(dz_sqr * GI.dist_multiplier)] *
+										  kernel[(int) round(dy_sqr * GI.dist_multiplier)] *
+										  kernel[(int) round(dx_sqr * GI.dist_multiplier)];
+									ind = 2* getIndex(i,j,k,GI.sector_pad_width);
+								
+									// multiply data by current kernel val 
+									// grid complex or scalar 
+									atomicAdd(&(sdata[ind]),val * data[2*data_cnt]);
+									atomicAdd(&(sdata[ind+1]),val * data[2*data_cnt+1]);
+								} // kernel bounds check x, spherical support 
+								i++;
+							} // x 	 
+						} // kernel bounds check y, spherical support 
+						j++;
+					} // y 
+				} //kernel bounds check z 
+				k++;
+			} // z
+			data_cnt = data_cnt + blockDim.x;
+		} //grid points per sector
+	
+		//write shared data to output grid
+		__syncthreads();
+		//int sector_ind_offset = sec * GI.sector_dim;
+		int sector_ind_offset = getIndex(center.x - GI.sector_offset,center.y - GI.sector_offset,center.z - GI.sector_offset,GI.grid_width);
+		
+		//each thread writes one position from shared mem to global mem
+		for (int s_ind=threadIdx.x;s_ind<GI.sector_dim; s_ind += blockDim.x)
+		{
+			int z = s_ind / (GI.grid_width*GI.grid_width) ;
+			int r = s_ind - z* GI.grid_width;
+			int y = r / GI.grid_width;
+			int x = r % GI.grid_width;
+
+			int ind = sector_ind_offset + getIndex(x,y,z,GI.grid_width);//index in output grid
+			
+			if (isOutlier(x,y,z,center.x,center.y,center.z,GI.grid_width,GI.sector_offset))
+				continue;
+
+			atomicAdd(&(gdata[ind].x),sdata[2*s_ind]);//Re
+			atomicAdd(&(gdata[ind].y),sdata[2*s_ind+1]);//Im
+		}
+	}//sec < sector_count	
+}
+
 //
 // convolve every data point on grid position -> controlled by threadIdx.x .y and .z 
 // shared data holds grid values as software managed cache
@@ -270,14 +398,21 @@ void performConvolution( DType* data_d,
 	convolutionKernelFromGrid<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d);
 	*/
 	//TODO how to calculate shared_mem_size???, shared_mem_needed?
-	long shared_mem_size = 128 * sizeof(CufftType);//empiric
+	/*long shared_mem_size = 128 * sizeof(CufftType);//empiric
 
 	dim3 block_dim(128);
 	dim3 grid_dim(gi_host->sector_count);
 	
 	printf("convolution requires %d bytes of shared memory!\n",shared_mem_size);
 	convolutionKernel<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d);
+	*/
+	long shared_mem_size = 2*gi_host->sector_dim*sizeof(DType);
+
+	dim3 block_dim(128);
+	dim3 grid_dim(gi_host->sector_count);
 	
+	printf("adjoint convolution requires %d bytes of shared memory!\n",shared_mem_size);
+	convolutionKernel2<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d);
 	printf("...finished with: %s\n", cudaGetErrorString(cudaGetLastError()));
 }
 

@@ -259,8 +259,8 @@ __global__ void convolutionKernel2( DType* data,
 			if (isOutlier(x,y,z,center.x,center.y,center.z,GI.grid_width,GI.sector_offset))
 				continue;
 
-			atomicAdd(&(gdata[ind].x),sdata[2*s_ind]);//Re
-			atomicAdd(&(gdata[ind].y),sdata[2*s_ind+1]);//Im
+			atomicAdd(&(gdata[ind].x),1.0f);//sdata[2*s_ind]);//Re
+			atomicAdd(&(gdata[ind].y),1.0f);//sdata[2*s_ind+1]);//Im
 		}
 	}//sec < sector_count	
 }

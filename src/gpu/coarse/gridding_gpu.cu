@@ -196,11 +196,11 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 			freeTotalDeviceMemory(data_d,crds_d,imdata_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d,NULL);//NULL as stop token
 
 			free(gi_host);
-			/* Destroy the cuFFT plan. */
+			// Destroy the cuFFT plan.
 			cufftDestroy(fft_plan);
 			return;
 		}
-
+		performFFTShift(gdata_d,INVERSE,gi_host->grid_width);
 		//Inverse FFT
 		if (err=pt2CufftExec(fft_plan, gdata_d, gdata_d, CUFFT_INVERSE) != CUFFT_SUCCESS)
 		{
@@ -218,17 +218,17 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 				printf("error on destroying cufft plan\n");
 			freeTotalDeviceMemory(data_d,crds_d,imdata_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d,NULL);//NULL as stop token
 			free(gi_host);
-			/* Destroy the cuFFT plan. */
+			// Destroy the cuFFT plan.
 			printf("last cuda error: %s\n", cudaGetErrorString(cudaGetLastError()));
 			return;
 		}
 
 		performFFTShift(gdata_d,INVERSE,gi_host->grid_width);
-
+		
 		performCrop(gdata_d,imdata_d,gi_host);
 		
 		performDeapodization(imdata_d,gi_host);
-
+		
 		//get result
 		copyFromDevice<CufftType>(imdata_d,imdata+im_coil_offset,imdata_count);
 	}//iterate over coils

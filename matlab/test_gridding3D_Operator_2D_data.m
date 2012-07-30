@@ -65,5 +65,5 @@ figure, imshow(imresize(((abs(imgRegrid_kb_dc(:,:,32,4)))),4),[]), title('griddi
 
 %% merge channels
 recon_sos_dc = sqrt(sum(abs(imgRegrid_kb_dc).^2,4));
-figure, imshow(imresize(((abs(recon_sos_dc(:,:,32)))),4),[]), title('gridding dc');
+figure, imshow(imresize(((abs(recon_sos_dc(:,:,32)))),4),[]), title('gridding dc sos');
 

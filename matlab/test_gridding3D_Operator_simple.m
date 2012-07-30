@@ -57,11 +57,11 @@ osf = 1.5;
 wg = 3;
 sw = 8;
 w = ones(1,length(k_traj_3d(:)));
-FT = gridding3D(k_traj_3d,w,imwidth,osf,wg,sw,'deappo');
+FT = gridding3D(k_traj_3d,w,imwidth,osf,wg,sw,'false');
 
 %% generate radial data
-dataRadial = FT*img;
-
+dataRadial = (FT*img);
+dataRadial_x = (1/sqrt(prod([16 16 16]))) * dataRadial;
 %% density compensation
 w = abs(rho);
 w = repmat(w, [1, numSpokes,1]);
@@ -71,5 +71,6 @@ dataRadial_dc = dataRadial.*w(:);
 
 %% recon
 imgRegrid_kb = FT'*dataRadial_dc;
+imgRegrid_kb_x = (1/sqrt(prod([16 16 16]))) * imgRegrid_kb;
 
 show3DImageasArray([4 4],imgRegrid_kb,'gridding reconstruction','fft slice ');

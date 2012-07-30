@@ -29,7 +29,7 @@ imwidth = 64;
 k = E.nufftStruct.om'./(2*pi);
 w = ones(E.trajectory_length,1);
 
-G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw,'true');
+G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw,'false');
 %freiburg implementation
 %G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw,'sparse',E);
 %% one call for all coils
@@ -91,7 +91,7 @@ wg = 3;
 sw = 8;
 k = E.nufftStruct.om'./(2*pi);
 w = ones(1,E.trajectory_length);
-G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw);
+G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw,'false');
 tic
 dataRadial = G3D*z_pad;
 exec_time = toc;

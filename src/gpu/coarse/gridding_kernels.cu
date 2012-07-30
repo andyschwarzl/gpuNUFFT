@@ -114,6 +114,10 @@ __global__ void convolutionKernel( DType* data,
 	
 	    //write shared data to temporary output grid
 		int sector_ind_offset = sec * GI.sector_dim;
+
+		int kw_3 = GI.kernel_width * GI.kernel_width * GI.kernel_width;
+		DType kw_3_inv = (DType)1.0 / (DType)kw_3;
+
 		for (int z=threadIdx.z;z<GI.sector_pad_width; z += blockDim.z)
 		{
 			int y=threadIdx.y;
@@ -121,9 +125,9 @@ __global__ void convolutionKernel( DType* data,
 			
 			int s_ind = 2* getIndex(x,y,z,GI.sector_pad_width) ;//index in shared grid
 			ind = 2*sector_ind_offset + s_ind;//index in temp output grid
-						
-			temp_gdata[ind] = sdata[s_ind];//Re
-			temp_gdata[ind+1] = sdata[s_ind+1];//Im
+			
+			temp_gdata[ind] = kw_3_inv * sdata[s_ind];//Re
+			temp_gdata[ind+1] = kw_3_inv * sdata[s_ind+1];//Im
 		}
 	}//sec < sector_coun, gtx 260
 }
@@ -227,7 +231,9 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 		out_data.y = 0.0f;//Im
 		//int sector_grid_offset = sec * GI.sector_dim;
 		int sector_ind_offset = getIndex(center.x - GI.sector_offset,center.y - GI.sector_offset,center.z - GI.sector_offset,GI.grid_width);
-		
+		int kw_3 = GI.kernel_width * GI.kernel_width * GI.kernel_width;
+		DType kw_3_inv = (DType)1.0 / (DType)kw_3;
+
 		while (data_cnt < sectors[sec+1])
 		{
 			DType3 data_point; //datapoint per thread
@@ -304,10 +310,9 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 									}
 				
 									//out_data[data_cnt].x = 1.0f; //val * gdata[ind].x;
-									//out_data[data_cnt].y = 1.0f; //val * gdata[ind].y;		
+									//out_data[data_cnt].y = 1.0f; //val * gdata[ind].y;
 									out_data.x += gdata[ind].x * val; //+= /*val **/ gdata[ind].x;
-									out_data.y += gdata[ind].y * val; //+= /*val **/ gdata[ind].y;
-									
+									out_data.y += (DType)-1.0 * gdata[ind].y * val; //+= /*val **/ gdata[ind].y;
 								}// kernel bounds check x, spherical support 
 								i++;
 							} // x loop
@@ -318,8 +323,8 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 				k++;
 			} // z loop
 			//data[data_cnt] = out_data[data_cnt];
-			data[data_cnt].x = out_data.x;// / sqrt((DType)GI.kernel_width*GI.kernel_width*GI.kernel_width);
-			data[data_cnt].y = out_data.y;// / sqrt((DType)GI.kernel_width*GI.kernel_width*GI.kernel_width);
+			data[data_cnt].x = kw_3_inv * out_data.x;// / sqrt((DType)GI.kernel_width*GI.kernel_width*GI.kernel_width);
+			data[data_cnt].y = kw_3_inv * out_data.y;// / sqrt((DType)GI.kernel_width*GI.kernel_width*GI.kernel_width);
 			
 			data_cnt = data_cnt + blockDim.x;
 

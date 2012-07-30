@@ -45,7 +45,7 @@ osf = 1.75;
 wg = 5;
 sw = 8;
 w = ones(1,length(k(:)));
-FT = gridding3D(k_traj,w,imwidth,osf,wg,sw,'deappo');
+FT = gridding3D(k_traj,w,imwidth,osf,wg,sw,'false');
 
 %% generate radial data
 dataRadial = FT*img_a;

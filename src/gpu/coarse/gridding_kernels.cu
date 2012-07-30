@@ -114,10 +114,7 @@ __global__ void convolutionKernel( DType* data,
 	
 	    //write shared data to temporary output grid
 		int sector_ind_offset = sec * GI.sector_dim;
-
-		int kw_3 = GI.kernel_width * GI.kernel_width * GI.kernel_width;
-		DType kw_3_inv = (DType)1.0 / (DType)kw_3;
-
+		
 		for (int z=threadIdx.z;z<GI.sector_pad_width; z += blockDim.z)
 		{
 			int y=threadIdx.y;
@@ -126,8 +123,8 @@ __global__ void convolutionKernel( DType* data,
 			int s_ind = 2* getIndex(x,y,z,GI.sector_pad_width) ;//index in shared grid
 			ind = 2*sector_ind_offset + s_ind;//index in temp output grid
 			
-			temp_gdata[ind] = kw_3_inv * sdata[s_ind];//Re
-			temp_gdata[ind+1] = kw_3_inv * sdata[s_ind+1];//Im
+			temp_gdata[ind] = sdata[s_ind];//Re
+			temp_gdata[ind+1] = sdata[s_ind+1];//Im
 		}
 	}//sec < sector_coun, gtx 260
 }
@@ -199,8 +196,7 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 	extern __shared__ CufftType shared_out_data[];//externally managed shared memory
 	//test
 	CufftType out_data;
-
-
+	
 	int sec= blockIdx.x;
 	//init shared memory
 	//out_data[threadIdx.x].x = 0.0f;//Re
@@ -225,15 +221,12 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 
 		//Grid Points over Threads
 		int data_cnt = sectors[sec] + threadIdx.x;
-		//out_data[data_cnt].x = 0.0f;//Re
-		//out_data[data_cnt].y = 0.0f;//Im
+
 		out_data.x = 0.0f;//Re
 		out_data.y = 0.0f;//Im
-		//int sector_grid_offset = sec * GI.sector_dim;
-		int sector_ind_offset = getIndex(center.x - GI.sector_offset,center.y - GI.sector_offset,center.z - GI.sector_offset,GI.grid_width);
-		int kw_3 = GI.kernel_width * GI.kernel_width * GI.kernel_width;
-		DType kw_3_inv = (DType)1.0 / (DType)kw_3;
 
+		int sector_ind_offset = getIndex(center.x - GI.sector_offset,center.y - GI.sector_offset,center.z - GI.sector_offset,GI.grid_width);
+		
 		while (data_cnt < sectors[sec+1])
 		{
 			DType3 data_point; //datapoint per thread
@@ -255,46 +248,33 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 
 			// convolve neighboring cartesian points to this data point
 			k = kmin;
-			//data[data_cnt].x = -1.0f;//(float)k;
-			//data[data_cnt].y =-1.0f;// (float)kmax;
+
 			while (k<=kmax && k>=kmin)
 			{
 				kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.grid_width)) - 0.5f;//(k - center_z) *width_inv;
 				dz_sqr = kz - data_point.z;
 				dz_sqr *= dz_sqr;
 				
-				//data[data_cnt].x = kz;
-				//data[data_cnt].y = center.z;//static_cast<DType>((k + center.z - 8 - GI.sector_offset)) / static_cast<DType>((GI.grid_width)) - 0.5f;
 				if (dz_sqr < GI.radiusSquared)
 				{
-					//data[data_cnt].x = 1.1f;
-					//data[data_cnt].y = 1.1f;
 					j=jmin;
 					while (j<=jmax && j>=jmin)
 					{
-						//data[data_cnt].x = 1.2f;
-						//data[data_cnt].y = 1.2f;
 						jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.grid_width)) - 0.5f;   //(j - center_y) *width_inv;
 						dy_sqr = jy - data_point.y;
 						dy_sqr *= dy_sqr;
 						if (dy_sqr < GI.radiusSquared)	
 						{
-							//data[data_cnt].x = 1.3f;
-							//data[data_cnt].y = 1.3f;
 							i=imin;								
 							while (i<=imax && i>=imin)
 							{
-								//data[data_cnt].x = 1.4f;
-								//data[data_cnt].y = 1.4f;
 								ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.grid_width)) - 0.5f;// (i - center_x) *width_inv;
 								dx_sqr = ix - data_point.x;
 								dx_sqr *= dx_sqr;
 								if (dx_sqr < GI.radiusSquared)	
 								{
-									//data[data_cnt].x = 1.5f;
-									//data[data_cnt].y = 1.5f;
 									// get kernel value
-									//Berechnung mit Separable Filters 
+									// calc as separable filter
 									val = kernel[(int) round(dz_sqr * GI.dist_multiplier)] *
 											kernel[(int) round(dy_sqr * GI.dist_multiplier)] *
 											kernel[(int) round(dx_sqr * GI.dist_multiplier)];
@@ -309,10 +289,8 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 										continue;
 									}
 				
-									//out_data[data_cnt].x = 1.0f; //val * gdata[ind].x;
-									//out_data[data_cnt].y = 1.0f; //val * gdata[ind].y;
-									out_data.x += gdata[ind].x * val; //+= /*val **/ gdata[ind].x;
-									out_data.y += (DType)-1.0 * gdata[ind].y * val; //+= /*val **/ gdata[ind].y;
+									out_data.x += gdata[ind].x * val; 
+									out_data.y += gdata[ind].y * val;
 								}// kernel bounds check x, spherical support 
 								i++;
 							} // x loop
@@ -322,18 +300,13 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 				} //kernel bounds check z 
 				k++;
 			} // z loop
-			//data[data_cnt] = out_data[data_cnt];
-			data[data_cnt].x = kw_3_inv * out_data.x;// / sqrt((DType)GI.kernel_width*GI.kernel_width*GI.kernel_width);
-			data[data_cnt].y = kw_3_inv * out_data.y;// / sqrt((DType)GI.kernel_width*GI.kernel_width*GI.kernel_width);
+			data[data_cnt].x = out_data.x;
+			data[data_cnt].y = out_data.y;
 			
 			data_cnt = data_cnt + blockDim.x;
 
-			//out_data[data_cnt].x = (DType)0.0f;
-			//out_data[data_cnt].y = (DType)0.0f;
 			out_data.x = 0.0f;//Re
 			out_data.y = 0.0f;//Im
-			//data[data_cnt] = out_data[data_cnt];
-			//data_cnt++;
 		} //data points per sector
 	} //sector check
 }

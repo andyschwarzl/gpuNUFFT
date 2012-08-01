@@ -256,7 +256,7 @@ __global__ void convolutionKernel2( DType* data,
 			}*/
 
 			int z = (int)(s_ind / (GI.grid_width*GI.grid_width)) ;
-			int r = s_ind - z* GI.grid_width * GI.grid_width;
+			int r = s_ind - z * GI.grid_width * GI.grid_width;
 			int y = (int)(r / GI.grid_width);
 			int x = s_ind % GI.grid_width;
 

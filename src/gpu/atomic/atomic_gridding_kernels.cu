@@ -153,8 +153,8 @@ __global__ void convolutionKernel2( DType* data,
 		//init shared memory
 		for (int s_ind=threadIdx.x;s_ind<GI.sector_dim; s_ind+= blockDim.x)
 		{
-			sdata[2*s_ind] = 3.0f;//Re
-			sdata[2*s_ind+1]=3.0f;//Im
+			sdata[2*s_ind] = 0.0f;//Re
+			sdata[2*s_ind+1]=0.0f;//Im
 		}
 		__syncthreads();
 	
@@ -176,7 +176,7 @@ __global__ void convolutionKernel2( DType* data,
 		//affected region, if so, add data point weighted to grid position value
 		while (data_cnt < sectors[sec+1])
 		{
-			__shared__ DType3 data_point; //datapoint shared in every thread
+			DType3 data_point; //datapoint shared in every thread
 			data_point.x = crds[3*data_cnt];
 			data_point.y = crds[3*data_cnt +1];
 			data_point.z = crds[3*data_cnt +2];

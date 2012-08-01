@@ -153,8 +153,8 @@ __global__ void convolutionKernel2( DType* data,
 		//init shared memory
 		for (int s_ind=threadIdx.x;s_ind<GI.sector_dim; s_ind+= blockDim.x)
 		{
-			sdata[2*s_ind] = 0.0f;//Re
-			sdata[2*s_ind+1]=0.0f;//Im
+			sdata[2*s_ind] = 3.0f;//Re
+			sdata[2*s_ind+1]=3.0f;//Im
 		}
 		__syncthreads();
 	
@@ -264,7 +264,7 @@ __global__ void convolutionKernel2( DType* data,
 			
 			if (isOutlier(x,y,z,center.x,center.y,center.z,GI.grid_width,GI.sector_offset))
 				continue;
-
+			
 			atomicAdd(&(gdata[ind].x),sdata[2*s_ind]);//Re
 			atomicAdd(&(gdata[ind].y),sdata[2*s_ind+1]);//Im
 		}

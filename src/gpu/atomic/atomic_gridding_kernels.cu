@@ -251,8 +251,8 @@ __global__ void convolutionKernel2( DType* data,
 		{
 			if (sector_ind_offset + s_ind < GI.grid_width_dim)
 			{
-				atomicAdd(&(gdata[2*(sector_ind_offset + s_ind)].x),1.0f);
-				atomicAdd(&(gdata[2*(sector_ind_offset + s_ind)+1].y),1.0f);
+				atomicAdd(&(gdata[sector_ind_offset + s_ind].x),1.0f);
+				atomicAdd(&(gdata[sector_ind_offset + s_ind+1].y),1.0f);
 			}
 
 			int z = s_ind / (GI.grid_width*GI.grid_width) ;

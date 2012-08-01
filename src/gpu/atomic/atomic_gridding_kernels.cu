@@ -249,6 +249,12 @@ __global__ void convolutionKernel2( DType* data,
 		//each thread writes one position from shared mem to global mem
 		for (int s_ind=threadIdx.x;s_ind<GI.sector_dim; s_ind += blockDim.x)
 		{
+			if (sector_ind_offset + s_ind < GI.grid_width_dim)
+			{
+				atomicAdd(&(gdata[2*(sector_ind_offset + s_ind)]),1.0f);
+				atomicAdd(&(gdata[2*(sector_ind_offset + s_ind)+1]),1.0f);
+			}
+
 			int z = s_ind / (GI.grid_width*GI.grid_width) ;
 			int r = s_ind - z* GI.grid_width;
 			int y = r / GI.grid_width;

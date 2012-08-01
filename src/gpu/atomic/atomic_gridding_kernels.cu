@@ -160,7 +160,8 @@ __global__ void convolutionKernel2( DType* data,
 	
 		//start convolution
 		int ind, k, i, j;
-		__shared__ int max_x, max_y, max_z, imin, imax,jmin,jmax,kmin,kmax;
+		__shared__ int max_x, max_y, max_z;
+		int imin, imax,jmin,jmax,kmin,kmax;
 
 		DType dx_sqr, dy_sqr, dz_sqr, val, ix, jy, kz;
 

@@ -255,10 +255,10 @@ __global__ void convolutionKernel2( DType* data,
 				atomicAdd(&(gdata[sector_ind_offset + s_ind+1].y),0.0f);
 			}*/
 
-			int z = (int)(s_ind / (GI.grid_width*GI.grid_width)) ;
-			int r = s_ind - z * GI.grid_width * GI.grid_width;
-			int y = (int)(r / GI.grid_width);
-			int x = s_ind % GI.grid_width;
+			int z = (int)(s_ind / (GI.sector_pad_width*GI.sector_pad_width)) ;
+			int r = s_ind - z * GI.sector_pad_width * GI.sector_pad_width;
+			int y = (int)(r / GI.sector_pad_width);
+			int x = s_ind % GI.sector_pad_width;
 
 			int ind = sector_ind_offset + getIndex(x,y,z,GI.grid_width);//index in output grid
 			

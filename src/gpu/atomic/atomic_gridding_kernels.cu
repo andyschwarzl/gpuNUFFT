@@ -4,7 +4,7 @@
 // convolve every data point on grid position -> controlled by threadIdx.x .y and .z 
 // shared data holds grid values as software managed cache
 //
-// like non atomic gridding, but without temporaray grid
+// like non atomic gridding, but without temporary grid
 // atomic write to global output grid
 // TODO evaluate performance
 __global__ void convolutionKernelFromGrid(  DType* data, 

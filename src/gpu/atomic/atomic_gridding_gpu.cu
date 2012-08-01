@@ -1,10 +1,8 @@
 #include "atomic_gridding_kernels.cu"
 #include "../std_gridding_kernels.cu"
-
 #include "cuda_utils.hpp"
 #include "gridding_gpu.hpp"
 #include "cufft_config.hpp"
-
 /** gridding3D_gpu
   * forward gridding from image to grid/k-space
   * TODO
@@ -198,6 +196,8 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 			cufftDestroy(fft_plan);
 			return;
 		}
+
+		performFFTShift(gdata_d,INVERSE,gi_host->grid_width);
 
 		//Inverse FFT
 		if (err=pt2CufftExec(fft_plan, gdata_d, gdata_d, CUFFT_INVERSE) != CUFFT_SUCCESS)

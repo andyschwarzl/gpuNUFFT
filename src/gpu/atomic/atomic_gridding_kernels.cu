@@ -249,16 +249,16 @@ __global__ void convolutionKernel2( DType* data,
 		//each thread writes one position from shared mem to global mem
 		for (int s_ind=threadIdx.x;s_ind<GI.sector_dim; s_ind += blockDim.x)
 		{
-			if (sector_ind_offset + s_ind < GI.grid_width_dim)
+			/*if (sector_ind_offset + s_ind < GI.grid_width_dim)
 			{
-				atomicAdd(&(gdata[sector_ind_offset + s_ind].x),1.2f);
-				atomicAdd(&(gdata[sector_ind_offset + s_ind+1].y),1.2f);
-			}
+				atomicAdd(&(gdata[sector_ind_offset + s_ind].x),0.0f);
+				atomicAdd(&(gdata[sector_ind_offset + s_ind+1].y),0.0f);
+			}*/
 
-			/*int z = s_ind / (GI.grid_width*GI.grid_width) ;
-			int r = s_ind - z* GI.grid_width;
-			int y = r / GI.grid_width;
-			int x = r % GI.grid_width;
+			int z = (int)(s_ind / (GI.grid_width*GI.grid_width)) ;
+			int r = s_ind - z* GI.grid_width * GI.grid_width;
+			int y = (int)(r / GI.grid_width);
+			int x = s_ind % GI.grid_width;
 
 			int ind = sector_ind_offset + getIndex(x,y,z,GI.grid_width);//index in output grid
 			
@@ -266,7 +266,7 @@ __global__ void convolutionKernel2( DType* data,
 				continue;
 
 			atomicAdd(&(gdata[ind].x),1.0f);//sdata[2*s_ind]);//Re
-			atomicAdd(&(gdata[ind].y),1.0f);//sdata[2*s_ind+1]);//Im*/
+			atomicAdd(&(gdata[ind].y),1.0f);//sdata[2*s_ind+1]);//Im
 		}
 	}//sec < sector_count	
 }

@@ -80,6 +80,7 @@ disp(['execution time forward: ', num2str(exec_time)]);
 %dataRadial_dc = dataRadial .* dc;
 %%
 %imgRegrid_dc = G3D'*dataRadial_dc;
+disp(num2str(size(dataRadial)));
 tic
 imgRegrid = G3D'*dataRadial;
 exec_time = toc;

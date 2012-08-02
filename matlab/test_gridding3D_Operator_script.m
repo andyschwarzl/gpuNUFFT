@@ -75,11 +75,12 @@ dataRadial = G3D*z_pad;
 exec_time = toc;
 disp(['execution time forward: ', num2str(exec_time)]);
 %% calculate density compensation
-dc = sqrt(sum(abs(k').^2,2));
+%dc = sqrt(sum(abs(k').^2,2));
 %dc = dc / max(dc);
-dataRadial_dc = dataRadial .* dc;
+%dataRadial_dc = dataRadial .* dc;
 %%
-imgRegrid_dc = G3D'*dataRadial_dc;
+%imgRegrid_dc = G3D'*dataRadial_dc;
+disp(num2str(size(dataRadial)));
 tic
 imgRegrid = G3D'*dataRadial;
 exec_time = toc;

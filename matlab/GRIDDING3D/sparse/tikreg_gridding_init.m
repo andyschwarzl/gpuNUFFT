@@ -2,6 +2,7 @@
 function [idx weight bp_vxidx bp_midx bp_weight] = tikreg_gridding_init(ipk,prec)
 
 p = ipk.p;
+p = struct(p);
 sz = prod(ipk.Jd);%5*5*5
 
 chksum = full(sum(abs(p.arg.G(1,:)))) + p.arg.np + mod(p.arg.odim(1),3123) + size(p.arg.G,1) +prec;
@@ -24,7 +25,7 @@ display('planning');
 idx = zeros(sz,size(p.dim,1));
 weight = zeros(2,sz,p.dim(1));
 
-[i j s] = (find(ipk.p.arg.G)); %findet alle indizes (zeilen = Trajektoriensample, spalten = Voxelindex) und werte ungleich null
+[i j s] = (find(p.arg.G)); %findet alle indizes (zeilen = Trajektoriensample, spalten = Voxelindex) und werte ungleich null
 [dummy id] = sort(i); %i...Zeilen, sortiert alle indizes -> speichert werte und indizes in die vektoren
 ids = reshape(id,[sz p.dim(1)]); %[125 11685]
     

@@ -12,7 +12,9 @@ load MREG_data_Graz;
 %load 20111024_MREG_Data_MID_65_2mm_Full_Brain;
 
 %% sensmaps
+E = struct(E);
 smaps = getfield(E,'sensmaps');
+
 %%
 smaps_il = zeros([2,size(smaps{1}),length(smaps)]);
 for k = 1:length(smaps),

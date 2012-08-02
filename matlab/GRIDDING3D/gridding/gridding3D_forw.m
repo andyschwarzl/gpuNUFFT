@@ -18,7 +18,7 @@ else
 end
 %put data in correct order
 %data_test = zeros(1,length(a.op.data_ind));
-disp(['returned data dimensions:' size(data)]);
+disp(['returned data dimensions:' num2str(size(data))]);
 if (n_chnls > 1)
     data = squeeze(data(1,:,:) + 1j*(data(2,:,:)));
     data_test = zeros([length(a.data_ind),n_chnls]);

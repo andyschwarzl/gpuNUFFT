@@ -60,9 +60,9 @@ for k=1:length(varargin)
         end
     end
 end
-
+A = struct(A);
 ipk = getfield(A,'nufftStruct');
-
+ipk = struct(ipk);
 if working_precision == 1,
     %devprops = gpuDevice;
     %devnum = devprops.Index;

@@ -84,6 +84,28 @@ static __global__ void  dosens(cufftComplex *val,
       }
 }
 
+static __global__ void  dosenswithoffset(cufftComplex *val,
+										cufftComplex *tmp2,
+										cufftComplex *_ipk_we,
+										int *_the_index,
+										int numP, 
+										int numK,
+										int offset,
+										int n)
+{     
+      int k = blockDim.x * blockIdx.x + threadIdx.x;
+      if (k+offset < n)
+      {
+          val[k].x = 0;  val[k].y = 0;          
+          for (int p = 0; p < numP; p++)
+          { 
+              int idx = _the_index[numP*k + p];          
+              val[k+offset].x += tmp2[idx].x*_ipk_we[numP*k + p].x - tmp2[idx].y*_ipk_we[numP*k + p].y;
+              val[k+offset].y += tmp2[idx].x*_ipk_we[numP*k + p].y + tmp2[idx].y*_ipk_we[numP*k + p].x;
+          }
+      }
+}
+
 static __global__ void quadradd(cufftComplex *_r,
                                 cufftComplex *tmp2,
                                 int w, 

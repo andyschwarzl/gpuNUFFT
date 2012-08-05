@@ -43,10 +43,8 @@ size(imgRegrid_kb);
 exec_time = toc;
 disp(['execution time adjoint: ', num2str(exec_time)]);
 %% SENS corr
-offset = (imwidth - size(smaps,3))/2;
-imgRegrid_kb = imgRegrid_kb(:,:,offset+1:(offset+size(smaps,3)),:) .* conj(smaps(:,:,:,:));
+imgRegrid_kb = imgRegrid_kb .* conj(smaps);
 %imgRegrid_kb = imgRegrid_kb(:,:,:,:) .* conj(smaps(:,:,:,:));
-
 %% res = SoS of coil data
 res = sqrt(sum(abs(imgRegrid_kb).^2,4));
 %%
@@ -61,33 +59,12 @@ diff = (res_curr(:) - res_gridding(:))' * (res_curr(:) - res_gridding(:))
 %% check forward gridding using solution z
 z_pad = padarray(z_ref,[0 0 10]);
 %%
-
-imwidth = 64; %E.imageDim(1);
-osf = 1.25;
-wg = 3;
-sw = 8;
-k = E.nufftStruct.om'./(2*pi);
-w = ones(1,E.trajectory_length);
-G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw,'true');
 tic
 dataRadial = G3D*z_pad;
 exec_time = toc;
 disp(['execution time forward: ', num2str(exec_time)]);
-%% calculate density compensation
-%dc = sqrt(sum(abs(k').^2,2));
-%dc = dc / max(dc);
-%dataRadial_dc = dataRadial .* dc;
-%%
-%imgRegrid_dc = G3D'*dataRadial_dc;
 disp(num2str(size(dataRadial)));
 tic
 imgRegrid = G3D'*dataRadial;
 exec_time = toc;
 disp(['execution time adjoint: ', num2str(exec_time)]);
-%%
-%figure, imshow(imresize(abs(imgRegrid(:,:,slice)),4),[]), title('gridding');
-%figure, imshow(imresize(abs(imgRegrid_dc(:,:,slice)),4),[]), title('gridding dc');
-%figure, imshow(imresize(abs(z_ref(:,:,slice)),4),[]), title('input z');
-
-%show3DImageasArray([4 4],imgRegrid,'gridding','slice ');
-%show3DImageasArray([4 4],imgRegrid_dc,'gridding dc','slice ');

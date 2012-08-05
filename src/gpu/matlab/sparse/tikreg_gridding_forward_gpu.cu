@@ -8,7 +8,7 @@
 #include "cuda_runtime.h"
 #include <cuda.h> 
 #include <cublas.h>
-
+#include "cuda_utils.hpp"
 #include <stdio.h>
 #include <iostream>
 #include "config.hpp"
@@ -59,7 +59,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	DType *num_sens = (DType*) mxGetData(NumSens);
 	numsens = (int) num_sens[0];
 	mexPrintf("Number of Coils: %d\n",numsens);
-	
+
     const int dims_sz[] = {2, (int)image_dims[0], (int)image_dims[1], (int)image_dims[2],numsens };//2x64x64x44
     int w = (int)dims_sz[1];//64
     int h = (int)dims_sz[2];//64
@@ -111,7 +111,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     DType lambda = params[1]; //Regularisierungsparam
     int device_num = (int) params[2]; //Device
     int VERBOSE = (int) params[4]; //Verbose-Mode
-    
+	
     if (VERBOSE == 1)  
         mexPrintf("gpuDevice: %i  lambda^2: %f\n",device_num,lambda);
 
@@ -124,46 +124,45 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 		//   cuCtxPopCurrent(&pctx);	      
     }   
     mexPrintf("dev:%i\n",dev);
-       
+      
     // MALLOCs    
-    CufftType *tmp1,*tmp2, *_r , *_img, *_ipk_we;
+    CufftType *tmp1,*tmp2, *_r, *_ipk_we;
+	CufftType *_img;
 	DType* _sn;
 	
     int *_the_index;
+	    	
     cufftHandle            plan;
     
 	//output erzeugen
 	plhs[0]             =  mxCreateNumericArray(numdim,(const mwSize*)dims_k,mxGetClassID(ImageData),mxREAL);
      
     std::complex<DType> *res = (std::complex<DType> *) mxGetData(plhs[0]);
-   	
+
+	//allocateAndCopyToDeviceMem<std::complex<DType>>(&_img,img, totsz*numsens);
 	cudaMalloc( (void **) &_img,sizeof(CufftType)*totsz*numsens);
+
     cudaMalloc( (void **) &tmp1,sizeof(CufftType)*totsz_pad);
-    cudaMalloc( (void **) &tmp2,sizeof(CufftType)*totsz_pad);
-
-    cudaMalloc( (void **) &_sn,sizeof(DType)*totsz);
-    cudaMalloc( (void **) &_r,sizeof(CufftType)*numK*numsens);
 	
-    cudaMalloc( (void **) &_ipk_we,sizeof(CufftType)*numP*numK);
-    cudaMalloc( (void **) &_the_index,sizeof(int)*numP*numK);
-
-    cudaThreadSynchronize();
-   
+    cudaMalloc( (void **) &tmp2,sizeof(CufftType)*totsz_pad);
+	
+    cudaMalloc( (void **) &_sn,sizeof(DType)*totsz);
+	cudaMalloc( (void **) &_r,sizeof(CufftType)*numK*numsens);
+	cudaMalloc( (void **) &_ipk_we,sizeof(CufftType)*numP*numK);
+	cudaMalloc( (void **) &_the_index,sizeof(int)*numP*numK);
+	
     cudaMemset( tmp1,0,sizeof(CufftType)*totsz_pad);
-    cudaMemset( tmp2,0,sizeof(CufftType)*totsz_pad);
-    cudaMemset( _img,0,sizeof(CufftType)*totsz*numsens);
-	 
-    cudaThreadSynchronize();
- 
+	cudaMemset( tmp2,0,sizeof(CufftType)*totsz_pad);
+	cudaMemset( _img,0,sizeof(CufftType)*totsz*numsens);
+	
      /************** copy data on device **********************/
 	 cudaMemcpy( _img, img, sizeof(CufftType)*numsens*totsz, cudaMemcpyHostToDevice);
      cudaMemcpy( _ipk_we, ipk_we, sizeof(CufftType)*numP*numK, cudaMemcpyHostToDevice);
      cudaMemcpy( _the_index, the_index, sizeof(int)*numP*numK, cudaMemcpyHostToDevice);
 	 cudaMemcpy( _sn, sn, sizeof(DType)*totsz, cudaMemcpyHostToDevice);
-     
      cudaMemcpy( ipk_we, _ipk_we, sizeof(CufftType)*numP*numK, cudaMemcpyDeviceToHost);
      cudaMemcpy( the_index, _the_index, sizeof(int)*numP*numK, cudaMemcpyDeviceToHost);
- 
+
      cudaThreadSynchronize();
     
     if (VERBOSE == 1) 
@@ -172,7 +171,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     if (VERBOSE == 1) {
         mexPrintf("num active Vox: %i\n",numVox);    
     }
-    
+    mexPrintf("trying to create cufft plan with %d\n",CufftTransformType);
 	int err;
 	if (err=cufftPlan3d(&plan, d_pad, h_pad, w_pad, CufftTransformType) != CUFFT_SUCCESS)
 	{
@@ -207,14 +206,15 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	
 	if (VERBOSE == 1)
 		mexPrintf("start forward gridding...\n");
-    // do sens -- b=A x
+    
+	// do sens -- b=A x
     for (int i = 0; i < numsens; i++)
     { 
 		//reset data for next coil
         cudaMemset(tmp1,0, sizeof(CufftType)*totsz_pad);
 		
 		//Multiplikation mit SN Matrix
-        sn_mult<<<dimGrid_dw,dimBlock_dw>>>(tmp1,_img, _sn, w, h, d, w_pad, h_pad, d_pad);     
+        sn_mult<<<dimGrid_dw,dimBlock_dw>>>(tmp1,_img + i*totsz_pad, _sn, w, h, d, w_pad, h_pad, d_pad);     
 		
 		//FT in k-space
         if (err=pt2CufftExec(plan, tmp1, tmp2, CUFFT_FORWARD) != CUFFT_SUCCESS)
@@ -223,9 +223,10 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 			mexPrintf("%s\n", cudaGetErrorString(cudaGetLastError()));
             return;
         }
-
-        cudaMemset(_r,0, sizeof(CufftType)*numK*numsens);
-        dosens<<<dimGrid_se,dimBlock_se>>>(_r,tmp2,_ipk_we,_the_index,numP,numK);
+		dosenswithoffset<<<dimGrid_se,dimBlock_se>>>(_r,tmp2,_ipk_we,_the_index,numP,numK,i*numK,numK*numsens);
+		
+		//add to result -> without sense 
+		//addcoiltores<<<dimGrid_se,dimBlock_se>>>(_r,tmp1, numK*numsens,i*numK);
      }
   
     cudaMemcpy( res, _r, sizeof(CufftType)*numK*numsens,cudaMemcpyDeviceToHost);    

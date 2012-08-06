@@ -123,8 +123,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	free(kernel);
 
 	//mexPrintf("%s\n", cudaGetErrorString(cudaGetLastError()));
-
-	cudaDeviceReset();
+     CUcontext  pctx ;
+     cuCtxPopCurrent(&pctx);
 }
 
 

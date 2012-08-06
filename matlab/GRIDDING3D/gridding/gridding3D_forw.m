@@ -3,14 +3,17 @@ imspace = bb;
 imdata = [real(imspace(:))'; imag(imspace(:))'];
 
 n_chnls = size(bb,4);
-size(imdata)
+size(imdata);
 imdata = reshape(imdata,[2 a.params.im_width*a.params.im_width*a.params.im_width n_chnls]);
 
 if (n_chnls > 1)
-    disp('multiple channel image data passed');
+    if a.verbose
+        disp('multiple channel image data passed');
+    end
 end    
-disp('call forward gridding mex kernel');
-
+if a.verbose
+    disp('call forward gridding mex kernel');
+end
 if a.atomic == true
     data = mex_gridding3D_forw_atomic_f(single(imdata),single(a.coords),int32(a.sector_data_cnt),int32(a.sector_centers),a.params);
 else
@@ -18,7 +21,9 @@ else
 end
 %put data in correct order
 %data_test = zeros(1,length(a.op.data_ind));
-disp(['returned data dimensions:' num2str(size(data))]);
+if a.verbose
+    disp(['returned data dimensions:' num2str(size(data))]);
+end
 if (n_chnls > 1)
     data = squeeze(data(1,:,:) + 1j*(data(2,:,:)));
     data_test = zeros([length(a.data_ind),n_chnls]);

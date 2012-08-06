@@ -48,6 +48,7 @@ if strcmp(method,'gridding')
     res.op.params.sector_width = uint32(sw);
     res.op.params.trajectory_length = uint32(length(k));
     res.op.atomic = atomic;
+    res.op.verbose = false;
     %res.opt = opt;
 elseif strcmp(method,'sparse')
     res.op = E;

@@ -125,7 +125,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	
 	free(kernel);
 
-	mexPrintf("%s\n", cudaGetErrorString(cudaGetLastError()));
+	//mexPrintf("%s\n", cudaGetErrorString(cudaGetLastError()));
 
 	CUcontext  pctx ;
 	cuCtxPopCurrent(&pctx);	

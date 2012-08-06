@@ -411,9 +411,11 @@ void performConvolution( DType* data_d,
 	dim3 block_dim(128);
 	dim3 grid_dim(gi_host->sector_count);
 	
-	printf("adjoint convolution requires %d bytes of shared memory!\n",shared_mem_size);
+	if (DEBUG)
+		printf("adjoint convolution requires %d bytes of shared memory!\n",shared_mem_size);
 	convolutionKernel2<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d);
-	printf("...finished with: %s\n", cudaGetErrorString(cudaGetLastError()));
+	if (DEBUG)
+		printf("...finished with: %s\n", cudaGetErrorString(cudaGetLastError()));
 }
 
 __global__ void forwardConvolutionKernel( CufftType* data, 
@@ -546,6 +548,7 @@ void performForwardConvolution( CufftType*		data_d,
 	dim3 block_dim(128);
 	dim3 grid_dim(gi_host->sector_count);
 	
-	printf("convolution requires %d bytes of shared memory!\n",shared_mem_size);
+	if (DEBUG)
+		printf("convolution requires %d bytes of shared memory!\n",shared_mem_size);
 	forwardConvolutionKernel<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d);
 }

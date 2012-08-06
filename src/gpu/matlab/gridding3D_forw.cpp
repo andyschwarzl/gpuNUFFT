@@ -33,7 +33,14 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 {
 	if (MATLAB_DEBUG)
 		mexPrintf("Starting Forward GRIDDING 3D Function...\n");
-
+	
+	/**************** Init Cuda *****************/
+    CUdevice dev; 
+    if (cuCtxGetDevice(&dev) == CUDA_SUCCESS)
+    {
+    //   CUcontext  pctx ;
+    //   cuCtxPopCurrent(&pctx);	      
+    }   
 	//TODO check input params count first!
 	/*  if(nrhs != 9 ) {
 	printf("\nUsage:\n");
@@ -82,16 +89,6 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	if (MATLAB_DEBUG)
 		mexPrintf("passed Params, IM_WIDTH: %d, IM_COUNT: %d, OSR: %f, KERNEL_WIDTH: %d, SECTOR_WIDTH: %d, DATA_ENTRIES: %d, n_coils: %d\n",im_width,im_count,osr,kernel_width,sector_width,data_entries,n_coils);
 
-   /**************** Init Cuda *****************/
-    
-    CUdevice dev; 
-    
-    if (cuCtxGetDevice(&dev) == CUDA_SUCCESS)
-    {
-    //   CUcontext  pctx ;
-    //   cuCtxPopCurrent(&pctx);	      
-    }   
-
 	if (MATLAB_DEBUG)
 	{
 		size_t free_mem = 0;
@@ -127,8 +124,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
 	//mexPrintf("%s\n", cudaGetErrorString(cudaGetLastError()));
 
-	CUcontext  pctx ;
-	cuCtxPopCurrent(&pctx);	
+	cudaDeviceReset();
 }
 
 

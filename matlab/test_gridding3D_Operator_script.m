@@ -31,7 +31,7 @@ imwidth = 64;
 k = E.nufftStruct.om'./(2*pi);
 w = ones(E.trajectory_length,1);
 
-G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw,'false');
+G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw,E.imageDim,'false');
 %freiburg implementation
 %G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw,'sparse',E);
 %% one call for all coils
@@ -39,7 +39,9 @@ res = zeros(E.imageDim);
 kspace = reshape(data,[E.trajectory_length E.numCoils]);
 %[imgRegrid_kb,kernel] = grid3D(kspace,k,w,imwidth,osf,wg,sw,'deappo');
 tic
-imgRegrid_kb = G3D'*kspace;
+for ii = 1:32
+    imgRegrid_kb(:,:,:,ii) = G3D'*kspace(:,ii);
+end
 size(imgRegrid_kb);
 exec_time = toc;
 disp(['execution time adjoint: ', num2str(exec_time)]);
@@ -69,7 +71,7 @@ wg = 3;
 sw = 8;
 k = E.nufftStruct.om'./(2*pi);
 w = ones(1,E.trajectory_length);
-G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw,'false');
+G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw,E.imageDim,'false');
 tic
 dataRadial = G3D*z_pad;
 exec_time = toc;

@@ -39,6 +39,7 @@ res = zeros(E.imageDim);
 kspace = reshape(data,[E.trajectory_length E.numCoils]);
 %[imgRegrid_kb,kernel] = grid3D(kspace,k,w,imwidth,osf,wg,sw,'deappo');
 tic
+%imgRegrid_kb = G3D'*kspace;
 for ii = 1:32
     imgRegrid_kb(:,:,:,ii) = G3D'*kspace(:,ii);
 end

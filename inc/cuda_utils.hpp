@@ -66,7 +66,8 @@ void freeTotalDeviceMemory(void* ptr,...)
 	  if(p==NULL)
 		   break;
 	  //printf("free dev ptr...%p %d\n",p,i);
-	  freeDeviceMem(p);
+	  //freeDeviceMem((void*)p);
+	  cudaFree((void*)p);
 	  i++;
 	  p= va_arg(list,void*);
 	}

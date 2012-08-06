@@ -57,7 +57,6 @@ inline void copyFromDevice(TypeName* device_ptr, TypeName* host_ptr, int num_ele
 
 void freeTotalDeviceMemory(void* ptr,...)
 {
-	cudaThreadSynchronize();
 	va_list list;
 	va_start(list,ptr); 
 	void* p = ptr;
@@ -67,8 +66,8 @@ void freeTotalDeviceMemory(void* ptr,...)
 	  if(p==NULL)
 		   break;
 	  //printf("free dev ptr...%p %d\n",p,i);
-	  //freeDeviceMem((void*)p);
-	  HANDLE_ERROR(cudaFree((void*)p));
+	  freeDeviceMem((void*)p);
+	  cudaThreadSynchronize();
 	  i++;
 	  p= va_arg(list,void*);
 	}

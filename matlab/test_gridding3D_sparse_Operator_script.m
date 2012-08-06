@@ -32,7 +32,7 @@ k = E.nufftStruct.om'./(2*pi);
 w = ones(E.trajectory_length,1);
 
 %freiburg implementation
-G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw,'sparse',E);
+G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw,E.imageDim,'sparse',E);
 %% one call for all coils
 res = zeros(E.imageDim);
 kspace = reshape(data,[E.trajectory_length E.numCoils]);
@@ -57,13 +57,14 @@ res_curr = abs(res(:,:,slice));
 load MREG_abs_slice25;
 diff = (res_curr(:) - res_gridding(:))' * (res_curr(:) - res_gridding(:))
 %% check forward gridding using solution z
-z_pad = padarray(z_ref,[0 0 10]);
+%z_pad = padarray(z_ref,[0 0 10]);
 %%
 tic
-dataRadial = G3D*z_pad;
+dataRadial = G3D*z;
 exec_time = toc;
 disp(['execution time forward: ', num2str(exec_time)]);
 disp(num2str(size(dataRadial)));
+%%
 tic
 imgRegrid = G3D'*dataRadial;
 exec_time = toc;

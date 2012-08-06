@@ -12,6 +12,7 @@ load MREG_data_Graz;
 %load 20111024_MREG_Data_MID_65_2mm_Full_Brain;
 
 %% sensmaps
+E = struct(E);
 smaps = getfield(E,'sensmaps');
 %%
 smaps_il = zeros([2,size(smaps{1}),length(smaps)]);
@@ -29,9 +30,9 @@ imwidth = 64;
 k = E.nufftStruct.om'./(2*pi);
 w = ones(E.trajectory_length,1);
 
-G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw,'false');
+G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw,E.imageDim,'false');
 %freiburg implementation
-%G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw,'sparse',E);
+%G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw,E.imageDim,'sparse',E);
 %% one call for all coils
 res = zeros(E.imageDim);
 kspace = reshape(data,[E.trajectory_length E.numCoils]);
@@ -91,7 +92,8 @@ wg = 3;
 sw = 8;
 k = E.nufftStruct.om'./(2*pi);
 w = ones(1,E.trajectory_length);
-G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw,'false');
+G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw,E.imageDim,'false');
+%G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw,E.imageDim,'sparse',E);
 %%
 tic
 dataRadial = G3D*z_pad;

@@ -19,7 +19,7 @@ imwidth = 64;
 k = E.nufftStruct.om'./(2*pi);
 w = ones(E.trajectory_length,1);
 %%
-G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw,E.imageDim,'false');
+G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw,E.imageDim,E.sensmaps,'false');
 
 %%
 y1 = G3D * x1;

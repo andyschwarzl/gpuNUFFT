@@ -80,7 +80,7 @@ if working_precision == 1,
         b_il(1,:) = real(b);
         b_il(2,:) = imag(b);
         
-        b_coils = size(b_il,2) / A.trajectory_length;
+        b_coils = A.numCoils;
         if (single_coil == true)
             %single call per coil
             res = zeros(A.imageDim);
@@ -88,17 +88,14 @@ if working_precision == 1,
                 coil_start = 2 * (coil-1) * A.trajectory_length +1;
                 coil_end = coil_start + 2  * A.trajectory_length - 1;
                 %tmp = tikreg_gridding_gpu_f(single(b_il(coil_start:coil_end)),single(ipk.sn),single(A.imageDim),single(1),single(idx),single(weight),single(ipk.Kd), uint32(bp_vxidx), bp_midx, bp_weight,single([it lambda^2 devnum tol verbose]));
-                tmp = mex_gridding3D_forw_sparse_f(single(b_il(coil_start:coil_end)),single(ipk.sn),single(A.imageDim),single(1),single(idx),single(weight),single(ipk.Kd), uint32(bp_vxidx), bp_midx, bp_weight,single([it lambda^2 devnum tol verbose]));
-                
+                tmp = mex_gridding3D_adj_sparse_f(single(b_il(coil_start:coil_end)),single(ipk.sn),single(A.imageDim),single(1),single(idx),single(weight),single(ipk.Kd), uint32(bp_vxidx), bp_midx, bp_weight,single([it lambda^2 devnum tol verbose]));
                 tmp = squeeze(tmp(1,:,:,:) + 1i*tmp(2,:,:,:));
-                %display(max(tmp));
 
                 res(:,:,:,coil) = tmp;
             end
         else
-            %b_coils = A.numCoils
             %res = tikreg_gridding_gpu_f(single(b_il),single(A.imageDim),single(ipk.sn),single(b_coils),single(idx),single(weight),single(ipk.Kd), uint32(bp_vxidx), bp_midx, bp_weight,single([it lambda^2 devnum tol verbose]));
-            res = mex_gridding3D_forw_sparse_f(single(b_il),single(A.imageDim),single(ipk.sn),single(b_coils),single(idx),single(weight),single(ipk.Kd), uint32(bp_vxidx), bp_midx, bp_weight,single([it lambda^2 devnum tol verbose]));
+            res = mex_gridding3D_adj_sparse_f(single(b_il),single(A.imageDim),single(ipk.sn),single(b_coils),single(idx),single(weight),single(ipk.Kd), uint32(bp_vxidx), bp_midx, bp_weight,single([it lambda^2 devnum tol verbose]));
             
             res = squeeze(res(1,:,:,:,:) + 1i*res(2,:,:,:,:));
         end;
@@ -107,12 +104,12 @@ if working_precision == 1,
     
         %forward gridding single precision
         img = b;
-        
-        img_il(1,:,:,:) = real(img);
-        img_il(2,:,:,:) = imag(img);
+       
+        img_il(1,:,:,:,:) = real(img);
+        img_il(2,:,:,:,:) = imag(img);
         
         %res = tikreg_gridding_forward_gpu_f(single(img_il),single(A.imageDim),single(ipk.sn),single(1),single(idx),single(weight),single(ipk.Kd), uint32(bp_vxidx), bp_midx, bp_weight,single([it lambda^2 devnum tol verbose]));
-        res = mex_gridding3D_adj_sparse_f(single(img_il),single(A.imageDim),single(ipk.sn),single(1),single(idx),single(weight),single(ipk.Kd), uint32(bp_vxidx), bp_midx, bp_weight,single([it lambda^2 devnum tol verbose]));
+        res = mex_gridding3D_forw_sparse_f(single(img_il),single(A.imageDim),single(ipk.sn),single(A.numCoils),single(idx),single(weight),single(ipk.Kd), uint32(bp_vxidx), bp_midx, bp_weight,single([it lambda^2 devnum tol verbose]));
         
         res = squeeze(res(1,:) + 1i*res(2,:));
     end;

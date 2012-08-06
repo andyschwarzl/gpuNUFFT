@@ -70,7 +70,9 @@ void freeTotalDeviceMemory(void* ptr,...)
 	  i++;
 	  p= va_arg(list,void*);
 	}
-	printf("%d device pointers freed\n",i);
+	if (DEBUG)
+		printf("%d device pointers freed\n",i);
+	
     va_end(list);
 }
 
@@ -92,7 +94,8 @@ inline void showMemoryInfo()
 	size_t free_mem = 0;
 	size_t total_mem = 0;
 	cudaMemGetInfo(&free_mem, &total_mem);
-	printf("memory usage, free: %lu total: %lu\n",free_mem,total_mem);
+	if (DEBUG)
+		printf("memory usage, free: %lu total: %lu\n",free_mem,total_mem);
 }	
 
 GriddingInfo* initAndCopyGriddingInfo(int sector_count, 
@@ -127,7 +130,8 @@ GriddingInfo* initAndCopyGriddingInfo(int sector_count,
 	DType radiusSquared = radius * radius;
 	DType kernelRadius_invSqr = (DType)1.0 / radiusSquared;
 	DType dist_multiplier = (kernel_count - 1) * kernelRadius_invSqr;
-	printf("radius rel. to grid width %f\n",radius);
+	if (DEBUG)
+		printf("radius rel. to grid width %f\n",radius);
 	int sector_pad_width = sector_width + 2*(int)(floor(kernel_width / (DType)2.0));
 	int sector_dim = sector_pad_width  * sector_pad_width  * sector_pad_width ;
 	int sector_offset = (int)(floor(sector_pad_width / (DType)2.0));
@@ -145,10 +149,12 @@ GriddingInfo* initAndCopyGriddingInfo(int sector_count,
 
 	gi_host->sector_pad_width = sector_pad_width;
 	
-	printf("copy Gridding Info to symbol memory...\n");
+	if (DEBUG)
+		printf("copy Gridding Info to symbol memory...\n");
 	HANDLE_ERROR(cudaMemcpyToSymbol(GI, gi_host,sizeof(GriddingInfo)));
 	//free(gi_host);
-	printf("...done!\n");
+	if (DEBUG)
+		printf("...done!\n");
 	return gi_host;
 }
 

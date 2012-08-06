@@ -6,7 +6,8 @@
 #define epsilon 0.0001f
 
 TEST(TestKernel, LoadKernel) {
-	printf("start creating kernel...\n");
+	if (DEBUG)
+		printf("start creating kernel...\n");
 	long kernel_entries = calculateGrid3KernelSize();
 	
 	assert(kernel_entries > 0);

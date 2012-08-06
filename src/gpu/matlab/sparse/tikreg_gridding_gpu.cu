@@ -47,7 +47,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     ImageDim = prhs[pcnt++];//1...Image Dimensions
     DType *image_dims = (DType*) mxGetData(ImageDim);
 	const mwSize *dims_imagedim = mxGetDimensions(ImageDim);
-	mexPrintf("Test %d, %d\n",dims_imagedim[0],dims_imagedim[1]);
+	if (MATLAB_DEBUG)
+		mexPrintf("Test %d, %d\n",dims_imagedim[0],dims_imagedim[1]);
 		
 	const mxArray *Sn;
     Sn = prhs[pcnt++];//1...SN Map
@@ -58,7 +59,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	NumSens = prhs[pcnt++];//2...Anzahl Spulen
 	DType *num_sens = (DType*) mxGetData(NumSens);
 	numsens = (int) num_sens[0];
-	mexPrintf("Number of Coils: %d\n",numsens);
+	if (MATLAB_DEBUG)
+		mexPrintf("Number of Coils: %d\n",numsens);
 	
     const int numdim =5;
     const int dims_sz[] = {2, (int)image_dims[0], (int)image_dims[1], (int)image_dims[2],numsens };//2x64x64x44
@@ -113,14 +115,20 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
         mexPrintf("gpuDevice: %i  lambda^2: %f\n",device_num,lambda);
 
     /**************** Init Cuda *****************/
-    CUdevice dev; 
-    
-    if (cuCtxGetDevice(&dev) == CUDA_SUCCESS)
-    {
+	if (MATLAB_DEBUG)
+		mexPrintf("start...\n");
+    //CUdevice dev; 
+    CUdevice cuDevice = 0;
+	cuDeviceGet(&cuDevice, 0);
+	// Create context
+	CUcontext cuContext;
+	cuCtxCreate(&cuContext, 0, cuDevice);
+    //if (cuCtxGetDevice(&dev) == CUDA_SUCCESS)
+    //{
 		//   CUcontext  pctx ;
 		//   cuCtxPopCurrent(&pctx);	      
-    }   
-    mexPrintf("dev:%i\n",dev);
+    //}   
+    //mexPrintf("dev:%i\n",dev);
        
     // MALLOCs
     CufftType *tmp1,*tmp2, *_r , *_meas, *_ipk_we;
@@ -144,12 +152,12 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     cudaMalloc( (void **) &_ipk_we,sizeof(CufftType)*numP*numK);
     cudaMalloc( (void **) &_the_index,sizeof(int)*numP*numK);
 	 
-    cudaThreadSynchronize();
+    //cudaThreadSynchronize();
    
     cudaMemset( tmp1,0,sizeof(CufftType)*totsz_pad);
     cudaMemset( tmp2,0,sizeof(CufftType)*totsz_pad);
     cudaMemset(  _r,0,sizeof(CufftType)*totsz*numsens); 
-     cudaThreadSynchronize();
+     //cudaThreadSynchronize();
 
      /************** copy data on device **********************/
 
@@ -161,7 +169,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
      cudaMemcpy( the_index, _the_index, sizeof(int)*numP*numK, cudaMemcpyDeviceToHost);
      cudaMemcpy( _sn, sn, sizeof(DType)*totsz, cudaMemcpyHostToDevice);
 
-     cudaThreadSynchronize();
+     //cudaThreadSynchronize();
     
     if (VERBOSE == 1) 
         mexPrintf("numP: %i  numK: %i whd %i %i %i pad %i %i %i numsens: %i\n",numP,numK,w,h,d,w_pad,h_pad,d_pad,numsens);
@@ -225,7 +233,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
         mexPrintf("num active Vox: %i\n",numVox);
 		mexPrintf("creating cufft plan with %d %d %d dimensions\n",d_pad,h_pad,w_pad);
 	}
-    
+    if (MATLAB_DEBUG)
+		mexPrintf("trying to create cufft plan with %d\n",CufftTransformType);
 	int err;	
 	if (err=cufftPlan3d(&plan, d_pad, h_pad, w_pad, CufftTransformType) != CUFFT_SUCCESS)
 	{

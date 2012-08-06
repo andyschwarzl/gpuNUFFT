@@ -1,15 +1,31 @@
-function ress = mtimes(a,bb)
+function res = mtimes(a,bb)
 if strcmp(a.method,'sparse')
     if (a.adjoint)
         bb = bb(:);
-        ress = Tikreg_gridding(a.op,bb,'machine','gpu_float','adjoint');%, ,'single_coil''verbose',1);
+        res = Tikreg_gridding(a.op,bb,'machine','gpu_float','adjoint');%, ,'single_coil''verbose',1);
+
+        res = res .* conj(a.smaps);%TODO check
+        res = res / sqrt(prod(a.imageDim));%TODO check
     else
-        ress = Tikreg_gridding(a.op,bb,'machine','gpu_float','verbose','1');%, 'verbose',1);
-    end    
+        bb = bb .* a.smaps;%TODO check
+        res = Tikreg_gridding(a.op,bb,'machine','gpu_float','verbose','1');%, 'verbose',1);
+        
+        res = res / sqrt(prod(a.imageDim));%TODO check
+    end
 elseif strcmp(a.method,'gridding')
     if (a.adjoint)
-        ress = gridding3D_adj(a.op,bb);
+        bb = reshape(bb,[a.op.params.trajectory_length size(a.smaps,4)]);
+        res = gridding3D_adj(a.op,bb);
+        %TODO check
+        %offset = (a.op.params.im_width - size(a.smaps,3))/2;
+        %res = res(:,:,offset+1:(offset+size(a.smaps,3)),:) .* conj(a.smaps(:,:,:,:));
+        res = res(:,:,1:44,:);%TODO
+        res = res .* conj(a.smaps);
+        res = res / sqrt(prod(a.imageDim));
     else
-        ress = gridding3D_forw(a.op,bb);
+        bb = bb .* a.smaps;
+        bb = padarray(bb,[0 0 double((a.op.params.im_width-a.imageDim(3))/2) 0]);
+        res = gridding3D_forw(a.op,bb);
+        res = res / sqrt(prod(a.imageDim));        %TODO check
     end
 end

@@ -11,7 +11,7 @@ load img_brain_4ch;
 %load noisy_phantom;
 %load calf_data_cs;
 %%
-trimmed_size = 64;
+trimmed_size = 224;
 img = img(128-trimmed_size/2+1:128+trimmed_size/2,128-trimmed_size/2+1:128+trimmed_size/2,:);
 %%
 n_chn = 4;
@@ -41,11 +41,11 @@ k=rho*exp(-1j*theta);
 %FT = GRIDDING3D(k, 1, 1, 0, [nPE,nFE], 2);
 k_traj = [real(k(:))'; imag(k(:))';zeros(1,length(k(:)))];
 imwidth = nPE;
-osf = 1.75;
-wg = 5;
+osf = 1.5;
+wg = 3;
 sw = 8;
 w = ones(1,length(k(:)));
-FT = gridding3D(k_traj,w,imwidth,osf,wg,sw,'false');
+FT = gridding3D(k_traj,w,imwidth,osf,wg,sw,[trimmed_size trimmed_size trimmed_size],'false');
 
 %% generate radial data
 dataRadial = FT*img_a;

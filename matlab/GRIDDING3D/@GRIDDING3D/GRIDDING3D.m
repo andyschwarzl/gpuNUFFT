@@ -1,5 +1,5 @@
-function [res] = gridding3D(k,w,n,osf,wg,sw,imageDim,smaps,varargin)
-% function m = GRIDDING3D(d,k,w,n,osf,kw,sw,imageDim,sensmaps,opt)
+function [res] = gridding3D(k,w,n,osf,wg,sw,imageDim,varargin)
+% function m = GRIDDING3D(d,k,w,n,osf,kw,sw,opt)
 %
 %     k -- k-trajectory, scaled -0.5 to 0.5
 %     w -- k-space weighting
@@ -20,22 +20,14 @@ function [res] = gridding3D(k,w,n,osf,wg,sw,imageDim,smaps,varargin)
 %
 %  A. Schwarzl, Graz University of Technology
 
-if nargin <= 9,
+if nargin <= 8,
     method = 'gridding';
     E = 0;
     atomic = eval(varargin{1});
-elseif nargin > 9
+elseif nargin > 8
     method = varargin{1};
     E = varargin{2};    
 end
-
-smaps_il = zeros([2,size(smaps{1}),length(smaps)]);
-for k_it = 1:length(smaps),
-    smaps_il(1,:,:,:,k_it) = real(smaps{k_it});%.*E.nufftStruct.sn ./ max(E.nufftStruct.sn(:));
-    smaps_il(2,:,:,:,k_it) = imag(smaps{k_it});%.*E.nufftStruct.sn./ max(E.nufftStruct.sn(:));
-end;
-res.smaps = squeeze(smaps_il(1,:,:,:,:) + 1i*smaps_il(2,:,:,:,:));
-clear smaps_il;
 
 res.method = method;
 res.adjoint = 0;

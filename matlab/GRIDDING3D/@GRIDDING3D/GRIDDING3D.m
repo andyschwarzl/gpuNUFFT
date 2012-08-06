@@ -1,4 +1,4 @@
-function [res] = gridding3D(k,w,n,osf,wg,sw,varargin)
+function [res] = gridding3D(k,w,n,osf,wg,sw,imageDim,varargin)
 % function m = GRIDDING3D(d,k,w,n,osf,kw,sw,opt)
 %
 %     k -- k-trajectory, scaled -0.5 to 0.5
@@ -20,17 +20,18 @@ function [res] = gridding3D(k,w,n,osf,wg,sw,varargin)
 %
 %  A. Schwarzl, Graz University of Technology
 
-if nargin <= 7,
+if nargin <= 8,
     method = 'gridding';
     E = 0;
     atomic = eval(varargin{1});
-elseif nargin > 7
+elseif nargin > 8
     method = varargin{1};
     E = varargin{2};    
 end
 
 res.method = method;
 res.adjoint = 0;
+res.imageDim = imageDim;
 
 if strcmp(method,'gridding')
     % convert to single column

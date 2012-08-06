@@ -106,7 +106,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	
 	//calc grid width -> oversampling
 	int grid_width = (unsigned long)(im_width * osr);
-	mexPrintf("grid width (incl. osr) = %d\n",grid_width);
+	if (MATLAB_DEBUG)
+		mexPrintf("grid width (incl. osr) = %d\n",grid_width);
 	//Output Image
 	CufftType* data;
 	const int n_dims = 3;//2 * data_cnt * ncoils, 2 -> Re + Im

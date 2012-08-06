@@ -47,7 +47,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     ImageDim = prhs[pcnt++];//1...Image Dimensions
     DType *image_dims = (DType*) mxGetData(ImageDim);
 	const mwSize *dims_imagedim = mxGetDimensions(ImageDim);
-	mexPrintf("Test %d, %d\n",dims_imagedim[0],dims_imagedim[1]);
+	if (MATLAB_DEBUG)
+		mexPrintf("Test %d, %d\n",dims_imagedim[0],dims_imagedim[1]);
 	
 	const mxArray *Sn;
     Sn = prhs[pcnt++];//1...SN Map
@@ -58,7 +59,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	NumSens = prhs[pcnt++];//2...Anzahl Spulen
 	DType *num_sens = (DType*) mxGetData(NumSens);
 	numsens = (int) num_sens[0];
-	mexPrintf("Number of Coils: %d\n",numsens);
+	if (MATLAB_DEBUG)
+		mexPrintf("Number of Coils: %d\n",numsens);
 
     const int dims_sz[] = {2, (int)image_dims[0], (int)image_dims[1], (int)image_dims[2],numsens };//2x64x64x44
     int w = (int)dims_sz[1];//64
@@ -123,7 +125,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 		//   CUcontext  pctx ;
 		//   cuCtxPopCurrent(&pctx);	      
     }   
-    mexPrintf("dev:%i\n",dev);
+    if (MATLAB_DEBUG)
+		mexPrintf("dev:%i\n",dev);
       
     // MALLOCs    
     CufftType *tmp1,*tmp2, *_r, *_ipk_we;
@@ -171,7 +174,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     if (VERBOSE == 1) {
         mexPrintf("num active Vox: %i\n",numVox);    
     }
-    mexPrintf("trying to create cufft plan with %d\n",CufftTransformType);
+    if (MATLAB_DEBUG)
+		mexPrintf("trying to create cufft plan with %d\n",CufftTransformType);
 	int err;
 	if (err=cufftPlan3d(&plan, d_pad, h_pad, w_pad, CufftTransformType) != CUFFT_SUCCESS)
 	{

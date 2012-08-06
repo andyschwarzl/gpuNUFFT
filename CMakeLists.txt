@@ -27,6 +27,13 @@ enable_testing()
 
 #Options
 #General DEBUG output 
+SET (DEBUG false)
+OPTION(WITH_DEBUG "Enable DEBUG messages" OFF)
+if (WITH_DEBUG)
+ SET (DEBUG true)
+endif()
+MESSAGE(STATUS "Setting DEBUG Option to ${DEBUG}")
+
 #Matlab DEBUG output
 SET (MATLAB_DEBUG false)
 OPTION(WITH_MATLAB_DEBUG "Enable DEBUG messages for MATLAB calls" OFF)

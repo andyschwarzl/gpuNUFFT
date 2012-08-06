@@ -12,7 +12,8 @@ void gridding3D_cpu(DType* data, DType* crds, DType* gdata, DType* kernel, int* 
 	DType kernel_radius = static_cast<DType>(kernel_width) / 2.0f;
 	DType radius = kernel_radius / static_cast<DType>(width);
 
-	printf("radius rel. to grid width %f\n",radius);
+	if (DEBUG)
+		printf("radius rel. to grid width %f\n",radius);
 	DType width_inv = 1.0f / width;
 	DType radiusSquared = radius * radius;
 	DType kernelRadius_invSqr = 1 / radiusSquared;
@@ -23,8 +24,8 @@ void gridding3D_cpu(DType* data, DType* crds, DType* gdata, DType* kernel, int* 
 	int sector_pad_width = sector_width + 2*(int)floor(kernel_width / 2.0f);
 	int sector_dim = sector_pad_width  * sector_pad_width  * sector_pad_width ;
 	int sector_offset = (int)floor(sector_pad_width / 2.0f);
-
-	printf("sector offset = %d",sector_offset);
+	if (DEBUG)
+		printf("sector offset = %d",sector_offset);
 	DType** sdata =  (DType**)malloc(sector_count*sizeof(DType*));
 
 	assert(sectors != NULL);
@@ -38,16 +39,19 @@ void gridding3D_cpu(DType* data, DType* crds, DType* gdata, DType* kernel, int* 
 		center_y = sector_centers[sec * 3 + 1];
 		center_z = sector_centers[sec * 3 + 2];
 
-		printf("handling center (%d,%d,%d) in sector %d\n",center_x,center_y,center_z,sec);
+		if (DEBUG)
+			printf("handling center (%d,%d,%d) in sector %d\n",center_x,center_y,center_z,sec);
 
 		for (int data_cnt = sectors[sec]; data_cnt < sectors[sec+1];data_cnt++)
 		{
-			printf("handling %d data point = %f\n",data_cnt+1,data[2*data_cnt]);
+			if (DEBUG)
+				printf("handling %d data point = %f\n",data_cnt+1,data[2*data_cnt]);
 
 			x = crds[3*data_cnt];
 			y = crds[3*data_cnt +1];
 			z = crds[3*data_cnt +2];
-			printf("data k-space coords (%f, %f, %f)\n",x,y,z);
+			if (DEBUG)
+				printf("data k-space coords (%f, %f, %f)\n",x,y,z);
 			
 			max_x = sector_pad_width-1;
 			max_y = sector_pad_width-1;
@@ -56,13 +60,15 @@ void gridding3D_cpu(DType* data, DType* crds, DType* gdata, DType* kernel, int* 
 			/* set the boundaries of final dataset for gridding this point */
 			ix = (x + 0.5f) * (width) - center_x + sector_offset;
 			set_minmax(&ix, &imin, &imax, max_x, kernel_radius);
-			printf("ix=%f, imin = %d, imax = %d, max_x = %d\n",ix,imin,imax,max_x);
+			if (DEBUG)
+				printf("ix=%f, imin = %d, imax = %d, max_x = %d\n",ix,imin,imax,max_x);
 			jy = (y + 0.5f) * (width) - center_y + sector_offset;
 			set_minmax(&jy, &jmin, &jmax, max_y, kernel_radius);
 			kz = (z + 0.5f) * (width) - center_z + sector_offset;
 			set_minmax(&kz, &kmin, &kmax, max_z, kernel_radius);
 
-			printf("sector grid position of data point: %f,%f,%f\n",ix,jy,kz);
+			if (DEBUG)
+				printf("sector grid position of data point: %f,%f,%f\n",ix,jy,kz);
 			
 			/* grid this point onto the neighboring cartesian points */
 			for (k=kmin; k<=kmax; k++)	

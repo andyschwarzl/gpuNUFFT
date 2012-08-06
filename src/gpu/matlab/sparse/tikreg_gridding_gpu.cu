@@ -47,7 +47,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     ImageDim = prhs[pcnt++];//1...Image Dimensions
     DType *image_dims = (DType*) mxGetData(ImageDim);
 	const mwSize *dims_imagedim = mxGetDimensions(ImageDim);
-	mexPrintf("Test %d, %d\n",dims_imagedim[0],dims_imagedim[1]);
+	if (MATLAB_DEBUG)
+		mexPrintf("Test %d, %d\n",dims_imagedim[0],dims_imagedim[1]);
 		
 	const mxArray *Sn;
     Sn = prhs[pcnt++];//1...SN Map
@@ -58,7 +59,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	NumSens = prhs[pcnt++];//2...Anzahl Spulen
 	DType *num_sens = (DType*) mxGetData(NumSens);
 	numsens = (int) num_sens[0];
-	mexPrintf("Number of Coils: %d\n",numsens);
+	if (MATLAB_DEBUG)
+		mexPrintf("Number of Coils: %d\n",numsens);
 	
     const int numdim =5;
     const int dims_sz[] = {2, (int)image_dims[0], (int)image_dims[1], (int)image_dims[2],numsens };//2x64x64x44
@@ -113,7 +115,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
         mexPrintf("gpuDevice: %i  lambda^2: %f\n",device_num,lambda);
 
     /**************** Init Cuda *****************/
-	mexPrintf("start...\n");
+	if (MATLAB_DEBUG)
+		mexPrintf("start...\n");
     //CUdevice dev; 
     CUdevice cuDevice = 0;
 	cuDeviceGet(&cuDevice, 0);
@@ -230,7 +233,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
         mexPrintf("num active Vox: %i\n",numVox);
 		mexPrintf("creating cufft plan with %d %d %d dimensions\n",d_pad,h_pad,w_pad);
 	}
-    mexPrintf("trying to create cufft plan with %d\n",CufftTransformType);
+    if (MATLAB_DEBUG)
+		mexPrintf("trying to create cufft plan with %d\n",CufftTransformType);
 	int err;	
 	if (err=cufftPlan3d(&plan, d_pad, h_pad, w_pad, CufftTransformType) != CUFFT_SUCCESS)
 	{

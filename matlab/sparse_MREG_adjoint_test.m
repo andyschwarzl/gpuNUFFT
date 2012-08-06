@@ -23,10 +23,8 @@ G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw,'sparse',E);
 
 %%
 y1 = G3D * x1;
-y1_corr = y1/sqrt(prod([64 64 44 32]));
 %%
 x2 = G3D' * y2;
-x2_corr = x2/sqrt(prod([64 64 44 32]));
 %%
 diff = x1(:)'*x2_corr(:) - y1_corr(:)'*y2(:)
 display(['Adjoint test result: ', num2str(diff)]);

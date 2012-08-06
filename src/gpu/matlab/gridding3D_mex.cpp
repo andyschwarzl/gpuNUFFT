@@ -34,9 +34,9 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	if (MATLAB_DEBUG)
 		mexPrintf("Starting GRIDDING 3D Function...\n");
 	/**************** Init Cuda *****************/
-    CUdevice dev; 
+    //CUdevice dev; 
     
-    if (cuCtxGetDevice(&dev) == CUDA_SUCCESS)
+    //if (cuCtxGetDevice(&dev) == CUDA_SUCCESS)
     {
     //   CUcontext  pctx ;
     //   cuCtxPopCurrent(&pctx);	      
@@ -118,8 +118,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
 	//mexPrintf("%s\n", cudaGetErrorString(cudaGetLastError()));
 
-     CUcontext  pctx ;
-     cuCtxPopCurrent(&pctx);
+     //CUcontext  pctx ;
+     //cuCtxPopCurrent(&pctx);
 }
 
 

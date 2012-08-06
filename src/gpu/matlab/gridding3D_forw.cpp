@@ -35,8 +35,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 		mexPrintf("Starting Forward GRIDDING 3D Function...\n");
 	
 	/**************** Init Cuda *****************/
-    CUdevice dev; 
-    if (cuCtxGetDevice(&dev) == CUDA_SUCCESS)
+    //CUdevice dev; 
+    //if (cuCtxGetDevice(&dev) == CUDA_SUCCESS)
     {
     //   CUcontext  pctx ;
     //   cuCtxPopCurrent(&pctx);	      
@@ -123,8 +123,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	free(kernel);
 
 	//mexPrintf("%s\n", cudaGetErrorString(cudaGetLastError()));
-     CUcontext  pctx ;
-     cuCtxPopCurrent(&pctx);
+    // CUcontext  pctx ;
+    // cuCtxPopCurrent(&pctx);
 }
 
 

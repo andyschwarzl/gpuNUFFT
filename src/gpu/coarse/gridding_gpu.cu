@@ -107,7 +107,7 @@ void gridding3D_gpu(CufftType*	data,			//kspace data array
 		//get result
 		copyFromDevice<CufftType>(data_d, data + data_coil_offset,data_count);
 	}//iterate over coils
-
+	cudaThreadSynchronize();
 	// Destroy the cuFFT plan.
 	freeTotalDeviceMemory(data_d,crds_d,gdata_d,imdata_d,kernel_d,sectors_d,sector_centers_d,NULL);//NULL as stop
 	cufftDestroy(fft_plan);

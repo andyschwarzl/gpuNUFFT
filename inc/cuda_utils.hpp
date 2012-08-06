@@ -67,7 +67,7 @@ void freeTotalDeviceMemory(void* ptr,...)
 		   break;
 	  //printf("free dev ptr...%p %d\n",p,i);
 	  freeDeviceMem((void*)p);
-	  cudaThreadSynchronize();
+	  //cudaThreadSynchronize();
 	  i++;
 	  p= va_arg(list,void*);
 	}

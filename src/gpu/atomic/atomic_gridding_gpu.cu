@@ -33,31 +33,39 @@ void gridding3D_gpu(CufftType*	data,			//kspace data array
 	DType *imdata_d, *crds_d, *kernel_d;//, *temp_gdata_d;
 	CufftType *gdata_d, *data_d;
 	int* sector_centers_d, *sectors_d;
-	
-	printf("allocate and copy imdata of size %d...\n",2*imdata_count*n_coils);
+	if (DEBUG)
+		printf("allocate and copy imdata of size %d...\n",2*imdata_count*n_coils);
 	allocateAndCopyToDeviceMem<DType>(&imdata_d,imdata,2*imdata_count*n_coils);
 
-	printf("allocate and copy gdata of size %d...\n",gi_host->grid_width_dim );
+	if (DEBUG)
+		printf("allocate and copy gdata of size %d...\n",gi_host->grid_width_dim );
 
 	allocateAndSetMem<CufftType>(&gdata_d, gi_host->grid_width_dim,0);
 
-	printf("allocate and copy data of size %d...\n",data_count * n_coils);
+	if (DEBUG)
+		printf("allocate and copy data of size %d...\n",data_count * n_coils);
 	allocateDeviceMem<CufftType>(&data_d,data_count * n_coils);
 
-	printf("allocate and copy coords of size %d...\n",3*data_count);
+	if (DEBUG)
+		printf("allocate and copy coords of size %d...\n",3*data_count);
 	allocateAndCopyToDeviceMem<DType>(&crds_d,crds,3*data_count);
 	
-	printf("allocate and copy kernel of size %d...\n",kernel_count);
+	if (DEBUG)
+		printf("allocate and copy kernel of size %d...\n",kernel_count);
 	allocateAndCopyToDeviceMem<DType>(&kernel_d,kernel,kernel_count);
-	printf("allocate and copy sectors of size %d...\n",sector_count+1);
+	if (DEBUG)
+		printf("allocate and copy sectors of size %d...\n",sector_count+1);
 	allocateAndCopyToDeviceMem<int>(&sectors_d,sectors,sector_count+1);
-	printf("allocate and copy sector_centers of size %d...\n",3*sector_count);
+	if (DEBUG)
+		printf("allocate and copy sector_centers of size %d...\n",3*sector_count);
 	allocateAndCopyToDeviceMem<int>(&sector_centers_d,sector_centers,3*sector_count);
-	printf("sector pad width: %d\n",gi_host->sector_pad_width);
+	if (DEBUG)
+		printf("sector pad width: %d\n",gi_host->sector_pad_width);
 	
 	//Inverse fft plan and execution
 	cufftHandle fft_plan;
-	printf("creating cufft plan with %d,%d,%d dimensions\n",gi_host->grid_width,gi_host->grid_width,gi_host->grid_width);
+	if (DEBUG)
+		printf("creating cufft plan with %d,%d,%d dimensions\n",gi_host->grid_width,gi_host->grid_width,gi_host->grid_width);
 	cufftResult res = cufftPlan3d(&fft_plan, gi_host->grid_width,gi_host->grid_width,gi_host->grid_width, CufftTransformType) ;
 	if (res != CUFFT_SUCCESS) 
 		printf("error on CUFFT Plan creation!!! %d\n",res);
@@ -140,33 +148,43 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 	CufftType *gdata_d, *imdata_d;
 	int* sector_centers_d, *sectors_d;
 
-	printf("allocate and copy imdata of size %d...\n",imdata_count);
+	if (DEBUG)
+		printf("allocate and copy imdata of size %d...\n",imdata_count);
 	allocateAndCopyToDeviceMem<CufftType>(&imdata_d,imdata,imdata_count);//Konvention!!!
 
-	printf("allocate and copy gdata of size %d...\n",gi_host->grid_width_dim);
+	if (DEBUG)
+		printf("allocate and copy gdata of size %d...\n",gi_host->grid_width_dim);
 	allocateDeviceMem<CufftType>(&gdata_d,gi_host->grid_width_dim);
 
-	printf("allocate and copy data of size %d...\n",2*data_count*n_coils);
+	if (DEBUG)
+		printf("allocate and copy data of size %d...\n",2*data_count*n_coils);
 	allocateAndCopyToDeviceMem<DType>(&data_d,data,2*data_count*n_coils);
 
 	/*int temp_grid_count = 2 * sector_count * gi_host->sector_dim;
-	printf("allocate temp grid data of size %d...\n",temp_grid_count);
+	if (DEBUG)
+		printf("allocate temp grid data of size %d...\n",temp_grid_count);
 	allocateDeviceMem<DType>(&temp_gdata_d,temp_grid_count);
 */
-	printf("allocate and copy coords of size %d...\n",3*data_count);
+	if (DEBUG)
+		printf("allocate and copy coords of size %d...\n",3*data_count);
 	allocateAndCopyToDeviceMem<DType>(&crds_d,crds,3*data_count);
 	
-	printf("allocate and copy kernel of size %d...\n",kernel_count);
+	if (DEBUG)
+		printf("allocate and copy kernel of size %d...\n",kernel_count);
 	allocateAndCopyToDeviceMem<DType>(&kernel_d,kernel,kernel_count);
-	printf("allocate and copy sectors of size %d...\n",sector_count+1);
+	if (DEBUG)
+		printf("allocate and copy sectors of size %d...\n",sector_count+1);
 	allocateAndCopyToDeviceMem<int>(&sectors_d,sectors,sector_count+1);
-	printf("allocate and copy sector_centers of size %d...\n",3*sector_count);
+	if (DEBUG)
+		printf("allocate and copy sector_centers of size %d...\n",3*sector_count);
 	allocateAndCopyToDeviceMem<int>(&sector_centers_d,sector_centers,3*sector_count);
-	printf("sector pad width: %d\n",gi_host->sector_pad_width);
+	if (DEBUG)
+		printf("sector pad width: %d\n",gi_host->sector_pad_width);
 	
 	//Inverse fft plan and execution
 	cufftHandle fft_plan;
-	printf("creating cufft plan with %d,%d,%d dimensions\n",gi_host->grid_width,gi_host->grid_width,gi_host->grid_width);
+	if (DEBUG)
+		printf("creating cufft plan with %d,%d,%d dimensions\n",gi_host->grid_width,gi_host->grid_width,gi_host->grid_width);
 	cufftResult res = cufftPlan3d(&fft_plan, gi_host->grid_width,gi_host->grid_width,gi_host->grid_width, CufftTransformType) ;
 	if (res != CUFFT_SUCCESS) 
 		printf("error on CUFFT Plan creation!!! %d\n",res);
@@ -185,10 +203,12 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 
 		if (gridding_out == CONVOLUTION)
 		{
-			printf("stopping output after CONVOLUTION step\n");
+			if (DEBUG)
+				printf("stopping output after CONVOLUTION step\n");
 			//get output
 			copyFromDevice<CufftType>(gdata_d,imdata,gi_host->grid_width_dim);
-			printf("test value at point zero: %f\n",imdata[0].x);
+			if (DEBUG)
+				printf("test value at point zero: %f\n",imdata[0].x);
 			freeTotalDeviceMemory(data_d,crds_d,imdata_d,gdata_d,kernel_d,sectors_d,sector_centers_d,NULL);//NULL as stop token
 
 			free(gi_host);
@@ -207,7 +227,8 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 	
 		if (gridding_out == FFT)
 		{
-			printf("stopping output after FFT step\n");
+			if (DEBUG)
+				printf("stopping output after FFT step\n");
 			//get output
 			copyFromDevice<CufftType>(gdata_d,imdata,gi_host->grid_width_dim);
 			

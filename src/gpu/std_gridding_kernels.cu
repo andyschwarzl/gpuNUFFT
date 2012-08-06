@@ -60,7 +60,8 @@ void performDeapodization(CufftType* imdata_d,
 	//Calculate normalization value (should be at position 0 in interval [-N/2,N/2]) 
 	DType norm_val = calculateDeapodizationValue(0,gi_host->grid_width_inv,gi_host->kernel_width,beta);
 	norm_val = norm_val * norm_val * norm_val;
-	printf("running deapodization with norm_val %.2f\n",norm_val);
+	if (DEBUG)
+		printf("running deapodization with norm_val %.2f\n",norm_val);
 	deapodizationKernel<<<grid_dim,block_dim>>>(imdata_d,beta,norm_val);
 }
 
@@ -75,7 +76,8 @@ void performCrop(CufftType* gdata_d,
     ind_end = ind_start + a.params.im_width -1;
     ress = m(ind_start:ind_end,ind_start:ind_end,ind_start:ind_end,:);*/
 	int ind_off = (int)(gi_host->im_width * ((DType)gi_host->osr - 1.0f)/(DType)2);
-	printf("start cropping image with offset %d\n",ind_off);
+	if (DEBUG)
+		printf("start cropping image with offset %d\n",ind_off);
 
 	dim3 grid_dim(gi_host->im_width,gi_host->im_width,1);
 	dim3 block_dim(gi_host->im_width);
@@ -155,8 +157,8 @@ void performPadding(DType* imdata_d,
 					GriddingInfo* gi_host)
 {
 	int ind_off = (int)(gi_host->im_width * ((DType)gi_host->osr -1.0f)/(DType)2);
-
-	printf("start padding image with offset %d\n",ind_off);
+	if (DEBUG)
+		printf("start padding image with offset %d\n",ind_off);
 
 	dim3 grid_dim(gi_host->im_width,gi_host->im_width,1);
 	dim3 block_dim(gi_host->im_width);

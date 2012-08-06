@@ -95,7 +95,7 @@ inline void showMemoryInfo()
 	size_t free_mem = 0;
 	size_t total_mem = 0;
 	cudaMemGetInfo(&free_mem, &total_mem);
-	//if (DEBUG)
+	if (DEBUG)
 		printf("memory usage, free: %lu total: %lu\n",free_mem,total_mem);
 }	
 

@@ -24,7 +24,7 @@ end;
 smaps = squeeze(smaps_il(1,:,:,:,:) + 1i*smaps_il(2,:,:,:,:));
 clear smaps_il;
 %% Perform Regridding with Kaiser Besser Kernel 64
-osf = 1.25;%1,1.25,1.5,1.75,2
+osf = 1.5;%1,1.25,1.5,1.75,2
 wg = 3;%3-7
 sw = 8;
 imwidth = 64;
@@ -66,7 +66,7 @@ z_pad = padarray(z_ref,[0 0 10]);
 %%
 
 imwidth = 64; %E.imageDim(1);
-osf = 1.25;
+osf = 1.5;
 wg = 3;
 sw = 8;
 k = E.nufftStruct.om'./(2*pi);

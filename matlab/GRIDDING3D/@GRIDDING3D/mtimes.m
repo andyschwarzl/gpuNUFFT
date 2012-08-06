@@ -19,7 +19,7 @@ elseif strcmp(a.method,'gridding')
         %TODO check
         %offset = (a.op.params.im_width - size(a.smaps,3))/2;
         %res = res(:,:,offset+1:(offset+size(a.smaps,3)),:) .* conj(a.smaps(:,:,:,:));
-        res = res(:,:,1:44,:);%TODO
+        res = res(:,:,11:54,:);%TODO
         res = res .* conj(a.smaps);
         res = res / sqrt(prod(a.imageDim));
     else

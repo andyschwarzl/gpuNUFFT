@@ -7,7 +7,7 @@ addpath(genpath('GRIDDING3D'));
 addpath(genpath('../bin'));
 %%
 % test for adjoint property: looks good
-z_pad = padarray(z,[0 0 10]);
+z_pad = z;%padarray(z,[0 0 10]);
 x1 = randn(size(z_pad));
 x1 = repmat(x1,[1 1 1 32]);
 y2 = reshape(randn(size(data)),[11685 32]);
@@ -20,9 +20,9 @@ k = E.nufftStruct.om'./(2*pi);
 w = ones(E.trajectory_length,1);
 %%
 G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw,E.imageDim,E.sensmaps,'false');
-
 %%
 y1 = G3D * x1;
+%%
 x2 = G3D' * y2;
 %%
 diff = x1(:)'*x2(:) - y1(:)'*y2(:)

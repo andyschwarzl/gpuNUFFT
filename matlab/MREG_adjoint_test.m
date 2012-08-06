@@ -19,15 +19,13 @@ imwidth = 64;
 k = E.nufftStruct.om'./(2*pi);
 w = ones(E.trajectory_length,1);
 %%
-G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw,'false');
+G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw,E.imageDim,'false');
 
 %%
 y1 = G3D * x1;
-y1_corr = y1/sqrt(prod([64 64 64]));
 x2 = G3D' * y2;
-x2_corr = x2/sqrt(prod([64 64 64]));
 %%
-diff = x1(:)'*x2_corr(:) - y1_corr(:)'*y2(:)
+diff = x1(:)'*x2(:) - y1(:)'*y2(:)
 display(['Adjoint test result: ', num2str(diff)]);
 
 % Apply to data

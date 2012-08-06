@@ -104,7 +104,7 @@ if working_precision == 1,
     
         %forward gridding single precision
         img = b;
-        
+       
         img_il(1,:,:,:,:) = real(img);
         img_il(2,:,:,:,:) = imag(img);
         

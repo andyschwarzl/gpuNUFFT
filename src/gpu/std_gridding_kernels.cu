@@ -58,14 +58,11 @@ void performDeapodization(CufftType* imdata_d,
 {
 	DType beta = (DType)BETA(gi_host->kernel_width,gi_host->osr);
 
-	dim3 grid_dim(gi_host->im_width,gi_host->im_width,1);	
-	dim3 block_dim(gi_host->im_width);
 	//Calculate normalization value (should be at position 0 in interval [-N/2,N/2]) 
 	DType norm_val = calculateDeapodizationValue(0,gi_host->grid_width_inv,gi_host->kernel_width,beta);
 	norm_val = norm_val * norm_val * norm_val;
 	if (DEBUG)
 		printf("running deapodization with norm_val %.2f\n",norm_val);
-	//deapodizationKernel<<<grid_dim,block_dim>>>(imdata_d,beta,norm_val);
 
 	dim3 new_grid_dim(gi_host->im_width);
 	dim3 new_block_dim(256);

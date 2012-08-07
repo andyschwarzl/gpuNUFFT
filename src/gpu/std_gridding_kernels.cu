@@ -1,21 +1,24 @@
 #include "gridding_kernels.hpp"
 #include "cuda_utils.cuh"
 
-__global__ void deapodizationKernel(CufftType* gdata, DType beta, DType norm_val)
+__global__ void deapodizationKernel(CufftType* gdata, DType beta, DType norm_val, int N)
 {
-	int x=blockIdx.x;
-	int y=blockIdx.y;
-	int z=threadIdx.x;
+	int t = blockIdx.x + threadIdx.x *gridDim.x;
 
-	int ind = getIndex(x,y,z,GI.im_width);
-	
-	DType deapo = calculateDeapodizationAt(x,y,z,GI.im_width_offset,GI.grid_width_inv,GI.kernel_width,beta,norm_val);
-	
-	//check if deapodization value is valid number
-	if (!isnan(deapo))// == deapo)
-	{
-		gdata[ind].x = gdata[ind].x / deapo;//Re
-		gdata[ind].y = gdata[ind].y / deapo;//Im
+	int x, y, z;//, ind;
+	DType deapo;
+	while (t < N) 
+	{ 
+	   getCoordsFromIndex(t, &x, &y, &z, GI.im_width);
+	   
+	   deapo = calculateDeapodizationAt(x,y,z,GI.im_width_offset,GI.grid_width_inv,GI.kernel_width,beta,norm_val);
+	   //check if deapodization value is valid number
+	   if (!isnan(deapo))// == deapo)
+	   {
+		   gdata[t].x = gdata[t].x / deapo;//Re
+		   gdata[t].y = gdata[t].y / deapo;//Im
+	   }
+	   t = t + blockDim.x*gridDim.x;
 	}
 }
 
@@ -62,7 +65,11 @@ void performDeapodization(CufftType* imdata_d,
 	norm_val = norm_val * norm_val * norm_val;
 	if (DEBUG)
 		printf("running deapodization with norm_val %.2f\n",norm_val);
-	deapodizationKernel<<<grid_dim,block_dim>>>(imdata_d,beta,norm_val);
+	//deapodizationKernel<<<grid_dim,block_dim>>>(imdata_d,beta,norm_val);
+
+	dim3 new_grid_dim(gi_host->im_width);
+	dim3 new_block_dim(256);
+	deapodizationKernel<<<new_grid_dim,new_block_dim>>>(imdata_d,beta,norm_val,gi_host->grid_width_dim);
 }
 
 
@@ -103,7 +110,7 @@ void performFFTShift(CufftType* gdata_d,
 	fftShiftKernel<<<block_dim,grid_dim>>>(gdata_d,offset);
 }
 
-__global__ void forwardDeapodizationKernel(DType* imdata, DType beta, DType norm_val)
+/*__global__ void forwardDeapodizationKernel(DType* imdata, DType beta, DType norm_val)
 {
 	int x=blockIdx.x;
 	int y=blockIdx.y;
@@ -119,6 +126,28 @@ __global__ void forwardDeapodizationKernel(DType* imdata, DType beta, DType norm
 	{
 		imdata[ind] = imdata[ind] / deapo; // / deapo;//Re
 		imdata[ind+1] = imdata[ind+1] / deapo ; /// deapo;//Im
+	}
+}*/
+
+__global__ void forwardDeapodizationKernel(DType* imdata, DType beta, DType norm_val, int N)
+{
+	int t = blockIdx.x + blockIdx.y * gridDim.x + threadIdx.x *gridDim.x*gridDim.y;
+
+	int x, y, z;
+	DType deapo;
+	while (t < N) 
+	{ 
+	   getCoordsFromIndex(t, &x, &y, &z, GI.im_width);
+	   
+	   int ind = 2*getIndex(x,y,z,GI.im_width);
+	   deapo = calculateDeapodizationAt(x,y,z,GI.im_width_offset,GI.grid_width_inv,GI.kernel_width,beta,norm_val);
+	   //check if deapodization value is valid number
+	   if (!isnan(deapo))// == deapo)
+	   {
+		   imdata[ind] = imdata[ind] / deapo; // / deapo;//Re
+		   imdata[ind+1] = imdata[ind+1] / deapo ; /// deapo;//Im
+	   }
+	   t = t + blockDim.x*gridDim.x*gridDim.y;
 	}
 }
 
@@ -149,7 +178,7 @@ void performForwardDeapodization(DType* imdata_d,
 	DType norm_val = calculateDeapodizationValue(0,gi_host->grid_width_inv,gi_host->kernel_width,beta);
 	norm_val = norm_val * norm_val * norm_val;
 
-	forwardDeapodizationKernel<<<grid_dim,block_dim>>>(imdata_d,beta,norm_val);
+	forwardDeapodizationKernel<<<grid_dim,block_dim>>>(imdata_d,beta,norm_val,gi_host->im_width_dim);
 }
 
 void performPadding(DType* imdata_d,

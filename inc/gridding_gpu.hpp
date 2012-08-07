@@ -75,6 +75,7 @@ struct GriddingInfo
 	DType grid_width_inv;
 
 	int im_width;
+	int im_width_dim;
 	int im_width_offset;
 
 	DType osr;

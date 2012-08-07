@@ -50,13 +50,13 @@ SET(GPU_DOUBLE_PREC OFF CACHE BOOL "Enable double precision floating point opera
 
 if(GPU_DOUBLE_PREC)
   SET(PREC_SUFFIX "_d")
-  SET(CUDA_NVCC_FLAGS "-arch;sm_13")
+  SET(CUDA_NVCC_FLAGS "-arch;sm_13;--ptxas-options=-v")
 else(GPU_DOUBLE_PREC)
   SET(PREC_SUFFIX "_f")
-SET(CUDA_NVCC_FLAGS "-arch;sm_11")
+SET(CUDA_NVCC_FLAGS "-arch;sm_11;--ptxas-options=-v")
 endif(GPU_DOUBLE_PREC)
 if(GEN_ATOMIC)
-  SET(CUDA_NVCC_FLAGS "-arch;sm_20")
+  SET(CUDA_NVCC_FLAGS "-arch;sm_20;--ptxas-options=-v")
 endif(GEN_ATOMIC)
 
 MESSAGE("setting NVCC FLAGS to: ${CUDA_NVCC_FLAGS}")

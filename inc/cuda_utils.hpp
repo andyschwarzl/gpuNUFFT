@@ -10,6 +10,8 @@
 #include "gridding_gpu.hpp"
 #include <stdarg.h>
 
+#define MIN(X,Y) ((X) < (Y) ? (X) : (Y))
+
 #define HANDLE_ERROR(err) { \
 	if (err != cudaSuccess) \
 	{ \
@@ -88,6 +90,11 @@ __device__ inline float atomicFloatAdd(float* address, float value)
         new_old += old;
   }
   return ret;
+}
+
+inline dim3 getOptimalGridDim(long im_dim, long thread_count)
+{
+	return dim3(MIN((im_dim+thread_count-1)/thread_count,128*128));//128*128 empiric, max is 256*256
 }
 
 inline void showMemoryInfo()

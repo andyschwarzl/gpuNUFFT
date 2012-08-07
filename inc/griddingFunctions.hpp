@@ -102,6 +102,14 @@ __inline__ __device__ __host__ int getIndex(int x, int y, int z, int gwidth)
 	return x + gwidth * (y + gwidth * z);
 }
 
+__inline__ __device__ __host__ void getCoordsFromIndex(int index, int* x, int* y, int* z, int w)
+{
+	*x = index % w;
+	*z = (int)(index / (w*w)) ;
+	int r = index - *z * w * w;
+	*y = (int)(r / w);	
+}
+
 __inline__ __device__ __host__ bool isOutlier(int x, int y, int z, int center_x, int center_y, int center_z, int width, int sector_offset)
 {
 		return ((center_x - sector_offset + x) >= width ||

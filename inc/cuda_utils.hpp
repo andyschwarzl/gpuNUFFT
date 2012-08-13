@@ -11,6 +11,7 @@
 #include <stdarg.h>
 
 #define MIN(X,Y) ((X) < (Y) ? (X) : (Y))
+#define MAX(X,Y) ((X) >= (Y) ? (X) : (Y))
 
 #define HANDLE_ERROR(err) { \
 	if (err != cudaSuccess) \
@@ -94,7 +95,7 @@ __device__ inline float atomicFloatAdd(float* address, float value)
 
 inline dim3 getOptimalGridDim(long im_dim, long thread_count)
 {
-	return dim3(MIN((im_dim+thread_count-1)/thread_count,128*128));//128*128 empiric, max is 256*256
+	return dim3(MIN((im_dim+thread_count-1)/thread_count,128*128));//128*128 empiric, max is 256*256 = 65536
 }
 
 inline void showMemoryInfo()

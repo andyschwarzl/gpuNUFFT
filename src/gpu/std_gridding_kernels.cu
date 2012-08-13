@@ -4,13 +4,13 @@
 
 __global__ void deapodizationKernel(CufftType* gdata, DType beta, DType norm_val, int N)
 {
-	int t = blockIdx.x + threadIdx.x *gridDim.x;
+	int t = threadIdx.x +  blockIdx.x *blockDim.x;
 
-	int x, y, z;//, ind;
+	int x, y, z;
 	DType deapo;
 	while (t < N) 
 	{ 
-	   getCoordsFromIndex(t, &x, &y, &z, GI.grid_width);
+	   getCoordsFromIndex(t, &x, &y, &z, GI.im_width);
 	   
 	   deapo = calculateDeapodizationAt(x,y,z,GI.im_width_offset,GI.grid_width_inv,GI.kernel_width,beta,norm_val);
 	   //check if deapodization value is valid number
@@ -25,15 +25,14 @@ __global__ void deapodizationKernel(CufftType* gdata, DType beta, DType norm_val
 
 __global__ void cropKernel(CufftType* gdata,CufftType* imdata, int offset, int N)
 {
-	int t = blockIdx.x + threadIdx.x *gridDim.x;
+	int t = threadIdx.x +  blockIdx.x *blockDim.x;
 
-	int x, y, z, im_ind, grid_ind;
+	int x, y, z, grid_ind;
 	while (t < N) 
-	{ 
+	{
 		getCoordsFromIndex(t, &x, &y, &z, GI.im_width);
 		grid_ind = getIndex(offset+x,offset+y,offset+z,GI.grid_width);
-		im_ind = t;
-		imdata[im_ind] = gdata[grid_ind];
+		imdata[t] = gdata[grid_ind];
 		t = t + blockDim.x*gridDim.x;
 	}
 }
@@ -41,19 +40,19 @@ __global__ void cropKernel(CufftType* gdata,CufftType* imdata, int offset, int N
 __global__ void fftShiftKernel(CufftType* gdata, int offset, int N)
 {
 	int t = threadIdx.x +  blockIdx.x *blockDim.x;
-	int x, y, z;
+	int x, y, z, x_opp, y_opp, z_opp, ind_opp;
 	while (t < N) 
 	{ 
 		getCoordsFromIndex(t, &x, &y, &z, GI.grid_width);
 		//calculate "opposite" coord pair
-		int x_opp = (x + offset) % GI.grid_width;
-		int y_opp = (y + offset) % GI.grid_width;
-		int z_opp = (z + offset) % GI.grid_width;
-
+		x_opp = (x + offset) % GI.grid_width;
+		y_opp = (y + offset) % GI.grid_width;
+		z_opp = (z + offset) % GI.grid_width;
+		ind_opp = getIndex(x_opp,y_opp,z_opp,GI.grid_width);
 		//swap points
-		CufftType temp = gdata[getIndex(x,y,z,GI.grid_width)];
-		gdata[getIndex(x,y,z,GI.grid_width)] = gdata[getIndex(x_opp,y_opp,z_opp,GI.grid_width)];
-		gdata[getIndex(x_opp,y_opp,z_opp,GI.grid_width)] = temp;
+		CufftType temp = gdata[t];
+		gdata[t] = gdata[ind_opp];
+		gdata[ind_opp] = temp;
 		
 		t = t + blockDim.x*gridDim.x;
 	}
@@ -74,7 +73,7 @@ void performDeapodization(CufftType* imdata_d,
 
 	dim3 grid_dim(getOptimalGridDim(gi_host->im_width_dim,THREAD_BLOCK_SIZE));
 	dim3 block_dim(THREAD_BLOCK_SIZE);
-	deapodizationKernel<<<grid_dim,block_dim>>>(imdata_d,beta,norm_val,gi_host->grid_width_dim);
+	deapodizationKernel<<<grid_dim,block_dim>>>(imdata_d,beta,norm_val,gi_host->im_width_dim);
 }
 
 
@@ -82,11 +81,6 @@ void performCrop(CufftType* gdata_d,
 				 CufftType* imdata_d,
 				 GriddingInfo* gi_host)
 {
-	/*crop data 
-    ind_off = (a.params.im_width * (double(a.params.osr)-1) / 2) + 1;
-    ind_start = ind_off;
-    ind_end = ind_start + a.params.im_width -1;
-    ress = m(ind_start:ind_end,ind_start:ind_end,ind_start:ind_end,:);*/
 	int ind_off = (int)(gi_host->im_width * ((DType)gi_host->osr - 1.0f)/(DType)2);
 	if (DEBUG)
 		printf("start cropping image with offset %d\n",ind_off);
@@ -119,7 +113,7 @@ void performFFTShift(CufftType* gdata_d,
 
 __global__ void forwardDeapodizationKernel(DType* imdata, DType beta, DType norm_val, int N)
 {
-	int t = blockIdx.x + threadIdx.x *gridDim.x;
+	int t = threadIdx.x +  blockIdx.x *blockDim.x;
 
 	int x, y, z,ind;
 	DType deapo;
@@ -132,8 +126,8 @@ __global__ void forwardDeapodizationKernel(DType* imdata, DType beta, DType norm
 	   if (!isnan(deapo))// == deapo)
 	   {
 		   ind = 2*t;
-		   imdata[ind] = imdata[ind] / deapo; // / deapo;//Re
-		   imdata[ind+1] = imdata[ind+1] / deapo ; /// deapo;//Im
+		   imdata[ind] = imdata[ind] / deapo;//Re
+		   imdata[ind+1] = imdata[ind+1] / deapo ; //Im
 	   }
 	   t = t + blockDim.x*gridDim.x;
 	}
@@ -141,13 +135,13 @@ __global__ void forwardDeapodizationKernel(DType* imdata, DType beta, DType norm
 
 __global__ void paddingKernel(DType* imdata,CufftType* gdata, int offset,int N)
 {	
-	int t = blockIdx.x + threadIdx.x *gridDim.x;
+	int t = threadIdx.x +  blockIdx.x *blockDim.x;
 
-	int x, y, z, im_ind;
+	int x, y, z, im_ind,grid_ind;
 	while (t < N) 
 	{ 
 		getCoordsFromIndex(t, &x, &y, &z, GI.im_width);
-		int grid_ind =  getIndex(offset + x,offset + y,offset +z,GI.grid_width);
+		grid_ind =  getIndex(offset + x,offset + y,offset +z,GI.grid_width);
 		im_ind = 2*t;
 		gdata[grid_ind].x = imdata[im_ind];
 		gdata[grid_ind].y = imdata[im_ind+1];
@@ -162,8 +156,9 @@ void performForwardDeapodization(DType* imdata_d,
 {
 	DType beta = (DType)BETA(gi_host->kernel_width,gi_host->osr);
 
-	dim3 grid_dim(gi_host->im_width,gi_host->im_width,1);	
-	dim3 block_dim(gi_host->im_width);
+	dim3 grid_dim(getOptimalGridDim(gi_host->im_width_dim,THREAD_BLOCK_SIZE));
+	dim3 block_dim(THREAD_BLOCK_SIZE);
+	
 	//Calculate normalization value (should be at position 0 in interval [-N/2,N/2]) 
 	DType norm_val = calculateDeapodizationValue(0,gi_host->grid_width_inv,gi_host->kernel_width,beta);
 	norm_val = norm_val * norm_val * norm_val;

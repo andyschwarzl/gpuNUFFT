@@ -84,6 +84,7 @@ struct GriddingInfo
 	int sector_width;
 	int sector_dim;
 	int sector_pad_width;
+	int sector_pad_max;
 	int sector_offset;
 
 	DType radiusSquared;

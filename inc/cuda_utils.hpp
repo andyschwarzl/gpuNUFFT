@@ -152,6 +152,7 @@ GriddingInfo* initAndCopyGriddingInfo(int sector_count,
 	
 	gi_host->kernel_radius = kernel_radius;
 	gi_host->sector_pad_width = sector_pad_width;
+	gi_host->sector_pad_max = sector_pad_width - 1;
 	gi_host->sector_dim = sector_dim;
 	gi_host->sector_offset = sector_offset;
 	gi_host->radiusSquared = radiusSquared;

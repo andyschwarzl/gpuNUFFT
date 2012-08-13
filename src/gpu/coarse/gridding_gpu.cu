@@ -93,7 +93,6 @@ void gridding3D_gpu(CufftType*	data,			//kspace data array
 		
 		// eventually free imdata_d
 		// Forward FFT to kspace domain
-		//if (err=cufftExecC2C(fft_plan, gdata_d, gdata_d, CUFFT_FORWARD) != CUFFT_SUCCESS)
 		if (err=pt2CufftExec(fft_plan, gdata_d, gdata_d, CUFFT_FORWARD) != CUFFT_SUCCESS)
 		{
 			printf("cufft has failed with err %i \n",err);

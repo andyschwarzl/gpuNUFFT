@@ -176,7 +176,7 @@ void performConvolution( DType* data_d,
 	convolutionKernel<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d);
 }
 
-//very slow way of composing the output 
+//very slow way of composing the output, should only be used on compute capabilties lower than 2.0
 void composeOutput(DType* temp_gdata_d, CufftType* gdata_d, int* sector_centers_d, GriddingInfo* gi_host)
 {
 	dim3 grid_dim(1);

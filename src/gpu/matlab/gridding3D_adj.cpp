@@ -33,7 +33,15 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 {
 	if (MATLAB_DEBUG)
 		mexPrintf("Starting GRIDDING 3D Function...\n");
-	//TODO check input params count first!
+  
+  int cuDevice = 0;
+	cudaGetDevice(&cuDevice);
+	// Create context
+	//CUcontext cuContext;
+	//cuCtxCreate(&cuContext, 0, cuDevice);
+	
+
+//TODO check input params count first!
 	/*  if(nrhs != 9 ) {
 	printf("\nUsage:\n");
     return;
@@ -79,7 +87,15 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 		
 	if (MATLAB_DEBUG)
 		mexPrintf("passed Params, IM_WIDTH: %d, OSR: %f, KERNEL_WIDTH: %d, SECTOR_WIDTH: %d\n",im_width,osr,kernel_width,sector_width);
-   
+  
+	if (MATLAB_DEBUG)
+	{
+		size_t free_mem = 0;
+		size_t total_mem = 0;
+		cudaMemGetInfo(&free_mem, &total_mem);
+		mexPrintf("memory usage on device, free: %lu total: %lu\n",free_mem,total_mem);
+	}
+ 
 	long kernel_count = calculateGrid3KernelSize(osr, kernel_width/2.0f);
 	DType* kernel = (DType*) calloc(kernel_count,sizeof(float));
 	loadGrid3Kernel(kernel,kernel_count,kernel_width,osr);
@@ -108,6 +124,9 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
 	free(kernel);
 
+//	cudaDeviceReset();
+     //CUcontext  pctx ;
+     //cuCtxPopCurrent(&pctx);	
 	//mexPrintf("%s\n", cudaGetErrorString(cudaGetLastError()));
 }
 

@@ -34,6 +34,12 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	if (MATLAB_DEBUG)
 		mexPrintf("Starting Forward GRIDDING 3D Function...\n");
 	
+  int cuDevice;
+	cudaGetDevice(&cuDevice);
+	// Create context
+	//CUcontext cuContext;
+	//cuCtxCreate(&cuContext, 0, cuDevice);
+	
 	//TODO check input params count first!
 	/*  if(nrhs != 9 ) {
 	printf("\nUsage:\n");
@@ -114,7 +120,9 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	gridding3D_gpu(data,data_entries,n_coils,coords,imdata,im_count,grid_width,kernel,kernel_count,kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,CONVOLUTION);
 	
 	free(kernel);
-
+	//cudaDeviceReset();
+  //   CUcontext  pctx ;
+  //   cuCtxPopCurrent(&pctx);	
 	//mexPrintf("%s\n", cudaGetErrorString(cudaGetLastError()));
 }
 

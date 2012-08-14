@@ -116,6 +116,7 @@ __global__ void convolutionKernel( DType* data,
 	    //write shared data to temporary output grid
 		int sector_ind_offset = sec * GI.sector_dim;
 		
+		__syncthreads();
 		for (k=threadIdx.z;k<GI.sector_pad_width; k += blockDim.z)
 		{
 			j=threadIdx.y;

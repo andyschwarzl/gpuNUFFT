@@ -5,19 +5,19 @@ clear all; close all; clc;
 addpath ../bin  
 addpath ../../daten
 addpath(genpath('./GRIDDING3D'));
-
+addpath(genpath('../../bUTE/utils'));
 %% Load data
 load img_brain_4ch;
 %load noisy_phantom;
 %load calf_data_cs;
 %%
-trimmed_size = 256;
+trimmed_size = 128;
 img = img(128-trimmed_size/2+1:128+trimmed_size/2,128-trimmed_size/2+1:128+trimmed_size/2,:);
 %%
-n_chn = 4;
+n_chn = 2;
 img_a = zeros([trimmed_size,trimmed_size,trimmed_size,n_chn]);
 %%
-for chn = 1:4,
+for chn = 1:n_chn,
     img_a(:,:,:,chn) = repmat(img(:,:,chn),[1 1 trimmed_size]);
 end
 %img_a(1:10,1:10,:) = 0;
@@ -25,7 +25,7 @@ end
 %img_a = padarray(img(:,:,1),[0 0 trimmed_size/2]);
 %%
 size(img_a)
-%figure, imshow(imresize(abs(img_a(:,:,1,4)),4),[]), title('gridding input');
+%figure, imshow(imresize(abs(img_a(:,:,1,n_chn)),4),[]), title('gridding input');
 
 [nPE,nFE,nCh]=size(img_a);
 
@@ -41,7 +41,7 @@ k=rho*exp(-1j*theta);
 %FT = GRIDDING3D(k, 1, 1, 0, [nPE,nFE], 2);
 k_traj = [real(k(:))'; imag(k(:))';zeros(1,length(k(:)))];
 imwidth = nPE;
-osf = 1.5;
+osf = 1.25;
 wg = 3;
 sw = 8;
 w = ones(1,length(k(:)));
@@ -52,18 +52,21 @@ dataRadial = FT*img_a;
 %% density compensation
 w = abs(rho);
 w = repmat(w, [1, numSpokes,1]);
-w_mc = repmat(w(:),[1 4]);
+w_mc = repmat(w(:),[1 n_chn]);
 dataRadial_dc = dataRadial.*w_mc;
 %% recon
 %no density compnesation
-imgRegrid_kb = FT'*dataRadial;
-%density compensated
-imgRegrid_kb_dc = FT'*dataRadial_dc;
+%imgRegrid_kb = FT'*dataRadial;
+imgRegrid_kb = regrid_multicoil_gpu(reshape(dataRadial,[size(k),chn]),FT);
+%% density compensated
+%imgRegrid_kb_dc = FT'*dataRadial_dc;
+imgRegrid_kb_dc = regrid_multicoil_gpu(reshape(dataRadial_dc,[size(k),chn]),FT);
 
 %% show results
-%figure, imshow(imresize(((abs(imgRegrid_kb_dc(:,:,32,4)))),4),[]), title('gridding dc');
+%figure, imshow(imresize(((abs(imgRegrid_kb_dc(:,:,32,n_chn)))),4),[]), title('gridding dc');
 
 %% merge channels
 recon_sos_dc = sqrt(sum(abs(imgRegrid_kb_dc).^2,4));
 %figure, imshow(imresize(((abs(recon_sos_dc(:,:,32)))),4),[]), title('gridding dc sos');
 disp('finished');
+exit;

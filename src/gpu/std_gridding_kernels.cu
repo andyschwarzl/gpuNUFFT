@@ -95,7 +95,7 @@ void performFFTShift(CufftType* gdata_d,
 					 FFTShiftDir shift_dir,
 					 int width)
 {
-	dim3 grid_dim(getOptimalGridDim(width,THREAD_BLOCK_SIZE));
+	dim3 grid_dim(getOptimalGridDim(width*width,THREAD_BLOCK_SIZE));
 	dim3 block_dim(THREAD_BLOCK_SIZE);
 	int offset= 0;
 

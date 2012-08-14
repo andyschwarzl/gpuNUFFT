@@ -11,7 +11,7 @@ load img_brain_4ch;
 %load noisy_phantom;
 %load calf_data_cs;
 %%
-trimmed_size = 64;
+trimmed_size = 256;
 img = img(128-trimmed_size/2+1:128+trimmed_size/2,128-trimmed_size/2+1:128+trimmed_size/2,:);
 %%
 n_chn = 4;
@@ -25,7 +25,7 @@ end
 %img_a = padarray(img(:,:,1),[0 0 trimmed_size/2]);
 %%
 size(img_a)
-figure, imshow(imresize(abs(img_a(:,:,1,4)),4),[]), title('gridding input');
+%figure, imshow(imresize(abs(img_a(:,:,1,4)),4),[]), title('gridding input');
 
 [nPE,nFE,nCh]=size(img_a);
 
@@ -61,9 +61,9 @@ imgRegrid_kb = FT'*dataRadial;
 imgRegrid_kb_dc = FT'*dataRadial_dc;
 
 %% show results
-figure, imshow(imresize(((abs(imgRegrid_kb_dc(:,:,32,4)))),4),[]), title('gridding dc');
+%figure, imshow(imresize(((abs(imgRegrid_kb_dc(:,:,32,4)))),4),[]), title('gridding dc');
 
 %% merge channels
 recon_sos_dc = sqrt(sum(abs(imgRegrid_kb_dc).^2,4));
-figure, imshow(imresize(((abs(recon_sos_dc(:,:,32)))),4),[]), title('gridding dc sos');
-
+%figure, imshow(imresize(((abs(recon_sos_dc(:,:,32)))),4),[]), title('gridding dc sos');
+disp('finished');

@@ -107,7 +107,6 @@ void performFFTShift(CufftType* gdata_d,
 	{
 		offset = (int)floor((DType)(width / (DType)2.0));
 	}
-	int width_half = (int)ceil(width/(DType)2.0);
 	fftShiftKernel<<<grid_dim,block_dim>>>(gdata_d,offset,width*width*width/2);
 }
 

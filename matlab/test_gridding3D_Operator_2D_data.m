@@ -2,7 +2,7 @@
 clear all; close all; clc;
 
 %% add bin to path
-addpath ../bin
+addpath ../bin  
 addpath ../../daten
 addpath(genpath('./GRIDDING3D'));
 

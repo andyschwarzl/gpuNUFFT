@@ -25,11 +25,11 @@ enum FFTShiftDir
 	INVERSE
 };
 
-void gridding3D_gpu(CufftType*	data,			//kspace data array 
-					int			data_count,		//data count, samples per trajectory
-					int			n_coils,		//number of coils 
+void gridding3D_gpu(CufftType**	data,			// kspace output data array 
+					int			data_count,		// data count, samples per trajectory
+					int			n_coils,		// number of coils 
 					DType*		crds,			//
-					DType*		imdata,			//
+					DType*		imdata,			// image input data array
 					int			imdata_count,	//			
 					int			grid_width,		//
 					DType*		kernel,			//
@@ -40,14 +40,14 @@ void gridding3D_gpu(CufftType*	data,			//kspace data array
 					int*		sector_centers,	//
 					int			sector_width,	//
 					int			im_width,		//
-					DType		osr,			//
+					DType		osr,			// oversampling ratio
 					const GriddingOutput gridding_out);
 
-void gridding3D_gpu_adj(DType*		data,			//kspace data array 
-						int			data_count,		//data count, samples per trajectory
-						int			n_coils,		//number of coils 
-						DType*		crds,			//
-						CufftType*	imdata,			//
+void gridding3D_gpu_adj(DType*		data,			// kspace input data array
+						int			data_count,		// data count, samples per trajectory
+						int			n_coils,		// number of coils 
+						DType*		crds,			// 
+						CufftType**	imdata,			// image output data array
 						int			imdata_count,	//			
 						int			grid_width,		//
 						DType*		kernel,			//
@@ -58,7 +58,7 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 						int*		sector_centers,	//
 						int			sector_width,	//
 						int			im_width,		//
-						DType		osr,			//
+						DType		osr,			// oversampling ratio
 						const GriddingOutput gridding_out);
 
 struct GriddingInfo 

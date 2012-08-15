@@ -8,7 +8,7 @@
   * TODO
   * NFFT
 **/
-void gridding3D_gpu(CufftType*	data,			//kspace data array 
+void gridding3D_gpu(CufftType**	data,			//kspace data array 
 					int			data_count,		//data count, samples per trajectory
 					int			n_coils,		//number of coils 
 					DType*		crds,			//
@@ -104,7 +104,7 @@ void gridding3D_gpu(CufftType*	data,			//kspace data array
 		performForwardConvolution(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,gi_host);
 
 		//get result
-		copyFromDevice<CufftType>(data_d, data + data_coil_offset,data_count);
+		copyFromDevice<CufftType>(data_d, *data + data_coil_offset,data_count);
 	}//iterate over coils
 	cudaThreadSynchronize();
 	// Destroy the cuFFT plan.
@@ -122,7 +122,7 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 						int			data_count,		//data count, samples per trajectory
 						int			n_coils,		//number of coils 
 						DType*		crds,			//
-						CufftType*	imdata,			//
+						CufftType**	imdata,			//
 						int			imdata_count,	//			
 						int			grid_width,		//
 						DType*		kernel,			//
@@ -150,7 +150,7 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 
 	if (DEBUG)
 		printf("allocate and copy imdata of size %d...\n",imdata_count);
-	allocateAndCopyToDeviceMem<CufftType>(&imdata_d,imdata,imdata_count);//Konvention!!!
+	allocateAndCopyToDeviceMem<CufftType>(&imdata_d,*imdata,imdata_count);//Konvention!!!
 
 	if (DEBUG)
 		printf("allocate and copy gdata of size %d...\n",gi_host->grid_width_dim);
@@ -209,9 +209,9 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 			if (DEBUG)
 				printf("stopping output after CONVOLUTION step\n");
 			//get output
-			copyFromDevice<CufftType>(gdata_d,imdata,gi_host->grid_width_dim);
+			copyFromDevice<CufftType>(gdata_d,*imdata,gi_host->grid_width_dim);
 			if (DEBUG)
-				printf("test value at point zero: %f\n",imdata[0].x);
+				printf("test value at point zero: %f\n",(*imdata)[0].x);
 			freeTotalDeviceMemory(data_d,crds_d,imdata_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d,NULL);//NULL as stop token
 
 			free(gi_host);
@@ -232,7 +232,7 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 			if (DEBUG)
 				printf("stopping output after FFT step\n");
 			//get output
-			copyFromDevice<CufftType>(gdata_d,imdata,gi_host->grid_width_dim);
+			copyFromDevice<CufftType>(gdata_d,*imdata,gi_host->grid_width_dim);
 			
 			//free memory
 			if (cufftDestroy(fft_plan) != CUFFT_SUCCESS)
@@ -249,9 +249,10 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 		performCrop(gdata_d,imdata_d,gi_host);
 		
 		performDeapodization(imdata_d,gi_host);
-		
+		printf("im_coil_offset : %d\n",im_coil_offset);
+		printf("pointer start : %p -> + %d = %p\n",*imdata,im_coil_offset,*imdata+im_coil_offset);
 		//get result
-		copyFromDevice<CufftType>(imdata_d,imdata+im_coil_offset,imdata_count);
+		copyFromDevice<CufftType>(imdata_d,*imdata+im_coil_offset,imdata_count);
 	}//iterate over coils
 	cudaThreadSynchronize();
 	// Destroy the cuFFT plan.

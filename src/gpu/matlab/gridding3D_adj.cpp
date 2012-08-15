@@ -120,7 +120,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	if (imdata == NULL)
      mexErrMsgTxt("Could not create output mxArray.\n");
 
-	gridding3D_gpu_adj(data,data_count,n_coils,coords,imdata,im_count,grid_width,kernel,kernel_count,kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,DEAPODIZATION);//CONVOLUTION);
+	gridding3D_gpu_adj(data,data_count,n_coils,coords,&imdata,im_count,grid_width,kernel,kernel_count,kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,DEAPODIZATION);//CONVOLUTION);
 
 	free(kernel);
 

@@ -11,7 +11,7 @@ load img_brain_4ch;
 %load noisy_phantom;
 %load calf_data_cs;
 %%
-trimmed_size = 224;
+trimmed_size = 64;
 img = img(128-trimmed_size/2+1:128+trimmed_size/2,128-trimmed_size/2+1:128+trimmed_size/2,:);
 %%
 n_chn = 2;
@@ -63,10 +63,10 @@ imgRegrid_kb = regrid_multicoil_gpu(reshape(dataRadial,[size(k),chn]),FT);
 imgRegrid_kb_dc = regrid_multicoil_gpu(reshape(dataRadial_dc,[size(k),chn]),FT);
 
 %% show results
-%figure, imshow(imresize(((abs(imgRegrid_kb_dc(:,:,32,n_chn)))),4),[]), title('gridding dc');
+figure, imshow(imresize(((abs(imgRegrid_kb_dc(:,:,32,n_chn)))),4),[]), title('gridding dc');
 
 %% merge channels
 recon_sos_dc = sqrt(sum(abs(imgRegrid_kb_dc).^2,4));
 %figure, imshow(imresize(((abs(recon_sos_dc(:,:,32)))),4),[]), title('gridding dc sos');
 disp('finished');
-exit;
+%exit;

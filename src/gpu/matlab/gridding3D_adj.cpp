@@ -115,13 +115,15 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
 	long im_count = dims_im[1]*dims_im[2]*dims_im[3];
 	
-	plhs[0] = mxCreateNumericArray(n_dims,(const mwSize*)dims_im,mxGetClassID(prhs[0]),mxREAL);
+	//plhs[0] = mxCreateNumericArray(n_dims,(const mwSize*)dims_im,mxGetClassID(prhs[0]),mxREAL);
+	plhs[0] = mxCreateNumericArray(n_dims,(const mwSize*)dims_im,mxSINGLE_CLASS,mxREAL);
+	
     imdata = (CufftType*)mxGetData(plhs[0]);
 	if (imdata == NULL)
      mexErrMsgTxt("Could not create output mxArray.\n");
 
 	gridding3D_gpu_adj(data,data_count,n_coils,coords,&imdata,im_count,grid_width,kernel,kernel_count,kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,DEAPODIZATION);//CONVOLUTION);
-   cudaThreadSynchronize();
+    cudaThreadSynchronize();
 	free(kernel);
 
 //	cudaDeviceReset();

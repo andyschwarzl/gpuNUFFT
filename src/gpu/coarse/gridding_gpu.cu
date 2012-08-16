@@ -102,14 +102,14 @@ void gridding3D_gpu(CufftType**	data,			//kspace data array
 		
 		// convolution and resampling to non-standard trajectory
 		performForwardConvolution(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,gi_host);
-
+		cudaThreadSynchronize();
 		//get result
 		copyFromDevice<CufftType>(data_d, *data + data_coil_offset,data_count);
 	}//iterate over coils
+	cufftDestroy(fft_plan);
 	cudaThreadSynchronize();
 	// Destroy the cuFFT plan.
 	freeTotalDeviceMemory(data_d,crds_d,gdata_d,imdata_d,kernel_d,sectors_d,sector_centers_d,NULL);//NULL as stop
-	cufftDestroy(fft_plan);
 	free(gi_host);
 }
 
@@ -249,7 +249,7 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 		performCrop(gdata_d,imdata_d,gi_host);
 		
 		performDeapodization(imdata_d,gi_host);
-
+		cudaThreadSynchronize();
 		//get result
 		copyFromDevice<CufftType>(imdata_d,*imdata+im_coil_offset,imdata_count);
 	}//iterate over coils

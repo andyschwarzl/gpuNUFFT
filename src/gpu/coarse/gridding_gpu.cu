@@ -243,20 +243,19 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 			printf("last cuda error: %s\n", cudaGetErrorString(cudaGetLastError()));
 			return;
 		}
-
+		
 		performFFTShift(gdata_d,INVERSE,gi_host->grid_width);
 		
 		performCrop(gdata_d,imdata_d,gi_host);
 		
 		performDeapodization(imdata_d,gi_host);
-		printf("im_coil_offset : %d\n",im_coil_offset);
-		printf("pointer start : %p -> + %d = %p\n",*imdata,im_coil_offset,*imdata+im_coil_offset);
+
 		//get result
 		copyFromDevice<CufftType>(imdata_d,*imdata+im_coil_offset,imdata_count);
 	}//iterate over coils
-	cudaThreadSynchronize();
 	// Destroy the cuFFT plan.
 	cufftDestroy(fft_plan);
+	cudaThreadSynchronize();
 	freeTotalDeviceMemory(data_d,crds_d,gdata_d,imdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d,NULL);//NULL as stop
 	free(gi_host);
 }

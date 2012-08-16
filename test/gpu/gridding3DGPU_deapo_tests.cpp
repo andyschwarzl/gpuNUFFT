@@ -85,7 +85,7 @@ TEST(TestGPUGriddingDeapo,KernelCall1Sector2Coils)
 {
 	int kernel_width = 5;
 	//oversampling ratio
-	float osr = 2;//DEFAULT_OVERSAMPLING_RATIO;
+	float osr = 2.0f;//DEFAULT_OVERSAMPLING_RATIO;
 
 	long kernel_entries = calculateGrid3KernelSize(osr,kernel_width/2.0f);
 	DType *kern = (DType*) calloc(kernel_entries,sizeof(DType));

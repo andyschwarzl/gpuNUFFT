@@ -49,7 +49,9 @@ w = ones(1,length(k(:)));
 FT = GRIDDING3D(k_traj,w,imwidth,osf,wg,sw,[trimmed_size trimmed_size trimmed_size],'true');
 
 %% generate radial data
+tic
 dataRadial = FT*img_a;
+toc
 %% density compensation
 w = abs(rho);
 w = repmat(w, [1, numSpokes,1]);
@@ -58,11 +60,14 @@ dataRadial_dc = dataRadial.*w_mc;
 %% recon
 %no density compnesation
 %imgRegrid_kb = FT'*dataRadial;
-imgRegrid_kb = regrid_multicoil_gpu(reshape(dataRadial,[size(k),chn]),FT);
+%tic
+%imgRegrid_kb = regrid_multicoil_gpu(reshape(dataRadial,[size(k),chn]),FT);
+%toc
 %% density compensated
 %imgRegrid_kb_dc = FT'*dataRadial_dc;
+tic
 imgRegrid_kb_dc = regrid_multicoil_gpu(reshape(dataRadial_dc,[size(k),chn]),FT);
-
+toc
 %% show results
 %figure, imshow(imresize(((abs(imgRegrid_kb_dc(:,:,32,n_chn)))),4),[]), title('gridding dc');
 

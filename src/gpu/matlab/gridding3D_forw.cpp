@@ -118,7 +118,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
      mexErrMsgTxt("Could not create output mxArray.\n");
 
 	gridding3D_gpu(&data,data_entries,n_coils,coords,imdata,im_count,grid_width,kernel,kernel_count,kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,CONVOLUTION);
-	
+        cudaThreadSynchronize();	
 	free(kernel);
 	//cudaDeviceReset();
   //   CUcontext  pctx ;

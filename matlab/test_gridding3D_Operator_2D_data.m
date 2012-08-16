@@ -1,5 +1,6 @@
 %% testscript with operator usage
-clear all; close all; clc;
+%clear all; 
+close all; clc;
 
 %% add bin to path
 addpath ../bin  
@@ -11,7 +12,7 @@ load img_brain_4ch;
 %load noisy_phantom;
 %load calf_data_cs;
 %%
-trimmed_size = 64;
+trimmed_size = 192;
 img = img(128-trimmed_size/2+1:128+trimmed_size/2,128-trimmed_size/2+1:128+trimmed_size/2,:);
 %%
 n_chn = 2;

@@ -68,9 +68,10 @@ imgRegrid_kb_dc = regrid_multicoil_gpu(reshape(dataRadial_dc,[size(k),chn]),FT);
 
 %% merge channels
 recon_sos_dc = sqrt(sum(abs(imgRegrid_kb_dc).^2,4));
+recon_sos_dc = recon_sos_dc(:,:,129);
 %figure, imshow(imresize(((abs(recon_sos_dc(:,:,32)))),4),[]), title('gridding dc sos');
 disp('finished');
 out_file = ['../../daten/results/2D_',num2str(trimmed_size)];
-save(out_file, 'recon_sos_dc(:,:,129)');
+save(out_file, 'recon_sos_dc');
 disp(['output written to ',out_file]);
 exit;

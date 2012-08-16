@@ -1,5 +1,6 @@
 #include "gridding_kernels.hpp"
 #include "cuda_utils.cuh"
+#include "cuda_utils.hpp"
 
 // convolve every data point on grid position -> controlled by threadIdx.x .y and .z 
 // shared data holds grid values as software managed cache
@@ -142,13 +143,15 @@ __global__ void convolutionKernel2( DType* data,
 									CufftType* gdata,
 									DType* kernel, 
 									int* sectors, 
-									int* sector_centers
+									int* sector_centers,
+									int N
 									)
 {
 	extern __shared__ DType sdata[];//externally managed shared memory
-	int sec= blockIdx.x;
+	__shared__ int sec;
+	sec = blockIdx.x;
 
-	if (sec < GI.sector_count)
+	while (sec < N)
 	{
 		//init shared memory
 		for (int s_ind=threadIdx.x;s_ind<GI.sector_dim; s_ind+= blockDim.x)
@@ -261,7 +264,9 @@ __global__ void convolutionKernel2( DType* data,
 			ind = sector_ind_offset + getIndex(x,y,z,GI.grid_width);//index in output grid
 			atomicAdd(&(gdata[ind].x),sdata[2*s_ind]);//Re
 			atomicAdd(&(gdata[ind].y),sdata[2*s_ind+1]);//Im
-		}
+		}		
+		__syncthreads();
+		sec = sec + gridDim.x;
 	}//sec < sector_count	
 }
 
@@ -408,12 +413,14 @@ void performConvolution( DType* data_d,
 	*/
 	long shared_mem_size = 2*gi_host->sector_dim*sizeof(DType);
 
-	dim3 block_dim(128);
-	dim3 grid_dim(gi_host->sector_count);
+	int thread_size = 128;
 	
+	dim3 block_dim(thread_size);
+	dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,thread_size));
+
 	if (DEBUG)
 		printf("adjoint convolution requires %d bytes of shared memory!\n",shared_mem_size);
-	convolutionKernel2<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d);
+	convolutionKernel2<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,gi_host->sector_count);
 	if (DEBUG)
 		printf("...finished with: %s\n", cudaGetErrorString(cudaGetLastError()));
 }
@@ -423,20 +430,21 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 										  CufftType* gdata,
 										  DType* kernel, 
 										  int* sectors, 
-										  int* sector_centers
-											)
+										  int* sector_centers,
+										  int N)
 {
 	extern __shared__ CufftType shared_out_data[];//externally managed shared memory
 	
-	int sec= blockIdx.x;
+	__shared__ int sec;
+	sec= blockIdx.x;
 	//init shared memory
 	shared_out_data[threadIdx.x].x = 0.0f;//Re
 	shared_out_data[threadIdx.x].y = 0.0f;//Im
-
+	__syncthreads();
 	//start convolution
-	if (sec < GI.sector_count)
+	while (sec < N)
 	{
-		int ind, max_x, max_y, max_z, imin, imax, jmin, jmax,kmin,kmax, k, i, j;
+		int ind, imin, imax, jmin, jmax,kmin,kmax, k, i, j;
 		DType dx_sqr, dy_sqr, dz_sqr, val, ix, jy, kz;
 
 		__shared__ int3 center;
@@ -447,11 +455,8 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 		//Grid Points over Threads
 		int data_cnt = sectors[sec] + threadIdx.x;
 		
-		int sector_ind_offset = getIndex(center.x - GI.sector_offset,center.y - GI.sector_offset,center.z - GI.sector_offset,GI.grid_width);
-
-		max_x = GI.sector_pad_width-1;
-		max_y = GI.sector_pad_width-1;
-		max_z = GI.sector_pad_width-1;
+		__shared__ int sector_ind_offset; 
+		sector_ind_offset = getIndex(center.x - GI.sector_offset,center.y - GI.sector_offset,center.z - GI.sector_offset,GI.grid_width);
 
 		while (data_cnt < sectors[sec+1])
 		{
@@ -462,15 +467,14 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 
 			// set the boundaries of final dataset for gridding this point
 			ix = (data_point.x + 0.5f) * (GI.grid_width) - center.x + GI.sector_offset;
-			set_minmax(&ix, &imin, &imax, max_x, GI.kernel_radius);
+			set_minmax(&ix, &imin, &imax, GI.sector_pad_max, GI.kernel_radius);
 			jy = (data_point.y + 0.5f) * (GI.grid_width) - center.y + GI.sector_offset;
-			set_minmax(&jy, &jmin, &jmax, max_y, GI.kernel_radius);
+			set_minmax(&jy, &jmin, &jmax, GI.sector_pad_max, GI.kernel_radius);
 			kz = (data_point.z + 0.5f) * (GI.grid_width) - center.z + GI.sector_offset;
-			set_minmax(&kz, &kmin, &kmax, max_z, GI.kernel_radius);
+			set_minmax(&kz, &kmin, &kmax, GI.sector_pad_max, GI.kernel_radius);
 
 			// convolve neighboring cartesian points to this data point
-			k = kmin;
-			
+			k = kmin;			
 			while (k<=kmax && k>=kmin)
 			{
 				kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.grid_width)) - 0.5f;//(k - center_z) *width_inv;
@@ -530,6 +534,8 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 			shared_out_data[threadIdx.x].x = (DType)0.0;//Re
 			shared_out_data[threadIdx.x].y = (DType)0.0;//Im
 		} //data points per sector
+		__syncthreads();
+		sec = sec + gridDim.x;
 	} //sector check
 }
 
@@ -543,12 +549,13 @@ void performForwardConvolution( CufftType*		data_d,
 								)
 {
 	//TODO how to calculate shared_mem_size???, shared_mem_needed?
-	long shared_mem_size = 128 * sizeof(CufftType);//empiric
+	int thread_size = 128;
+	long shared_mem_size = thread_size * sizeof(CufftType);//empiric
 
-	dim3 block_dim(128);
-	dim3 grid_dim(gi_host->sector_count);
+	dim3 block_dim(thread_size);
+	dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,thread_size));
 	
 	if (DEBUG)
 		printf("convolution requires %d bytes of shared memory!\n",shared_mem_size);
-	forwardConvolutionKernel<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d);
+	forwardConvolutionKernel<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,gi_host->sector_count);
 }

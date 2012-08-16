@@ -216,7 +216,7 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 		center.x = sector_centers[sec * 3];
 		center.y = sector_centers[sec * 3 + 1];
 		center.z = sector_centers[sec * 3 + 2];
-		//__syncthreads();
+		
 		//Grid Points over Threads
 		int data_cnt = sectors[sec] + threadIdx.x;
 
@@ -315,9 +315,6 @@ void performForwardConvolution( CufftType*		data_d,
 {
 	int thread_size = 128;
 	long shared_mem_size = thread_size * sizeof(CufftType);//empiric
-
-//	dim3 block_dim(128);
-//	dim3 grid_dim(gi_host->sector_count);
 
 	dim3 block_dim(thread_size);
 	dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,thread_size));

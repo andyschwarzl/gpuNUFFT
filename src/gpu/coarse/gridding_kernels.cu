@@ -48,14 +48,12 @@ __global__ void convolutionKernel( DType* data,
 		data_cnt = sectors[sec];
 		
 		max_dim =  GI.sector_pad_max;		
-		
 		while (data_cnt < sectors[sec+1])
 		{
 			__shared__ DType3 data_point; //datapoint shared in every thread
 			data_point.x = crds[3*data_cnt];
 			data_point.y = crds[3*data_cnt +1];
 			data_point.z = crds[3*data_cnt +2];
-
 			// set the boundaries of final dataset for gridding this point
 			ix = (data_point.x + 0.5f) * (GI.grid_width) - center.x + GI.sector_offset;
 			set_minmax(&ix, &imin, &imax, max_dim, GI.kernel_radius);
@@ -109,24 +107,24 @@ __global__ void convolutionKernel( DType* data,
 					} //kernel bounds check z 
 				} // z
 			}//for loop over z entries
-			__syncthreads();
+			
 			data_cnt++;
 		} //grid points per sector
 	
 	    //write shared data to temporary output grid
 		int sector_ind_offset = sec * GI.sector_dim;
 		
-		__syncthreads();
 		for (k=threadIdx.z;k<GI.sector_pad_width; k += blockDim.z)
 		{
-			j=threadIdx.y;
 			i=threadIdx.x;
+			j=threadIdx.y;
 			
 			int s_ind = 2* getIndex(i,j,k,GI.sector_pad_width) ;//index in shared grid
 			ind = 2*sector_ind_offset + s_ind;//index in temp output grid
 			
 			temp_gdata[ind] = sdata[s_ind];//Re
 			temp_gdata[ind+1] = sdata[s_ind+1];//Im
+			__syncthreads();
 			sdata[s_ind] = (DType)0.0;
 			sdata[s_ind+1] = (DType)0.0;
 		}
@@ -151,8 +149,8 @@ __global__ void composeOutputKernel(DType* temp_gdata, CufftType* gdata, int* se
 		//write data from temp grid to overall output grid
 		for (int z=threadIdx.z;z<GI.sector_pad_width; z += blockDim.z)
 		{
-			int y=threadIdx.y;
 			int x=threadIdx.x;
+			int y=threadIdx.y;
 			int s_ind = 2* (sector_grid_offset + getIndex(x,y,z,GI.sector_pad_width));
 			int ind = (sector_ind_offset + getIndex(x,y,z,GI.grid_width));
 			if (isOutlier(x,y,z,center.x,center.y,center.z,GI.grid_width,GI.sector_offset))

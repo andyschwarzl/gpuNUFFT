@@ -243,7 +243,7 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 			printf("last cuda error: %s\n", cudaGetErrorString(cudaGetLastError()));
 			return;
 		}
-		
+
 		performFFTShift(gdata_d,INVERSE,gi_host->grid_width);
 		
 		performCrop(gdata_d,imdata_d,gi_host);

@@ -32,9 +32,9 @@ prhs Array of pointers to the input mxArrays. Do not modify any prhs values in y
 void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 {
 	if (MATLAB_DEBUG)
-		mexPrintf("Starting GRIDDING 3D Function...\n");
+		mexPrintf("Starting ADJOINT GRIDDING 3D Function...\n");
   
-  int cuDevice = 0;
+    int cuDevice = 0;
 	cudaGetDevice(&cuDevice);
 	// Create context
 	//CUcontext cuContext;
@@ -88,7 +88,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	if (MATLAB_DEBUG)
 		mexPrintf("passed Params, IM_WIDTH: %d, OSR: %f, KERNEL_WIDTH: %d, SECTOR_WIDTH: %d\n",im_width,osr,kernel_width,sector_width);
   
-	if (MATLAB_DEBUG)
+	//if (MATLAB_DEBUG)
 	{
 		size_t free_mem = 0;
 		size_t total_mem = 0;

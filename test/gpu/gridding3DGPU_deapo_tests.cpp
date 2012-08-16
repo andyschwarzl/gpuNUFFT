@@ -142,7 +142,7 @@ TEST(TestGPUGriddingDeapo,KernelCall1Sector2Coils)
 	int coil_offset = 1 * grid_size;
 	printf("grid_size: %d\n",grid_size);
 	
-	/*for (int j=0; j<im_width; j++)
+   /*for (int j=0; j<im_width; j++)
 	{
 		for (int i=0; i<im_width; i++)
 			printf("A: %.2f B: %.2f",gdata[get3DC2lin(i,j,16,im_width)].x,gdata[coil_offset+get3DC2lin(i,j,16,im_width)].x);

@@ -96,18 +96,20 @@ void gridding3D_gpu(CufftType**	data,			//kspace data array
 		if (err=pt2CufftExec(fft_plan, gdata_d, gdata_d, CUFFT_FORWARD) != CUFFT_SUCCESS)
 		{
 			printf("cufft has failed with err %i \n",err);
+			printf("cuda error: %s\n", cudaGetErrorString(cudaGetLastError()));
 		}
 		
 		performFFTShift(gdata_d,FORWARD,gi_host->grid_width);
 		
 		// convolution and resampling to non-standard trajectory
 		performForwardConvolution(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,gi_host);
-		cudaThreadSynchronize();
 		//get result
+	  cudaThreadSynchronize();
 		copyFromDevice<CufftType>(data_d, *data + data_coil_offset,data_count);
+		cudaThreadSynchronize();
 	}//iterate over coils
 	cufftDestroy(fft_plan);
-	cudaThreadSynchronize();
+	  cudaThreadSynchronize();
 	// Destroy the cuFFT plan.
 	freeTotalDeviceMemory(data_d,crds_d,gdata_d,imdata_d,kernel_d,sectors_d,sector_centers_d,NULL);//NULL as stop
 	free(gi_host);
@@ -247,12 +249,13 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 		performCrop(gdata_d,imdata_d,gi_host);
 		
 		performDeapodization(imdata_d,gi_host);
-		cudaThreadSynchronize();
+	  cudaThreadSynchronize();
 		//get result
 		copyFromDevice<CufftType>(imdata_d,*imdata+im_coil_offset,imdata_count);
+		cudaThreadSynchronize();
 	}//iterate over coils
 	cufftDestroy(fft_plan);
-	cudaThreadSynchronize();
+  cudaThreadSynchronize();
 	// Destroy the cuFFT plan.
 	freeTotalDeviceMemory(data_d,crds_d,gdata_d,imdata_d,kernel_d,sectors_d,sector_centers_d,NULL);//NULL as stop
 	free(gi_host);

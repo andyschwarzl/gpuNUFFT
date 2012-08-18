@@ -11,6 +11,9 @@ load MREG_data_Graz;
 %load 20111013_MREG_data_Graz_SoS;
 %load 20111024_MREG_Data_MID_65_2mm_Full_Brain;
 
+%% freiburg or own 
+use_freiburg = false;
+
 %% sensmaps
 E = struct(E);
 smaps = getfield(E,'sensmaps');
@@ -30,9 +33,11 @@ imwidth = 64;
 k = E.nufftStruct.om'./(2*pi);
 w = ones(E.trajectory_length,1);
 
-G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw,E.imageDim,'true');
-%freiburg implementation
-%G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw,E.imageDim,'sparse',E);
+if (use_freiburg==true)
+    G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw,E.imageDim,'sparse',E);
+else
+    G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw,E.imageDim,'true');
+end
 %% one call for all coils
 res = zeros(E.imageDim);
 kspace = reshape(data,[E.trajectory_length E.numCoils]);
@@ -43,11 +48,13 @@ size(imgRegrid_kb);
 exec_time = toc;
 disp(['execution time adjoint: ', num2str(exec_time)]);
 %% SENS corr
-%offset = (imwidth - size(smaps,3))/2;
-%imgRegrid_kb = imgRegrid_kb(:,:,offset+1:(offset+size(smaps,3)),:) .* conj(smaps(:,:,:,:));
-%% SENS corr freiburg
-imgRegrid_kb = imgRegrid_kb(:,:,:,:) .* conj(smaps(:,:,:,:));
-
+if (use_freiburg==true)
+    %% SENS corr freiburg
+    imgRegrid_kb = imgRegrid_kb(:,:,:,:) .* conj(smaps(:,:,:,:));
+else
+    offset = (imwidth - size(smaps,3))/2;
+    imgRegrid_kb = imgRegrid_kb(:,:,offset+1:(offset+size(smaps,3)),:) .* conj(smaps(:,:,:,:));
+end
 %% res = SoS of coil data
 res = sqrt(sum(abs(imgRegrid_kb).^2,4));
 %%
@@ -84,9 +91,11 @@ figure, imshow(imresize(abs(z_ref(:,:,slice)),4),[]), title('reference (CG)');
 %end
 
 %% check forward gridding using solution z
-%z_pad = padarray(z_ref,[0 0 10]);
-%% freiburg
-z_pad = z_ref;
+if (use_freiburg==true)
+    z_pad = z_ref;
+else
+    z_pad = padarray(z_ref,[0 0 10]);
+end;
 %%
 
 imwidth = 64; %E.imageDim(1);
@@ -95,8 +104,11 @@ wg = 3;
 sw = 8;
 k = E.nufftStruct.om'./(2*pi);
 w = ones(1,E.trajectory_length);
-%G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw,E.imageDim,'true');
-G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw,E.imageDim,'sparse',E);
+if (use_freiburg==true)
+    G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw,E.imageDim,'sparse',E);
+else
+    G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw,E.imageDim,'true');
+end;
 %%
 tic
 dataRadial = G3D*z_pad;

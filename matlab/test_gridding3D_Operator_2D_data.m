@@ -1,5 +1,5 @@
 %% testscript with operator usage
-%clear all; 
+clear all; 
 close all; clc;
 
 %% add bin to path
@@ -12,10 +12,11 @@ load img_brain_4ch;
 %load noisy_phantom;
 %load calf_data_cs;
 %%
+slice=128;
 trimmed_size = 256;
 img = img(128-trimmed_size/2+1:128+trimmed_size/2,128-trimmed_size/2+1:128+trimmed_size/2,:);
 %%
-n_chn = 2;
+n_chn = 4;
 img_a = zeros([trimmed_size,trimmed_size,trimmed_size,n_chn]);
 %%
 for chn = 1:n_chn,
@@ -42,7 +43,7 @@ k=rho*exp(-1j*theta);
 %FT = GRIDDING3D(k, 1, 1, 0, [nPE,nFE], 2);
 k_traj = [real(k(:))'; imag(k(:))';zeros(1,length(k(:)))];
 imwidth = nPE;
-osf = 1.25;
+osf = 1.5;
 wg = 3;
 sw = 8;
 w = ones(1,length(k(:)));
@@ -50,8 +51,9 @@ FT = GRIDDING3D(k_traj,w,imwidth,osf,wg,sw,[trimmed_size trimmed_size trimmed_si
 
 %% generate radial data
 tic
-dataRadial = FT*img_a;
+dataRadial = inversegrid_multicoil_gpu(img_a,FT,2*nPE,numSpokes);
 toc
+dataRadial = reshape(dataRadial, [2*nPE*numSpokes n_chn]);
 %% density compensation
 w = abs(rho);
 w = repmat(w, [1, numSpokes,1]);
@@ -65,6 +67,7 @@ dataRadial_dc = dataRadial.*w_mc;
 %toc
 %% density compensated
 %imgRegrid_kb_dc = FT'*dataRadial_dc;
+%pause;
 tic
 imgRegrid_kb_dc = regrid_multicoil_gpu(reshape(dataRadial_dc,[size(k),chn]),FT);
 toc
@@ -73,10 +76,10 @@ toc
 
 %% merge channels
 recon_sos_dc = sqrt(sum(abs(imgRegrid_kb_dc).^2,4));
-recon_sos_dc = recon_sos_dc(:,:,129);
-%figure, imshow(imresize(((abs(recon_sos_dc(:,:,32)))),4),[]), title('gridding dc sos');
+recon_sos_res = recon_sos_dc(:,:,slice);
+figure, imshow(imresize(((abs(recon_sos_res(:,:)))),1),[]), title('gridding dc sos');
 disp('finished');
-out_file = ['../../daten/results/2D_',num2str(trimmed_size)];
-save(out_file, 'recon_sos_dc');
+out_file = ['../../daten/results/2D_',num2str(trimmed_size),'_',strrep(num2str(osf), '.', '_'),'_',num2str(wg),'_',num2str(slice)];
+save(out_file, 'recon_sos_res');
 disp(['output written to ',out_file]);
-exit;
+%exit;

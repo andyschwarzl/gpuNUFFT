@@ -88,7 +88,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	if (MATLAB_DEBUG)
 		mexPrintf("passed Params, IM_WIDTH: %d, OSR: %f, KERNEL_WIDTH: %d, SECTOR_WIDTH: %d\n",im_width,osr,kernel_width,sector_width);
   
-	if (MATLAB_DEBUG)
+	//if (MATLAB_DEBUG)
 	{
 		size_t free_mem = 0;
 		size_t total_mem = 0;
@@ -126,6 +126,12 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     cudaThreadSynchronize();
 	free(kernel);
 
+	{
+		size_t free_mem = 0;
+		size_t total_mem = 0;
+		cudaMemGetInfo(&free_mem, &total_mem);
+		mexPrintf("memory usage on device afterwards, free: %lu total: %lu\n",free_mem,total_mem);
+	}
 //	cudaDeviceReset();
      //CUcontext  pctx ;
      //cuCtxPopCurrent(&pctx);	

@@ -88,7 +88,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	if (MATLAB_DEBUG)
 		mexPrintf("passed Params, IM_WIDTH: %d, IM_COUNT: %d, OSR: %f, KERNEL_WIDTH: %d, SECTOR_WIDTH: %d, DATA_ENTRIES: %d, n_coils: %d\n",im_width,im_count,osr,kernel_width,sector_width,data_entries,n_coils);
 
-	if (MATLAB_DEBUG)
+	//if (MATLAB_DEBUG)
 	{
 		size_t free_mem = 0;
 		size_t total_mem = 0;
@@ -122,6 +122,12 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	gridding3D_gpu(&data,data_entries,n_coils,coords,imdata,im_count,grid_width,kernel,kernel_count,kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,CONVOLUTION);
     cudaThreadSynchronize();	
 	free(kernel);
+	{
+		size_t free_mem = 0;
+		size_t total_mem = 0;
+		cudaMemGetInfo(&free_mem, &total_mem);
+		mexPrintf("memory usage on device afterwards, free: %lu total: %lu\n",free_mem,total_mem);
+	}
 	//cudaDeviceReset();
   //   CUcontext  pctx ;
   //   cuCtxPopCurrent(&pctx);	

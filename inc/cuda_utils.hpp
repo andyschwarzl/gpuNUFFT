@@ -69,11 +69,11 @@ void freeTotalDeviceMemory(void* ptr,...)
 	  if(p==NULL)
 		   break;
 	  //printf("free dev ptr...%p %d\n",p,i);
-	  cudaThreadSynchronize();
 	  freeDeviceMem((void*)p);
 	  i++;
 	  p= va_arg(list,void*);
 	}
+	cudaThreadSynchronize();
 	if (DEBUG)
 		printf("%d device pointers freed\n",i);
 	

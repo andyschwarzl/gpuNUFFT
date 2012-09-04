@@ -172,10 +172,10 @@ __global__ void convolutionKernel2( DType* data,
 		center.y = sector_centers[sec * 3 + 1];
 		center.z = sector_centers[sec * 3 + 2];
 
-		__shared__ int max_x, max_y, max_z;
+		__shared__ int max_x;//, max_y, max_z;
 		max_x = GI.sector_pad_width-1;
-		max_y = GI.sector_pad_width-1;
-		max_z = GI.sector_pad_width-1;
+//		max_y = GI.sector_pad_width-1;
+//		max_z = GI.sector_pad_width-1;
 
 		//Grid Points over Threads
 		int data_cnt = sectors[sec] + threadIdx.x;
@@ -193,9 +193,9 @@ __global__ void convolutionKernel2( DType* data,
 			ix = (data_point.x + 0.5f) * (GI.grid_width) - center.x + GI.sector_offset;
 			set_minmax(&ix, &imin, &imax, max_x, GI.kernel_radius);
 			jy = (data_point.y + 0.5f) * (GI.grid_width) - center.y + GI.sector_offset;
-			set_minmax(&jy, &jmin, &jmax, max_y, GI.kernel_radius);
+			set_minmax(&jy, &jmin, &jmax, max_x, GI.kernel_radius);
 			kz = (data_point.z + 0.5f) * (GI.grid_width) - center.z + GI.sector_offset;
-			set_minmax(&kz, &kmin, &kmax, max_z, GI.kernel_radius);
+			set_minmax(&kz, &kmin, &kmax, max_x, GI.kernel_radius);
 				                
 			// grid this point onto its cartesian points neighbors
 			k =kmin;
@@ -422,9 +422,11 @@ void performConvolution( DType* data_d,
 	dim3 block_dim(thread_size);
 	dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,thread_size));
 
-	//if (DEBUG)
-		printf("adjoint convolution requires %d bytes of shared memory!\n",shared_mem_size);
+	if (DEBUG)
+	{
+  	printf("adjoint convolution requires %d bytes of shared memory!\n",shared_mem_size);
     printf("grid dim %d, block dim %d \n",grid_dim.x, block_dim.x); 
+  }
 	convolutionKernel2<<</*grid_dim*/32,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,gi_host->sector_count);
 	if (DEBUG)
 		printf("...finished with: %s\n", cudaGetErrorString(cudaGetLastError()));

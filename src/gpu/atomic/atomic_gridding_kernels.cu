@@ -227,12 +227,15 @@ __global__ void convolutionKernel2( DType* data,
 									val = kernel[(int) round(dz_sqr * GI.dist_multiplier)] *
 										  kernel[(int) round(dy_sqr * GI.dist_multiplier)] *
 										  kernel[(int) round(dx_sqr * GI.dist_multiplier)];
-									ind = 2* getIndex(i,j,k,GI.sector_pad_width);
-								
+									ind = getIndex(i,j,k,GI.sector_pad_width);
+ 	
 									// multiply data by current kernel val 
 									// grid complex or scalar 
-									atomicAdd(&(sdata[ind]),val * data[2*data_cnt]);
-									atomicAdd(&(sdata[ind+1]),val * data[2*data_cnt+1]);
+									if (ind < GI.sector_dim)
+									{
+										atomicAdd(&(sdata[2*ind]),val * data[2*data_cnt]);
+										atomicAdd(&(sdata[2*ind+1]),val * data[2*data_cnt+1]);
+									}
 								} // kernel bounds check x, spherical support 
 								i++;
 							} // x 	 
@@ -262,6 +265,7 @@ __global__ void convolutionKernel2( DType* data,
 				continue;
 			
 			ind = sector_ind_offset + getIndex(x,y,z,GI.grid_width);//index in output grid
+			
 			atomicAdd(&(gdata[ind].x),sdata[2*s_ind]);//Re
 			atomicAdd(&(gdata[ind].y),sdata[2*s_ind+1]);//Im
 		}		
@@ -411,16 +415,17 @@ void performConvolution( DType* data_d,
 	printf("convolution requires %d bytes of shared memory!\n",shared_mem_size);
 	convolutionKernel<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d);
 	*/
-	long shared_mem_size = 2*gi_host->sector_dim*sizeof(DType);
+	long shared_mem_size = 2*(gi_host->sector_dim)*sizeof(DType);
 
 	int thread_size = 128;
 	
 	dim3 block_dim(thread_size);
 	dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,thread_size));
 
-	if (DEBUG)
+	//if (DEBUG)
 		printf("adjoint convolution requires %d bytes of shared memory!\n",shared_mem_size);
-	convolutionKernel2<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,gi_host->sector_count);
+    printf("grid dim %d, block dim %d \n",grid_dim.x, block_dim.x); 
+	convolutionKernel2<<</*grid_dim*/32,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,gi_host->sector_count);
 	if (DEBUG)
 		printf("...finished with: %s\n", cudaGetErrorString(cudaGetLastError()));
 }

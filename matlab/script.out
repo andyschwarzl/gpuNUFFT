@@ -1,0 +1,93 @@
+Warning: No display specified.  You will not be able to display graphics on the screen.
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2010 The MathWorks, Inc.
+                Version 7.11.0.584 (R2010b) 64-bit (glnxa64)
+                              August 16, 2010
+
+ 
+  To get started, type one of these: helpwin, helpdesk, or demo.
+  For product information, visit www.mathworks.com.
+ 
+>> 
+ans =
+
+   128   128   128     4
+
+Elapsed time is 0.795641 seconds.
+Elapsed time is 0.428008 seconds.
+finished iteration
+
+ans =
+
+   128   128   128     4
+
+Elapsed time is 0.711663 seconds.
+Elapsed time is 0.414053 seconds.
+finished iteration
+
+ans =
+
+   128   128   128     4
+
+Elapsed time is 0.709369 seconds.
+Elapsed time is 0.413950 seconds.
+finished iteration
+
+ans =
+
+   128   128   128     4
+
+Elapsed time is 0.717366 seconds.
+Elapsed time is 0.415320 seconds.
+finished iteration
+
+ans =
+
+   128   128   128     4
+
+Elapsed time is 0.717512 seconds.
+Elapsed time is 0.414958 seconds.
+finished iteration
+
+ans =
+
+   128   128   128     4
+
+Elapsed time is 0.719861 seconds.
+Elapsed time is 0.414848 seconds.
+finished iteration
+
+ans =
+
+   128   128   128     4
+
+Elapsed time is 0.724885 seconds.
+Elapsed time is 0.415001 seconds.
+finished iteration
+
+ans =
+
+   128   128   128     4
+
+Elapsed time is 0.726842 seconds.
+Elapsed time is 0.413772 seconds.
+finished iteration
+
+ans =
+
+   128   128   128     4
+
+Elapsed time is 0.729524 seconds.
+Elapsed time is 0.413686 seconds.
+finished iteration
+
+ans =
+
+   128   128   128     4
+
+Elapsed time is 0.729423 seconds.
+Elapsed time is 0.420606 seconds.
+finished iteration
+>> >> >> output written to ../../daten/results/2D_128_1_5_3_32
+>> 

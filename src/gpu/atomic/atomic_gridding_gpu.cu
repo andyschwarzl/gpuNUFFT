@@ -218,12 +218,12 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 		//cudaMemset(temp_gdata_d,0, sizeof(DType)*temp_grid_count);
 		cudaMemset(gdata_d,0, sizeof(CufftType)*gi_host->grid_width_dim);
 		
-		if (cudaThreadSynchronize() != cudaSuccess)
-			printf("error at adj thread synchronization 1: %s\n",cudaGetErrorString(cudaGetLastError()));
+	//	if (cudaThreadSynchronize() != cudaSuccess)
+	//		printf("error at adj thread synchronization 1: %s\n",cudaGetErrorString(cudaGetLastError()));
 		performConvolution(data_d+data_coil_offset,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,NULL,gi_host);
 
-		if (cudaThreadSynchronize() != cudaSuccess)
-			printf("error at adj  thread synchronization 2: %s\n",cudaGetErrorString(cudaGetLastError()));
+		//if (cudaThreadSynchronize() != cudaSuccess)
+			//printf("error at adj  thread synchronization 2: %s\n",cudaGetErrorString(cudaGetLastError()));
 		if (gridding_out == CONVOLUTION)
 		{
 			if (DEBUG)
@@ -240,8 +240,8 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 			return;
 		}
 
-		if (cudaThreadSynchronize() != cudaSuccess)
-			printf("error at adj  thread synchronization 3: %s\n",cudaGetErrorString(cudaGetLastError()));
+	//	if (cudaThreadSynchronize() != cudaSuccess)
+		//	printf("error at adj  thread synchronization 3: %s\n",cudaGetErrorString(cudaGetLastError()));
 		performFFTShift(gdata_d,INVERSE,gi_host->grid_width);
 		//Inverse FFT
 		if (err=pt2CufftExec(fft_plan, gdata_d, gdata_d, CUFFT_INVERSE) != CUFFT_SUCCESS)
@@ -250,8 +250,8 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 	//		printf("cuda error: %s\n", cudaGetErrorString(cudaGetLastError()));
 		}
 	
-		if (cudaThreadSynchronize() != cudaSuccess)
-			printf("error at adj  thread synchronization 4: %s\n",cudaGetErrorString(cudaGetLastError()));
+	//	if (cudaThreadSynchronize() != cudaSuccess)
+		//	printf("error at adj  thread synchronization 4: %s\n",cudaGetErrorString(cudaGetLastError()));
 		if (gridding_out == FFT)
 		{
 			if (DEBUG)
@@ -269,32 +269,32 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 			return;
 		}
 
-		if (cudaThreadSynchronize() != cudaSuccess)
-			printf("error at adj  thread synchronization 5: %s\n",cudaGetErrorString(cudaGetLastError()));
+	//	if (cudaThreadSynchronize() != cudaSuccess)
+		//	printf("error at adj  thread synchronization 5: %s\n",cudaGetErrorString(cudaGetLastError()));
 		performFFTShift(gdata_d,INVERSE,gi_host->grid_width);
 
-		if (cudaThreadSynchronize() != cudaSuccess)
-			printf("error at adj  thread synchronization 6: %s\n",cudaGetErrorString(cudaGetLastError()));
+	//	if (cudaThreadSynchronize() != cudaSuccess)
+		//	printf("error at adj  thread synchronization 6: %s\n",cudaGetErrorString(cudaGetLastError()));
 		performCrop(gdata_d,imdata_d,gi_host);
 		
-		if (cudaThreadSynchronize() != cudaSuccess)
-			printf("error at adj  thread synchronization 7: %s\n",cudaGetErrorString(cudaGetLastError()));
+	//	if (cudaThreadSynchronize() != cudaSuccess)
+		//	printf("error at adj  thread synchronization 7: %s\n",cudaGetErrorString(cudaGetLastError()));
 		performDeapodization(imdata_d,gi_host);
 		//check for errors
-		if (cudaThreadSynchronize() != cudaSuccess)
-			printf("error: at adj  thread synchronization 8: %s\n",cudaGetErrorString(cudaGetLastError()));
+	//	if (cudaThreadSynchronize() != cudaSuccess)
+		//	printf("error: at adj  thread synchronization 8: %s\n",cudaGetErrorString(cudaGetLastError()));
 		
 		//get result
 		copyFromDevice<CufftType>(imdata_d,*imdata+im_coil_offset,imdata_count);
 	}//iterate over coils
 
-		if (cudaThreadSynchronize() != cudaSuccess)
-			printf("error: at adj  thread synchronization 9: %s\n",cudaGetErrorString(cudaGetLastError()));
+	//	if (cudaThreadSynchronize() != cudaSuccess)
+		//	printf("error: at adj  thread synchronization 9: %s\n",cudaGetErrorString(cudaGetLastError()));
 	cufftDestroy(fft_plan);
 	// Destroy the cuFFT plan.
 
-		if (cudaThreadSynchronize() != cudaSuccess)
-			printf("error: at adj  thread synchronization 10: %s\n",cudaGetErrorString(cudaGetLastError()));
+	//	if (cudaThreadSynchronize() != cudaSuccess)
+		//	printf("error: at adj  thread synchronization 10: %s\n",cudaGetErrorString(cudaGetLastError()));
 	freeTotalDeviceMemory(data_d,crds_d,gdata_d,imdata_d,kernel_d,sectors_d,sector_centers_d,NULL);//NULL as stop
 	free(gi_host);
 }

@@ -287,7 +287,7 @@ __global__ void convolutionKernel( DType* data,
 								int* sector_centers
 								)
 {
-	extern __shared__ DType sdata[]; //externally managed shared memory
+	//extern __shared__ DType sdata[]; //externally managed shared memory
 
 	int  sec= blockIdx.x;
 	//start convolution
@@ -398,23 +398,27 @@ void performConvolution( DType* data_d,
 {
 	//XXX other Kernel - slow //TODO evaluate
 
-	/*long shared_mem_size = 2*gi_host->sector_dim*sizeof(DType);
+/*	long shared_mem_size = 2*gi_host->sector_dim*sizeof(DType);
 
 	dim3 block_dim(gi_host->sector_pad_width,gi_host->sector_pad_width,N_THREADS_PER_SECTOR);
 	dim3 grid_dim(gi_host->sector_count);
 	
-	printf("adjoint convolution requires %d bytes of shared memory!\n",shared_mem_size);
+	//printf("adjoint convolution requires %d bytes of shared memory!\n",shared_mem_size);
 	convolutionKernelFromGrid<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d);
-	*/
+*/	
 	//TODO how to calculate shared_mem_size???, shared_mem_needed?
-	/*long shared_mem_size = 128 * sizeof(CufftType);//empiric
+/*	long shared_mem_size = 256 * sizeof(CufftType);//empiric
 
-	dim3 block_dim(128);
+	dim3 block_dim(256);
 	dim3 grid_dim(gi_host->sector_count);
 	
-	printf("convolution requires %d bytes of shared memory!\n",shared_mem_size);
-	convolutionKernel<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d);
-	*/
+//	printf("convolution requires %d bytes of shared memory!\n",shared_mem_size);
+	convolutionKernel<<<grid_dim,block_dim>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d);
+	
+
+*/
+ //evaluate TODO activate
+
 	long shared_mem_size = 2*(gi_host->sector_dim)*sizeof(DType);
 
 	int thread_size = 128;
@@ -428,6 +432,8 @@ void performConvolution( DType* data_d,
     printf("grid dim %d, block dim %d \n",grid_dim.x, block_dim.x); 
   }
 	convolutionKernel2<<</*grid_dim*/32,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,gi_host->sector_count);
+
+
 	if (DEBUG)
 		printf("...finished with: %s\n", cudaGetErrorString(cudaGetLastError()));
 }

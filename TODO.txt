@@ -1,0 +1,6 @@
+TODOs gridding3D:
+ - density compensation via gpu
+ - kernel in const mem + tests
+ - streams for per channel operation in order to avoid out of mem
+ - shared approach evaluation
+ - 

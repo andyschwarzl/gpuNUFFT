@@ -433,7 +433,7 @@ void performConvolution( DType* data_d,
   	printf("adjoint convolution requires %d bytes of shared memory!\n",shared_mem_size);
     printf("grid dim %d, block dim %d \n",grid_dim.x, block_dim.x); 
   }
-	convolutionKernel2<<</*grid_dim*32,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,gi_host->sector_count);
+	convolutionKernel2<<<32,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,gi_host->sector_count);
 
 */
 	if (DEBUG)

@@ -100,12 +100,8 @@ void gridding3D_gpu(CufftType**	data,			//kspace data array
 			printf("error at thread synchronization 4: %s\n",cudaGetErrorString(cudaGetLastError()));
 		// eventually free imdata_d
 		// Forward FFT to kspace domain
-		//if (err=cufftExecC2C(fft_plan, gdata_d, gdata_d, CUFFT_FORWARD) != CUFFT_SUCCESS)
 		if (err=pt2CufftExec(fft_plan, gdata_d, gdata_d, CUFFT_FORWARD) != CUFFT_SUCCESS)
-		{
 			printf("cufft has failed with err %i \n",err);
-			//printf("cuda error: %s\n", cudaGetErrorString(cudaGetLastError()));
-		}
 		
  		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
 			printf("error at thread synchronization 5: %s\n",cudaGetErrorString(cudaGetLastError()));
@@ -179,11 +175,6 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 		printf("allocate and copy data of size %d...\n",2*data_count*n_coils);
 	allocateAndCopyToDeviceMem<DType>(&data_d,data,2*data_count*n_coils);
 
-	/*int temp_grid_count = 2 * sector_count * gi_host->sector_dim;
-	if (DEBUG)
-		printf("allocate temp grid data of size %d...\n",temp_grid_count);
-	allocateDeviceMem<DType>(&temp_gdata_d,temp_grid_count);
-*/
 	if (DEBUG)
 		printf("allocate and copy coords of size %d...\n",3*data_count);
 	allocateAndCopyToDeviceMem<DType>(&crds_d,crds,3*data_count);
@@ -214,8 +205,6 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 	{
 		int data_coil_offset = 2 * coil_it * data_count;
 		int im_coil_offset = coil_it * imdata_count;//gi_host->width_dim;
-		//reset temp array
-		//cudaMemset(temp_gdata_d,0, sizeof(DType)*temp_grid_count);
 		cudaMemset(gdata_d,0, sizeof(CufftType)*gi_host->grid_width_dim);
 		
 	if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
@@ -245,10 +234,7 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 		performFFTShift(gdata_d,INVERSE,gi_host->grid_width);
 		//Inverse FFT
 		if (err=pt2CufftExec(fft_plan, gdata_d, gdata_d, CUFFT_INVERSE) != CUFFT_SUCCESS)
-		{
 			printf("cufft has failed at adj with err %i \n",err);
-	//		printf("cuda error: %s\n", cudaGetErrorString(cudaGetLastError()));
-		}
 	
 	if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
 			printf("error at adj  thread synchronization 4: %s\n",cudaGetErrorString(cudaGetLastError()));
@@ -265,7 +251,6 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 			freeTotalDeviceMemory(data_d,crds_d,imdata_d,gdata_d,kernel_d,sectors_d,sector_centers_d,NULL);//NULL as stop token
 			free(gi_host);
 			// Destroy the cuFFT plan.
-		//	printf("last cuda error: %s\n", cudaGetErrorString(cudaGetLastError()));
 			return;
 		}
 

@@ -81,36 +81,51 @@ void gridding3D_gpu(CufftType**	data,			//kspace data array
 		//cudaMemset(temp_gdata_d,0, sizeof(DType)*temp_grid_count);
 		cudaMemset(data_d,0, sizeof(CufftType)*data_count);
 		cudaMemset(gdata_d,0, sizeof(CufftType)*gi_host->grid_width_dim);
-		
+
+		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
+			printf("error at thread synchronization 1: %s\n",cudaGetErrorString(cudaGetLastError()));
 		// apodization Correction
 		performForwardDeapodization(imdata_d + im_coil_offset,gi_host);
 		
-		// resize by oversampling factor and zero pad
+		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
+			printf("error at thread synchronization 2: %s\n",cudaGetErrorString(cudaGetLastError()));
+	  // resize by oversampling factor and zero pad
 		performPadding(imdata_d + im_coil_offset,gdata_d,gi_host);
-		
+	
+    if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
+			printf("error at thread synchronization 3: %s\n",cudaGetErrorString(cudaGetLastError()));
 		// shift image to get correct zero frequency position
 		performFFTShift(gdata_d,FORWARD,gi_host->grid_width);
-		
+	
+    if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
+			printf("error at thread synchronization 4: %s\n",cudaGetErrorString(cudaGetLastError()));
 		// eventually free imdata_d
 		// Forward FFT to kspace domain
 		if (err=pt2CufftExec(fft_plan, gdata_d, gdata_d, CUFFT_FORWARD) != CUFFT_SUCCESS)
-		{
 			printf("cufft has failed with err %i \n",err);
-		}
 		
+	 if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
+			printf("error at thread synchronization 5: %s\n",cudaGetErrorString(cudaGetLastError()));
 		performFFTShift(gdata_d,FORWARD,gi_host->grid_width);
 		
+	if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
+			printf("error at thread synchronization 6: %s\n",cudaGetErrorString(cudaGetLastError()));
 		// convolution and resampling to non-standard trajectory
 		performForwardConvolution(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,gi_host);
-		cudaThreadSynchronize();
+		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
+			printf("error at thread synchronization 7: %s\n",cudaGetErrorString(cudaGetLastError()));
 		//get result
 		copyFromDevice<CufftType>(data_d, *data + data_coil_offset,data_count);
 	}//iterate over coils
 	cufftDestroy(fft_plan);
-	cudaThreadSynchronize();
 	// Destroy the cuFFT plan.
+	if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
+			printf("error at thread synchronization 8: %s\n",cudaGetErrorString(cudaGetLastError()));
 	freeTotalDeviceMemory(data_d,crds_d,gdata_d,imdata_d,kernel_d,sectors_d,sector_centers_d,NULL);//NULL as stop
-	free(gi_host);
+	
+  if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
+			printf("error at thread synchronization 9: %s\n",cudaGetErrorString(cudaGetLastError()));
+  free(gi_host);
 }
 
 /** gridding3D_gpu
@@ -199,8 +214,12 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 		cudaMemset(temp_gdata_d,0, sizeof(DType)*temp_grid_count);
 		cudaMemset(gdata_d,0, sizeof(CufftType)*gi_host->grid_width_dim);
 		
+		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
+			printf("error at adj thread synchronization 1: %s\n",cudaGetErrorString(cudaGetLastError()));
 		performConvolution(data_d+data_coil_offset,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d,gi_host);
 
+		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
+			printf("error at adj thread synchronization 2: %s\n",cudaGetErrorString(cudaGetLastError()));
 		//compose total output from local blocks 
 		composeOutput(temp_gdata_d,gdata_d,sector_centers_d,gi_host);
 	
@@ -219,13 +238,14 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 			cufftDestroy(fft_plan);
 			return;
 		}
+		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
+			printf("error at adj thread synchronization 3: %s\n",cudaGetErrorString(cudaGetLastError()));
 		performFFTShift(gdata_d,INVERSE,gi_host->grid_width);
 		//Inverse FFT
 		if (err=pt2CufftExec(fft_plan, gdata_d, gdata_d, CUFFT_INVERSE) != CUFFT_SUCCESS)
-		{
-			printf("cufft has failed with err %i \n",err);
-			printf("cuda error: %s\n", cudaGetErrorString(cudaGetLastError()));
-		}
+			printf("cufft has failed at adj with err %i \n",err);
+	  if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
+			printf("error at adj thread synchronization 4: %s\n",cudaGetErrorString(cudaGetLastError()));
 	
 		if (gridding_out == FFT)
 		{
@@ -243,19 +263,29 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 			printf("last cuda error: %s\n", cudaGetErrorString(cudaGetLastError()));
 			return;
 		}
-
+ if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
+			printf("error at adj thread synchronization 5: %s\n",cudaGetErrorString(cudaGetLastError()));
 		performFFTShift(gdata_d,INVERSE,gi_host->grid_width);
 		
+	 if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
+			printf("error at adj thread synchronization 6: %s\n",cudaGetErrorString(cudaGetLastError()));
 		performCrop(gdata_d,imdata_d,gi_host);
 		
+	 if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
+			printf("error at adj thread synchronization 7: %s\n",cudaGetErrorString(cudaGetLastError()));
 		performDeapodization(imdata_d,gi_host);
-		cudaThreadSynchronize();
-		//get result
+	if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
+			printf("error at adj thread synchronization 8: %s\n",cudaGetErrorString(cudaGetLastError()));
+	//get result
 		copyFromDevice<CufftType>(imdata_d,*imdata+im_coil_offset,imdata_count);
 	}//iterate over coils
-	// Destroy the cuFFT plan.
+  if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
+      printf("error: at adj  thread synchronization 9: %s\n",cudaGetErrorString(cudaGetLastError()));
+// Destroy the cuFFT plan.
 	cufftDestroy(fft_plan);
-	cudaThreadSynchronize();
-	freeTotalDeviceMemory(data_d,crds_d,gdata_d,imdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d,NULL);//NULL as stop
+
+	if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
+			printf("error: at adj  thread synchronization 10: %s\n",cudaGetErrorString(cudaGetLastError()));
+  freeTotalDeviceMemory(data_d,crds_d,gdata_d,imdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d,NULL);//NULL as stop
 	free(gi_host);
 }

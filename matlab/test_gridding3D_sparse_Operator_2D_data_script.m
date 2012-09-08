@@ -7,16 +7,15 @@ close all; clc;
 addpath ../bin  
 addpath ../../daten
 addpath(genpath('./GRIDDING3D'));
-addpath(genpath('../../bUTE/utils'));
+addpath(genpath('./utils'));
 addpath(genpath('../../tgv/NUFFT'));
-addpath(genpath('../../3D_radial_bUTE_test'));
 %% Load data
 load img_brain_4ch;
 %load noisy_phantom;
 %load calf_data_cs;
 %%
 slice=32;
-trimmed_size = 256;
+trimmed_size = 128;
 img = img(128-trimmed_size/2+1:128+trimmed_size/2,128-trimmed_size/2+1:128+trimmed_size/2,:);
 %%
 n_chn = 4;

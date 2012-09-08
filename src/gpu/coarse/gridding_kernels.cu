@@ -18,7 +18,7 @@ __global__ void convolutionKernel( DType* data,
 {
 	extern __shared__ DType sdata[];//externally managed shared memory
 
-	__shared__ int sec;
+	int sec;
 	sec = blockIdx.x;
 	//init shared memory
 	for (int z=threadIdx.z;z<GI.sector_pad_width; z += blockDim.z)
@@ -127,7 +127,8 @@ __global__ void convolutionKernel( DType* data,
 			__syncthreads();
 			sdata[s_ind] = (DType)0.0;
 			sdata[s_ind+1] = (DType)0.0;
-		}
+      __syncthreads();	
+   	}
 		__syncthreads();
 		sec = sec + gridDim.x;
 	}//sec < sector_count
@@ -177,7 +178,7 @@ void performConvolution( DType* data_d,
 	dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,(gi_host->sector_pad_width)*(gi_host->sector_pad_width)*(N_THREADS_PER_SECTOR)));
 	if (DEBUG)
 		printf("convolution requires %d bytes of shared memory!\n",shared_mem_size);
-	convolutionKernel<<<32,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d,gi_host->sector_count);
+	convolutionKernel<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d,gi_host->sector_count);
 }
 
 //very slow way of composing the output, should only be used on compute capabilties lower than 2.0

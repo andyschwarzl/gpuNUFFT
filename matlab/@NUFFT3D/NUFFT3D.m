@@ -1,4 +1,4 @@
-function  res = NUFFT3D(k,w,phase,shift,imSize, mode)
+function  res = NUFFT3D(k,w,phase,shift,imSize, mode, nCoils)
 % 
 %	Interface to Jeffery Fessler's NUFFT Tolbox, 3D NUFFT
 % 
@@ -43,5 +43,6 @@ end
     res.dataSize = size(om);
     res.w = w;
     res.mode = mode;
+    res.numCoils = nCoils;
     res = class(res,'NUFFT3D');
 

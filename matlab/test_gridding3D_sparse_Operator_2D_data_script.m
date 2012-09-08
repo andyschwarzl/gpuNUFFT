@@ -15,7 +15,7 @@ load img_brain_4ch;
 %load calf_data_cs;
 %%
 slice=32;
-trimmed_size = 128;
+trimmed_size = 32;
 img = img(128-trimmed_size/2+1:128+trimmed_size/2,128-trimmed_size/2+1:128+trimmed_size/2,:);
 %%
 n_chn = 4;
@@ -50,14 +50,15 @@ wg = 3;
 sw = 8;
 w = ones(1,length(k(:)));
 
-E = NUFFT3D(k_traj', 1, 1, 0, [imwidth,imwidth,imwidth], 2);
+E = NUFFT3D(k_traj', 1, 1, 0, [imwidth,imwidth,imwidth], 2, nCh);
 
 FT = GRIDDING3D(k_traj,w,imwidth,osf,wg,sw,[trimmed_size trimmed_size trimmed_size],'sparse',E);
-
+whos
 %% generate radial data
 tic
 dataRadial = inversegrid_multicoil_gpu(img_a,FT,2*nPE,numSpokes);
 toc
+return
 dataRadial = reshape(dataRadial, [2*nPE*numSpokes n_chn]);
 %% density compensation
 w = abs(rho);
@@ -88,4 +89,4 @@ end;
 out_file = ['../../daten/results/2D_',num2str(trimmed_size),'_',strrep(num2str(osf),'.','_'),'_',num2str(wg),'_',num2str(slice)];
 save(out_file, 'recon_sos_res');
 disp(['output written to ',out_file]);
-exit;
+%exit;

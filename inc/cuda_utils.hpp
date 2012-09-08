@@ -98,14 +98,19 @@ inline dim3 getOptimalGridDim(long im_dim, long thread_count)
 	return dim3(MIN((im_dim+thread_count-1)/thread_count,128*128));//128*128 empiric, max is 256*256 = 65536
 }
 
-inline void showMemoryInfo()
+inline void showMemoryInfo(bool force)
 {
 	size_t free_mem = 0;
 	size_t total_mem = 0;
 	cudaMemGetInfo(&free_mem, &total_mem);
-	if (DEBUG)
+	if (DEBUG || force)
 		printf("memory usage, free: %lu total: %lu\n",free_mem,total_mem);
 }	
+
+inline void showMemoryInfo()
+{
+	showMemoryInfo(false);
+}
 
 GriddingInfo* initAndCopyGriddingInfo(int sector_count, 
 									  int sector_width,

@@ -8,7 +8,8 @@ addpath ../bin
 addpath ../../daten
 addpath(genpath('./GRIDDING3D'));
 addpath(genpath('../../bUTE/utils'));
-addpath(genpath('../../tgv/NUFFT'));
+addpath(genpath('../../3D_radial_bUTE_test'));
+
 %% Load data
 load img_brain_4ch;
 %load noisy_phantom;

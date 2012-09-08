@@ -8,8 +8,8 @@ addpath ../bin
 addpath ../../daten
 addpath(genpath('./GRIDDING3D'));
 addpath(genpath('../../bUTE/utils'));
+addpath(genpath('../../tgv/NUFFT'));
 addpath(genpath('../../3D_radial_bUTE_test'));
-
 %% Load data
 load img_brain_4ch;
 %load noisy_phantom;
@@ -51,7 +51,7 @@ wg = 3;
 sw = 8;
 w = ones(1,length(k(:)));
 
-E = NUFFT3D(k_traj, 1, 1, 0, [imwidth,imwidth,imwidth], 2);
+E = NUFFT3D(k_traj', 1, 1, 0, [imwidth,imwidth,imwidth], 2);
 
 FT = GRIDDING3D(k_traj,w,imwidth,osf,wg,sw,[trimmed_size trimmed_size trimmed_size],'sparse',E);
 

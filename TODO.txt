@@ -6,4 +6,7 @@ TODOs gridding3D:
  - streams for per channel operation in order to avoid out of mem
  - shared approach evaluation
  - density compensation via gpu
+ - scaling (after fft) on gpu
  - measure, correct and conserve TILED access kernels
+ - comment code
+ - evaluate norm 

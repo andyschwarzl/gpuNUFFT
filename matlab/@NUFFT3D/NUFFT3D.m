@@ -34,12 +34,13 @@ end
     Kd = [Nd*2];
     n_shift = Nd/2 + shift; 
     % n_shift = [0,0,0] + shift;
-    res.nufftStruct = nufft_init(om, Nd, Jd, Kd, n_shift);
-    %res.nufftStruct = nufft_init(om, Nd, Jd, Kd, n_shift, 'table', 2^12, 'minmax:kb'); 
+    %res.st = nufft_init(om, Nd, Jd, Kd, n_shift);
+    res.st = nufft_init(om, Nd, Jd, Kd, n_shift, 'table', 2^12, 'minmax:kb'); 
 
     res.phase = phase;
     res.adjoint = 0;
     res.imageDim = imSize;
+    res.imSize = imSize;
     res.dataSize = size(om);
     res.w = w;
     res.mode = mode;

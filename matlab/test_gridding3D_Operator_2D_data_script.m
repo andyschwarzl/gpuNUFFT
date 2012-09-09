@@ -1,4 +1,4 @@
-for (counter = 1:10)
+%for (counter = 1:10)
 %% testscript with operator usage
 clear all; 
 close all; clc;
@@ -7,14 +7,15 @@ close all; clc;
 addpath ../bin  
 addpath ../../daten
 addpath(genpath('./GRIDDING3D'));
-addpath(genpath('../../bUTE/utils'));
+addpath(genpath('./utils'));
+addpath(genpath('../../tgv/NUFFT'));
 %% Load data
 load img_brain_4ch;
 %load noisy_phantom;
 %load calf_data_cs;
 %%
 slice=32;
-trimmed_size = 256;
+trimmed_size = 96;
 img = img(128-trimmed_size/2+1:128+trimmed_size/2,128-trimmed_size/2+1:128+trimmed_size/2,:);
 %%
 n_chn = 4;
@@ -41,19 +42,18 @@ rho=linspace(-0.5,0.5,nPE*2)';
 k=rho*exp(-1j*theta);
 
 %% generate Fourier sampling operator
-%FT = GRIDDING3D(k, 1, 1, 0, [nPE,nFE], 2);
 k_traj = [real(k(:))'; imag(k(:))';zeros(1,length(k(:)))];
 imwidth = nPE;
 osf = 1.25;
 wg = 3;
 sw = 8;
 w = ones(1,length(k(:)));
-FT = GRIDDING3D(k_traj,w,imwidth,osf,wg,sw,[trimmed_size trimmed_size trimmed_size],'true');
-
+FT = GRIDDING3D(k_traj,w,imwidth,osf,wg,sw,[trimmed_size trimmed_size trimmed_size],'false');
+%FT = NUFFT3D(k_traj', 1, 1, 0, [nPE,nFE,nFE], 2,n_chn);%cpu ref
 %% generate radial data
 tic
 dataRadial = inversegrid_multicoil_gpu(img_a,FT,2*nPE,numSpokes);
-toc
+inverse_time = toc
 dataRadial = reshape(dataRadial, [2*nPE*numSpokes n_chn]);
 %% density compensation
 w = abs(rho);
@@ -71,7 +71,7 @@ dataRadial_dc = dataRadial.*w_mc;
 %pause;
 tic
 imgRegrid_kb_dc = regrid_multicoil_gpu(reshape(dataRadial_dc,[size(k),chn]),FT);
-toc
+regrid_time = toc
 %% show results
 %figure, imshow(imresize(((abs(imgRegrid_kb_dc(:,:,32,n_chn)))),4),[]), title('gridding dc');
 
@@ -80,8 +80,8 @@ recon_sos_dc = sqrt(sum(abs(imgRegrid_kb_dc).^2,4));
 recon_sos_res = recon_sos_dc(:,:,slice);
 %figure, imshow(imresize(((abs(recon_sos_res(:,:)))),2),[]), title('gridding dc sos');
 disp('finished iteration');
-end;
+%end;
 out_file = ['../../daten/results/2D_',num2str(trimmed_size),'_',strrep(num2str(osf),'.','_'),'_',num2str(wg),'_',num2str(slice)];
-save(out_file, 'recon_sos_res');
+save(out_file, 'recon_sos_res','inverse_time','regrid_time');
 disp(['output written to ',out_file]);
 exit;

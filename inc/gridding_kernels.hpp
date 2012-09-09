@@ -2,7 +2,11 @@
 #define GRIDDING_KERNELS_H
 #include "gridding_gpu.hpp"
 
-#define THREAD_BLOCK_SIZE 256
+#if __CUDA_ARCH__ < 200
+	#define THREAD_BLOCK_SIZE 128
+#else
+	#define THREAD_BLOCK_SIZE 256
+#endif
 
 //INVERSE Operations
 void performConvolution( DType* data_d, 

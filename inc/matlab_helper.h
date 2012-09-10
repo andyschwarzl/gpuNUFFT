@@ -27,7 +27,7 @@ void readMatlabInputArray(const mxArray *prhs[], int input_index, int highest_va
     *n_coils = 1;
 	if (nd == 2)
 	{
-		if(dims[0] != highest_varying_dim)//total: highest_varying_dim x N = 2
+		if(highest_varying_dim > 0 && dims[0] != highest_varying_dim)//total: highest_varying_dim x N = 2
 		{
 			mexPrintf("dimensions of '%s' input array don't fit. Need to be %d x N but are %d x %d\n",name, highest_varying_dim, dims[0],dims[1]);
 			mexErrMsgTxt ("Error occured!\n");

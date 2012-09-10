@@ -152,7 +152,7 @@ __global__ void convolutionKernel( DType* data,
 								int N
 								)
 {
-	//extern __shared__ DType sdata[]; //externally managed shared memory
+	extern __shared__ DType sdata[]; //externally managed shared memory
 
 	int  sec= blockIdx.x;
 	//start convolution
@@ -182,10 +182,16 @@ __global__ void convolutionKernel( DType* data,
 		
 		while (data_cnt < sectors[sec+1])
 		{
-			DType3 data_point; //datapoint per thread
-			data_point.x = crds[3*data_cnt];
-			data_point.y = crds[3*data_cnt +1];
-			data_point.z = crds[3*data_cnt +2];
+//			DType3 data_point; //datapoint per thread
+			//data_point.x = crds[3*data_cnt];
+			//data_point.y = crds[3*data_cnt +1];
+			//data_point.z = crds[3*data_cnt +2];
+		  
+		  sdata[threadIdx.x] = crds[3*data_cnt];
+			sdata[threadIdx.x+blockDim.x] = crds[3*data_cnt+blockDim.x];
+			sdata[threadIdx.x+2*blockDim.x]= crds[3*data_cnt+2*blockDim.x];
+			__syncthreads();	
+			DType3 data_point = ((DType3*)sdata)[threadIdx.x];	
 			
 			// set the boundaries of final dataset for gridding this point
 			ix = (data_point.x + 0.5f) * (GI.grid_width) - center.x + GI.sector_offset;
@@ -263,13 +269,13 @@ void performConvolution( DType* data_d,
 						)
 {
 	//TODO how to calculate shared_mem_size???, shared_mem_needed?
-	//long shared_mem_size = 256 * sizeof(CufftType);//empiric
+	long shared_mem_size = 256 * sizeof(DType3);//empiric
 
 	dim3 block_dim(256);
 	dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,256));
 	
 //	printf("convolution requires %d bytes of shared memory!\n",shared_mem_size);
-	convolutionKernel<<<grid_dim,block_dim>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,gi_host->sector_count);
+	convolutionKernel<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,gi_host->sector_count);
 
  //evaluate TODO activate
 /*

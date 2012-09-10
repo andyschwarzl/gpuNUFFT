@@ -164,7 +164,8 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 	//and each data point to one thread inside this block 
 	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,sector_width,kernel_width,kernel_count,grid_width,im_width,osr);
 	
-	DType* data_d, *crds_d, *kernel_d;
+	DType* data_d, *kernel_d;
+  DType* crds_d;
 	CufftType *gdata_d, *imdata_d;
 	int* sector_centers_d, *sectors_d;
 

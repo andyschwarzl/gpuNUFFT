@@ -17,7 +17,7 @@ if (kspace_data_dim > 1)
         if a.verbose
             disp('using atomic operations');
         end
-        m = mex_gridding3D_adj_atomic_f(single(kspace),single(a.coords),int32(a.sector_data_cnt),int32(a.sector_centers),a.params);
+        m = mex_gridding3D_adj_atomic_f(single(kspace),single(a.coords)',int32(a.sector_data_cnt),int32(a.sector_centers),a.params);
     else
         m = mex_gridding3D_adj_f(single(kspace),single(a.coords),int32(a.sector_data_cnt),int32(a.sector_centers),a.params);
     end;
@@ -37,7 +37,7 @@ else
         disp('call gridding mex kernel')
     end
     if a.atomic == true
-        m = mex_gridding3D_adj_atomic_f(single(data),single(a.coords),int32(a.sector_data_cnt),int32(a.sector_centers),a.params);
+        m = mex_gridding3D_adj_atomic_f(single(data),single(a.coords)',int32(a.sector_data_cnt),int32(a.sector_centers),a.params);
     else
         m = mex_gridding3D_adj_f(single(data),single(a.coords),int32(a.sector_data_cnt),int32(a.sector_centers),a.params);
     end

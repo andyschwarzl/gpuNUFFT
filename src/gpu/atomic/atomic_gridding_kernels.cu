@@ -182,16 +182,16 @@ __global__ void convolutionKernel( DType* data,
 		
 		while (data_cnt < sectors[sec+1])
 		{
-//			DType3 data_point; //datapoint per thread
-			//data_point.x = crds[3*data_cnt];
-			//data_point.y = crds[3*data_cnt +1];
-			//data_point.z = crds[3*data_cnt +2];
+			DType3 data_point; //datapoint per thread
+			data_point.x = crds[3*data_cnt];
+			data_point.y = crds[3*data_cnt +1];
+			data_point.z = crds[3*data_cnt +2];
 		  
-		  sdata[threadIdx.x] = crds[3*data_cnt];
-			sdata[threadIdx.x+blockDim.x] = crds[3*data_cnt+blockDim.x];
-			sdata[threadIdx.x+2*blockDim.x]= crds[3*data_cnt+2*blockDim.x];
-			__syncthreads();	
-			DType3 data_point = ((DType3*)sdata)[threadIdx.x];	
+			//sdata[threadIdx.x] = crds[3*data_cnt];
+			//sdata[threadIdx.x+blockDim.x] = crds[3*data_cnt+blockDim.x];
+			//sdata[threadIdx.x+2*blockDim.x]= crds[3*data_cnt+2*blockDim.x];
+			//__syncthreads();	
+			//DType3 data_point = ((DType3*)sdata)[threadIdx.x];	
 			
 			// set the boundaries of final dataset for gridding this point
 			ix = (data_point.x + 0.5f) * (GI.grid_width) - center.x + GI.sector_offset;

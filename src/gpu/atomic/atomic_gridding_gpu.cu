@@ -51,8 +51,10 @@ void gridding3D_gpu(CufftType**	data,			//kspace data array
 	allocateAndCopyToDeviceMem<DType>(&crds_d,crds,3*data_count);
 	
 	if (DEBUG)
-		printf("allocate and copy kernel of size %d...\n",kernel_count);
-	allocateAndCopyToDeviceMem<DType>(&kernel_d,kernel,kernel_count);
+		printf("allocate and copy kernel in const memory of size %d...\n",kernel_count);
+	HANDLE_ERROR(cudaGetSymbolAddress((void**)&kernel_d, KERNEL));
+	HANDLE_ERROR(cudaMemcpyToSymbol(KERNEL,(void*)kernel,kernel_count*sizeof(DType)));
+	//allocateAndCopyToDeviceMem<DType>(&kernel_d,kernel,kernel_count);
 	if (DEBUG)
 		printf("allocate and copy sectors of size %d...\n",sector_count+1);
 	allocateAndCopyToDeviceMem<int>(&sectors_d,sectors,sector_count+1);
@@ -124,7 +126,7 @@ void gridding3D_gpu(CufftType**	data,			//kspace data array
 	// Destroy the cuFFT plan.
 	if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
 		printf("error at thread synchronization 8: %s\n",cudaGetErrorString(cudaGetLastError()));
-	freeTotalDeviceMemory(data_d,crds_d,gdata_d,imdata_d,kernel_d,sectors_d,sector_centers_d,NULL);//NULL as stop
+	freeTotalDeviceMemory(data_d,crds_d,gdata_d,imdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop
 	
 	if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
 		printf("error at thread synchronization 9: %s\n",cudaGetErrorString(cudaGetLastError()));
@@ -183,8 +185,10 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 	allocateAndCopyToDeviceMem<DType>(&crds_d,crds,3*data_count);
 	
 	if (DEBUG)
-		printf("allocate and copy kernel of size %d...\n",kernel_count);
-	allocateAndCopyToDeviceMem<DType>(&kernel_d,kernel,kernel_count);
+		printf("allocate and copy kernel in const memory of size %d...\n",kernel_count);
+	HANDLE_ERROR(cudaGetSymbolAddress((void**)&kernel_d, "KERNEL"));
+	HANDLE_ERROR(cudaMemcpyToSymbol("KERNEL",kernel,kernel_count*sizeof(DType)));
+	//allocateAndCopyToDeviceMem<DType>(&kernel_d,kernel,kernel_count);
 	if (DEBUG)
 		printf("allocate and copy sectors of size %d...\n",sector_count+1);
 	allocateAndCopyToDeviceMem<int>(&sectors_d,sectors,sector_count+1);
@@ -224,7 +228,7 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 			copyFromDevice<CufftType>(gdata_d,*imdata,gi_host->grid_width_dim);
 			if (DEBUG)
 				printf("test value at point zero: %f\n",(*imdata)[0].x);
-			freeTotalDeviceMemory(data_d,crds_d,imdata_d,gdata_d,kernel_d,sectors_d,sector_centers_d,NULL);//NULL as stop token
+			freeTotalDeviceMemory(data_d,crds_d,imdata_d,gdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop token
 
 			free(gi_host);
 			/* Destroy the cuFFT plan. */
@@ -254,7 +258,7 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 			//free memory
 			if (cufftDestroy(fft_plan) != CUFFT_SUCCESS)
 				printf("error on destroying cufft plan\n");
-			freeTotalDeviceMemory(data_d,crds_d,imdata_d,gdata_d,kernel_d,sectors_d,sector_centers_d,NULL);//NULL as stop token
+			freeTotalDeviceMemory(data_d,crds_d,imdata_d,gdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop token
 			free(gi_host);
 			// Destroy the cuFFT plan.
 			return;
@@ -286,6 +290,6 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 
 	if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
 		printf("error: at adj  thread synchronization 10: %s\n",cudaGetErrorString(cudaGetLastError()));
-	freeTotalDeviceMemory(data_d,crds_d,gdata_d,imdata_d,kernel_d,sectors_d,sector_centers_d,NULL);//NULL as stop
+	freeTotalDeviceMemory(data_d,crds_d,gdata_d,imdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop
 	free(gi_host);
 }

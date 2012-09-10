@@ -13,7 +13,7 @@
 	#endif
 #else
 	static cufftType_t CufftTransformType = CUFFT_C2C;
-	
+
 	#ifdef WIN32
 		static cufftResult (__stdcall*pt2CufftExec)(cufftHandle, cufftComplex*, cufftComplex*,int) = &cufftExecC2C;
 	#else

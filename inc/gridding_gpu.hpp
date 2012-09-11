@@ -63,6 +63,7 @@ void gridding3D_gpu_adj(DType*		data,			// kspace input data array
 
 struct GriddingInfo 
 {
+	int data_count;
 	int kernel_width; 
 	int kernel_widthSquared;
 	DType kernel_widthInvSquared;

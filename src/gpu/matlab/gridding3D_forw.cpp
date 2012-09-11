@@ -62,7 +62,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	//Coords
 	DType* coords = NULL;
 	int coord_count;
-	readMatlabInputArray<DType>(prhs, pcount++, 3,"coords",&coords, &coord_count);
+	readMatlabInputArray<DType>(prhs, pcount++, 0,"coords",&coords, &coord_count);
 
 	//Sectors
 	int* sectors = NULL;

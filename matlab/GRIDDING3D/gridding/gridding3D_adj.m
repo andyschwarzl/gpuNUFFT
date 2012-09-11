@@ -19,7 +19,7 @@ if (kspace_data_dim > 1)
         end
         m = mex_gridding3D_adj_atomic_f(single(kspace),single(a.coords)',int32(a.sector_data_cnt),int32(a.sector_centers),a.params);
     else
-        m = mex_gridding3D_adj_f(single(kspace),single(a.coords),int32(a.sector_data_cnt),int32(a.sector_centers),a.params);
+        m = mex_gridding3D_adj_f(single(kspace),single(a.coords)',int32(a.sector_data_cnt),int32(a.sector_centers),a.params);
     end;
     size(m);
     m = squeeze(m(1,:,:,:,:) + 1i*(m(2,:,:,:,:)));

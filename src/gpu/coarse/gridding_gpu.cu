@@ -27,7 +27,7 @@ void gridding3D_gpu(CufftType**	data,			//kspace data array
 					const GriddingOutput gridding_out)
 {
 	showMemoryInfo();
-	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,sector_width,kernel_width,kernel_count,grid_width,im_width,osr);
+	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,sector_width,kernel_width,kernel_count,grid_width,im_width,osr,data_count);
 
 	//cuda mem allocation
 	DType *imdata_d, *crds_d, *kernel_d;//, *temp_gdata_d;
@@ -160,7 +160,7 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 
 	//split and run sectors into blocks
 	//and each data point to one thread inside this block 
-	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,sector_width,kernel_width,kernel_count,grid_width,im_width,osr);
+	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,sector_width,kernel_width,kernel_count,grid_width,im_width,osr,data_count);
 	
 	DType* data_d, *crds_d, *kernel_d, *temp_gdata_d;
 	CufftType *gdata_d, *imdata_d;

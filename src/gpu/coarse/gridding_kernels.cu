@@ -9,7 +9,6 @@
 __global__ void convolutionKernel( DType* data, 
 							    DType* crds, 
 							    CufftType* gdata,
-							    DType* kernel, 
 							    int* sectors, 
 								int* sector_centers,
 								DType* temp_gdata,
@@ -91,9 +90,9 @@ __global__ void convolutionKernel( DType* data,
 									{
 										//get kernel value
 										//Calculate Separable Filters 
-										val = kernel[(int) round(dz_sqr * GI.dist_multiplier)] *
-											  kernel[(int) round(dy_sqr * GI.dist_multiplier)] *
-											  kernel[(int) round(dx_sqr * GI.dist_multiplier)];
+										val = KERNEL[(int) round(dz_sqr * GI.dist_multiplier)] *
+													KERNEL[(int) round(dy_sqr * GI.dist_multiplier)] *
+													KERNEL[(int) round(dx_sqr * GI.dist_multiplier)];
 										ind = 2* getIndex(i,j,k,GI.sector_pad_width);
 								
 										// multiply data by current kernel val 
@@ -178,7 +177,7 @@ void performConvolution( DType* data_d,
 	dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,(gi_host->sector_pad_width)*(gi_host->sector_pad_width)*(N_THREADS_PER_SECTOR)));
 	if (DEBUG)
 		printf("convolution requires %d bytes of shared memory!\n",shared_mem_size);
-	convolutionKernel<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,temp_gdata_d,gi_host->sector_count);
+	convolutionKernel<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,temp_gdata_d,gi_host->sector_count);
 }
 
 //very slow way of composing the output, should only be used on compute capabilties lower than 2.0
@@ -193,7 +192,6 @@ void composeOutput(DType* temp_gdata_d, CufftType* gdata_d, int* sector_centers_
 __global__ void forwardConvolutionKernel( CufftType* data, 
 										  DType* crds, 
 										  CufftType* gdata,
-										  DType* kernel, 
 										  int* sectors, 
 										  int* sector_centers,
 										  int N)
@@ -267,9 +265,9 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 								{
 									// get kernel value
 									// calc as separable filter
-									val = kernel[(int) round(dz_sqr * GI.dist_multiplier)] *
-											kernel[(int) round(dy_sqr * GI.dist_multiplier)] *
-											kernel[(int) round(dx_sqr * GI.dist_multiplier)];
+									val = KERNEL[(int) round(dz_sqr * GI.dist_multiplier)] *
+											KERNEL[(int) round(dy_sqr * GI.dist_multiplier)] *
+											KERNEL[(int) round(dx_sqr * GI.dist_multiplier)];
 									
 									ind = (sector_ind_offset + getIndex(i,j,k,GI.grid_width));
 
@@ -322,5 +320,5 @@ void performForwardConvolution( CufftType*		data_d,
 	
 	if (DEBUG)
 		printf("convolution requires %d bytes of shared memory!\n",shared_mem_size);
-	forwardConvolutionKernel<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,gi_host->sector_count);
+	forwardConvolutionKernel<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
 }

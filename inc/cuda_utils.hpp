@@ -118,10 +118,11 @@ GriddingInfo* initAndCopyGriddingInfo(int sector_count,
 									  int kernel_count, 
 									  int grid_width,
 									  int im_width,
-									  DType osr)
+									  DType osr,
+										int data_count)
 {
 	GriddingInfo* gi_host = (GriddingInfo*)malloc(sizeof(GriddingInfo));
-
+  gi_host->data_count = data_count;
 	gi_host->sector_count = sector_count;
 	gi_host->sector_width = sector_width;
 	

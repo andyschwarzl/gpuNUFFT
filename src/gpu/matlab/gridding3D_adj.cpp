@@ -86,10 +86,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	int sector_width = getParamField<int>(matParams,"sector_width");
 		
 	if (MATLAB_DEBUG)
-		mexPrintf("passed Params, IM_WIDTH: %d, OSR: %f, KERNEL_WIDTH: %d, SECTOR_WIDTH: %d\n",im_width,osr,kernel_width,sector_width);
-  
-	if (MATLAB_DEBUG)
 	{
+		mexPrintf("passed Params, IM_WIDTH: %d, OSR: %f, KERNEL_WIDTH: %d, SECTOR_WIDTH: %d\n",im_width,osr,kernel_width,sector_width);
 		size_t free_mem = 0;
 		size_t total_mem = 0;
 		cudaMemGetInfo(&free_mem, &total_mem);

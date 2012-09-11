@@ -50,9 +50,9 @@ __global__ void convolutionKernel( DType* data,
 		while (data_cnt < sectors[sec+1])
 		{
 			__shared__ DType3 data_point; //datapoint shared in every thread
-			data_point.x = crds[3*data_cnt];
-			data_point.y = crds[3*data_cnt +1];
-			data_point.z = crds[3*data_cnt +2];
+			data_point.x = crds[data_cnt];
+			data_point.y = crds[data_cnt +GI.data_count];
+			data_point.z = crds[data_cnt +2*GI.data_count];
 			// set the boundaries of final dataset for gridding this point
 			ix = (data_point.x + 0.5f) * (GI.grid_width) - center.x + GI.sector_offset;
 			set_minmax(&ix, &imin, &imax, max_dim, GI.kernel_radius);
@@ -225,9 +225,9 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 		while (data_cnt < sectors[sec+1])
 		{
 			DType3 data_point; //datapoint per thread
-			data_point.x = crds[3*data_cnt];
-			data_point.y = crds[3*data_cnt +1];
-			data_point.z = crds[3*data_cnt +2];
+			data_point.x = crds[data_cnt];
+			data_point.y = crds[data_cnt + GI.data_count];
+			data_point.z = crds[data_cnt + 2*GI.data_count];
 
 			// set the boundaries of final dataset for gridding this point
 			ix = (data_point.x + 0.5f) * (GI.grid_width) - center.x + GI.sector_offset;

@@ -30,7 +30,7 @@ void gridding3D_gpu(CufftType**	data,			//kspace data array
 	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,sector_width,kernel_width,kernel_count,grid_width,im_width,osr,data_count);
 
 	//cuda mem allocation
-	DType *imdata_d, *crds_d, *kernel_d;//, *temp_gdata_d;
+	DType *imdata_d, *crds_d;//, *kernel_d;//, *temp_gdata_d;
 	CufftType *gdata_d, *data_d;
 	int* sector_centers_d, *sectors_d;
 	if (DEBUG)
@@ -52,9 +52,9 @@ void gridding3D_gpu(CufftType**	data,			//kspace data array
 	
 	if (DEBUG)
 		printf("allocate and copy kernel in const memory of size %d...\n",kernel_count);
-	HANDLE_ERROR(cudaGetSymbolAddress((void**)&kernel_d, KERNEL));
 	HANDLE_ERROR(cudaMemcpyToSymbol(KERNEL,(void*)kernel,kernel_count*sizeof(DType)));
 	//allocateAndCopyToDeviceMem<DType>(&kernel_d,kernel,kernel_count);
+
 	if (DEBUG)
 		printf("allocate and copy sectors of size %d...\n",sector_count+1);
 	allocateAndCopyToDeviceMem<int>(&sectors_d,sectors,sector_count+1);
@@ -115,7 +115,7 @@ void gridding3D_gpu(CufftType**	data,			//kspace data array
 		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
 			printf("error at thread synchronization 6: %s\n",cudaGetErrorString(cudaGetLastError()));
 		// convolution and resampling to non-standard trajectory
-		performForwardConvolution(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,gi_host);
+		performForwardConvolution(data_d,crds_d,gdata_d,NULL,sectors_d,sector_centers_d,gi_host);
 		//check for errors
 		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
 			printf("error at thread synchronization 7: %s\n",cudaGetErrorString(cudaGetLastError()));
@@ -164,7 +164,7 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 	//and each data point to one thread inside this block 
 	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,sector_width,kernel_width,kernel_count,grid_width,im_width,osr,data_count);
 	
-	DType* data_d, *kernel_d;
+	DType* data_d;//, *kernel_d;
   DType* crds_d;
 	CufftType *gdata_d, *imdata_d;
 	int* sector_centers_d, *sectors_d;
@@ -187,7 +187,6 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 	
 	if (DEBUG)
 		printf("allocate and copy kernel in const memory of size %d...\n",kernel_count);
-	HANDLE_ERROR(cudaGetSymbolAddress((void**)&kernel_d, "KERNEL"));
 	HANDLE_ERROR(cudaMemcpyToSymbol("KERNEL",kernel,kernel_count*sizeof(DType)));
 	//allocateAndCopyToDeviceMem<DType>(&kernel_d,kernel,kernel_count);
 	if (DEBUG)
@@ -217,7 +216,7 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 		
 		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
 			printf("error at adj thread synchronization 1: %s\n",cudaGetErrorString(cudaGetLastError()));
-		performConvolution(data_d+data_coil_offset,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,NULL,gi_host);
+		performConvolution(data_d+data_coil_offset,crds_d,gdata_d,NULL,sectors_d,sector_centers_d,NULL,gi_host);
 
 		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
 			printf("error at adj  thread synchronization 2: %s\n",cudaGetErrorString(cudaGetLastError()));

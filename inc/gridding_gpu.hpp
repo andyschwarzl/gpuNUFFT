@@ -12,6 +12,14 @@
 #define MAX_SECTOR_WIDTH 12 // 8x8x8 + Kernel with Width 5 -> 12x12x12
 #define MAX_SECTOR_DIM 1728 // 12x12x12
 
+
+#if __CUDA_ARCH__ < 200
+	#define THREAD_BLOCK_SIZE 128
+#else
+	#define THREAD_BLOCK_SIZE 256
+#endif
+
+
 enum GriddingOutput
 {
 	CONVOLUTION,

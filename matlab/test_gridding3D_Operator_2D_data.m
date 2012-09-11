@@ -6,14 +6,14 @@ close all; clc;
 addpath ../bin  
 addpath ../../daten
 addpath(genpath('./GRIDDING3D'));
-addpath(genpath('../../bUTE/utils'));
+addpath(genpath('./utils'));
 %% Load data
 load img_brain_4ch;
 %load noisy_phantom;
 %load calf_data_cs;
 %%
-slice=128;
-trimmed_size = 256;
+slice=32;
+trimmed_size = 96;
 img = img(128-trimmed_size/2+1:128+trimmed_size/2,128-trimmed_size/2+1:128+trimmed_size/2,:);
 %%
 n_chn = 4;
@@ -43,11 +43,11 @@ k=rho*exp(-1j*theta);
 %FT = GRIDDING3D(k, 1, 1, 0, [nPE,nFE], 2);
 k_traj = [real(k(:))'; imag(k(:))';zeros(1,length(k(:)))];
 imwidth = nPE;
-osf = 1.5;
+osf = 1.25;
 wg = 3;
 sw = 8;
 w = ones(1,length(k(:)));
-FT = GRIDDING3D(k_traj,w,imwidth,osf,wg,sw,[trimmed_size trimmed_size trimmed_size],'true');
+FT = GRIDDING3D(k_traj,w,imwidth,osf,wg,sw,[trimmed_size trimmed_size trimmed_size],'false');
 
 %% generate radial data
 tic

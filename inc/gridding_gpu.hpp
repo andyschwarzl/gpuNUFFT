@@ -14,7 +14,7 @@
 
 
 #if __CUDA_ARCH__ < 200
-	#define THREAD_BLOCK_SIZE 128
+	#define THREAD_BLOCK_SIZE 256 
 #else
 	#define THREAD_BLOCK_SIZE 256
 #endif

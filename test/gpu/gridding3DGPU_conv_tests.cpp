@@ -235,25 +235,22 @@ TEST(TestGPUGriddingConv,GPUTest_2SectorsKernel3nData)
     DType* coords = (DType*) calloc(3*data_entries,sizeof(DType));//3* x,y,z
 	int coord_cnt = 0;
 	//1.Sektor
-	coords[coord_cnt++] = -0.3f; 
-	coords[coord_cnt++] = 0.2f;
-	coords[coord_cnt++] = 0;
-
-	coords[coord_cnt++] = -0.1f;
-	coords[coord_cnt++] = 0;
-	coords[coord_cnt++] = 0;
-
-	//2.Sektor
-	coords[coord_cnt++] = 0; 
-	coords[coord_cnt++] = 0;
-	coords[coord_cnt++] = 0;
-
+	coords[coord_cnt++] = -0.3f; //x
+	coords[coord_cnt++] = -0.1f; 
+	coords[coord_cnt++] = 0;    
 	coords[coord_cnt++] = 0.5f; 
-	coords[coord_cnt++] = 0;
-	coords[coord_cnt++] = 0;
+	coords[coord_cnt++] = 0.3f;
 
+	coords[coord_cnt++] = 0.2f; //y
+	coords[coord_cnt++] = 0;
+	coords[coord_cnt++] = 0;
+	coords[coord_cnt++] = 0;
 	coords[coord_cnt++] = 0.3f;
-	coords[coord_cnt++] = 0.3f;
+	
+	coords[coord_cnt++] = 0; //z
+	coords[coord_cnt++] = 0;
+	coords[coord_cnt++] = 0;
+	coords[coord_cnt++] = 0;
 	coords[coord_cnt++] = 0;
 
 	//Output Grid

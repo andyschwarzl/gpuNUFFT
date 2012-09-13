@@ -104,7 +104,7 @@ void gridding3D_gpu(CufftType**	data,			//kspace data array
 		// Forward FFT to kspace domain
 		if (err=pt2CufftExec(fft_plan, gdata_d, gdata_d, CUFFT_FORWARD) != CUFFT_SUCCESS)
 		{
-			printf("cufft has failed with err %i \n",err);
+			fprintf(stderr,"cufft has failed with err %i \n",err);
 			showMemoryInfo(true);
 		}
 		
@@ -128,8 +128,8 @@ void gridding3D_gpu(CufftType**	data,			//kspace data array
 		printf("error at thread synchronization 8: %s\n",cudaGetErrorString(cudaGetLastError()));
 	freeTotalDeviceMemory(data_d,crds_d,gdata_d,imdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop
 	
-	if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
-		printf("error at thread synchronization 9: %s\n",cudaGetErrorString(cudaGetLastError()));
+	if ((cudaThreadSynchronize() != cudaSuccess))
+		fprintf(stderr,"error in atomic gridding3D_gpu function: %s\n",cudaGetErrorString(cudaGetLastError()));
   free(gi_host);
 }
 
@@ -242,7 +242,7 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 		//Inverse FFT
 		if (err=pt2CufftExec(fft_plan, gdata_d, gdata_d, CUFFT_INVERSE) != CUFFT_SUCCESS)
 		{
-			printf("cufft has failed at adj with err %i \n",err);
+			fprintf(stderr,"cufft has failed at adj with err %i \n",err);
 			showMemoryInfo(true);
 		}
 	
@@ -285,11 +285,10 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 
 	if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
 		printf("error: at adj  thread synchronization 9: %s\n",cudaGetErrorString(cudaGetLastError()));
-	cufftDestroy(fft_plan);
 	// Destroy the cuFFT plan.
-
-	if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
-		printf("error: at adj  thread synchronization 10: %s\n",cudaGetErrorString(cudaGetLastError()));
+	cufftDestroy(fft_plan);
 	freeTotalDeviceMemory(data_d,crds_d,gdata_d,imdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop
-	free(gi_host);
+	if ((cudaThreadSynchronize() != cudaSuccess))
+		fprintf(stderr,"error in atomic gridding3D_gpu_adj function: %s\n",cudaGetErrorString(cudaGetLastError()));
+  free(gi_host);
 }

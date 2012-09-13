@@ -104,7 +104,7 @@ void gridding3D_gpu(CufftType**	data,			//kspace data array
 		// Forward FFT to kspace domain
 		if (err=pt2CufftExec(fft_plan, gdata_d, gdata_d, CUFFT_FORWARD) != CUFFT_SUCCESS)
 		{
-			printf("cufft has failed with err %i \n",err);
+			fprintf(stderr,"cufft has failed with err %i \n",err);
 			showMemoryInfo(true);
 		}
 		
@@ -127,12 +127,12 @@ void gridding3D_gpu(CufftType**	data,			//kspace data array
 			printf("error at thread synchronization 8: %s\n",cudaGetErrorString(cudaGetLastError()));
 	freeTotalDeviceMemory(data_d,crds_d,gdata_d,imdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop
 	
-	if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
-		printf("error at thread synchronization 9: %s\n",cudaGetErrorString(cudaGetLastError()));
+	if ((cudaThreadSynchronize() != cudaSuccess))
+		fprintf(stderr,"error in gridding3D_gpu function: %s\n",cudaGetErrorString(cudaGetLastError()));
 	free(gi_host);
 }
 
-/** gridding3D_gpu
+/** gridding3D_gpu_adj
   * adjoint gridding from k-space to grid
   * TODO
   * known issues: memory can become to a problem when regridding greate matrices (256 and more)
@@ -251,7 +251,7 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 		//Inverse FFT
 		if (err=pt2CufftExec(fft_plan, gdata_d, gdata_d, CUFFT_INVERSE) != CUFFT_SUCCESS)
 		{
-			printf("cufft has failed at adj with err %i \n",err);
+			fprintf(stderr,"cufft has failed at adj with err %i \n",err);
 			showMemoryInfo(true);
 		}
 	  	if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
@@ -294,7 +294,7 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 	// Destroy the cuFFT plan.
 	cufftDestroy(fft_plan);
 	freeTotalDeviceMemory(data_d,crds_d,gdata_d,imdata_d,sectors_d,sector_centers_d,temp_gdata_d,NULL);//NULL as stop
-	if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
-		printf("error: at adj  thread synchronization 10: %s\n",cudaGetErrorString(cudaGetLastError()));
+	if ((cudaThreadSynchronize() != cudaSuccess))
+		fprintf(stderr,"error in gridding3D_gpu_adj function: %s\n",cudaGetErrorString(cudaGetLastError()));
 	free(gi_host);
 }

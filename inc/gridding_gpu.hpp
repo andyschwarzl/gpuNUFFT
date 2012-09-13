@@ -12,14 +12,6 @@
 #define MAX_SECTOR_WIDTH 12 // 8x8x8 + Kernel with Width 5 -> 12x12x12
 #define MAX_SECTOR_DIM 1728 // 12x12x12
 
-
-#if __CUDA_ARCH__ < 200
-	#define THREAD_BLOCK_SIZE 256 
-#else
-	#define THREAD_BLOCK_SIZE 256
-#endif
-
-
 enum GriddingOutput
 {
 	CONVOLUTION,
@@ -51,7 +43,7 @@ void gridding3D_gpu(CufftType**	data,			// kspace output data array
 					DType		osr,			// oversampling ratio
 					const GriddingOutput gridding_out);
 
-void gridding3D_gpu_adj(DType*		data,			// kspace input data array
+void gridding3D_gpu_adj(DType2*		data,			// kspace input data array
 						int			data_count,		// data count, samples per trajectory
 						int			n_coils,		// number of coils 
 						DType*		crds,			// 

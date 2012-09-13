@@ -6,16 +6,16 @@
 // shared data holds grid values as software managed cache
 //
 // 
-__global__ void convolutionKernel( DType* data, 
+__global__ void convolutionKernel( DType2* data, 
 							    DType* crds, 
 							    CufftType* gdata,
 							    int* sectors, 
 								int* sector_centers,
-								DType* temp_gdata,
+								DType2* temp_gdata,
 								int N
 								)
 {
-	extern __shared__ DType sdata[];//externally managed shared memory
+	extern __shared__ DType2 sdata[];//externally managed shared memory
 
 	int sec;
 	sec = blockIdx.x;
@@ -24,9 +24,9 @@ __global__ void convolutionKernel( DType* data,
 	{
 		int y=threadIdx.y;
 		int x=threadIdx.x;
-		int s_ind = 2* getIndex(x,y,z,GI.sector_pad_width) ;
-		sdata[s_ind] = 0.0f;//Re
-		sdata[s_ind+1]=0.0f;//Im
+		int s_ind = getIndex(x,y,z,GI.sector_pad_width) ;
+		sdata[s_ind].x = 0.0f;//Re
+		sdata[s_ind].y = 0.0f;//Im
 	}
 	__syncthreads();
 	//start convolution
@@ -93,12 +93,12 @@ __global__ void convolutionKernel( DType* data,
 										val = KERNEL[(int) round(dz_sqr * GI.dist_multiplier)] *
 													KERNEL[(int) round(dy_sqr * GI.dist_multiplier)] *
 													KERNEL[(int) round(dx_sqr * GI.dist_multiplier)];
-										ind = 2* getIndex(i,j,k,GI.sector_pad_width);
+										ind = getIndex(i,j,k,GI.sector_pad_width);
 								
 										// multiply data by current kernel val 
 										// grid complex or scalar 
-										sdata[ind]   += val * data[2*data_cnt];
-										sdata[ind+1] += val * data[2*data_cnt+1];
+										sdata[ind].x += val * data[data_cnt].x;
+										sdata[ind].y += val * data[data_cnt].y;
 									} // kernel bounds check x, spherical support 
 								} // x 	 
 							} // kernel bounds check y, spherical support 
@@ -118,14 +118,14 @@ __global__ void convolutionKernel( DType* data,
 			i=threadIdx.x;
 			j=threadIdx.y;
 			
-			int s_ind = 2* getIndex(i,j,k,GI.sector_pad_width) ;//index in shared grid
-			ind = 2*sector_ind_offset + s_ind;//index in temp output grid
+			int s_ind = getIndex(i,j,k,GI.sector_pad_width) ;//index in shared grid
+			ind = sector_ind_offset + s_ind;//index in temp output grid
 			
-			temp_gdata[ind] = sdata[s_ind];//Re
-			temp_gdata[ind+1] = sdata[s_ind+1];//Im
+			temp_gdata[ind].x = sdata[s_ind].x;//Re
+			temp_gdata[ind].y = sdata[s_ind].y;//Im
 			__syncthreads();
-			sdata[s_ind] = (DType)0.0;
-			sdata[s_ind+1] = (DType)0.0;
+			sdata[s_ind].x = (DType)0.0;
+			sdata[s_ind].y = (DType)0.0;
       __syncthreads();	
    	}
 		__syncthreads();
@@ -133,7 +133,7 @@ __global__ void convolutionKernel( DType* data,
 	}//sec < sector_count
 }
 
-__global__ void composeOutputKernel(DType* temp_gdata, CufftType* gdata, int* sector_centers)
+__global__ void composeOutputKernel(DType2* temp_gdata, CufftType* gdata, int* sector_centers)
 {
 	for (int sec = 0; sec < GI.sector_count; sec++)
 	{
@@ -151,27 +151,27 @@ __global__ void composeOutputKernel(DType* temp_gdata, CufftType* gdata, int* se
 		{
 			int x=threadIdx.x;
 			int y=threadIdx.y;
-			int s_ind = 2* (sector_grid_offset + getIndex(x,y,z,GI.sector_pad_width));
+			int s_ind = (sector_grid_offset + getIndex(x,y,z,GI.sector_pad_width));
 			int ind = (sector_ind_offset + getIndex(x,y,z,GI.grid_width));
 			if (isOutlier(x,y,z,center.x,center.y,center.z,GI.grid_width,GI.sector_offset))
 				continue;
-			gdata[ind].x += temp_gdata[s_ind];//Re
-			gdata[ind].y += temp_gdata[s_ind+1];//Im
+			gdata[ind].x += temp_gdata[s_ind].x;//Re
+			gdata[ind].y += temp_gdata[s_ind].y;//Im
 		}
 	}
 }
 
-void performConvolution( DType* data_d, 
+void performConvolution( DType2* data_d, 
 						 DType* crds_d, 
 						 CufftType* gdata_d,
 						 DType* kernel_d, 
 						 int* sectors_d, 
 						 int* sector_centers_d,
-						 DType* temp_gdata_d,
+						 DType2* temp_gdata_d,
 						 GriddingInfo* gi_host
 						)
 {
-	long shared_mem_size = 2*gi_host->sector_dim*sizeof(DType);
+	long shared_mem_size = gi_host->sector_dim*sizeof(DType2);
 	
 	dim3 block_dim(gi_host->sector_pad_width,gi_host->sector_pad_width,N_THREADS_PER_SECTOR);
 	dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,(gi_host->sector_pad_width)*(gi_host->sector_pad_width)*(N_THREADS_PER_SECTOR)));
@@ -181,7 +181,7 @@ void performConvolution( DType* data_d,
 }
 
 //very slow way of composing the output, should only be used on compute capabilties lower than 2.0
-void composeOutput(DType* temp_gdata_d, CufftType* gdata_d, int* sector_centers_d, GriddingInfo* gi_host)
+void composeOutput(DType2* temp_gdata_d, CufftType* gdata_d, int* sector_centers_d, GriddingInfo* gi_host)
 {
 	dim3 grid_dim(1);
 	dim3 block_dim(gi_host->sector_pad_width,gi_host->sector_pad_width,N_THREADS_PER_SECTOR);

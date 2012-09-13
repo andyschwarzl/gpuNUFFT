@@ -20,9 +20,9 @@ TEST(TestGPUGriddingFFT,KernelCall1Sector)
 
 	//Data
 	int data_entries = 1;
-    DType* data = (DType*) calloc(2*data_entries,sizeof(DType)); //2* re + im
-	data[0] = 1;
-	data[1] = 1;
+    DType2* data = (DType2*) calloc(data_entries,sizeof(DType2)); //2* re + im
+	data[0].x = 1;
+	data[0].y = 1;
 
 	//Coords
 	//Scaled between -0.5 and 0.5
@@ -104,9 +104,9 @@ TEST(TestGPUGriddingFFT,GPUTest_Kernel5w64)
 
 	//Data
 	int data_entries = 1;
-    DType* data = (DType*) calloc(2*data_entries,sizeof(DType)); //2* re + im
-	data[0] = 1;
-	data[1] = 0;
+    DType2* data = (DType2*) calloc(data_entries,sizeof(DType2)); //2* re + im
+	data[0].x = 1;
+	data[0].y = 0;
 
 	//Coords
 	//Scaled between -0.5 and 0.5
@@ -173,22 +173,22 @@ TEST(DISABLED_TestGPUGriddingFFT,GPUTest_2SectorsKernel3nData)
 
 	//Data
 	int data_entries = 5;
-    DType* data = (DType*) calloc(2*data_entries,sizeof(DType)); //2* re + im
+    DType2* data = (DType2*) calloc(data_entries,sizeof(DType2)); //2* re + im
 	int data_cnt = 0;
-	data[data_cnt++] = 0.5f;
-	data[data_cnt++] = 0.5f;
+	data[data_cnt].x = 0.5f;
+	data[data_cnt++].y = 0.5f;
 	
-	data[data_cnt++] = 0.7f;
-	data[data_cnt++] = 1;
+	data[data_cnt].x = 0.7f;
+	data[data_cnt++].y = 1;
 	
-	data[data_cnt++] = 1;
-	data[data_cnt++] = 1;
+	data[data_cnt].x = 1;
+	data[data_cnt++].y = 1;
 
-	data[data_cnt++] = 1;
-	data[data_cnt++] = 1;
+	data[data_cnt].x = 1;
+	data[data_cnt++].y = 1;
 
-	data[data_cnt++] = 1;
-	data[data_cnt++] = 1;
+	data[data_cnt].x = 1;
+	data[data_cnt++].y = 1;
 
 	//Coords
 	//Scaled between -0.5 and 0.5
@@ -293,22 +293,22 @@ TEST(DISABLED_TestGPUGriddingFFT,GPUTest_8SectorsKernel3nData)
 
 	//Data
 	int data_entries = 5;
-    DType* data = (DType*) calloc(2*data_entries,sizeof(DType)); //2* re + im
+    DType2* data = (DType2*) calloc(2*data_entries,sizeof(DType2)); //2* re + im
 	int data_cnt = 0;
-	data[data_cnt++] = 0.5f;
-	data[data_cnt++] = 0.5f;
+	data[data_cnt].x = 0.5f;
+	data[data_cnt++].y = 0.5f;
 	
-	data[data_cnt++] = 0.7f;
-	data[data_cnt++] = 1;
+	data[data_cnt].x = 0.7f;
+	data[data_cnt++].y = 1;
 	
-	data[data_cnt++] = 1;
-	data[data_cnt++] = 1;
+	data[data_cnt].x = 1;
+	data[data_cnt++].y = 1;
 
-	data[data_cnt++] = 1;
-	data[data_cnt++] = 1;
+	data[data_cnt].x = 1;
+	data[data_cnt++].y = 1;
 
-	data[data_cnt++] = 1;
-	data[data_cnt++] = 1;
+	data[data_cnt].x = 1;
+	data[data_cnt++].y = 1;
 
 	//Coords
 	//Scaled between -0.5 and 0.5
@@ -438,22 +438,22 @@ TEST(DISABLED_TestGPUGriddingFFT,GPUTest_8SectorsKernel4nData)
 
 	//Data
 	int data_entries = 5;
-    DType* data = (DType*) calloc(2*data_entries,sizeof(DType)); //2* re + im
+    DType2* data = (DType2*) calloc(data_entries,sizeof(DType2)); //2* re + im
 	int data_cnt = 0;
-	data[data_cnt++] = 0.5f;
-	data[data_cnt++] = 0.5f;
+	data[data_cnt].x = 0.5f;
+	data[data_cnt++].y = 0.5f;
 	
-	data[data_cnt++] = 0.7f;
-	data[data_cnt++] = 1;
+	data[data_cnt].x = 0.7f;
+	data[data_cnt++].y = 1;
 	
-	data[data_cnt++] = 1;
-	data[data_cnt++] = 1;
+	data[data_cnt].x = 1;
+	data[data_cnt++].y = 1;
 
-	data[data_cnt++] = 1;
-	data[data_cnt++] = 1;
+	data[data_cnt].x = 1;
+	data[data_cnt++].y = 1;
 
-	data[data_cnt++] = 1;
-	data[data_cnt++] = 1;
+	data[data_cnt].x = 1;
+	data[data_cnt++].y = 1;
 
 	//Coords
 	//Scaled between -0.5 and 0.5
@@ -589,10 +589,10 @@ TEST(DISABLED_TestGPUGriddingFFT,GPUTest_8SectorsKernel3nDataw128)
 
 	//Data
 	int data_entries = 1;
-    DType* data = (DType*) calloc(2*data_entries,sizeof(DType)); //2* re + im
+    DType2* data = (DType2*) calloc(data_entries,sizeof(DType2)); //2* re + im
 	int data_cnt = 0;
-	data[data_cnt++] = 1.0f;
-	data[data_cnt++] = 1.0f;
+	data[data_cnt].x = 1.0f;
+	data[data_cnt++].y = 1.0f;
 
 	//Coords
 	//Scaled between -0.5 and 0.5
@@ -665,22 +665,22 @@ TEST(TestGPUGriddingFFT,GPUTest_FactorTwoTest)
 
 	//Data
 	int data_entries = 5;
-    DType* data = (DType*) calloc(2*data_entries,sizeof(DType)); //2* re + im
+    DType2* data = (DType2*) calloc(data_entries,sizeof(DType2)); //2* re + im
 	int data_cnt = 0;
-	data[data_cnt++] = 0.5f;
-	data[data_cnt++] = 0.5f;
+	data[data_cnt].x = 0.5f;
+	data[data_cnt++].y = 0.5f;
 	
-	data[data_cnt++] = 0.5f;
-	data[data_cnt++] = 0.5f;
+	data[data_cnt].x = 0.5f;
+	data[data_cnt++].y = 0.5f;
 	
-	data[data_cnt++] = 1;
-	data[data_cnt++] = 1;
+	data[data_cnt].x = 1;
+	data[data_cnt++].y = 1;
 
-	data[data_cnt++] = 1;
-	data[data_cnt++] = 1;
+	data[data_cnt].x = 1;
+	data[data_cnt++].y = 1;
 
-	data[data_cnt++] = 1;
-	data[data_cnt++] = 1;
+	data[data_cnt].x = 1;
+	data[data_cnt++].y = 1;
 
 	//Coords
 	//Scaled between -0.5 and 0.5
@@ -809,23 +809,23 @@ TEST(DISABLED_TestGPUGriddingFFT,GPUTest_8SectorsKernel3nDataw32)
 
 	//Data
 	int data_entries = 5;
-    DType* data = (DType*) calloc(2*data_entries,sizeof(DType)); //2* re + im
+    DType2* data = (DType2*) calloc(data_entries,sizeof(DType2)); //2* re + im
 	int data_cnt = 0;
 	
-	data[data_cnt++] = 0.5f;
-	data[data_cnt++] = 0;
+	data[data_cnt].x = 0.5f;
+	data[data_cnt++].y = 0;
 	
-	data[data_cnt++] = 0.7f;
-	data[data_cnt++] = 0;
+	data[data_cnt].x = 0.7f;
+	data[data_cnt++].y = 0;
 
-	data[data_cnt++] = -0.2f;
-	data[data_cnt++] = 0.8f;
+	data[data_cnt].x = -0.2f;
+	data[data_cnt++].y = 0.8f;
 	
-	data[data_cnt++] = -0.2f;
-	data[data_cnt++] = 0.8f;
+	data[data_cnt].x = -0.2f;
+	data[data_cnt++].y = 0.8f;
 
-	data[data_cnt++] = 1;
-  data[data_cnt++] = 0;
+	data[data_cnt].x = 1;
+  data[data_cnt++].y = 0;
 
 
 	//Coords
@@ -930,11 +930,11 @@ TEST(DISABLED_TestGPUGriddingFFT,MatlabTest_8SK3w32)
 
 	//Data
 	int data_entries = 1;
-    DType* data = (DType*) calloc(2*data_entries,sizeof(DType)); //2* re + im
+    DType2* data = (DType2*) calloc(data_entries,sizeof(DType2)); //2* re + im
 	int data_cnt = 0;
 	
-	data[data_cnt++] = 0.0046f;
-	data[data_cnt++] = -0.0021f;
+	data[data_cnt].x = 0.0046f;
+	data[data_cnt++].y = -0.0021f;
 
 	//Coords
 	//Scaled between -0.5 and 0.5

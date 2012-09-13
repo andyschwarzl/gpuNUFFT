@@ -55,10 +55,10 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	int pcount = 0;  //Parametercounter
     
 	//Data
-	DType* data = NULL;
+	DType2* data = NULL;
 	int data_count;
 	int n_coils;
-	readMatlabInputArray<DType>(prhs, pcount++, 2,"data",&data, &data_count,3,&n_coils);
+	readMatlabInputArray<DType2>(prhs, pcount++, 2,"data",&data, &data_count,3,&n_coils);
 	
 	//Coords
 	DType* coords = NULL;
@@ -131,6 +131,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 		cudaMemGetInfo(&free_mem, &total_mem);
 		mexPrintf("memory usage on device afterwards, free: %lu total: %lu\n",free_mem,total_mem);
 	}
+	//cudaDeviceReset();
 //	cudaDeviceReset();
      //CUcontext  pctx ;
      //cuCtxPopCurrent(&pctx);	

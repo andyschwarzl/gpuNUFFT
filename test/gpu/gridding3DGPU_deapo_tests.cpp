@@ -23,9 +23,9 @@ TEST(TestGPUGriddingDeapo,KernelCall1Sector)
 
 	//Data
 	int data_entries = 1;
-    DType* data = (DType*) calloc(2*data_entries,sizeof(DType)); //2* re + im
-	data[0] = 1;//Re
-	data[1] = 0;//Im
+    DType2* data = (DType2*) calloc(data_entries,sizeof(DType2)); //2* re + im
+	data[0].x = 1;//Re
+	data[0].y = 0;//Im
 
 	//Coords
 	//Scaled between -0.5 and 0.5
@@ -98,11 +98,11 @@ TEST(TestGPUGriddingDeapo,KernelCall1Sector2Coils)
 	int data_entries = 1;
 	int n_coils = 2;
 
-    DType* data = (DType*) calloc(2*data_entries*n_coils,sizeof(DType)); //2* re + im
-	data[0] = 1;//Re
-	data[1] = 0;//Im
-	data[2] = 1;//Re
-	data[3] = 0;//Im
+    DType2* data = (DType2*) calloc(data_entries*n_coils,sizeof(DType2)); //2* re + im
+	data[0].x = 1;//Re
+	data[0].y = 0;//Im
+	data[1].x = 1;//Re
+	data[1].y = 0;//Im
 	
 	//Coords, same per coil
 	//Scaled between -0.5 and 0.5

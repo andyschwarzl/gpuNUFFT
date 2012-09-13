@@ -187,7 +187,7 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 	
 	if (DEBUG)
 		printf("allocate and copy kernel in const memory of size %d...\n",kernel_count);
-	HANDLE_ERROR(cudaMemcpyToSymbol("KERNEL",kernel,kernel_count*sizeof(DType)));
+	HANDLE_ERROR(cudaMemcpyToSymbol(KERNEL,(void*)kernel,kernel_count*sizeof(DType)));
 	//allocateAndCopyToDeviceMem<DType>(&kernel_d,kernel,kernel_count);
 	if (DEBUG)
 		printf("allocate and copy sectors of size %d...\n",sector_count+1);

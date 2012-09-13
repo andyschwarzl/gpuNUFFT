@@ -147,7 +147,7 @@ __global__ void convolutionKernel( DType* data,
 
 	int  sec= blockIdx.x;
 	//start convolution
-	while (sec < GI.sector_count)
+	while (sec < N)
 	{
 		//shared???
 		int ind, imin, imax, jmin, jmax,kmin,kmax, k, i, j;
@@ -400,7 +400,7 @@ void performForwardConvolution( CufftType*		data_d,
 								)
 {
 	//TODO how to calculate shared_mem_size???, shared_mem_needed?
-	int thread_size = 256;
+	int thread_size =256;
 	long shared_mem_size = thread_size * sizeof(CufftType);//empiric
 
 	dim3 block_dim(thread_size);

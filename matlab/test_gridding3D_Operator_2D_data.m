@@ -47,7 +47,7 @@ osf = 1.25;
 wg = 3;
 sw = 8;
 w = ones(1,length(k(:)));
-FT = GRIDDING3D(k_traj,w,imwidth,osf,wg,sw,[trimmed_size trimmed_size trimmed_size],'false');
+FT = GRIDDING3D(k_traj,w,imwidth,osf,wg,sw,[trimmed_size trimmed_size trimmed_size],'true');
 
 %% generate radial data
 tic

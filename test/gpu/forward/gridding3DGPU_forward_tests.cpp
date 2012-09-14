@@ -35,7 +35,7 @@ TEST(TestGPUGriddingForwardConv,KernelCall1Sector)
 	coords[1] = -0.38650f;
 	coords[2] = 0;
 
-	DType* im_data;
+	DType2* im_data;
 	unsigned long dims_g[4];
     dims_g[0] = 2; /* complex */
 	dims_g[1] = (unsigned long)(im_width); 
@@ -44,10 +44,13 @@ TEST(TestGPUGriddingForwardConv,KernelCall1Sector)
 
 	long im_size = dims_g[1]*dims_g[2]*dims_g[3];
 
-	im_data = (DType*) calloc(2*im_size,sizeof(DType));
+	im_data = (DType2*) calloc(im_size,sizeof(DType2));
 	
 	for (int x=0;x<im_size;x++)
-		im_data[x] = 1.0f;
+	{
+		im_data[x].x = 1.0f;
+		im_data[x].y = 1.0f;
+	}
 	
 	long grid_width = (unsigned long)(im_width * osr);
 

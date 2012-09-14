@@ -29,7 +29,7 @@ void gridding3D_gpu(CufftType**	data,			// kspace output data array
 					int			data_count,		// data count, samples per trajectory
 					int			n_coils,		// number of coils 
 					DType*		crds,			//
-					DType*		imdata,			// image input data array
+					DType2*		imdata,			// image input data array
 					int			imdata_count,	//			
 					int			grid_width,		//
 					DType*		kernel,			//

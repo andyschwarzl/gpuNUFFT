@@ -54,10 +54,10 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	int pcount = 0;  //Parametercounter
     
 	//Data
-	DType* imdata = NULL;
+	DType2* imdata = NULL;
 	int im_count;
 	int n_coils;
-	readMatlabInputArray<DType>(prhs, pcount++, 2,"imdata",&imdata, &im_count,3,&n_coils);
+	readMatlabInputArray<DType2>(prhs, pcount++, 2,"imdata",&imdata, &im_count,3,&n_coils);
 	
 	//Coords
 	DType* coords = NULL;

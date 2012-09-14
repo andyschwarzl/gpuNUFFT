@@ -110,11 +110,11 @@ void performFFTShift(CufftType* gdata_d,
 	fftShiftKernel<<<grid_dim,block_dim>>>(gdata_d,offset,width*width*width/2);
 }
 
-__global__ void forwardDeapodizationKernel(DType* imdata, DType beta, DType norm_val, int N)
+__global__ void forwardDeapodizationKernel(DType2* imdata, DType beta, DType norm_val, int N)
 {
 	int t = threadIdx.x +  blockIdx.x *blockDim.x;
 
-	int x, y, z,ind;
+	int x, y, z;
 	DType deapo;
 	while (t < N) 
 	{ 
@@ -124,33 +124,32 @@ __global__ void forwardDeapodizationKernel(DType* imdata, DType beta, DType norm
 	   //check if deapodization value is valid number
 	   if (!isnan(deapo))// == deapo)
 	   {
-		   ind = 2*t;
-		   imdata[ind] = imdata[ind] / deapo;//Re
-		   imdata[ind+1] = imdata[ind+1] / deapo ; //Im
+		   imdata[t].x = imdata[t].x / deapo;//Re
+		   imdata[t].y = imdata[t].y / deapo ; //Im
 	   }
 	   t = t + blockDim.x*gridDim.x;
 	}
 }
 
-__global__ void paddingKernel(DType* imdata,CufftType* gdata, int offset,int N)
+__global__ void paddingKernel(DType2* imdata,CufftType* gdata, int offset,int N)
 {	
 	int t = threadIdx.x +  blockIdx.x *blockDim.x;
 
-	int x, y, z, im_ind,grid_ind;
+	int x, y, z,grid_ind;
 	while (t < N) 
 	{ 
 		getCoordsFromIndex(t, &x, &y, &z, GI.im_width);
 		grid_ind =  getIndex(offset + x,offset + y,offset +z,GI.grid_width);
-		im_ind = 2*t;
-		gdata[grid_ind].x = imdata[im_ind];
-		gdata[grid_ind].y = imdata[im_ind+1];
+		
+		gdata[grid_ind].x = imdata[t].x;
+		gdata[grid_ind].y = imdata[t].y;
 		t = t+ blockDim.x*gridDim.x;
 	}
 }
 
 //see BEATTY et al.: RAPID GRIDDING RECONSTRUCTION
 //eq. (4) and (5)
-void performForwardDeapodization(DType* imdata_d,
+void performForwardDeapodization(DType2* imdata_d,
 						  GriddingInfo* gi_host)
 {
 	DType beta = (DType)BETA(gi_host->kernel_width,gi_host->osr);
@@ -165,7 +164,7 @@ void performForwardDeapodization(DType* imdata_d,
 	forwardDeapodizationKernel<<<grid_dim,block_dim>>>(imdata_d,beta,norm_val,gi_host->im_width_dim);
 }
 
-void performPadding(DType* imdata_d,
+void performPadding(DType2* imdata_d,
 					CufftType* gdata_d,					
 					GriddingInfo* gi_host)
 {

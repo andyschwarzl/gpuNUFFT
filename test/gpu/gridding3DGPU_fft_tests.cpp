@@ -691,22 +691,19 @@ TEST(TestGPUGriddingFFT,GPUTest_FactorTwoTest)
 	coords[coord_cnt++] = 0; 
 	coords[coord_cnt++] = 0;
 	coords[coord_cnt++] = 0;
-
-	coords[coord_cnt++] = 0;
-	coords[coord_cnt++] = 0;
-	coords[coord_cnt++] = 0;
-
-	//8.Sektor
-	coords[coord_cnt++] = 0; 
-	coords[coord_cnt++] = 0;
-	coords[coord_cnt++] = 0;
-
 	coords[coord_cnt++] = 0.5f; 
+	coords[coord_cnt++] = 0.3f;
+	
 	coords[coord_cnt++] = 0;
 	coords[coord_cnt++] = 0;
-
+	coords[coord_cnt++] = 0;
+	coords[coord_cnt++] = 0; 
 	coords[coord_cnt++] = 0.3f;
-	coords[coord_cnt++] = 0.3f;
+	
+	coords[coord_cnt++] = 0;
+	coords[coord_cnt++] = 0;
+	coords[coord_cnt++] = 0;
+	coords[coord_cnt++] = 0;
 	coords[coord_cnt++] = 0;
 
 	//Output Grid

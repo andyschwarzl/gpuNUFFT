@@ -353,25 +353,22 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel3nData)
     DType* coords = (DType*) calloc(3*data_entries,sizeof(DType));//3* x,y,z
 	int coord_cnt = 0;
 	//7.Sektor
-	coords[coord_cnt++] = -0.3f; 
-	coords[coord_cnt++] = 0.2f;
-	coords[coord_cnt++] = 0;
-
+	coords[coord_cnt++] = -0.3f; //x
 	coords[coord_cnt++] = -0.1f;
-	coords[coord_cnt++] = 0;
-	coords[coord_cnt++] = 0;
-
-	//8.Sektor
 	coords[coord_cnt++] = 0; 
-	coords[coord_cnt++] = 0;
-	coords[coord_cnt++] = 0;
-
 	coords[coord_cnt++] = 0.5f; 
-	coords[coord_cnt++] = 0;
-	coords[coord_cnt++] = 0;
+	coords[coord_cnt++] = 0.3f;
 
+	coords[coord_cnt++] = 0.2f;//Y
+	coords[coord_cnt++] = 0;
+	coords[coord_cnt++] = 0;
+	coords[coord_cnt++] = 0;
 	coords[coord_cnt++] = 0.3f;
-	coords[coord_cnt++] = 0.3f;
+	
+	coords[coord_cnt++] = 0;//Z
+	coords[coord_cnt++] = 0;
+	coords[coord_cnt++] = 0;
+	coords[coord_cnt++] = 0;
 	coords[coord_cnt++] = 0;
 
 	//Output Grid
@@ -499,25 +496,22 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel4nData)
     DType* coords = (DType*) calloc(3*data_entries,sizeof(DType));//3* x,y,z
 	int coord_cnt = 0;
 	//7.Sektor
-	coords[coord_cnt++] = -0.3f; 
-	coords[coord_cnt++] = 0.2f;
-	coords[coord_cnt++] = 0;
-
+	coords[coord_cnt++] = -0.3f; //X
 	coords[coord_cnt++] = -0.1f;
-	coords[coord_cnt++] = 0;
-	coords[coord_cnt++] = 0;
-
-	//8.Sektor
 	coords[coord_cnt++] = 0; 
-	coords[coord_cnt++] = 0;
-	coords[coord_cnt++] = 0;
-
 	coords[coord_cnt++] = 0.5f; 
+	coords[coord_cnt++] = 0.3f;
+	
+	coords[coord_cnt++] = 0.2f;//Y
 	coords[coord_cnt++] = 0;
 	coords[coord_cnt++] = 0;
-
+	coords[coord_cnt++] = 0;
 	coords[coord_cnt++] = 0.3f;
-	coords[coord_cnt++] = 0.3f;
+	
+	coords[coord_cnt++] = 0;
+	coords[coord_cnt++] = 0;
+	coords[coord_cnt++] = 0;
+	coords[coord_cnt++] = 0;
 	coords[coord_cnt++] = 0;
 
 	//Output Grid
@@ -654,24 +648,21 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel5nData)
 	int coord_cnt = 0;
 	//7.Sektor
 	coords[coord_cnt++] = -0.3f; 
+	coords[coord_cnt++] = -0.1f;
+	coords[coord_cnt++] = 0; 
+	coords[coord_cnt++] = 0.5f; 
+	coords[coord_cnt++] = 0.3f;
+
 	coords[coord_cnt++] = 0.2f;
 	coords[coord_cnt++] = 0;
-
-	coords[coord_cnt++] = -0.1f;
 	coords[coord_cnt++] = 0;
 	coords[coord_cnt++] = 0;
-
-	//8.Sektor
-	coords[coord_cnt++] = 0; 
-	coords[coord_cnt++] = 0;
-	coords[coord_cnt++] = 0;
-
-	coords[coord_cnt++] = 0.5f; 
-	coords[coord_cnt++] = 0;
-	coords[coord_cnt++] = 0;
-
 	coords[coord_cnt++] = 0.3f;
-	coords[coord_cnt++] = 0.3f;
+
+	coords[coord_cnt++] = 0;
+	coords[coord_cnt++] = 0;
+	coords[coord_cnt++] = 0;
+	coords[coord_cnt++] = 0;
 	coords[coord_cnt++] = 0;
 
 	//Output Grid
@@ -944,22 +935,19 @@ TEST(TestGPUGriddingConv,GPUTest_FactorTwoTest)
 	coords[coord_cnt++] = 0; 
 	coords[coord_cnt++] = 0;
 	coords[coord_cnt++] = 0;
-
-	coords[coord_cnt++] = 0;
-	coords[coord_cnt++] = 0;
-	coords[coord_cnt++] = 0;
-
-	//8.Sektor
-	coords[coord_cnt++] = 0; 
-	coords[coord_cnt++] = 0;
-	coords[coord_cnt++] = 0;
-
 	coords[coord_cnt++] = 0.5f; 
+	coords[coord_cnt++] = 0.3f;
+	
 	coords[coord_cnt++] = 0;
 	coords[coord_cnt++] = 0;
-
+	coords[coord_cnt++] = 0;
+	coords[coord_cnt++] = 0; 
 	coords[coord_cnt++] = 0.3f;
-	coords[coord_cnt++] = 0.3f;
+	
+	coords[coord_cnt++] = 0;
+	coords[coord_cnt++] = 0;
+	coords[coord_cnt++] = 0;
+	coords[coord_cnt++] = 0;
 	coords[coord_cnt++] = 0;
 
 	//Output Grid
@@ -1081,22 +1069,20 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel3nDataw32)
     DType* coords = (DType*) calloc(3*data_entries,sizeof(DType));//3* x,y,z
 	int coord_cnt = 0;
 	coords[coord_cnt++] = -0.3f; 
-	coords[coord_cnt++] = 0.2f;
-	coords[coord_cnt++] = 0;
-	
 	coords[coord_cnt++] = -0.1f;
-	coords[coord_cnt++] = 0;
-	coords[coord_cnt++] = 0;
-
 	coords[coord_cnt++] = 0; 
 	coords[coord_cnt++] = 0;
-	coords[coord_cnt++] = 0;
-
-	coords[coord_cnt++] = 0;
-	coords[coord_cnt++] = 0;
-	coords[coord_cnt++] = 0;
-
 	coords[coord_cnt++] = 0.5f; 
+
+	coords[coord_cnt++] = 0.2f;
+	coords[coord_cnt++] = 0;
+	coords[coord_cnt++] = 0;
+	coords[coord_cnt++] = 0;
+	coords[coord_cnt++] = 0;
+
+	coords[coord_cnt++] = 0;
+	coords[coord_cnt++] = 0;
+	coords[coord_cnt++] = 0;
 	coords[coord_cnt++] = 0;
 	coords[coord_cnt++] = 0;
 

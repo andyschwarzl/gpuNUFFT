@@ -238,7 +238,7 @@ void gridding3D_gpu_adj(DType2*		data,			//kspace data array
 			copyFromDevice<CufftType>(gdata_d,*imdata,gi_host->grid_width_dim);
 			if (DEBUG)
 				printf("test value at point zero: %f\n",(*imdata)[0].x);
-			freeTotalDeviceMemory(data_d,crds_d,imdata_d,gdata_d,NULL,sectors_d,sector_centers_d,temp_gdata_d,NULL);//NULL as stop token
+			freeTotalDeviceMemory(data_d,crds_d,imdata_d,gdata_d,sectors_d,sector_centers_d,temp_gdata_d,NULL);//NULL as stop token
 
 			free(gi_host);
 			// Destroy the cuFFT plan.
@@ -268,7 +268,7 @@ void gridding3D_gpu_adj(DType2*		data,			//kspace data array
 			//free memory
 			if (cufftDestroy(fft_plan) != CUFFT_SUCCESS)
 				printf("error on destroying cufft plan\n");
-			freeTotalDeviceMemory(data_d,crds_d,imdata_d,gdata_d,NULL,sectors_d,sector_centers_d,temp_gdata_d,NULL);//NULL as stop token
+			freeTotalDeviceMemory(data_d,crds_d,imdata_d,gdata_d,sectors_d,sector_centers_d,temp_gdata_d,NULL);//NULL as stop token
 			free(gi_host);
 			// Destroy the cuFFT plan.
 			printf("last cuda error: %s\n", cudaGetErrorString(cudaGetLastError()));

@@ -2,7 +2,7 @@
 #include "cuda_utils.cuh"
 #include "cuda_utils.hpp"
 
-__global__ void convolutionKernel2( DType* data, 
+__global__ void convolutionKernel2( DType2* data, 
 									DType* crds, 
 									CufftType* gdata,
 									int* sectors, 
@@ -10,7 +10,7 @@ __global__ void convolutionKernel2( DType* data,
 									int N
 									)
 {
-	extern __shared__ DType sdata[];//externally managed shared memory
+	extern __shared__ DType2 sdata[];//externally managed shared memory
 	__shared__ int sec;
 	sec = blockIdx.x;
 
@@ -19,8 +19,8 @@ __global__ void convolutionKernel2( DType* data,
 		//init shared memory
 		for (int s_ind=threadIdx.x;s_ind<GI.sector_dim; s_ind+= blockDim.x)
 		{
-			sdata[2*s_ind] = 0.0f;//Re
-			sdata[2*s_ind+1]=0.0f;//Im
+			sdata[s_ind].x = 0.0f;//Re
+			sdata[s_ind].y = 0.0f;//Im
 		}
 		__syncthreads();
 	
@@ -89,8 +89,8 @@ __global__ void convolutionKernel2( DType* data,
  	
 									// multiply data by current kernel val 
 									// grid complex or scalar 
-								  atomicAdd(&(sdata[2*ind]),val * data[2*data_cnt]);
-									atomicAdd(&(sdata[2*ind+1]),val * data[2*data_cnt+1]);
+								    atomicAdd(&(sdata[ind].x),val * data[data_cnt].x);
+									atomicAdd(&(sdata[ind].y),val * data[data_cnt].y);
 								} // kernel bounds check x, spherical support 
 								i++;
 							} // x 	 
@@ -122,8 +122,8 @@ __global__ void convolutionKernel2( DType* data,
 			
 			ind = sector_ind_offset + getIndex(x,y,z,GI.grid_width);//index in output grid
 			
-			atomicAdd(&(gdata[ind].x),sdata[2*s_ind]);//Re
-			atomicAdd(&(gdata[ind].y),sdata[2*s_ind+1]);//Im
+			atomicAdd(&(gdata[ind].x),sdata[s_ind].x);//Re
+			atomicAdd(&(gdata[ind].y),sdata[s_ind].y);//Im
 		}		
 		__syncthreads();
 		sec = sec + gridDim.x;
@@ -135,7 +135,7 @@ __global__ void convolutionKernel2( DType* data,
 // shared data holds grid values as software managed cache
 //
 //
-__global__ void convolutionKernel( DType* data, 
+__global__ void convolutionKernel( DType2* data, 
 							    DType* crds, 
 							    CufftType* gdata,
 							    int* sectors, 
@@ -220,8 +220,8 @@ __global__ void convolutionKernel( DType* data,
 										continue;
 									}
 
-									atomicAdd(&(gdata[ind].x),val * data[2*data_cnt]);//Re
-									atomicAdd(&(gdata[ind].y),val * data[2*data_cnt+1]);//Im
+									atomicAdd(&(gdata[ind].x),val * data[data_cnt].x);//Re
+									atomicAdd(&(gdata[ind].y),val * data[data_cnt].y);//Im
 								}// kernel bounds check x, spherical support 
 								i++;
 							} // x loop
@@ -238,12 +238,12 @@ __global__ void convolutionKernel( DType* data,
 	} //sector check
 }
 
-void performConvolution( DType* data_d, 
+void performConvolution( DType2* data_d, 
 						 DType* crds_d, 
 						 CufftType* gdata_d,
 						 DType*			kernel_d, 
 						 int* sectors_d, 
-  					 int* sector_centers_d,
+  						 int* sector_centers_d,
 						 DType* temp_gdata_d,
 						 GriddingInfo* gi_host
 						)
@@ -251,15 +251,15 @@ void performConvolution( DType* data_d,
 	//TODO how to calculate shared_mem_size???, shared_mem_needed?
 //	long shared_mem_size = 256 * sizeof(DType3);//empiric
 	
-	dim3 block_dim(256);
-	dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,256));
+	dim3 block_dim(THREAD_BLOCK_SIZE);
+	dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,THREAD_BLOCK_SIZE));
 	
 //	printf("convolution requires %d bytes of shared memory!\n",shared_mem_size);
 	convolutionKernel<<<grid_dim,block_dim>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
 
  //evaluate TODO activate
 /*
-	long shared_mem_size = 2*(gi_host->sector_dim)*sizeof(DType);
+	long shared_mem_size = (gi_host->sector_dim)*sizeof(DType2);
 
 	int thread_size = 128;
 	
@@ -400,8 +400,7 @@ void performForwardConvolution( CufftType*		data_d,
 								GriddingInfo*	gi_host
 								)
 {
-	//TODO how to calculate shared_mem_size???, shared_mem_needed?
-	int thread_size =256;
+	int thread_size =THREAD_BLOCK_SIZE;
 	long shared_mem_size = thread_size * sizeof(CufftType);//empiric
 
 	dim3 block_dim(thread_size);

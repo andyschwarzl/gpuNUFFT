@@ -12,7 +12,7 @@ void gridding3D_gpu(CufftType**	data,			//kspace data array
 					int			data_count,		//data count, samples per trajectory
 					int			n_coils,		//number of coils 
 					DType*		crds,			//
-					DType*		imdata,			//
+					DType2*		imdata,			//
 					int			imdata_count,	//			
 					int			grid_width,		//
 					DType*		kernel,			//
@@ -30,12 +30,13 @@ void gridding3D_gpu(CufftType**	data,			//kspace data array
 	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,sector_width,kernel_width,kernel_count,grid_width,im_width,osr,data_count);
 
 	//cuda mem allocation
-	DType *imdata_d, *crds_d;//, *kernel_d;//, *temp_gdata_d;
+	DType2 *imdata_d;
+	DType* crds_d;
 	CufftType *gdata_d, *data_d;
 	int* sector_centers_d, *sectors_d;
 	if (DEBUG)
-		printf("allocate and copy imdata of size %d...\n",2*imdata_count*n_coils);
-	allocateAndCopyToDeviceMem<DType>(&imdata_d,imdata,2*imdata_count*n_coils);
+		printf("allocate and copy imdata of size %d...\n",imdata_count*n_coils);
+	allocateAndCopyToDeviceMem<DType2>(&imdata_d,imdata,imdata_count*n_coils);
 
 	if (DEBUG)
 		printf("allocate and copy gdata of size %d...\n",gi_host->grid_width_dim );
@@ -77,7 +78,7 @@ void gridding3D_gpu(CufftType**	data,			//kspace data array
 	for (int coil_it = 0; coil_it < n_coils; coil_it++)
 	{
 		int data_coil_offset = coil_it * data_count;
-		int im_coil_offset = 2 * coil_it * imdata_count;//gi_host->width_dim;
+		int im_coil_offset = coil_it * imdata_count;//gi_host->width_dim;
 		//reset temp array
 		//cudaMemset(temp_gdata_d,0, sizeof(DType)*temp_grid_count);
 		cudaMemset(data_d,0, sizeof(CufftType)*data_count);
@@ -138,7 +139,7 @@ void gridding3D_gpu(CufftType**	data,			//kspace data array
   * TODO
   * NFFT^H
 **/
-void gridding3D_gpu_adj(DType*		data,			//kspace data array 
+void gridding3D_gpu_adj(DType2*		data,			//kspace data array 
 						int			data_count,		//data count, samples per trajectory
 						int			n_coils,		//number of coils 
 						DType*		crds,			//
@@ -164,8 +165,9 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 	//and each data point to one thread inside this block 
 	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,sector_width,kernel_width,kernel_count,grid_width,im_width,osr,data_count);
 	
-	DType* data_d;//, *kernel_d;
-  DType* crds_d;
+	DType2* data_d;
+	DType* crds_d;
+
 	CufftType *gdata_d, *imdata_d;
 	int* sector_centers_d, *sectors_d;
 
@@ -178,8 +180,8 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 	allocateDeviceMem<CufftType>(&gdata_d,gi_host->grid_width_dim);
 
 	if (DEBUG)
-		printf("allocate and copy data of size %d...\n",2*data_count*n_coils);
-	allocateAndCopyToDeviceMem<DType>(&data_d,data,2*data_count*n_coils);
+		printf("allocate and copy data of size %d...\n",data_count*n_coils);
+	allocateAndCopyToDeviceMem<DType2>(&data_d,data,data_count*n_coils);
 
 	if (DEBUG)
 		printf("allocate and copy coords of size %d...\n",3*data_count);
@@ -210,7 +212,7 @@ void gridding3D_gpu_adj(DType*		data,			//kspace data array
 	//iterate over coils and compute result
 	for (int coil_it = 0; coil_it < n_coils; coil_it++)
 	{
-		int data_coil_offset = 2 * coil_it * data_count;
+		int data_coil_offset = coil_it * data_count;
 		int im_coil_offset = coil_it * imdata_count;//gi_host->width_dim;
 		cudaMemset(gdata_d,0, sizeof(CufftType)*gi_host->grid_width_dim);
 		

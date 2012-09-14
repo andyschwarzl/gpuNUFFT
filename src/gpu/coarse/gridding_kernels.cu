@@ -312,7 +312,7 @@ void performForwardConvolution( CufftType*		data_d,
 								GriddingInfo*	gi_host
 								)
 {
-	int thread_size = 128;
+	int thread_size = THREAD_BLOCK_SIZE;
 	long shared_mem_size = thread_size * sizeof(CufftType);//empiric
 
 	dim3 block_dim(thread_size);

@@ -124,7 +124,7 @@ __global__ void convolutionKernel2( DType2* data,
 			
 			atomicAdd(&(gdata[ind].x),sdata[s_ind].x);//Re
 			atomicAdd(&(gdata[ind].y),sdata[s_ind].y);//Im
-		}		
+		}
 		__syncthreads();
 		sec = sec + gridDim.x;
 	}//sec < sector_count	

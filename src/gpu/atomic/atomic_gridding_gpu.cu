@@ -123,7 +123,7 @@ void gridding3D_gpu(CufftType**	data,			//kspace data array
 		
 		performFFTScaling(data_d,gi_host->data_count,gi_host);
 		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
-			printf("error: at adj  thread synchronization 9: %s\n",cudaGetErrorString(cudaGetLastError()));
+			printf("error: at adj  thread synchronization 8: %s\n",cudaGetErrorString(cudaGetLastError()));
 
 		//get result
 	  copyFromDevice<CufftType>(data_d, *data + data_coil_offset,data_count);
@@ -131,7 +131,7 @@ void gridding3D_gpu(CufftType**	data,			//kspace data array
 	cufftDestroy(fft_plan);
 	// Destroy the cuFFT plan.
 	if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
-		printf("error at thread synchronization 8: %s\n",cudaGetErrorString(cudaGetLastError()));
+		printf("error at thread synchronization 9: %s\n",cudaGetErrorString(cudaGetLastError()));
 	freeTotalDeviceMemory(data_d,crds_d,gdata_d,imdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop
 	
 	if ((cudaThreadSynchronize() != cudaSuccess))
@@ -236,7 +236,7 @@ void gridding3D_gpu_adj(DType2*		data,			//kspace data array
 		if (do_comp == true)
 			performDensityCompensation(data_d+data_coil_offset,density_comp_d,gi_host);
 
-	if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
+		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
 			printf("error at adj thread synchronization 1: %s\n",cudaGetErrorString(cudaGetLastError()));
 		performConvolution(data_d+data_coil_offset,crds_d,gdata_d,NULL,sectors_d,sector_centers_d,NULL,gi_host);
 
@@ -316,6 +316,7 @@ void gridding3D_gpu_adj(DType2*		data,			//kspace data array
 	freeTotalDeviceMemory(data_d,crds_d,gdata_d,imdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop
 	if (do_comp == true)
 		cudaFree(density_comp_d);
+	
 	if ((cudaThreadSynchronize() != cudaSuccess))
 		fprintf(stderr,"error in atomic gridding3D_gpu_adj function: %s\n",cudaGetErrorString(cudaGetLastError()));
   free(gi_host);

@@ -20,7 +20,7 @@ void performFFTScaling(CufftType* data,int N, GriddingInfo* gi_host)
 {
 	dim3 block_dim(THREAD_BLOCK_SIZE);
 	dim3 grid_dim(getOptimalGridDim(N,THREAD_BLOCK_SIZE));
-  DType scaling_factor = (DType)1.0 / (DType) sqrt(gi_host->im_width_dim);
+	DType scaling_factor = (DType)1.0 / (DType) sqrt((DType)gi_host->im_width_dim);
 
 	fftScaleKernel<<<grid_dim,block_dim>>>(data,scaling_factor,N);
 }

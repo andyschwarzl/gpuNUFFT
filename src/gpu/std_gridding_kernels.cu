@@ -2,6 +2,50 @@
 #include "cuda_utils.cuh"
 #include "cuda_utils.hpp"
 
+__global__ void fftScaleKernel(CufftType* data, DType scaling, int N)
+{
+	int t = threadIdx.x +  blockIdx.x *blockDim.x;
+
+	while (t < N) 
+	{
+		CufftType data_p = data[t]; 
+		data_p.x = data_p.x * scaling;
+		data_p.y = data_p.y * scaling;
+		data[t] = data_p;
+		t = t+ blockDim.x*gridDim.x;
+	}
+}
+
+void performFFTScaling(CufftType* data,int N, GriddingInfo* gi_host)
+{
+	dim3 block_dim(THREAD_BLOCK_SIZE);
+	dim3 grid_dim(getOptimalGridDim(N,THREAD_BLOCK_SIZE));
+  DType scaling_factor = (DType)1.0 / (DType) sqrt(gi_host->im_width_dim);
+
+	fftScaleKernel<<<grid_dim,block_dim>>>(data,scaling_factor,N);
+}
+
+__global__ void densityCompensationKernel(DType2* data, DType* density_comp, int N)
+{
+	int t = threadIdx.x +  blockIdx.x *blockDim.x;
+
+	while (t < N) 
+	{
+		DType2 data_p = data[t]; 
+		data_p.x = data_p.x * density_comp[t];
+		data_p.y = data_p.y * density_comp[t];
+		data[t] = data_p;
+		t = t+ blockDim.x*gridDim.x;
+	}
+}
+
+void performDensityCompensation(DType2* data, DType* density_comp, GriddingInfo* gi_host)
+{
+	dim3 block_dim(THREAD_BLOCK_SIZE);
+	dim3 grid_dim(getOptimalGridDim(gi_host->data_count,THREAD_BLOCK_SIZE));
+	densityCompensationKernel<<<grid_dim,block_dim>>>(data,density_comp,gi_host->data_count);
+}
+
 __global__ void deapodizationKernel(CufftType* gdata, DType beta, DType norm_val, int N)
 {
 	int t = threadIdx.x +  blockIdx.x *blockDim.x;
@@ -16,8 +60,10 @@ __global__ void deapodizationKernel(CufftType* gdata, DType beta, DType norm_val
 	   //check if deapodization value is valid number
 	   if (!isnan(deapo))// == deapo)
 	   {
-		   gdata[t].x = gdata[t].x / deapo;//Re
-		   gdata[t].y = gdata[t].y / deapo;//Im
+			 CufftType gdata_p = gdata[t]; 
+		   gdata_p.x = gdata_p.x / deapo;//Re
+		   gdata_p.y = gdata_p.y / deapo;//Im
+			 gdata[t] = gdata_p;
 	   }
 	   t = t + blockDim.x*gridDim.x;
 	}

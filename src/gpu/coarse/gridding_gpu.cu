@@ -155,6 +155,8 @@ void gridding3D_gpu_adj(DType2*		data,			//kspace data array
 						int			sector_width,	//
 						int			im_width,		//
 						DType		osr,			//
+						bool		do_comp,
+						DType*  density_comp,
 						const GriddingOutput gridding_out)
 {
 	assert(sectors != NULL);

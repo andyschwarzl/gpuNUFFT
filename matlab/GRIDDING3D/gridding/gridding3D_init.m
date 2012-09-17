@@ -1,7 +1,7 @@
-function [res] = gridding3D_init(k,n,osf,sw)
-%function [res] = gridding3D_init(k,n,osf,sw)
+function [res] = gridding3D_init(k,n,osf,sw,w)
+%function [res] = gridding3D_init(k,n,osf,sw,w)
 %
-% TODO
+% w ... k-space data weighting, density compensation
 %
 coords = k;
 [data_sector_idx, sector_centers,sector_dim] = assign_sectors(osf*n,sw,coords);
@@ -43,3 +43,10 @@ res.coords = coords(res.coord_ind);
 %
 res.sector_centers = int32(reshape(sector_centers,[3,sector_dim]));
 
+% density compensation
+
+if ~isempty(w)
+    res.density_comp = w(res.data_ind);
+else
+    res.density_comp = [];
+end

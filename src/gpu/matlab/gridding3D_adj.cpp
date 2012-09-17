@@ -74,6 +74,16 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	int* sector_centers = NULL;
 	readMatlabInputArray<int>(prhs, pcount++, 3,"sectors-centers",&sector_centers, &sector_count);
 
+	//Density compensation
+	DType* density_comp = NULL;
+  int density_count;
+	readMatlabInputArray<DType>(prhs, pcount++, 0,"density-comp",&density_comp, &density_count);
+
+	bool do_comp = false;
+
+	if (density_count == data_count)
+		do_comp = true;
+	
 	//Parameters
     const mxArray *matParams = prhs[pcount++];
 	
@@ -116,11 +126,11 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	//plhs[0] = mxCreateNumericArray(n_dims,(const mwSize*)dims_im,mxGetClassID(prhs[0]),mxREAL);
 	plhs[0] = mxCreateNumericArray(n_dims,(const mwSize*)dims_im,mxSINGLE_CLASS,mxREAL);
 	
-    imdata = (CufftType*)mxGetData(plhs[0]);
+  imdata = (CufftType*)mxGetData(plhs[0]);
 	if (imdata == NULL)
      mexErrMsgTxt("Could not create output mxArray.\n");
 
-	gridding3D_gpu_adj(data,data_count,n_coils,coords,&imdata,im_count,grid_width,kernel,kernel_count,kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,DEAPODIZATION);//CONVOLUTION);
+	gridding3D_gpu_adj(data,data_count,n_coils,coords,&imdata,im_count,grid_width,kernel,kernel_count,kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,do_comp,density_comp,DEAPODIZATION);//CONVOLUTION);
     cudaThreadSynchronize();
 	free(kernel);
 	

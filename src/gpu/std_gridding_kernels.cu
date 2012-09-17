@@ -170,8 +170,10 @@ __global__ void forwardDeapodizationKernel(DType2* imdata, DType beta, DType nor
 	   //check if deapodization value is valid number
 	   if (!isnan(deapo))// == deapo)
 	   {
-		   imdata[t].x = imdata[t].x / deapo;//Re
-		   imdata[t].y = imdata[t].y / deapo ; //Im
+		   DType2 imdata_p = imdata[t]; 
+		   imdata_p.x = imdata_p.x / deapo;//Re
+		   imdata_p.y = imdata_p.y / deapo ; //Im
+		   imdata[t] = imdata_p;
 	   }
 	   t = t + blockDim.x*gridDim.x;
 	}
@@ -186,9 +188,10 @@ __global__ void paddingKernel(DType2* imdata,CufftType* gdata, int offset,int N)
 	{ 
 		getCoordsFromIndex(t, &x, &y, &z, GI.im_width);
 		grid_ind =  getIndex(offset + x,offset + y,offset +z,GI.grid_width);
-		
-		gdata[grid_ind].x = imdata[t].x;
-		gdata[grid_ind].y = imdata[t].y;
+		//DType2 imdata_p = imdata[t];
+		gdata[grid_ind] = (CufftType)imdata[t];
+/*					   .x = imdata_p.x;
+		gdata[grid_ind].y = imdata_p.y;*/
 		t = t+ blockDim.x*gridDim.x;
 	}
 }

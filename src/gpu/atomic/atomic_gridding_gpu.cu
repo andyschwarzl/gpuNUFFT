@@ -54,7 +54,6 @@ void gridding3D_gpu(CufftType**	data,			//kspace data array
 	if (DEBUG)
 		printf("allocate and copy kernel in const memory of size %d...\n",kernel_count);
 	HANDLE_ERROR(cudaMemcpyToSymbol(KERNEL,(void*)kernel,kernel_count*sizeof(DType)));
-	//allocateAndCopyToDeviceMem<DType>(&kernel_d,kernel,kernel_count);
 
 	if (DEBUG)
 		printf("allocate and copy sectors of size %d...\n",sector_count+1);
@@ -232,8 +231,6 @@ void gridding3D_gpu_adj(DType2*		data,			//kspace data array
 		cudaMemset(gdata_d,0, sizeof(CufftType)*gi_host->grid_width_dim);
 		copyToDevice(data + data_coil_offset, data_d,data_count);
 	
-		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
-			printf("error at adj thread synchronization 0: %s\n",cudaGetErrorString(cudaGetLastError()));
 		if (do_comp == true)
 			performDensityCompensation(data_d,density_comp_d,gi_host);
 

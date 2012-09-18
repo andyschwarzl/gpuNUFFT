@@ -248,32 +248,26 @@ void performConvolution( DType2* data_d,
 						 GriddingInfo* gi_host
 						)
 {
-	//TODO how to calculate shared_mem_size???, shared_mem_needed?
-//	long shared_mem_size = 256 * sizeof(DType3);//empiric
+	//#define CONVKERNEL2
+
+	#ifndef CONVKERNEL2 	
+		dim3 block_dim(THREAD_BLOCK_SIZE);
+		dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,THREAD_BLOCK_SIZE));
+		convolutionKernel<<<grid_dim,block_dim>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
+	#else
+		long shared_mem_size = (gi_host->sector_dim)*sizeof(DType2);
+		int thread_size = 256;//THREAD_BLOCK_SIZE;
 	
-	dim3 block_dim(THREAD_BLOCK_SIZE);
-	dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,THREAD_BLOCK_SIZE));
+		dim3 block_dim(thread_size);
+		dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,thread_size));
+		if (DEBUG)
+		{
+ 		 	printf("adjoint convolution requires %d bytes of shared memory!\n",shared_mem_size);
+			printf("grid dim %d, block dim %d \n",grid_dim.x, block_dim.x); 
+		}
+		convolutionKernel2<<<16,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
+	#endif
 	
-//	printf("convolution requires %d bytes of shared memory!\n",shared_mem_size);
-	convolutionKernel<<<grid_dim,block_dim>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
-
- //evaluate TODO activate
-/*
-	long shared_mem_size = (gi_host->sector_dim)*sizeof(DType2);
-
-	int thread_size = 128;
-	
-	dim3 block_dim(thread_size);
-	dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,thread_size));
-
-	if (DEBUG)
-	{
-  	printf("adjoint convolution requires %d bytes of shared memory!\n",shared_mem_size);
-    printf("grid dim %d, block dim %d \n",grid_dim.x, block_dim.x); 
-  }
-	convolutionKernel2<<<16,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
-
-*/
 	if (DEBUG)
 		printf("...finished with: %s\n", cudaGetErrorString(cudaGetLastError()));
 }

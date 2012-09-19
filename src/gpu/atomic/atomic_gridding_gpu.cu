@@ -35,8 +35,8 @@ void gridding3D_gpu(CufftType**	data,			//kspace data array
 	CufftType *gdata_d, *data_d;
 	int* sector_centers_d, *sectors_d;
 	if (DEBUG)
-		printf("allocate and copy imdata of size %d...\n",imdata_count*n_coils);
-	allocateAndCopyToDeviceMem<DType2>(&imdata_d,imdata,imdata_count*n_coils);
+		printf("allocate and copy imdata of size %d...\n",imdata_count);
+	allocateDeviceMem<DType2>(&imdata_d,imdata_count);
 
 	if (DEBUG)
 		printf("allocate and copy gdata of size %d...\n",gi_host->grid_width_dim );
@@ -44,8 +44,8 @@ void gridding3D_gpu(CufftType**	data,			//kspace data array
 	allocateAndSetMem<CufftType>(&gdata_d, gi_host->grid_width_dim,0);
 
 	if (DEBUG)
-		printf("allocate and copy data of size %d...\n",data_count * n_coils);
-	allocateDeviceMem<CufftType>(&data_d,data_count * n_coils);
+		printf("allocate and copy data of size %d...\n",data_count);
+	allocateDeviceMem<CufftType>(&data_d,data_count);
 
 	if (DEBUG)
 		printf("allocate and copy coords of size %d...\n",3*data_count);
@@ -54,7 +54,6 @@ void gridding3D_gpu(CufftType**	data,			//kspace data array
 	if (DEBUG)
 		printf("allocate and copy kernel in const memory of size %d...\n",kernel_count);
 	HANDLE_ERROR(cudaMemcpyToSymbol(KERNEL,(void*)kernel,kernel_count*sizeof(DType)));
-	//allocateAndCopyToDeviceMem<DType>(&kernel_d,kernel,kernel_count);
 
 	if (DEBUG)
 		printf("allocate and copy sectors of size %d...\n",sector_count+1);
@@ -80,19 +79,19 @@ void gridding3D_gpu(CufftType**	data,			//kspace data array
 		int data_coil_offset = coil_it * data_count;
 		int im_coil_offset = coil_it * imdata_count;//gi_host->width_dim;
 		//reset temp array
-		//cudaMemset(temp_gdata_d,0, sizeof(DType)*temp_grid_count);
+		copyToDevice(imdata + im_coil_offset,imdata_d,imdata_count);	
 		cudaMemset(data_d,0, sizeof(CufftType)*data_count);
 		cudaMemset(gdata_d,0, sizeof(CufftType)*gi_host->grid_width_dim);
 		
 		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
 			printf("error at thread synchronization 1: %s\n",cudaGetErrorString(cudaGetLastError()));
 		// apodization Correction
-		performForwardDeapodization(imdata_d + im_coil_offset,gi_host);
+		performForwardDeapodization(imdata_d,gi_host);
 		
 		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
 			printf("error at thread synchronization 2: %s\n",cudaGetErrorString(cudaGetLastError()));
 		// resize by oversampling factor and zero pad
-		performPadding(imdata_d + im_coil_offset,gdata_d,gi_host);
+		performPadding(imdata_d,gdata_d,gi_host);
 		
 		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
 			printf("error at thread synchronization 3: %s\n",cudaGetErrorString(cudaGetLastError()));
@@ -187,8 +186,8 @@ void gridding3D_gpu_adj(DType2*		data,			//kspace data array
 	allocateDeviceMem<CufftType>(&gdata_d,gi_host->grid_width_dim);
 
 	if (DEBUG)
-		printf("allocate and copy data of size %d...\n",data_count*n_coils);
-	allocateAndCopyToDeviceMem<DType2>(&data_d,data,data_count*n_coils);
+		printf("allocate and copy data of size %d...\n",data_count);
+	allocateDeviceMem<DType2>(&data_d,data_count);
 
 	if (DEBUG)
 		printf("allocate and copy coords of size %d...\n",3*data_count);
@@ -230,15 +229,14 @@ void gridding3D_gpu_adj(DType2*		data,			//kspace data array
 		int data_coil_offset = coil_it * data_count;
 		int im_coil_offset = coil_it * imdata_count;//gi_host->width_dim;
 		cudaMemset(gdata_d,0, sizeof(CufftType)*gi_host->grid_width_dim);
+		copyToDevice(data + data_coil_offset, data_d,data_count);
 	
-		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
-			printf("error at adj thread synchronization 0: %s\n",cudaGetErrorString(cudaGetLastError()));
 		if (do_comp == true)
-			performDensityCompensation(data_d+data_coil_offset,density_comp_d,gi_host);
+			performDensityCompensation(data_d,density_comp_d,gi_host);
 
 		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
 			printf("error at adj thread synchronization 1: %s\n",cudaGetErrorString(cudaGetLastError()));
-		performConvolution(data_d+data_coil_offset,crds_d,gdata_d,NULL,sectors_d,sector_centers_d,NULL,gi_host);
+		performConvolution(data_d,crds_d,gdata_d,NULL,sectors_d,sector_centers_d,NULL,gi_host);
 
 		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
 			printf("error at adj  thread synchronization 2: %s\n",cudaGetErrorString(cudaGetLastError()));

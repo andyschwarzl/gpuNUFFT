@@ -108,40 +108,26 @@ __global__ void convolutionKernel3( DType2* data,
 		} //grid points per sector
 		__syncthreads();	
     //write shared data to temporary output grid
-		int sector_ind_offset = sec * GI.sector_dim;
-		
+//		int sector_ind_offset = sec * GI.sector_dim;
+		int sector_ind_offset  = getIndex(center.x - GI.sector_offset,center.y - GI.sector_offset,center.z - GI.sector_offset,GI.grid_width);
+
 		for (k=threadIdx.z;k<GI.sector_pad_width; k += blockDim.z)
 		{
 			i=threadIdx.x;
 			j=threadIdx.y;
-			
-			int s_ind = getIndex(i,j,k,GI.sector_pad_width) ;//index in shared grid
-			ind = sector_ind_offset + s_ind;//index in temp output grid
-			
-			temp_gdata[ind].x = sdata[s_ind].x;//Re
-			temp_gdata[ind].y = sdata[s_ind].y;//Im
-			__syncthreads();
-			sdata[s_ind].x = (DType)0.0;
-			sdata[s_ind].y = (DType)0.0;
-      __syncthreads();	
-   	}
-//TODO 
-		for (int s_ind=threadIdx.x;s_ind<GI.sector_dim; s_ind += blockDim.x)
-		{
-			x = s_ind % GI.sector_pad_width;
-			z = (int)(s_ind / (GI.sector_pad_width*GI.sector_pad_width)) ;
-			r = s_ind - z * GI.sector_pad_width * GI.sector_pad_width;
-			y = (int)(r / GI.sector_pad_width);
-			
-			if (isOutlier(x,y,z,center.x,center.y,center.z,GI.grid_width,GI.sector_offset))
+	
+			if (isOutlier(i,j,k,center.x,center.y,center.z,GI.grid_width,GI.sector_offset))
 				continue;
 			
-			ind = sector_ind_offset + getIndex(x,y,z,GI.grid_width);//index in output grid
-			
+			int s_ind = getIndex(i,j,k,GI.grid_width) ;//index in shared grid
+			ind = sector_ind_offset + s_ind;//index in output grid
+		
 			atomicAdd(&(gdata[ind].x),sdata[s_ind].x);//Re
 			atomicAdd(&(gdata[ind].y),sdata[s_ind].y);//Im
-		}
-
+			sdata[s_ind].x = (DType)0.0;
+			sdata[s_ind].y = (DType)0.0;
+      //__syncthreads();	
+   	}
 		__syncthreads();
 		sec = sec + gridDim.x;
 	}//sec < sector_count

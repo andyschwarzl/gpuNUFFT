@@ -3,12 +3,12 @@ kspace_data_dim = size(bb,2);
 
 if (kspace_data_dim > 1)
     kspace = bb(a.data_ind,:);
-    data = [real(kspace(:))'; imag(kspace(:))'];
+    kspace = [real(kspace(:))'; imag(kspace(:))'];
 
     if a.verbose
         disp('multiple coil data passed');
     end
-    kspace = reshape(data,[2 a.params.trajectory_length kspace_data_dim]);
+    kspace = reshape(kspace,[2 a.params.trajectory_length kspace_data_dim]);
     
     if a.verbose
         disp('call gridding mex kernel');
@@ -27,7 +27,7 @@ if (kspace_data_dim > 1)
 else
     %prepare data
     kspace = bb(a.data_ind);
-    data = [real(kspace(:))'; imag(kspace(:))'];
+    kspace = [real(kspace(:))'; imag(kspace(:))'];
 
     % preweight, DCF
     %dw = d.*w;
@@ -37,9 +37,9 @@ else
         disp('call gridding mex kernel')
     end
     if a.atomic == true
-        m = mex_gridding3D_adj_atomic_f(single(data),single(a.coords)',int32(a.sector_data_cnt),int32(a.sector_centers),single(a.density_comp)',a.params);
+        m = mex_gridding3D_adj_atomic_f(single(kspace),single(a.coords)',int32(a.sector_data_cnt),int32(a.sector_centers),single(a.density_comp)',a.params);
     else
-        m = mex_gridding3D_adj_f(single(data),single(a.coords)',int32(a.sector_data_cnt),int32(a.sector_centers),single(a.density_comp)',a.params);
+        m = mex_gridding3D_adj_f(single(kspace),single(a.coords)',int32(a.sector_data_cnt),int32(a.sector_centers),single(a.density_comp)',a.params);
     end
     size(m);
     m = squeeze(m(1,:,:,:) + 1j*(m(2,:,:,:)));

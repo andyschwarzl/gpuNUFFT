@@ -148,8 +148,8 @@ TEST(TestGPUGriddingDeapo,KernelCall1Sector2Coils)
 			printf("A: %.2f B: %.2f",gdata[get3DC2lin(i,j,16,im_width)].x,gdata[coil_offset+get3DC2lin(i,j,16,im_width)].x);
 		printf("\n");
 	}*/
-	EXPECT_NEAR(gdata[get3DC2lin(0,0,16,im_width)].x,1.68032f,epsilon);
-	EXPECT_NEAR(gdata[coil_offset + get3DC2lin(0,0,16,im_width)].x,1.68032f,epsilon);
+	EXPECT_NEAR(gdata[get3DC2lin(0,0,16,im_width)].x,0.00928f,epsilon);
+	EXPECT_NEAR(gdata[coil_offset + get3DC2lin(0,0,16,im_width)].x,0.00928f,epsilon);
 	EXPECT_NEAR(gdata[get3DC2lin(10,0,16,im_width)].x,gdata[coil_offset + get3DC2lin(10,0,16,im_width)].x,epsilon);
 	EXPECT_NEAR(gdata[get3DC2lin(0,5,16,im_width)].x,gdata[coil_offset + get3DC2lin(0,5,16,im_width)].x,epsilon);
 	EXPECT_NEAR(gdata[get3DC2lin(4,4,16,im_width)].x,gdata[coil_offset + get3DC2lin(4,4,16,im_width)].x,epsilon);

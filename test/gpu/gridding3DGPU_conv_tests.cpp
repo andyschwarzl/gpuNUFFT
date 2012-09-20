@@ -214,20 +214,20 @@ TEST(TestGPUGriddingConv,GPUTest_2SectorsKernel3nData)
 	int data_entries = 5;
     DType2* data = (DType2*) calloc(data_entries,sizeof(DType2)); //2* re + im
 	int data_cnt = 0;
-	data[data_cnt++].x = 0.5f;
-	data[data_cnt].y = 0.5f;
+	data[data_cnt].x = 0.5f;
+	data[data_cnt++].y = 0.5f;
 	
-	data[data_cnt++].x = 0.7f;
-	data[data_cnt].y = 1;
+	data[data_cnt].x = 0.7f;
+	data[data_cnt++].y = 1;
 	
-	data[data_cnt++].x = 1;
-	data[data_cnt].y = 1;
+	data[data_cnt].x = 1;
+	data[data_cnt++].y = 1;
 
-	data[data_cnt++].x = 1;
-	data[data_cnt].y = 1;
+	data[data_cnt].x = 1;
+	data[data_cnt++].y = 1;
 
-	data[data_cnt++].x = 1;
-	data[data_cnt].y = 1;
+	data[data_cnt].x = 1;
+	data[data_cnt++].y = 1;
 
 	//Coords
 	//Scaled between -0.5 and 0.5

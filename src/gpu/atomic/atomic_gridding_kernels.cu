@@ -429,7 +429,7 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 	{
 		int ind, imin, imax, jmin, jmax,kmin,kmax, k, i, j;
 		DType dx_sqr, dy_sqr, dz_sqr, val, ix, jy, kz;
-
+ 
 		__shared__ int3 center;
 		center.x = sector_centers[sec * 3];
 		center.y = sector_centers[sec * 3 + 1];

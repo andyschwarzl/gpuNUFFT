@@ -417,9 +417,8 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 										  int N)
 {
 	extern __shared__ CufftType shared_out_data[];//externally managed shared memory
-	__shared__ DType3 coord_data[THREAD_BLOCK_SIZE];
 	
-		__shared__ int sec;
+	__shared__ int sec;
 	sec= blockIdx.x;
 	//init shared memory
 	shared_out_data[threadIdx.x].x = 0.0f;//Re
@@ -445,20 +444,17 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 
 		while (data_cnt < data_max)
 		{
-			/*DType3 data_point; //datapoint per thread
+			DType3 data_point; //datapoint per thread
 			data_point.x = crds[data_cnt];
 			data_point.y = crds[data_cnt +GI.data_count];
-			data_point.z = crds[data_cnt +2*GI.data_count];*/
-			coord_data[threadIdx.x].x = crds[data_cnt];
-			coord_data[threadIdx.x].y = crds[data_cnt +GI.data_count];
-			coord_data[threadIdx.x].z = crds[data_cnt +2*GI.data_count];
-			
+			data_point.z = crds[data_cnt +2*GI.data_count];
+
 			// set the boundaries of final dataset for gridding this point
-			ix = (coord_data[threadIdx.x].x + 0.5f) * (GI.grid_width) - center.x + GI.sector_offset;
+			ix = (data_point.x + 0.5f) * (GI.grid_width) - center.x + GI.sector_offset;
 			set_minmax(&ix, &imin, &imax, GI.sector_pad_max, GI.kernel_radius);
-			jy = (coord_data[threadIdx.x].y + 0.5f) * (GI.grid_width) - center.y + GI.sector_offset;
+			jy = (data_point.y + 0.5f) * (GI.grid_width) - center.y + GI.sector_offset;
 			set_minmax(&jy, &jmin, &jmax, GI.sector_pad_max, GI.kernel_radius);
-			kz = (coord_data[threadIdx.x].z + 0.5f) * (GI.grid_width) - center.z + GI.sector_offset;
+			kz = (data_point.z + 0.5f) * (GI.grid_width) - center.z + GI.sector_offset;
 			set_minmax(&kz, &kmin, &kmax, GI.sector_pad_max, GI.kernel_radius);
 
 			// convolve neighboring cartesian points to this data point
@@ -466,7 +462,7 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 			while (k<=kmax && k>=kmin)
 			{
 				kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.grid_width)) - 0.5f;//(k - center_z) *width_inv;
-				dz_sqr = kz - coord_data[threadIdx.x].z; //data_point.z;
+				dz_sqr = kz - data_point.z;
 				dz_sqr *= dz_sqr;
 				
 				if (dz_sqr < GI.radiusSquared)
@@ -475,7 +471,7 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 					while (j<=jmax && j>=jmin)
 					{
 						jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.grid_width)) - 0.5f;   //(j - center_y) *width_inv;
-						dy_sqr = jy - coord_data[threadIdx.x].y;//data_point.y;
+						dy_sqr = jy - data_point.y;
 						dy_sqr *= dy_sqr;
 						if (dy_sqr < GI.radiusSquared)	
 						{
@@ -483,7 +479,7 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 							while (i<=imax && i>=imin)
 							{
 								ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.grid_width)) - 0.5f;// (i - center_x) *width_inv;
-								dx_sqr = ix - coord_data[threadIdx.x].x; //data_point.x;
+								dx_sqr = ix - data_point.x;
 								dx_sqr *= dx_sqr;
 								if (dx_sqr < GI.radiusSquared)	
 								{

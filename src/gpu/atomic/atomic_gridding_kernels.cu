@@ -14,9 +14,8 @@ __global__ void convolutionKernel3( DType2* data,
 								)
 {
 	extern __shared__ DType shared_data[];//externally managed shared memory
-  DType2* data_cache =(DType2*)&shared_data[0]; //a is manually set at the beginning of shared
-  DType3* coord_cache =(DType3*) &shared_data[2*CACHE_SIZE]; //b is manually set at the end of a
-
+  DType2* data_cache =(DType2*)&shared_data[0];  
+  DType3* coord_cache =(DType3*) &shared_data[2*CACHE_SIZE]; 
 	__shared__ int sec;
 	sec = blockIdx.x;
 //start convolution
@@ -35,12 +34,12 @@ __global__ void convolutionKernel3( DType2* data,
 		//Grid Points over threads, start position of data points of this sector
 		__shared__ int data_off;
 		data_off = sectors[sec];
-
+		int max = sectors[sec+1];
 		//init shared memory data cache
 		int c_ind = threadIdx.x + blockDim.x * threadIdx.y + blockDim.x * blockDim.y* threadIdx.z;
 
 		//load data points into shared mem
-		while (c_ind < CACHE_SIZE && (data_off + c_ind) < sectors[sec+1])
+		while (c_ind < CACHE_SIZE && (data_off + c_ind) < max)
 		{
 			data_cache[c_ind] = data[data_off + c_ind];
 			coord_cache[c_ind].x = crds[c_ind + data_off];
@@ -56,27 +55,27 @@ __global__ void convolutionKernel3( DType2* data,
 		c_ind = 0;
 		__shared__ int reload_count;
 		reload_count = 0;
-		while (data_off+c_ind < sectors[sec+1])
+
+		while (data_off+c_ind < max)
 		{
 			if (c_ind >= (reload_count+1)*CACHE_SIZE)
 			{
 				__syncthreads();
-				int reload_ind = threadIdx.x + blockDim.x * threadIdx.y + blockDim.x * blockDim.y* threadIdx.z;
+			/*	int reload_ind = threadIdx.x + blockDim.x * threadIdx.y + blockDim.x * blockDim.y* threadIdx.z;
 				//load next data points into shared mem
-				while (reload_ind < CACHE_SIZE && (data_off + c_ind + reload_ind) < sectors[sec+1])
+				while (reload_ind < CACHE_SIZE && (data_off + c_ind + reload_ind) < max)
 				{
 					data_cache[reload_ind] = data[data_off + c_ind + reload_ind];
-					coord_cache[c_ind].x = crds[c_ind + data_off + reload_ind];
-					coord_cache[c_ind].y = crds[c_ind + data_off+ reload_ind + GI.data_count];
-					coord_cache[c_ind].z = crds[c_ind + data_off+ reload_ind + 2*GI.data_count];
+					coord_cache[reload_ind].x = crds[c_ind + data_off + reload_ind];
+					coord_cache[reload_ind].y = crds[c_ind + data_off+ reload_ind + GI.data_count];
+					coord_cache[reload_ind].z = crds[c_ind + data_off+ reload_ind + 2*GI.data_count];
 					reload_ind += blockDim.x * blockDim.y * blockDim.z;
-				}
+				}*/
 				reload_count++;
-				__syncthreads();
 			}
-
-			DType3 data_point; //datapoint shared in every thread
-			data_point = coord_cache[c_ind - reload_count*CACHE_SIZE];
+			__syncthreads();
+//			DType3 data_point; //datapoint shared in every thread
+			DType3 data_point = coord_cache[c_ind - reload_count*CACHE_SIZE];
 			// set the boundaries of final dataset for gridding this point
 			ix = (data_point.x + 0.5f) * (GI.grid_width) - center.x + GI.sector_offset;
 			set_minmax(&ix, &imin, &imax, GI.sector_pad_max, GI.kernel_radius);
@@ -167,10 +166,11 @@ __global__ void convolutionKernel2( DType2* data,
 
 		//Grid Points over Threads
 		int data_cnt = sectors[sec] + threadIdx.x;
-				
+		int max = sectors[sec+1];
+			
 		//loop over all data points of the current sector, and check if grid position lies inside 
 		//affected region, if so, add data point weighted to grid position value
-		while (data_cnt < sectors[sec+1])
+		while (data_cnt < max)
 		{
 			DType3 data_point; //datapoint per thread
 			data_point.x = crds[data_cnt];
@@ -291,11 +291,11 @@ __global__ void convolutionKernel( DType2* data,
 
 		//Grid Points over Threads
 		int data_cnt = sectors[sec] + threadIdx.x;
-
+		int max = sectors[sec+1];
 		__shared__ int sector_ind_offset;
 		sector_ind_offset = getIndex(center.x - GI.sector_offset,center.y - GI.sector_offset,center.z - GI.sector_offset,GI.grid_width);
 		
-		while (data_cnt < sectors[sec+1])
+		while (data_cnt < max)
 		{
 			DType3 data_point; //datapoint per thread
 			data_point.x = crds[data_cnt];
@@ -378,7 +378,7 @@ void performConvolution( DType2* data_d,
 						 GriddingInfo* gi_host
 						)
 {
-	#define CONVKERNEL3
+	#define CONVKERNEL
 
 	#ifdef CONVKERNEL 	
 		dim3 block_dim(THREAD_BLOCK_SIZE);
@@ -398,9 +398,9 @@ void performConvolution( DType2* data_d,
 			}
 			convolutionKernel2<<<16,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
 		#else
-			long cache_size = 32;
+			long cache_size = 176;
 			long shared_mem_size = (2*cache_size + 3*cache_size)*sizeof(DType);
-			dim3 block_dim(gi_host->sector_pad_width,gi_host->sector_pad_width,1);
+			dim3 block_dim(gi_host->sector_pad_width,gi_host->sector_pad_width,4);
 			dim3 grid_dim(gi_host->sector_count);
 			convolutionKernel3<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count,cache_size);
 		#endif
@@ -437,11 +437,11 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 
 		//Grid Points over Threads
 		int data_cnt = sectors[sec] + threadIdx.x;
-		
+		int max = sectors[sec+1];	
 		__shared__ int sector_ind_offset; 
 		sector_ind_offset = getIndex(center.x - GI.sector_offset,center.y - GI.sector_offset,center.z - GI.sector_offset,GI.grid_width);
 
-		while (data_cnt < sectors[sec+1])
+		while (data_cnt < max)
 		{
 			DType3 data_point; //datapoint per thread
 			data_point.x = crds[data_cnt];

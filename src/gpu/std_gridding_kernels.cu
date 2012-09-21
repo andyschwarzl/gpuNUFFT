@@ -69,6 +69,28 @@ __global__ void deapodizationKernel(CufftType* gdata, DType beta, DType norm_val
 	}
 }
 
+__global__ void precomputeDeapodizationKernel(DType* deapo_d, DType beta, DType norm_val, int N)
+{
+	int t = threadIdx.x +  blockIdx.x *blockDim.x;
+	int x, y, z;
+	DType deapo;
+	while (t < N) 
+	{ 
+	   getCoordsFromIndex(t, &x, &y, &z, GI.im_width);
+	   
+	   deapo = calculateDeapodizationAt(x,y,z,GI.im_width_offset,GI.grid_width_inv,GI.kernel_width,beta,norm_val);
+	   //check if deapodization value is valid number
+	   if (!isnan(deapo))// == deapo)
+	   {
+			 deapo_d[t] = (DType)1.0 / deapo;
+	   }
+		 else
+			 deapo_d[t] = (DType)1.0;
+
+	   t = t + blockDim.x*gridDim.x;
+	}
+}
+
 __global__ void cropKernel(CufftType* gdata,CufftType* imdata, int offset, int N)
 {
 	int t = threadIdx.x +  blockIdx.x *blockDim.x;
@@ -95,7 +117,6 @@ __global__ void fftShiftKernel(CufftType* gdata, int offset, int N)
 		z_opp = (z + offset) % GI.grid_width;
 		ind_opp = getIndex(x_opp,y_opp,z_opp,GI.grid_width);
 		//swap points
-		//TODO shared?
 		CufftType temp = gdata[t];
 		gdata[t] = gdata[ind_opp];
 		gdata[ind_opp] = temp;
@@ -107,7 +128,7 @@ __global__ void fftShiftKernel(CufftType* gdata, int offset, int N)
 //see BEATTY et al.: RAPID GRIDDING RECONSTRUCTION
 //eq. (4) and (5)
 void performDeapodization(CufftType* imdata_d,
-						  GriddingInfo* gi_host)
+													GriddingInfo* gi_host)
 {
 	DType beta = (DType)BETA(gi_host->kernel_width,gi_host->osr);
 
@@ -122,6 +143,47 @@ void performDeapodization(CufftType* imdata_d,
 	deapodizationKernel<<<grid_dim,block_dim>>>(imdata_d,beta,norm_val,gi_host->im_width_dim);
 }
 
+__global__ void precomputedDeapodizationKernel(CufftType* imdata, DType* deapo, int N)
+{
+	int t = threadIdx.x +  blockIdx.x *blockDim.x;
+
+	while (t < N) 
+	{
+		CufftType data_p = imdata[t]; 
+		data_p.x = data_p.x * deapo[t];
+		data_p.y = data_p.y * deapo[t];
+		imdata[t] = data_p;
+		t = t+ blockDim.x*gridDim.x;
+	}
+}
+
+void performDeapodization(CufftType* imdata_d,
+													DType* deapo_d,
+													GriddingInfo* gi_host)
+{
+	if (DEBUG)
+		printf("running deapodization with precomputed values\n");
+
+	dim3 grid_dim(getOptimalGridDim(gi_host->im_width_dim,THREAD_BLOCK_SIZE));
+	dim3 block_dim(THREAD_BLOCK_SIZE);
+	precomputedDeapodizationKernel<<<grid_dim,block_dim>>>(imdata_d,deapo_d,gi_host->im_width_dim);
+}
+
+void precomputeDeapodization(DType* deapo_d,
+														 GriddingInfo* gi_host)
+{
+	DType beta = (DType)BETA(gi_host->kernel_width,gi_host->osr);
+
+	//Calculate normalization value (should be at position 0 in interval [-N/2,N/2]) 
+	DType norm_val = calculateDeapodizationValue(0,gi_host->grid_width_inv,gi_host->kernel_width,beta);
+	norm_val = norm_val * norm_val * norm_val;
+	if (DEBUG)
+		printf("running deapodization precomputation with norm_val %.2f\n",norm_val);
+
+	dim3 grid_dim(getOptimalGridDim(gi_host->im_width_dim,THREAD_BLOCK_SIZE));
+	dim3 block_dim(THREAD_BLOCK_SIZE);
+	precomputeDeapodizationKernel<<<grid_dim,block_dim>>>(deapo_d,beta,norm_val,gi_host->im_width_dim);
+}
 
 void performCrop(CufftType* gdata_d,
 				 CufftType* imdata_d,

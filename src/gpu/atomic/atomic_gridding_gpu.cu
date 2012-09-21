@@ -216,6 +216,7 @@ void gridding3D_gpu_adj(DType2*		data,			//kspace data array
 		if (DEBUG)
 			printf("allocate precompute deapofunction of size %d...\n",imdata_count);
 		allocateDeviceMem<DType>(&deapo_d,imdata_count);
+		precomputeDeapodization(deapo_d,gi_host);
 	}
 
 	if (DEBUG)

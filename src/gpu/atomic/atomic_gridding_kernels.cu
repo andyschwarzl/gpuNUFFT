@@ -219,7 +219,7 @@ __global__ void convolutionKernel2( DType2* data,
  	
 									// multiply data by current kernel val 
 									// grid complex or scalar 
-								    atomicAdd(&(sdata[ind].x),val * data[data_cnt].x);
+								  atomicAdd(&(sdata[ind].x),val * data[data_cnt].x);
 									atomicAdd(&(sdata[ind].y),val * data[data_cnt].y);
 								} // kernel bounds check x, spherical support 
 								i++;

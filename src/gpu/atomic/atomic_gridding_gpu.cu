@@ -31,7 +31,7 @@ void gridding3D_gpu(CufftType**	data,			//kspace data array
 
 	//cuda mem allocation
 	DType2 *imdata_d;
-	DType* crds_d;
+	DType* crds_d, *deapo_d;
 	CufftType *gdata_d, *data_d;
 	int* sector_centers_d, *sectors_d;
 	if (DEBUG)
@@ -61,6 +61,15 @@ void gridding3D_gpu(CufftType**	data,			//kspace data array
 	if (DEBUG)
 		printf("allocate and copy sector_centers of size %d...\n",3*sector_count);
 	allocateAndCopyToDeviceMem<int>(&sector_centers_d,sector_centers,3*sector_count);
+
+	if (n_coils > 1)
+	{
+		if (DEBUG)
+			printf("allocate and precompute deapofunction of size %d...\n",imdata_count);
+		allocateDeviceMem<DType>(&deapo_d,imdata_count);
+		precomputeDeapodization(deapo_d,gi_host);
+	}
+
 	if (DEBUG)
 		printf("sector pad width: %d\n",gi_host->sector_pad_width);
 	
@@ -86,7 +95,10 @@ void gridding3D_gpu(CufftType**	data,			//kspace data array
 		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
 			printf("error at thread synchronization 1: %s\n",cudaGetErrorString(cudaGetLastError()));
 		// apodization Correction
-		performForwardDeapodization(imdata_d,gi_host);
+		if (n_coils > 1 && deapo_d != NULL)
+			performForwardDeapodization(imdata_d,deapo_d,gi_host);
+		else
+			performForwardDeapodization(imdata_d,gi_host);
 		
 		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
 			printf("error at thread synchronization 2: %s\n",cudaGetErrorString(cudaGetLastError()));
@@ -132,7 +144,9 @@ void gridding3D_gpu(CufftType**	data,			//kspace data array
 	if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
 		printf("error at thread synchronization 9: %s\n",cudaGetErrorString(cudaGetLastError()));
 	freeTotalDeviceMemory(data_d,crds_d,gdata_d,imdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop
-	
+	if (n_coils > 1)
+		cudaFree(deapo_d);
+
 	if ((cudaThreadSynchronize() != cudaSuccess))
 		fprintf(stderr,"error in atomic gridding3D_gpu function: %s\n",cudaGetErrorString(cudaGetLastError()));
   free(gi_host);

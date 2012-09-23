@@ -272,6 +272,18 @@ void performForwardDeapodization(DType2* imdata_d,
 	forwardDeapodizationKernel<<<grid_dim,block_dim>>>(imdata_d,beta,norm_val,gi_host->im_width_dim);
 }
 
+void performForwardDeapodization(DType2* imdata_d,
+																DType* deapo_d,
+																GriddingInfo* gi_host)
+{
+	if (DEBUG)
+		printf("running forward deapodization with precomputed values\n");
+
+	dim3 grid_dim(getOptimalGridDim(gi_host->im_width_dim,THREAD_BLOCK_SIZE));
+	dim3 block_dim(THREAD_BLOCK_SIZE);
+	precomputedDeapodizationKernel<<<grid_dim,block_dim>>>((CufftType*)imdata_d,deapo_d,gi_host->im_width_dim);
+}
+
 void performPadding(DType2* imdata_d,
 					CufftType* gdata_d,					
 					GriddingInfo* gi_host)

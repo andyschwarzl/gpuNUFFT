@@ -378,7 +378,7 @@ void performConvolution( DType2* data_d,
 						 GriddingInfo* gi_host
 						)
 {
-	#define CONVKERNEL
+	#define CONVKERNEL2
 
 	#ifdef CONVKERNEL 	
 		dim3 block_dim(THREAD_BLOCK_SIZE);
@@ -387,7 +387,7 @@ void performConvolution( DType2* data_d,
 	#else
 		#ifdef CONVKERNEL2
 			long shared_mem_size = (gi_host->sector_dim)*sizeof(DType2);
-			int thread_size = 128;//THREAD_BLOCK_SIZE;
+			int thread_size = THREAD_BLOCK_SIZE / 2;
 	
 			dim3 block_dim(thread_size);
 			dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,thread_size));

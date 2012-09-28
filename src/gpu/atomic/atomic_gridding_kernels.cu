@@ -415,28 +415,27 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 										  int N)
 {
 	extern __shared__ CufftType shared_out_data[];//externally managed shared memory
-//TODO XXX	
-	__shared__ int sec;
-	sec= blockIdx.x;
+	__shared__ int sec[THREAD_BLOCK_SIZE];
+	sec[threadIdx.x]= blockIdx.x;
 	//init shared memory
 	shared_out_data[threadIdx.x].x = 0.0f;//Re
 	shared_out_data[threadIdx.x].y = 0.0f;//Im
 	__syncthreads();
 	//start convolution
-	while (sec < N)
+	while (sec[threadIdx.x] < N)
 	{
 		int ind, imin, imax, jmin, jmax,kmin,kmax, k, i, j;
 		DType dx_sqr, dy_sqr, dz_sqr, val, ix, jy, kz;
  
 		__shared__ int3 center;
-		center.x = sector_centers[sec * 3];
-		center.y = sector_centers[sec * 3 + 1];
-		center.z = sector_centers[sec * 3 + 2];
+		center.x = sector_centers[sec[threadIdx.x] * 3];
+		center.y = sector_centers[sec[threadIdx.x] * 3 + 1];
+		center.z = sector_centers[sec[threadIdx.x] * 3 + 2];
 
 		//Grid Points over Threads
-		int data_cnt = sectors[sec] + threadIdx.x;
+		int data_cnt = sectors[sec[threadIdx.x]] + threadIdx.x;
 		__shared__ int data_max;
-		data_max = sectors[sec+1];	
+		data_max = sectors[sec[threadIdx.x]+1];	
 		__shared__ int sector_ind_offset; 
 		sector_ind_offset = getIndex(center.x - GI.sector_offset,center.y - GI.sector_offset,center.z - GI.sector_offset,GI.grid_width);
 
@@ -517,7 +516,7 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 			shared_out_data[threadIdx.x].y = (DType)0.0;//Im
 		} //data points per sector
 		__syncthreads();
-		sec = sec + gridDim.x;
+		sec[threadIdx.x]= sec[threadIdx.x] + gridDim.x;
 	} //sector check
 }
 

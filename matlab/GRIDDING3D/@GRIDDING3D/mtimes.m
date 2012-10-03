@@ -17,13 +17,7 @@ if strcmp(a.method,'sparse')
 elseif strcmp(a.method,'gridding')
     if (a.adjoint)
         res = gridding3D_adj(a.op,bb);
-        %TODO check
-        %res = res / sqrt(prod(a.imageDim));
-        %END
     else
         res = gridding3D_forw(a.op,bb);
-        %TODO check
-        %res = res / sqrt(prod(a.imageDim));
-        %END
     end
 end

@@ -15,6 +15,10 @@ SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 SET(ARCHIVE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 
+#patch output path
+SET(PATCH_OUTPUT_DIR ${PROJECT_SOURCE_DIR}/deploy)
+SET(PATCH_OUTPUT_PATH ${PATCH_OUTPUT_DIR}/gridding3D.zip)
+
 #Searching CUDA
 FIND_PACKAGE(CUDA)
 
@@ -112,3 +116,24 @@ if(GEN_ATOMIC)
     NAME runGPUATMUnitTests
     COMMAND runGPUATMUnitTests)
 endif()
+
+#CREATE zip Archive using JAVA in order to deploy project
+if (GEN_ZIP)
+	find_package(Java)
+
+	MESSAGE(${PATCH_OUTPUT_PATH})
+	execute_process(
+	    COMMAND 
+		"find" "${CMAKE_CURRENT_SOURCE_DIR}/src" "-not" "-name" "CMakeLists.txt" "-not" "-type" "d" 
+OUTPUT_VARIABLE _file_list
+	)
+#MESSAGE(${_file_list})	
+	execute_process( 
+    COMMAND "${Java_JAR_EXECUTABLE}" "cfM" "${PATCH_OUTPUT_PATH}" "`" 
+		"find" "${CMAKE_CURRENT_SOURCE_DIR}/src" "-not" "-name" "CMakeLists.txt" "-not" "-type" "d" "`"
+#		"-C" ${CMAKE_CURRENT_SOURCE_DIR} "inc" 
+#		"-C" ${CMAKE_CURRENT_SOURCE_DIR} "matlab/GRIDDING3D"
+	    RESULT_VARIABLE _result
+	)
+endif()
+

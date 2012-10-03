@@ -140,7 +140,7 @@ __global__ void convolutionKernel2( DType2* data,
 									)
 {
   extern __shared__ DType2 sdata[];//externally managed shared memory
-	int sec[THREAD_BLOCK_SIZE];
+	__shared__ int sec[THREAD_BLOCK_SIZE];
 	sec[threadIdx.x] = blockIdx.x;
 	while (sec[threadIdx.x] < N)
 	{

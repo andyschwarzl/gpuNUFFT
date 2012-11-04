@@ -104,14 +104,14 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 		mexPrintf("grid width (incl. osr) = %d\n",grid_width);
 	//Output Image
 	CufftType* data;
-	const int n_dims = 3;//2 * data_cnt * ncoils, 2 -> Re + Im
-	unsigned long dims_data[n_dims];
+	const mwSize n_dims = 3;//2 * data_cnt * ncoils, 2 -> Re + Im
+	mwSize dims_data[n_dims];
 	dims_data[0] = 2; /* complex */
 	dims_data[1] = data_entries;
-	dims_data[2] = (unsigned long)(n_coils);
+	dims_data[2] = n_coils;
 
 	//plhs[0] = mxCreateNumericArray(n_dims,(const mwSize*)dims_data,mxGetClassID(prhs[0]),mxREAL);
-	plhs[0] = mxCreateNumericArray(n_dims,(const mwSize*)dims_data,mxSINGLE_CLASS,mxREAL);
+	plhs[0] = mxCreateNumericArray(n_dims,dims_data,mxSINGLE_CLASS,mxREAL);
 	
     data = (CufftType*)mxGetData(plhs[0]);
 	if (data == NULL)

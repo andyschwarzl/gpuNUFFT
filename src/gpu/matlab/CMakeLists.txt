@@ -4,21 +4,24 @@ set_property(GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS 1)
 
 macro( matlab_config )
  if(WIN32)
-    message( "MATLAB_INCLUDE_DIR = ${MATLAB_INCLUDE_DIR}" )
+    message( "checking MATLAB INC DIR = ${MATLAB_INCLUDE_DIR}" )
     #MATLAB_LIBRARIES
     #MATLAB_MEX_LIBRARY
     #MATLAB_MX_LIBRARY
     #MATLAB_ENG_LIBRARY
 
-    if( BUILD_64BIT )
-        set( LIB_DIR win64 )
-        message( "BUILDING FOR 64 bit Windows" ) 
-
-    else(BUILD_64BIT)
+    if (CMAKE_SIZEOF_VOID_P MATCHES "8")
+		if (CMAKE_CL_64)
+			set( LIB_DIR win64 )
+			message( "BUILDING FOR 64 bit Windows" ) 
+		else (CMAKE_CL_64)
+			message( "FAILURE: BUILDING NO 64BIT GENERATOR SELECTED!")
+			exit()
+		endif(CMAKE_CL_64)
+    else(CMAKE_SIZEOF_VOID_P MATCHES "8")
         set( LIB_DIR win32 )
         message( "BUILDING FOR 32 bit Windows" )
-
-    endif(BUILD_64BIT)
+    endif(CMAKE_SIZEOF_VOID_P MATCHES "8")
 
     SET( MATLAB_ROOT_DIR "C:\\Program Files\\MATLAB\\R2011a" CACHE STRING "")
     SET( MATLAB_INCLUDE_DIR "${MATLAB_ROOT_DIR}\\extern\\include" CACHE STRING "" FORCE )
@@ -26,17 +29,9 @@ macro( matlab_config )
     find_library(MATLAB_MX_LIBRARY libmx.lib PATHS ${MATLAB_ROOT_DIR} ${MATLAB_ROOT_DIR}/extern/lib/${LIB_DIR}/microsoft )
     find_library(MATLAB_MEX_LIBRARY libmex.lib PATHS ${MATLAB_ROOT_DIR} ${MATLAB_ROOT_DIR}/extern/lib/${LIB_DIR}/microsoft )
 
-    message("MATLAB_LIB_DIR = ${MATLAB_ROOT_DIR}/extern/lib/${LIB_DIR}/microsoft" )
-    message( "MATLAB_LIB_DIR = ${MATLAB_LIB_DIR}" )
-    message( "matlab lib dir = ${MATLAB_ROOT_DIR}/extern/lib/${LIB_DIR}" )
-
-
     SET( MATLAB_LIBRARIES ${MATLAB_ROOT_DIR}/bin/${LIB_DIR} CACHE STRING "" FORCE )
-    #SET( MATLAB_MEX_LIBRARY ${MATLAB_ROOT_DIR}/extern/lib/${LIB_DIR}/microsoft CACHE STRING "" FORCE )
-    #SET( MATLAB_MX_LIBRARY ${MATLAB_ROOT_DIR}/extern/lib/${LIB_DIR}/microsoft CACHE STRING "" FORCE )
     SET( MATLAB_ENG_LIBRARY ${MATLAB_ROOT_DIR}/extern/lib/${LIB_DIR}/microsoft CACHE STRING "" FORCE )
 
-    INCLUDE_DIRECTORIES( ${MATLAB_INCLUDE_DIR})
 else(WIN32)
     SET (MATLAB_ROOT_DIR "/usr/local/MATLAB/R2010b")
     SET( MATLAB_INCLUDE_DIR "${MATLAB_ROOT_DIR}/extern/include" CACHE STRING "" FORCE )
@@ -56,8 +51,6 @@ else(WIN32)
     FIND_LIBRARY(MATLAB_MEX_LIBRARY ${LIBMEX} ${MATLAB_LIB_PATHS} NO_DEFAULT_PATH)
     FIND_LIBRARY(MATLAB_MX_LIBRARY ${LIBMX} ${MATLAB_LIB_PATHS} NO_DEFAULT_PATH)
     FIND_LIBRARY(MATLAB_ENG_LIBRARY ${LIBENG} ${MATLAB_LIB_PATHS} NO_DEFAULT_PATH)
-
-    INCLUDE_DIRECTORIES( ${MATLAB_INCLUDE_DIR})
     
     SET(MATLAB_LIBRARIES
         ${MATLAB_MEX_LIBRARY}
@@ -69,14 +62,14 @@ endmacro()
 
 matlab_config()
 
-MESSAGE("MATLAB libraries: ${MATLAB_LIBRARIES}")
-MESSAGE("MATLAB inc dir: ${MATLAB_INCLUDE_DIR}")
+MESSAGE("Using MATLAB MX LIB: ${MATLAB_MX_LIBRARY}")
+MESSAGE("Using MATLAB MEX LIB: ${MATLAB_MEX_LIBRARY}")
+MESSAGE("Using MATLAB INC DIR: ${MATLAB_INCLUDE_DIR}")
+
 INCLUDE_DIRECTORIES(${MATLAB_INCLUDE_DIR})
 
 set(MEX_FILE gridding3D_adj.cpp ${MATLAB_HELPER_INCLUDE})
 set(MEX_FILE_FORW gridding3D_forw.cpp ${MATLAB_HELPER_INCLUDE})
-
-#set(CUDA_NVCC_FLAGS -arch sm_11;--ptxas-options=-v)
 
 CUDA_COMPILE( mex_gridding3D_adj_generated ${MEX_FILE} SHARED)
 CUDA_COMPILE( mex_gridding3D_forw_generated ${MEX_FILE_FORW} SHARED)
@@ -92,19 +85,19 @@ SET_TARGET_PROPERTIES(${GRID_MEX_FORW_NAME} PROPERTIES PREFIX "" LINKER_LANGUAGE
 
 #determine mex suffix
 if(WIN32)
-  if (CMAKE_CL_64)
-	MESSAGE("Win 64")
+  if (CMAKE_SIZEOF_VOID_P MATCHES "8")
+	MESSAGE("set Win 64 suffix")
 	SET(MEX_SUFFIX .mexw64)
-  else()
-	MESSAGE("Win 32")
+  else(CMAKE_SIZEOF_VOID_P MATCHES "8")
+	MESSAGE("set Win 32 suffix")
 	SET(MEX_SUFFIX .mexw32)
-  endif()
+  endif(CMAKE_SIZEOF_VOID_P MATCHES "8")
 else(UNIX)
   if (CMAKE_SIZEOF_VOID_P MATCHES "8")
-	MESSAGE("Linux 64")
+	MESSAGE("set Linux 64 suffix")
 	SET(MEX_SUFFIX .mexa64)
   else()
-	MESSAGE("Linux 32")
+	MESSAGE("set Linux 32 suffix")
     SET(MEX_SUFFIX .mexglx)
   endif(CMAKE_SIZEOF_VOID_P MATCHES "8")
 endif()

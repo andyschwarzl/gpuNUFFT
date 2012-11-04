@@ -25,10 +25,6 @@ FIND_PACKAGE(CUDA)
 #Searching MATLAB
 FIND_PACKAGE(Matlab)
 
-# For make-based builds, defines make target named test.
-# For Visual Studio builds, defines Visual Studio project named RUN_TESTS.
-enable_testing()
-
 #Options
 #General DEBUG output 
 SET (DEBUG false)
@@ -47,7 +43,10 @@ endif()
 MESSAGE(STATUS "Setting MATLAB DEBUG Option to ${MATLAB_DEBUG}")
 
 #Enable ATOMIC kernel  
-SET(GEN_ATOMIC OFF CACHE BOOL "Enable atomic kernel generation (Compute Capability 2.0 needed)")
+SET(GEN_ATOMIC ON CACHE BOOL "Enable atomic kernel generation (Compute Capability 2.0 needed)")
+
+#Enable Google Tests
+SET(GEN_TESTS OFF CACHE BOOL "Enable and generate simple GOOGLE test framework unit tests")
 
 #Enable/Disable GPU double precision 
 SET(GPU_DOUBLE_PREC OFF CACHE BOOL "Enable double precision floating point operations on GPU (Compute Capability 1.3 needed)")
@@ -98,26 +97,30 @@ SET(MATLAB_HELPER_INCLUDE ${GRIDDING_INC_DIR}/matlab_helper.h)
 SET(CONFIG_INCLUDE ${GRIDDING_INC_DIR}/config.hpp ${GRIDDING_INC_DIR}/cufft_config.hpp)
 
 #Adding src directory to the project
-ADD_SUBDIRECTORY(test)
+
 ADD_SUBDIRECTORY(src)
-
-add_test(
-    NAME runUnitTests
-    COMMAND runUnitTests
-)
-
-add_test(
-    NAME runGPUUnitTests
-    COMMAND runGPUUnitTests
-)
+if(GEN_TESTS)
+	# For make-based builds, defines make target named test.
+	# For Visual Studio builds, defines Visual Studio project named RUN_TESTS.
+	enable_testing()
+	ADD_SUBDIRECTORY(test)
+	add_test(
+		NAME runUnitTests
+		COMMAND runUnitTests
+	)
+	add_test(
+		NAME runGPUUnitTests
+		COMMAND runGPUUnitTests
+	)
+endif(GEN_TESTS)
 
 if(GEN_ATOMIC)
 	add_test(
     NAME runGPUATMUnitTests
     COMMAND runGPUATMUnitTests)
-endif()
+endif(GEN_ATOMIC)
 
-#CREATE zip Archive using JAVA in order to deploy project
+#CREATE zip Archive using JAVA in order to deploy project patch
 if (GEN_ZIP)
 	find_package(Java)
 
@@ -135,5 +138,5 @@ OUTPUT_VARIABLE _file_list
 #		"-C" ${CMAKE_CURRENT_SOURCE_DIR} "matlab/GRIDDING3D"
 	    RESULT_VARIABLE _result
 	)
-endif()
+endif(GEN_ZIP)
 

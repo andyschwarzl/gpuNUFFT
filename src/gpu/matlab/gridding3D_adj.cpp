@@ -112,19 +112,19 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	int grid_width = (unsigned long)(im_width * osr);
 	
 	//Output Image
-	CufftType* imdata;
-	const int n_dims = 5;//2 * w * h * d * ncoils, 2 -> Re + Im
-	unsigned long dims_im[n_dims];
+	CufftType* imdata = NULL;
+	const mwSize n_dims = 5;//2 * w * h * d * ncoils, 2 -> Re + Im
+	mwSize dims_im[n_dims];
 	dims_im[0] = 2; /* complex */
 	dims_im[1] = im_width;
 	dims_im[2] = im_width;
 	dims_im[3] = im_width;
-	dims_im[4] = (unsigned long)(n_coils);
+	dims_im[4] = n_coils;
 
 	long im_count = dims_im[1]*dims_im[2]*dims_im[3];
 	
 	//plhs[0] = mxCreateNumericArray(n_dims,(const mwSize*)dims_im,mxGetClassID(prhs[0]),mxREAL);
-	plhs[0] = mxCreateNumericArray(n_dims,(const mwSize*)dims_im,mxSINGLE_CLASS,mxREAL);
+	plhs[0] = mxCreateNumericArray(n_dims,dims_im,mxSINGLE_CLASS,mxREAL);
 	
   imdata = (CufftType*)mxGetData(plhs[0]);
 	if (imdata == NULL)

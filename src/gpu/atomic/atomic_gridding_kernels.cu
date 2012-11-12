@@ -113,10 +113,15 @@ __global__ void convolutionKernel3( DType2* data,
 								val = KERNEL[(int) round(dz_sqr * GI.dist_multiplier)] *
 											KERNEL[(int) round(dy_sqr * GI.dist_multiplier)] *
 											KERNEL[(int) round(dx_sqr * GI.dist_multiplier)];
-								ind = sector_ind_offset + getIndex(i,j,k,GI.grid_width);//index in output grid
 								if (isOutlier(i,j,k,center.x,center.y,center.z,GI.grid_width,GI.sector_offset))
-										continue;
-										
+								//calculate opposite index
+									ind = getIndex(calculateOppositeIndex(i,center.x,GI.grid_width,GI.sector_offset),
+																		 calculateOppositeIndex(j,center.y,GI.grid_width,GI.sector_offset),
+																		 calculateOppositeIndex(k,center.z,GI.grid_width,GI.sector_offset),
+																		 GI.grid_width);
+								else
+									ind = sector_ind_offset + getIndex(i,j,k,GI.grid_width);//index in output grid
+
 								atomicAdd(&(gdata[ind].x),val * data_cache[c_ind-reload_count*CACHE_SIZE].x);//Re
 								atomicAdd(&(gdata[ind].y),val * data_cache[c_ind-reload_count*CACHE_SIZE].y);//Im
 					 	} // kernel bounds check x, spherical support 
@@ -247,10 +252,14 @@ __global__ void convolutionKernel2( DType2* data,
 			y = (int)(r / GI.sector_pad_width);
 			
 			if (isOutlier(x,y,z,center.x,center.y,center.z,GI.grid_width,GI.sector_offset))
-				continue;
-			
-			ind = sector_ind_offset + getIndex(x,y,z,GI.grid_width);//index in output grid
-			
+				//calculate opposite index
+				ind = getIndex(calculateOppositeIndex(x,center.x,GI.grid_width,GI.sector_offset),
+													 calculateOppositeIndex(y,center.y,GI.grid_width,GI.sector_offset),
+													 calculateOppositeIndex(z,center.z,GI.grid_width,GI.sector_offset),
+													 GI.grid_width);
+			else
+				ind = sector_ind_offset + getIndex(x,y,z,GI.grid_width);//index in output grid
+
 			atomicAdd(&(gdata[ind].x),sdata[s_ind].x);//Re
 			atomicAdd(&(gdata[ind].y),sdata[s_ind].y);//Im
 		}
@@ -276,7 +285,6 @@ __global__ void convolutionKernel( DType2* data,
 	//start convolution
 	while (sec < N)
 	{
-		//shared???
 		int ind, imin, imax, jmin, jmax,kmin,kmax, k, i, j;
 
 		DType dx_sqr, dy_sqr, dz_sqr, val, ix, jy, kz;
@@ -339,14 +347,15 @@ __global__ void convolutionKernel( DType2* data,
 											KERNEL[(int) round(dy_sqr * GI.dist_multiplier)] *
 											KERNEL[(int) round(dx_sqr * GI.dist_multiplier)];
 									
-									ind = sector_ind_offset + getIndex(i,j,k,GI.grid_width);//index in output grid
-			
 									if (isOutlier(i,j,k,center.x,center.y,center.z,GI.grid_width,GI.sector_offset))
-									{
-										i++;
-										continue;
-									}
-
+										//calculate opposite index
+										ind = getIndex(calculateOppositeIndex(i,center.x,GI.grid_width,GI.sector_offset),
+													 calculateOppositeIndex(j,center.y,GI.grid_width,GI.sector_offset),
+													 calculateOppositeIndex(k,center.z,GI.grid_width,GI.sector_offset),
+													 GI.grid_width);
+									else
+										ind = sector_ind_offset + getIndex(i,j,k,GI.grid_width);//index in output grid
+			
 									atomicAdd(&(gdata[ind].x),val * data[data_cnt].x);//Re
 									atomicAdd(&(gdata[ind].y),val * data[data_cnt].y);//Im
 								}// kernel bounds check x, spherical support 
@@ -486,16 +495,17 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 											KERNEL[(int) round(dy_sqr * GI.dist_multiplier)] *
 											KERNEL[(int) round(dx_sqr * GI.dist_multiplier)];
 									
-									ind = (sector_ind_offset + getIndex(i,j,k,GI.grid_width));
-
 									// multiply data by current kernel val 
 									// grid complex or scalar 
 									if (isOutlier(i,j,k,center.x,center.y,center.z,GI.grid_width,GI.sector_offset))
-									{
-										i++;
-										continue;
-									}
-				
+										//calculate opposite index
+										ind = getIndex(calculateOppositeIndex(i,center.x,GI.grid_width,GI.sector_offset),
+																	calculateOppositeIndex(j,center.y,GI.grid_width,GI.sector_offset),
+																	calculateOppositeIndex(k,center.z,GI.grid_width,GI.sector_offset),
+																	GI.grid_width);
+									else
+										ind = (sector_ind_offset + getIndex(i,j,k,GI.grid_width));
+
 									shared_out_data[threadIdx.x].x += gdata[ind].x * val; 
 									shared_out_data[threadIdx.x].y += gdata[ind].y * val;
 								}// kernel bounds check x, spherical support 

@@ -118,7 +118,6 @@ __inline__ __device__ __host__ void getCoordsFromIndex(int index, int* x, int* y
 	*y = (int)(r / w_z);	
 }
 
-
 __inline__ __device__ __host__ bool isOutlier(int x, int y, int z, int center_x, int center_y, int center_z, int width, int sector_offset)
 {
 		return ((center_x - sector_offset + x) >= width ||
@@ -127,6 +126,17 @@ __inline__ __device__ __host__ bool isOutlier(int x, int y, int z, int center_x,
 						(center_y - sector_offset + y) < 0 ||
 						(center_z - sector_offset + z) >= width ||
 						(center_z - sector_offset + z) < 0);
+}
+
+__inline__ __device__ __host__ int calculateOppositeIndex(int coord,int center,int width, int offset)
+{
+		//return (center - offset + coord) % width;
+		if ((center - offset + coord) >= width)
+			return (center - offset + coord) - width;
+		else if ((center - offset + coord) < 0)
+			return (center - offset + coord + width);
+		else
+			return center - offset + coord;
 }
 
 __inline__ __device__ __host__ DType calculateDeapodizationValue(int coord, DType grid_width_inv, int kernel_width, DType beta)

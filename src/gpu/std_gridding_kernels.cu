@@ -58,7 +58,7 @@ __global__ void deapodizationKernel(CufftType* gdata, DType beta, DType norm_val
 	   
 	   deapo = calculateDeapodizationAt(x,y,z,GI.im_width_offset,GI.grid_width_inv,GI.kernel_width,beta,norm_val);
 	   //check if deapodization value is valid number
-	   if (!isnan(deapo))// == deapo)
+	   if (!isnan(deapo))
 	   {
 			 CufftType gdata_p = gdata[t]; 
 		   gdata_p.x = gdata_p.x / deapo;//Re

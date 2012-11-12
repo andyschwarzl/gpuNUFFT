@@ -152,11 +152,19 @@ __global__ void composeOutputKernel(DType2* temp_gdata, CufftType* gdata, int* s
 			int x=threadIdx.x;
 			int y=threadIdx.y;
 			int s_ind = (sector_grid_offset + getIndex(x,y,z,GI.sector_pad_width));
-			int ind = (sector_ind_offset + getIndex(x,y,z,GI.grid_width));
+
+			int ind;
 			if (isOutlier(x,y,z,center.x,center.y,center.z,GI.grid_width,GI.sector_offset))
-				continue;
+				//calculate opposite index
+				ind = getIndex(calculateOppositeIndex(x,center.x,GI.grid_width,GI.sector_offset),
+													 calculateOppositeIndex(y,center.y,GI.grid_width,GI.sector_offset),
+													 calculateOppositeIndex(z,center.z,GI.grid_width,GI.sector_offset),
+													 GI.grid_width);
+			else
+				ind = (sector_ind_offset + getIndex(x,y,z,GI.grid_width));
+			
 			gdata[ind].x += temp_gdata[s_ind].x;//Re
-			gdata[ind].y += temp_gdata[s_ind].y;//Im
+			gdata[ind].y += temp_gdata[s_ind].y;//Im			
 		}
 	}
 }
@@ -269,18 +277,19 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 											KERNEL[(int) round(dy_sqr * GI.dist_multiplier)] *
 											KERNEL[(int) round(dx_sqr * GI.dist_multiplier)];
 									
-									ind = (sector_ind_offset + getIndex(i,j,k,GI.grid_width));
-
 									// multiply data by current kernel val 
 									// grid complex or scalar 
 									if (isOutlier(i,j,k,center.x,center.y,center.z,GI.grid_width,GI.sector_offset))
-									{
-										i++;
-										continue;
-									}
-				
+										//calculate opposite index
+										ind = getIndex(calculateOppositeIndex(i,center.x,GI.grid_width,GI.sector_offset),
+										calculateOppositeIndex(j,center.y,GI.grid_width,GI.sector_offset),
+										calculateOppositeIndex(k,center.z,GI.grid_width,GI.sector_offset),
+										GI.grid_width);
+									else
+										ind = (sector_ind_offset + getIndex(i,j,k,GI.grid_width));
+									
 									shared_out_data[threadIdx.x].x += gdata[ind].x * val; 
-									shared_out_data[threadIdx.x].y += gdata[ind].y * val;
+									shared_out_data[threadIdx.x].y += gdata[ind].y * val;									
 								}// kernel bounds check x, spherical support 
 								i++;
 							} // x loop

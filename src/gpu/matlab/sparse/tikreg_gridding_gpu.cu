@@ -121,8 +121,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     CUdevice cuDevice = 0;
 	cuDeviceGet(&cuDevice, 0);
 	// Create context
-	CUcontext cuContext;
-	cuCtxCreate(&cuContext, 0, cuDevice);
+	//CUcontext cuContext;
+	//cuCtxCreate(&cuContext, 0, cuDevice);
     //if (cuCtxGetDevice(&dev) == CUDA_SUCCESS)
     //{
 		//   CUcontext  pctx ;
@@ -240,7 +240,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	{
 		mexPrintf("create cufft plan has failed with err %i \n",err);
 		mexPrintf("%s\n", cudaGetErrorString(cudaGetLastError()));
-		return;
+		//return;
 	}
     // thread managements 
     int vx_block = 128;
@@ -274,7 +274,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
         {
             mexPrintf("cufft has failed with err %i \n",err);
 			mexPrintf("%s\n", cudaGetErrorString(cudaGetLastError()));
-            return;
+            //return;
         }
 		//Multiplikation mit SN Matrix
         sn_mult<<<dimGrid_dw,dimBlock_dw>>>(tmp2,tmp2, _sn, w, h, d, w_pad, h_pad, d_pad);
@@ -307,8 +307,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
  
 	mexPrintf("%s\n", cudaGetErrorString(cudaGetLastError()));
 
-     CUcontext  pctx ;
-     cuCtxPopCurrent(&pctx);	
+     //CUcontext  pctx ;
+     //cuCtxPopCurrent(&pctx);	
 }
 
 

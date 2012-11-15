@@ -41,14 +41,14 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     int pcnt = 0;  
     const mxArray *ImageData;
     ImageData = prhs[pcnt++];//0...Image Daten       
-    std::complex<DType> *img = ( std::complex<DType> *) mxGetData(ImageData);
-
+    CufftType *img = ( CufftType *) mxGetData(ImageData);
+		mexPrintf("test img(0)=%f, img(1)=%f\n",img[0],img[1]);
     const mxArray *ImageDim;
     ImageDim = prhs[pcnt++];//1...Image Dimensions
     DType *image_dims = (DType*) mxGetData(ImageDim);
 	const mwSize *dims_imagedim = mxGetDimensions(ImageDim);
 	if (MATLAB_DEBUG)
-		mexPrintf("Test %d, %d\n",dims_imagedim[0],dims_imagedim[1]);
+		mexPrintf("Test %d, %d\n",(int)image_dims[0],(int)image_dims[1]);
 	
 	const mxArray *Sn;
     Sn = prhs[pcnt++];//1...SN Map
@@ -113,21 +113,21 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     DType lambda = params[1]; //Regularisierungsparam
     int device_num = (int) params[2]; //Device
     int VERBOSE = (int) params[4]; //Verbose-Mode
-	
+	  VERBOSE = MATLAB_DEBUG;
     if (VERBOSE == 1)  
         mexPrintf("gpuDevice: %i  lambda^2: %f\n",device_num,lambda);
 
    /**************** Init Cuda *****************/
-    CUdevice dev; 
-
-    if (cuCtxGetDevice(&dev) == CUDA_SUCCESS)
+    //CUdevice dev; 
+		if (MATLAB_DEBUG)
+			mexPrintf("start 1...\n");
+    
+		CUdevice dev; 
+		if (cuCtxGetDevice(&dev) == CUDA_SUCCESS)
     {
-		//   CUcontext  pctx ;
-		//   cuCtxPopCurrent(&pctx);	      
-    }   
-    if (MATLAB_DEBUG)
-		mexPrintf("dev:%i\n",dev);
-      
+			mexPrintf("dev:%i\n",dev);
+		}   
+   
     // MALLOCs    
     CufftType *tmp1,*tmp2, *_r, *_ipk_we;
 	CufftType *_img;
@@ -136,9 +136,10 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     int *_the_index;
 	    	
     cufftHandle            plan;
-    
+    if (MATLAB_DEBUG)
+			mexPrintf("start...\n");
 	//output erzeugen
-	plhs[0]             =  mxCreateNumericArray(numdim,(const mwSize*)dims_k,mxGetClassID(ImageData),mxREAL);
+	plhs[0]             =  mxCreateNumericArray(numdim,(const mwSize*)dims_k,mxSINGLE_CLASS,mxREAL);
      
     std::complex<DType> *res = (std::complex<DType> *) mxGetData(plhs[0]);
 
@@ -153,18 +154,26 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	cudaMalloc( (void **) &_r,sizeof(CufftType)*numK*numsens);
 	cudaMalloc( (void **) &_ipk_we,sizeof(CufftType)*numP*numK);
 	cudaMalloc( (void **) &_the_index,sizeof(int)*numP*numK);
-	
+
     cudaMemset( tmp1,0,sizeof(CufftType)*totsz_pad);
 	cudaMemset( tmp2,0,sizeof(CufftType)*totsz_pad);
 	cudaMemset( _img,0,sizeof(CufftType)*totsz*numsens);
-	
+		    if (MATLAB_DEBUG)
+			mexPrintf("start 3...\n");
      /************** copy data on device **********************/
-	 cudaMemcpy( _img, img, sizeof(CufftType)*numsens*totsz, cudaMemcpyHostToDevice);
-     cudaMemcpy( _ipk_we, ipk_we, sizeof(CufftType)*numP*numK, cudaMemcpyHostToDevice);
-     cudaMemcpy( _the_index, the_index, sizeof(int)*numP*numK, cudaMemcpyHostToDevice);
+		cudaMemcpy( _ipk_we, ipk_we, sizeof(CufftType)*numP*numK, cudaMemcpyHostToDevice);
+   
+				mexPrintf("numsens %d, totsz %d\n",numsens,totsz);
+			cudaMemcpy( _img, img, sizeof(CufftType)*numsens*totsz, cudaMemcpyHostToDevice);
+	 		 		    if (MATLAB_DEBUG)
+			mexPrintf("start 4...\n");
+	   cudaMemcpy( _the_index, the_index, sizeof(int)*numP*numK, cudaMemcpyHostToDevice);
+
 	 cudaMemcpy( _sn, sn, sizeof(DType)*totsz, cudaMemcpyHostToDevice);
      cudaMemcpy( ipk_we, _ipk_we, sizeof(CufftType)*numP*numK, cudaMemcpyDeviceToHost);
      cudaMemcpy( the_index, _the_index, sizeof(int)*numP*numK, cudaMemcpyDeviceToHost);
+		 if (MATLAB_DEBUG)
+			mexPrintf("start 5...\n");
 
      cudaThreadSynchronize();
     
@@ -181,7 +190,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	{
 		mexPrintf("create cufft plan has failed with err %i \n",err);
 		mexPrintf("%s\n", cudaGetErrorString(cudaGetLastError()));
-		return;
+		//return;
 	}
     // thread managements 
     int vx_block = 128;
@@ -247,8 +256,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	    
     cufftDestroy(plan);
     
-    CUcontext  pctx ;
-    cuCtxPopCurrent(&pctx);	
+ //   CUcontext  pctx ;
+   // cuCtxPopCurrent(&pctx);	
 }
 
 

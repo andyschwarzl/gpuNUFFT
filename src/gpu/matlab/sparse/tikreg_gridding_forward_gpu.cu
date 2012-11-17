@@ -75,7 +75,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
     const mxArray *Ipk_we;
     Ipk_we = prhs[pcnt++]; //3...Weight (Y)      
-    std::complex<DType> *ipk_we = (std::complex<DType>*) mxGetData(Ipk_we);
+    CufftType *ipk_we = (CufftType*) mxGetData(Ipk_we);
   
     int numP = dims_ipk[0];//125
     int numK = dims_ipk[1];//11685
@@ -84,7 +84,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	const mwSize numdim =3;
 	const mwSize dims_k[] = {2, numK, numsens};
     
-	int* the_index= new int[numP*numK];
+	int the_index[numP*numK];
     for(int i = 0; i < numP*numK; i++)
         the_index[i] = (int)(ipk_index[i]-1);
 
@@ -140,43 +140,38 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	//output erzeugen
 	plhs[0]             =  mxCreateNumericArray(numdim,dims_k,mxSINGLE_CLASS,mxREAL);
      
-    std::complex<DType> *res = (std::complex<DType> *) mxGetData(plhs[0]);
+  CufftType *res = (CufftType*) mxGetData(plhs[0]);
 
 	//allocateAndCopyToDeviceMem<std::complex<DType>>(&_img,img, totsz*numsens);
+  cudaMalloc( (void **) &_r,sizeof(CufftType)*numK*numsens);
 	cudaMalloc( (void **) &_img,sizeof(CufftType)*totsz*numsens);
-
-    cudaMalloc( (void **) &tmp1,sizeof(CufftType)*totsz_pad);
-	
-    cudaMalloc( (void **) &tmp2,sizeof(CufftType)*totsz_pad);
-	
-    cudaMalloc( (void **) &_sn,sizeof(DType)*totsz);
+  cudaMalloc( (void **) &tmp1,sizeof(CufftType)*totsz_pad);
+  cudaMalloc( (void **) &tmp2,sizeof(CufftType)*totsz_pad);
+  cudaMalloc( (void **) &_sn,sizeof(DType)*totsz);
 	cudaMalloc( (void **) &_r,sizeof(CufftType)*numK*numsens);
 	cudaMalloc( (void **) &_ipk_we,sizeof(CufftType)*numP*numK);
 	cudaMalloc( (void **) &_the_index,sizeof(int)*numP*numK);
 
-    cudaMemset( tmp1,0,sizeof(CufftType)*totsz_pad);
+  cudaMemset( tmp1,0,sizeof(CufftType)*totsz_pad);
 	cudaMemset( tmp2,0,sizeof(CufftType)*totsz_pad);
 	cudaMemset( _img,0,sizeof(CufftType)*totsz*numsens);
 
-     /************** copy data on device **********************/
-		cudaMemcpy( _ipk_we, ipk_we, sizeof(CufftType)*numP*numK, cudaMemcpyHostToDevice);
-   
-			cudaMemcpy( _img, img, sizeof(CufftType)*numsens*totsz, cudaMemcpyHostToDevice);
+  //   ************** copy data on device **********************
+  cudaMemcpy( _ipk_we, ipk_we, sizeof(CufftType)*numP*numK, cudaMemcpyHostToDevice);
+	cudaMemcpy( _img, img, sizeof(CufftType)*numsens*totsz, cudaMemcpyHostToDevice);
+	cudaMemcpy( _the_index, the_index, sizeof(int)*numP*numK, cudaMemcpyHostToDevice);
+	cudaMemcpy( _sn, sn, sizeof(DType)*totsz, cudaMemcpyHostToDevice);
+  cudaMemcpy( ipk_we, _ipk_we, sizeof(CufftType)*numP*numK, cudaMemcpyDeviceToHost);
+  cudaMemcpy( the_index, _the_index, sizeof(int)*numP*numK, cudaMemcpyDeviceToHost);
 
-	   cudaMemcpy( _the_index, the_index, sizeof(int)*numP*numK, cudaMemcpyHostToDevice);
-
-	 cudaMemcpy( _sn, sn, sizeof(DType)*totsz, cudaMemcpyHostToDevice);
-     cudaMemcpy( ipk_we, _ipk_we, sizeof(CufftType)*numP*numK, cudaMemcpyDeviceToHost);
-     cudaMemcpy( the_index, _the_index, sizeof(int)*numP*numK, cudaMemcpyDeviceToHost);
-
-     cudaThreadSynchronize();
+  cudaThreadSynchronize();
     
-    if (VERBOSE == 1) 
-        mexPrintf("numP: %i  numK: %i whd %i %i %i pad %i %i %i numsens: %i\n",numP,numK,w,h,d,w_pad,h_pad,d_pad,numsens);
+  if (VERBOSE == 1) 
+    mexPrintf("numP: %i  numK: %i whd %i %i %i pad %i %i %i numsens: %i\n",numP,numK,w,h,d,w_pad,h_pad,d_pad,numsens);
           
-    if (VERBOSE == 1) {
-        mexPrintf("num active Vox: %i\n",numVox);    
-    }
+  if (VERBOSE == 1) 
+    mexPrintf("num active Vox: %i\n",numVox);    
+  
     if (MATLAB_DEBUG)
 		mexPrintf("trying to create cufft plan with %d\n",CufftTransformType);
 	int err;
@@ -213,7 +208,6 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	
 	if (VERBOSE == 1)
 		mexPrintf("start forward gridding...\n");
-    
 	// do sens -- b=A x
     for (int i = 0; i < numsens; i++)
     { 
@@ -250,10 +244,10 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	    
     cufftDestroy(plan);
 
-		free(the_index);
-
-    CUcontext  pctx ;
-    cuCtxPopCurrent(&pctx);	
+		//delete the_index;
+   // leads to segfaults
+   // CUcontext  pctx ;
+   // cuCtxPopCurrent(&pctx);	
 }
 
 

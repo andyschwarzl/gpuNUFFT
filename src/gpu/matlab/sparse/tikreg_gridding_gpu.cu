@@ -303,9 +303,9 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
 		if (MATLAB_DEBUG)
 			mexPrintf("%s\n", cudaGetErrorString(cudaGetLastError()));
-
-    CUcontext  pctx ;
-    cuCtxPopCurrent(&pctx);	
+// leads to segfault 
+//    CUcontext  pctx ;
+//    cuCtxPopCurrent(&pctx);	
 }
 
 

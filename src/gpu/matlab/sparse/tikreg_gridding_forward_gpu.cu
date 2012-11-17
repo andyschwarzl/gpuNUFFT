@@ -249,7 +249,9 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     cudaFree(_the_index);
 	    
     cufftDestroy(plan);
-    
+
+		free(the_index);
+
     CUcontext  pctx ;
     cuCtxPopCurrent(&pctx);	
 }

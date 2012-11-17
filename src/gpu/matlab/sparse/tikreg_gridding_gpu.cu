@@ -299,7 +299,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     cufftDestroy(plan);
     free(bpsize);
     free(bponset);
- 
+		free(the_index);
+
 		if (MATLAB_DEBUG)
 			mexPrintf("%s\n", cudaGetErrorString(cudaGetLastError()));
 

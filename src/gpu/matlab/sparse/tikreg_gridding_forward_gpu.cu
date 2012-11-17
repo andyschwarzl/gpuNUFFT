@@ -62,7 +62,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	if (MATLAB_DEBUG)
 		mexPrintf("Number of Coils: %d\n",numsens);
 
-    const int dims_sz[] = {2, (int)image_dims[0], (int)image_dims[1], (int)image_dims[2],numsens };//2x64x64x44
+    const mwSize dims_sz[] = {2, (int)image_dims[0], (int)image_dims[1], (int)image_dims[2],numsens };//2x64x64x44
     int w = (int)dims_sz[1];//64
     int h = (int)dims_sz[2];//64
     int d = (int)dims_sz[3];//44
@@ -81,8 +81,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     int numK = dims_ipk[1];//11685
 	
 	//output dimensions
-	const int numdim =3;
-	const int dims_k[] = {2, numK, numsens};
+	const mwSize numdim =3;
+	const mwSize dims_k[] = {2, numK, numsens};
     
 	int* the_index= new int[numP*numK];
     for(int i = 0; i < numP*numK; i++)
@@ -138,7 +138,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	    	
     cufftHandle            plan;
 	//output erzeugen
-	plhs[0]             =  mxCreateNumericArray(numdim,(const mwSize*)dims_k,mxSINGLE_CLASS,mxREAL);
+	plhs[0]             =  mxCreateNumericArray(numdim,dims_k,mxSINGLE_CLASS,mxREAL);
      
     std::complex<DType> *res = (std::complex<DType> *) mxGetData(plhs[0]);
 

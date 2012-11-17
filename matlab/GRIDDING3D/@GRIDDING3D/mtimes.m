@@ -1,7 +1,7 @@
 function res = mtimes(a,bb)
 if strcmp(a.method,'sparse')
     if (a.adjoint)
-        bb = bb(:);
+        %bb = bb(:);
         res = Tikreg_gridding(a.op,bb,'machine','gpu_float','adjoint');%, ,'single_coil''verbose',1);
         
         %TODO check

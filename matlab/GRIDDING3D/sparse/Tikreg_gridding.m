@@ -26,7 +26,6 @@ tol =  1e-5;
 it = 20;
 lambda = 0.2;
 verbose = 0;
-single_coil = false;
 adjoint = false;
 
 for k=1:length(varargin)
@@ -53,8 +52,6 @@ for k=1:length(varargin)
                 else
                     error('invalid machine type');
                 end;
-            case 'single_coil'
-                single_coil = true;
             case 'adjoint'
                 adjoint = true;
         end
@@ -74,34 +71,25 @@ if working_precision == 1,
     [idx weight  bp_vxidx bp_midx bp_weight] = tikreg_gridding_init(ipk,1);
    
     if (adjoint == true)
-        display('starting gridding on GPU (single precision)');
-    
-        %b -> daten
-        b_il(1,:) = real(b);
-        b_il(2,:) = imag(b);
-        
+        %display('starting gridding on GPU (single precision)');
         b_coils = A.numCoils;
-        if (single_coil == true)
-            %single call per coil
-            res = zeros(A.imageDim);
-            for coil = 1 : A.numCoils,
-                coil_start = 2 * (coil-1) * A.trajectory_length +1;
-                coil_end = coil_start + 2  * A.trajectory_length - 1;
-                %tmp = tikreg_gridding_gpu_f(single(b_il(coil_start:coil_end)),single(ipk.sn),single(A.imageDim),single(1),single(idx),single(weight),single(ipk.Kd), uint32(bp_vxidx), bp_midx, bp_weight,single([it lambda^2 devnum tol verbose]));
-                tmp = mex_gridding3D_adj_sparse_f(single(b_il(coil_start:coil_end)),single(ipk.sn),single(A.imageDim),single(1),single(idx),single(weight),single(ipk.Kd), uint32(bp_vxidx), bp_midx, bp_weight,single([it lambda^2 devnum tol verbose]));
-                tmp = squeeze(tmp(1,:,:,:) + 1i*tmp(2,:,:,:));
-
-                res(:,:,:,coil) = tmp;
-            end
-        else
+        if (size(b,2) > 1)
+            %b -> daten
+            b_il(1,:,:) = real(b);
+            b_il(2,:,:) = imag(b);
             %res = tikreg_gridding_gpu_f(single(b_il),single(A.imageDim),single(ipk.sn),single(b_coils),single(idx),single(weight),single(ipk.Kd), uint32(bp_vxidx), bp_midx, bp_weight,single([it lambda^2 devnum tol verbose]));
             res = mex_gridding3D_adj_sparse_f(single(b_il),single(A.imageDim),single(ipk.sn),single(b_coils),single(idx),single(weight),single(ipk.Kd), uint32(bp_vxidx), bp_midx, bp_weight,single([it lambda^2 devnum tol verbose]));
-            
             res = squeeze(res(1,:,:,:,:) + 1i*res(2,:,:,:,:));
+        else            
+            %b -> daten
+            b_il(1,:) = real(b);
+            b_il(2,:) = imag(b);
+            %tmp = tikreg_gridding_gpu_f(single(b_il(coil_start:coil_end)),single(ipk.sn),single(A.imageDim),single(1),single(idx),single(weight),single(ipk.Kd), uint32(bp_vxidx), bp_midx, bp_weight,single([it lambda^2 devnum tol verbose]));
+            res = mex_gridding3D_adj_sparse_f(single(b_il),single(A.imageDim),single(ipk.sn),single(1),single(idx),single(weight),single(ipk.Kd), uint32(bp_vxidx), bp_midx, bp_weight,single([it lambda^2 devnum tol verbose]));
+            res = squeeze(res(1,:,:,:) + 1i*res(2,:,:,:));
         end;
     else
-        display('starting forward gridding on GPU (single precision)');
-    
+        %display('starting forward gridding on GPU (single precision)');
         %forward gridding single precision
         img = b;
        
@@ -109,7 +97,7 @@ if working_precision == 1,
         img_il(2,:,:,:,:) = imag(img);
         
         %res = tikreg_gridding_forward_gpu_f(single(img_il),single(A.imageDim),single(ipk.sn),single(1),single(idx),single(weight),single(ipk.Kd), uint32(bp_vxidx), bp_midx, bp_weight,single([it lambda^2 devnum tol verbose]));
-        res = mex_gridding3D_forw_sparse_f(single(img_il),single(A.imageDim),single(ipk.sn),single(A.numCoils),single(idx),single(weight),single(ipk.Kd), uint32(bp_vxidx), bp_midx, bp_weight,single([it lambda^2 devnum tol verbose]));
+        res = mex_gridding3D_forw_sparse_f(single(img_il),single(A.imageDim),single(ipk.sn),single(1),single(idx),single(weight),single(ipk.Kd), uint32(bp_vxidx), bp_midx, bp_weight,single([it lambda^2 devnum tol verbose]));
         
         res = squeeze(res(1,:) + 1i*res(2,:));
     end;

@@ -42,7 +42,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     const mxArray *ImageData;
     ImageData = prhs[pcnt++];//0...Image Daten       
     CufftType *img = ( CufftType *) mxGetData(ImageData);
-		mexPrintf("test img(0)=%f, img(1)=%f\n",img[0],img[1]);
+
     const mxArray *ImageDim;
     ImageDim = prhs[pcnt++];//1...Image Dimensions
     DType *image_dims = (DType*) mxGetData(ImageDim);
@@ -125,9 +125,10 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 		CUdevice dev; 
 		if (cuCtxGetDevice(&dev) == CUDA_SUCCESS)
     {
-			mexPrintf("dev:%i\n",dev);
+			if (MATLAB_DEBUG)
+				mexPrintf("dev:%i\n",dev);
 		}   
-   
+  
     // MALLOCs    
     CufftType *tmp1,*tmp2, *_r, *_ipk_we;
 	CufftType *_img;
@@ -136,8 +137,6 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     int *_the_index;
 	    	
     cufftHandle            plan;
-    if (MATLAB_DEBUG)
-			mexPrintf("start...\n");
 	//output erzeugen
 	plhs[0]             =  mxCreateNumericArray(numdim,(const mwSize*)dims_k,mxSINGLE_CLASS,mxREAL);
      
@@ -158,22 +157,17 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     cudaMemset( tmp1,0,sizeof(CufftType)*totsz_pad);
 	cudaMemset( tmp2,0,sizeof(CufftType)*totsz_pad);
 	cudaMemset( _img,0,sizeof(CufftType)*totsz*numsens);
-		    if (MATLAB_DEBUG)
-			mexPrintf("start 3...\n");
+
      /************** copy data on device **********************/
 		cudaMemcpy( _ipk_we, ipk_we, sizeof(CufftType)*numP*numK, cudaMemcpyHostToDevice);
    
-				mexPrintf("numsens %d, totsz %d\n",numsens,totsz);
 			cudaMemcpy( _img, img, sizeof(CufftType)*numsens*totsz, cudaMemcpyHostToDevice);
-	 		 		    if (MATLAB_DEBUG)
-			mexPrintf("start 4...\n");
+
 	   cudaMemcpy( _the_index, the_index, sizeof(int)*numP*numK, cudaMemcpyHostToDevice);
 
 	 cudaMemcpy( _sn, sn, sizeof(DType)*totsz, cudaMemcpyHostToDevice);
      cudaMemcpy( ipk_we, _ipk_we, sizeof(CufftType)*numP*numK, cudaMemcpyDeviceToHost);
      cudaMemcpy( the_index, _the_index, sizeof(int)*numP*numK, cudaMemcpyDeviceToHost);
-		 if (MATLAB_DEBUG)
-			mexPrintf("start 5...\n");
 
      cudaThreadSynchronize();
     
@@ -234,9 +228,9 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
         {
 			mexPrintf("cufft has failed with err %i \n",err);
 			mexPrintf("%s\n", cudaGetErrorString(cudaGetLastError()));
-            return;
+            //return;
         }
-		dosenswithoffset<<<dimGrid_se,dimBlock_se>>>(_r,tmp2,_ipk_we,_the_index,numP,numK,i*numK,numK*numsens);
+			dosenswithoffset<<<dimGrid_se,dimBlock_se>>>(_r,tmp2,_ipk_we,_the_index,numP,numK,i*numK,numK*numsens);
 		
 		//add to result -> without sense 
 		//addcoiltores<<<dimGrid_se,dimBlock_se>>>(_r,tmp1, numK*numsens,i*numK);
@@ -249,15 +243,15 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	
     cudaFree(_r); 
     cudaFree(_img);
-	cudaFree(_sn);
+	  cudaFree(_sn);
 	
     cudaFree(_ipk_we);
     cudaFree(_the_index);
 	    
     cufftDestroy(plan);
     
- //   CUcontext  pctx ;
-   // cuCtxPopCurrent(&pctx);	
+    CUcontext  pctx ;
+    cuCtxPopCurrent(&pctx);	
 }
 
 

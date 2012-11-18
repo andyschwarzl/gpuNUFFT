@@ -113,13 +113,4 @@ elseif working_precision == 2,
     display('starting gridding on GPU (double precision)');
     res = tikreg_cg_reco_gpu_d(double(b_il),double(idx),double(weight),double(ipk.Kd), uint32(bp_vxidx), bp_midx, bp_weight,double([it lambda^2 devnum tol verbose]));
 end;
-fprintf('\n');
-
-
-
-
-
-
-
-
-
+%fprintf('\n');

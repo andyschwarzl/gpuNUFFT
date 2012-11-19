@@ -9,13 +9,6 @@
 #define MIN(X,Y) ((X) < (Y) ? (X) : (Y))
 
 template <typename TType>
-void readMatlabInputArray(const mxArray *prhs[], int input_index, int highest_varying_dim, const char* name,TType** data, int* data_entries)
-{
-	int dummy;
-	readMatlabInputArray<TType>(prhs, input_index, highest_varying_dim,name,data, data_entries,2,&dummy);
-}
-
-template <typename TType>
 void readMatlabInputArray(const mxArray *prhs[], int input_index, int highest_varying_dim, const char* name,TType** data, int* data_entries, int max_nd, int* n_coils)
 {
 	int nd = mxGetNumberOfDimensions(prhs[input_index]); /* get coordinate dimensions */
@@ -83,6 +76,13 @@ void readMatlabInputArray(const mxArray *prhs[], int input_index, int highest_va
 
 		mexPrintf("\n");
 	}
+}
+
+template <typename TType>
+void readMatlabInputArray(const mxArray *prhs[], int input_index, int highest_varying_dim, const char* name,TType** data, int* data_entries)
+{
+	int dummy;
+	readMatlabInputArray<TType>(prhs, input_index, highest_varying_dim,name,data, data_entries,2,&dummy);
 }
 
 template <typename TType>

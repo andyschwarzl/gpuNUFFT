@@ -136,13 +136,28 @@ __global__ void convolutionKernel3( DType2* data,
 	}//sec < sector_count
 }
 
-__global__ void convolutionKernel2( DType2* data, 
-									DType* crds, 
-									CufftType* gdata,
-									int* sectors, 
-									int* sector_centers,
-									int N
-									)
+// ----------------------------------------------------------------------------
+// convolutionKernel: NUFFT^H kernel
+//
+// Performs the gridding step by convolution of sample points with 
+// interpolation function and resampling onto grid. Basic concept based on Zwart
+// et al. 
+//
+// parameters:
+//  * data           : complex input sample points
+//  * crds           : coordinates of data points (x,y,z)
+//  * gdata          : output grid data 
+//  * sectors        : mapping of sample indices according to each sector
+//  * sector_centers : coordinates (x,y,z) of sector centers
+//  * temp_gdata     : temporary grid data
+//  * N              : number of threads
+__global__ void convolutionKernel2(DType2* data, 
+                                   DType* crds, 
+                                   CufftType* gdata,
+                                   int* sectors, 
+                                   int* sector_centers,
+                                   int N
+                                   )
 {
   extern __shared__ DType2 sdata[];//externally managed shared memory
 	__shared__ int sec[THREAD_BLOCK_SIZE];
@@ -268,11 +283,21 @@ __global__ void convolutionKernel2( DType2* data,
 	}//sec < sector_count	
 }
 
+// ----------------------------------------------------------------------------
+// convolutionKernel: NUFFT^H kernel
 //
-// convolve every data point on grid position -> controlled by threadIdx.x .y and .z 
-// shared data holds grid values as software managed cache
+// Performs the gridding step by convolution of sample points with 
+// interpolation function and resampling onto grid. Basic concept based on Zwart
+// et al. 
 //
-//
+// parameters:
+//  * data           : complex input sample points
+//  * crds           : coordinates of data points (x,y,z)
+//  * gdata          : output grid data 
+//  * sectors        : mapping of sample indices according to each sector
+//  * sector_centers : coordinates (x,y,z) of sector centers
+//  * temp_gdata     : temporary grid data
+//  * N              : number of threads
 __global__ void convolutionKernel( DType2* data, 
 							    DType* crds, 
 							    CufftType* gdata,
@@ -416,12 +441,25 @@ void performConvolution( DType2* data_d,
 		printf("...finished with: %s\n", cudaGetErrorString(cudaGetLastError()));
 }
 
+// ----------------------------------------------------------------------------
+// forwardConvolutionKernel: NUFFT kernel
+//
+// Performs the inverse gridding step by convolution of grid points with 
+// interpolation function and resampling onto trajectory. 
+//
+// parameters:
+//  * data           : complex output sample points
+//  * crds           : coordinates of data points (x,y,z)
+//  * gdata          : input grid data 
+//  * sectors        : mapping of sample indices according to each sector
+//  * sector_centers : coordinates (x,y,z) of sector centers
+//  * N              : number of threads
 __global__ void forwardConvolutionKernel( CufftType* data, 
-										  DType* crds, 
-										  CufftType* gdata,
-										  int* sectors, 
-										  int* sector_centers,
-										  int N)
+                                         DType* crds, 
+                                         CufftType* gdata,
+                                         int* sectors, 
+                                         int* sector_centers,
+                                         int N)
 {
 	extern __shared__ CufftType shared_out_data[];//externally managed shared memory
 	__shared__ int sec[THREAD_BLOCK_SIZE];
@@ -467,7 +505,7 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 			k = kmin;			
 			while (k<=kmax && k>=kmin)
 			{
-				kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.grid_width)) - 0.5f;//(k - center_z) *width_inv;
+				kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.grid_width)) - 0.5f;
 				dz_sqr = kz - data_point.z;
 				dz_sqr *= dz_sqr;
 				
@@ -476,7 +514,7 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 					j=jmin;
 					while (j<=jmax && j>=jmin)
 					{
-						jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.grid_width)) - 0.5f;   //(j - center_y) *width_inv;
+						jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.grid_width)) - 0.5f;
 						dy_sqr = jy - data_point.y;
 						dy_sqr *= dy_sqr;
 						if (dy_sqr < GI.radiusSquared)	
@@ -484,7 +522,7 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 							i=imin;								
 							while (i<=imax && i>=imin)
 							{
-								ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.grid_width)) - 0.5f;// (i - center_x) *width_inv;
+								ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.grid_width)) - 0.5f;
 								dx_sqr = ix - data_point.x;
 								dx_sqr *= dx_sqr;
 								if (dx_sqr < GI.radiusSquared)	

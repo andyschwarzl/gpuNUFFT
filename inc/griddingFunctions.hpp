@@ -30,17 +30,15 @@
 #define I0_BETA(__kw,__osr)	(i0(BETA(__kw,__osr)))
 #define kernel(__radius,__kw,__osr) (i0 (BETA(__kw,__osr) * sqrt (1 - sqr(__radius))) / I0_BETA(__kw,__osr))
 
-/*BEGIN Zwart*/
 /**************************************************************************
- *  FROM GRID_UTILS.C
+ *  Lookup table creation extracted from GRID_UTILS.C
  *
  *  Author: Nick Zwart, Dallas Turley, Ken Johnson, Jim Pipe 
  *  Date: 2011 apr 11
  *  Rev: 2011 aug 21
- * ...
+ *  In: grid3_dct_11aug
 */
-/************************************************************************** KERNEL */
-/* 
+/*  KERNEL 
  *	Summary: Allocates the 3D spherically symmetric kaiser-bessel function 
  *	         for kernel table lookup.
  *  

@@ -3,28 +3,51 @@
 #include "cuda_utils.hpp"
 #include "gridding_gpu.hpp"
 #include "cufft_config.hpp"
-/** gridding3D_gpu
-  * forward gridding from image to grid/k-space
-  * TODO
-  * NFFT
-**/
-void gridding3D_gpu(CufftType**	data,			//kspace data array 
-					int			data_count,		//data count, samples per trajectory
-					int			n_coils,		//number of coils 
-					DType*		crds,			//
-					DType2*		imdata,			//
-					int			imdata_count,	//			
-					int			grid_width,		//
-					DType*		kernel,			//
-					int			kernel_count,	//
-					int			kernel_width,	//
-					int*		sectors,		//
-					int			sector_count,	//
-					int*		sector_centers,	//
-					int			sector_width,	//
-					int			im_width,		//
-					DType		osr,			//
-					const GriddingOutput gridding_out)
+
+// ----------------------------------------------------------------------------
+// gridding3D_gpu: NUFFT
+//
+// Inverse gridding implementation - from image to grid/k-space
+// Basic steps: - apodization correction
+//              - zero paddingwith osf
+//              - FFT
+//							- convolution and resampling
+//
+// parameters:
+//	* data		     : output kspace data 
+//  * data_count   : number of samples on trajectory
+//  * n_coils      : number of channels or coils
+//  * crds         : coordinates on trajectory
+//  * imdata       : input image data
+//  * imdata_count : number of image data points
+//  * grid_width   : size of grid 
+//  * kernel       : precomputed convolution kernel as lookup table
+//  * kernel_count : number of kernel lookup table entries
+//  * sectors      : mapping of data indices according to each sector
+//  * sector_count : number of sectors
+//  * sector_centers: coordinates (x,y,z) of sector centers
+//  * sector_width : width of sector 
+//  * im_width     : dimension of image
+//  * osr          : oversampling ratio
+//  * gridding_out : enum indicating how far gridding has to be processed
+//  
+void gridding3D_gpu(CufftType**	data,			
+                    int			data_count,
+                    int			n_coils,
+                    DType*		crds,	
+                    DType2*		imdata,
+                    int			imdata_count,
+                    int			grid_width,
+                    DType*		kernel,
+                    int			kernel_count,
+                    int			kernel_width,
+                    int*		sectors,
+                    int			sector_count,
+                    int*		sector_centers,
+                    int			sector_width,
+                    int			im_width,
+                    DType		osr,
+                    const GriddingOutput gridding_out)
 {
 	showMemoryInfo();
 	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,sector_width,kernel_width,kernel_count,grid_width,im_width,osr,data_count);
@@ -137,31 +160,52 @@ void gridding3D_gpu(CufftType**	data,			//kspace data array
 	free(gi_host);
 }
 
-/** gridding3D_gpu_adj
-  * adjoint gridding from k-space to grid
-  * TODO
-  * known issues: memory can become to a problem when regridding greate matrices (256 and more)
-  * NFFT^H
-**/
-void gridding3D_gpu_adj(DType2*		data,			//kspace data array 
-						int			data_count,		//data count, samples per trajectory
-						int			n_coils,		//number of coils 
-						DType*		crds,			//
-						CufftType**	imdata,			//
-						int			imdata_count,	//			
-						int			grid_width,		//
-						DType*		kernel,			//
-						int			kernel_count,	//
-						int			kernel_width,	//
-						int*		sectors,		//
-						int			sector_count,	//
-						int*		sector_centers,	//
-						int			sector_width,	//
-						int			im_width,		//
-						DType		osr,			//
-						bool		do_comp,
-						DType*  density_comp,
-						const GriddingOutput gridding_out)
+// ----------------------------------------------------------------------------
+// gridding3D_gpu_adj: NUFFT^H
+//
+// Gridding implementation - interpolation from nonuniform k-space data onto 
+//                           oversampled grid based on optimized gridding kernel
+//                           with minimal oversampling ratio (see Beatty et al.)
+//
+// parameters:
+//	* data		     : input kspace data 
+//  * data_count   : number of samples on trajectory
+//  * n_coils      : number of channels or coils
+//  * crds         : coordinate array on trajectory
+//  * imdata       : output image data
+//  * imdata_count : number of image data points
+//  * grid_width   : size of grid 
+//  * kernel       : precomputed convolution kernel as lookup table
+//  * kernel_count : number of kernel lookup table entries
+//  * sectors      : mapping of start and end points of each sector
+//  * sector_count : number of sectors
+//  * sector_centers: coordinates (x,y,z) of sector centers
+//  * sector_width : width of sector 
+//  * im_width     : dimension of image
+//  * osr          : oversampling ratio
+//  * do_comp      : true, if density compensation has to be done
+//  * density_comp : densiy compensation array
+//  * gridding_out : enum indicating how far gridding has to be processed
+//  
+void gridding3D_gpu_adj(DType2*		data,			
+                        int			data_count,
+                        int			n_coils,
+                        DType*		crds,
+                        CufftType**	imdata,
+                        int			imdata_count,
+                        int			grid_width,
+                        DType*		kernel,
+                        int			kernel_count,
+                        int			kernel_width,
+                        int*		sectors,
+                        int			sector_count,
+                        int*		sector_centers,
+                        int			sector_width,
+                        int			im_width,
+                        DType		osr,
+                        bool		do_comp,
+                        DType*  density_comp,
+                        const GriddingOutput gridding_out)
 {
 	assert(sectors != NULL);
 	

@@ -5,7 +5,7 @@ long calculateGrid3KernelSize()
 	return calculateGrid3KernelSize(DEFAULT_OVERSAMPLING_RATIO,DEFAULT_KERNEL_RADIUS);
 }
 
-//calculate kernel density (per grid/kernel unit) 
+//calculate necessary kernel density (per grid/kernel unit) 
 //nearest neighbor with maximum aliasing error
 //of 0.001
 //

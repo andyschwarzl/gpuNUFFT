@@ -2,18 +2,28 @@
 #include "cuda_utils.cuh"
 #include "cuda_utils.hpp"
 
-// convolve every data point on grid position -> controlled by threadIdx.x .y and .z 
-// shared data holds grid values as software managed cache
+// ----------------------------------------------------------------------------
+// convolutionKernel: NUFFT^H kernel
 //
-// 
-__global__ void convolutionKernel( DType2* data, 
-							    DType* crds, 
-							    CufftType* gdata,
-							    int* sectors, 
-								int* sector_centers,
-								DType2* temp_gdata,
-								int N
-								)
+// Performs the gridding step by convolution of sample points with 
+// interpolation function and resampling onto grid. 
+//
+// parameters:
+//  * data           : complex input sample points
+//  * crds           : coordinates of data points (x,y,z)
+//  * gdata          : output grid data 
+//  * sectors        : mapping of sample indices according to each sector
+//  * sector_centers : coordinates (x,y,z) of sector centers
+//  * temp_gdata     : temporary grid data
+//  * N              : number of threads
+__global__ void convolutionKernel(DType2* data, 
+                                  DType* crds, 
+                                  CufftType* gdata,
+                                  int* sectors, 
+                                  int* sector_centers,
+                                  DType2* temp_gdata,
+                                  int N
+                                  )
 {
 	extern __shared__ DType2 sdata[];//externally managed shared memory
 
@@ -197,12 +207,25 @@ void composeOutput(DType2* temp_gdata_d, CufftType* gdata_d, int* sector_centers
 	composeOutputKernel<<<grid_dim,block_dim>>>(temp_gdata_d,gdata_d,sector_centers_d);
 }
 
-__global__ void forwardConvolutionKernel( CufftType* data, 
-										  DType* crds, 
-										  CufftType* gdata,
-										  int* sectors, 
-										  int* sector_centers,
-										  int N)
+// ----------------------------------------------------------------------------
+// forwardConvolutionKernel: NUFFT kernel
+//
+// Performs the inverse gridding step by convolution of grid points with 
+// interpolation function and resampling onto trajectory. 
+//
+// parameters:
+//  * data           : complex output sample points
+//  * crds           : coordinates of data points (x,y,z)
+//  * gdata          : input grid data 
+//  * sectors        : mapping of sample indices according to each sector
+//  * sector_centers : coordinates (x,y,z) of sector centers
+//  * N              : number of threads
+__global__ void forwardConvolutionKernel(CufftType* data, 
+                                         DType*     crds, 
+                                         CufftType* gdata,
+                                         int* sectors, 
+                                         int* sector_centers,
+                                         int N)
 {
 	extern __shared__ CufftType shared_out_data[];//externally managed shared memory
 	

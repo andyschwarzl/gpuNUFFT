@@ -2,14 +2,13 @@
 
 #include "mex.h"
 #include "matrix.h"
-//#include <math.h>
+
 #include <complex>
 #include <vector>
 
 //GRIDDING 3D
 #include "gridding_gpu.hpp"
 
-//#include "fftw3.h"
 #include "cufft.h"
 #include "cuda_runtime.h"
 #include <cuda.h> 
@@ -22,26 +21,24 @@
 #include <string.h>
 
 /*
-From MATLAB doc:
-Arguments
-nlhs Number of expected output mxArrays
-plhs Array of pointers to the expected output mxArrays
-nrhs Number of input mxArrays
-prhs Array of pointers to the input mxArrays. Do not modify any prhs values in your MEX-file. Changing the data in these read-only mxArrays can produce undesired side effects.
+  MATLAB Wrapper for NUFFT^H Operation
+
+	From MATLAB doc:
+	Arguments
+	nlhs Number of expected output mxArrays
+	plhs Array of pointers to the expected output mxArrays
+	nrhs Number of input mxArrays
+	prhs Array of pointers to the input mxArrays. Do not modify any prhs values in your MEX-file. Changing the data in these read-only mxArrays can produce undesired side effects.
 */
 void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 {
 	if (MATLAB_DEBUG)
 		mexPrintf("Starting ADJOINT GRIDDING 3D Function...\n");
   
-    int cuDevice = 0;
+  int cuDevice = 0;
 	cudaGetDevice(&cuDevice);
-	// Create context
-	//CUcontext cuContext;
-	//cuCtxCreate(&cuContext, 0, cuDevice);
-	
 
-//TODO check input params count first!
+	//TODO check input params count first!
 	/*  if(nrhs != 9 ) {
 	printf("\nUsage:\n");
     return;
@@ -50,7 +47,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     return;
 	}*/
 
-    //////////////////////////////////// fetching data from MATLAB
+  // fetching data from MATLAB
 
 	int pcount = 0;  //Parametercounter
     
@@ -89,7 +86,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	
 	if (!mxIsStruct (matParams))
          mexErrMsgTxt ("expects struct containing parameters!");
-    //'im_width', 'osr', 'kernel_width', 'sector_width'
+
 	int im_width = getParamField<int>(matParams,"im_width");
 	DType osr = getParamField<DType>(matParams,"osr"); 
 	int kernel_width = getParamField<int>(matParams,"kernel_width");
@@ -123,7 +120,6 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
 	long im_count = dims_im[1]*dims_im[2]*dims_im[3];
 	
-	//plhs[0] = mxCreateNumericArray(n_dims,(const mwSize*)dims_im,mxGetClassID(prhs[0]),mxREAL);
 	plhs[0] = mxCreateNumericArray(n_dims,dims_im,mxSINGLE_CLASS,mxREAL);
 	
   imdata = (CufftType*)mxGetData(plhs[0]);
@@ -141,11 +137,6 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 		cudaMemGetInfo(&free_mem, &total_mem);
 		mexPrintf("memory usage on device afterwards, free: %lu total: %lu\n",free_mem,total_mem);
 	}
-	//cudaDeviceReset();
-//	cudaDeviceReset();
-     //CUcontext  pctx ;
-     //cuCtxPopCurrent(&pctx);	
-	//mexPrintf("%s\n", cudaGetErrorString(cudaGetLastError()));
 }
 
 

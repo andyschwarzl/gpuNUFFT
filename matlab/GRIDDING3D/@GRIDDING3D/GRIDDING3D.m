@@ -14,13 +14,6 @@ function [res] = gridding3D(k,w,n,osf,wg,sw,imageDim,varargin)
 %         -- 'atomic' (true/false)
 %     res -- gridding operator
 %
-%  Uses optimum Kaiser-Bessel window for a given
-%    oversampling factor and kernel size
-%  Now uses Phil's numbers
-%
-%  extend from John Pauly, 2003, 2005, 2007, 2011
-%  (c)Board of Trustees, Leland Stanford Junior University
-%
 %  A. Schwarzl, Graz University of Technology
 
 if nargin <= 8,

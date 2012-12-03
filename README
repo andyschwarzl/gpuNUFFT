@@ -1,18 +1,42 @@
 INFO:
-GPU 3D regridding library with MATLAB(R) Mexfile output
+-------------------------------------------------------------------------------
+GPU 3D regridding library with MATLAB(R) Mexfile output.
 
-REQUIERMENTS:
+REQUIREMENTS:
+-------------------------------------------------------------------------------
 
-- CMAKE 2.8 or
-- google test framework 1.6
+- CMAKE 2.8
 - MATLAB 2008 or higher
+- (optional) GOOGLE test framework 1.6
 
+CMAKE Options:
+
+- GEN_ATOMIC        : DEFAULT ON, enables fast library using atomic operations
+- WITH_DEBUG        : DEFAULT OFF, enables Command-Line DEBUG output
+- WITH_MATLAB_DEBUG : DEFAULT OFF, enables MATLAB Console DEBUG output
+- GEN_TESTS         : DEFAULT OFF, enables simple unit tests using GOOGLE Test framework
+
+-------------------------------------------------------------------------------
 LINUX:
+-------------------------------------------------------------------------------
 
-build project via cmake 
+build project via cmake, starting from project root directory:
 
+    > mkdir build
+    > cd build
+    > cmake ..
+	> make
+	
+-------------------------------------------------------------------------------
 WINDOWS:
+-------------------------------------------------------------------------------
+build project using cmake, starting from project root directory:
 
-build project using cmake 
+    > mkdir build 
+	> cd build
+	> cmake .. -G "Visual Studio 2008 Win64" 
+    > Build created Solution gridding3D.sln using Visual Studio
 
-
+Ensure that at least a Visual Studio 2008 Express build environment is setup correctly.
+If the library shall run using Win64 check that all necessary Visual Studio Add-ons are
+installed correctly and a Win64 dummy project can be created using VS.

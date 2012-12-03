@@ -1,10 +1,10 @@
-MESSAGE("MEXfile build")
+MESSAGE(STATUS "MEX file")
 
 set_property(GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS 1)
 
 macro( matlab_config )
  if(WIN32)
-    message( "checking MATLAB INC DIR = ${MATLAB_INCLUDE_DIR}" )
+    message(STATUS "checking MATLAB INC DIR = ${MATLAB_INCLUDE_DIR}" )
     #MATLAB_LIBRARIES
     #MATLAB_MEX_LIBRARY
     #MATLAB_MX_LIBRARY
@@ -13,17 +13,16 @@ macro( matlab_config )
     if (CMAKE_SIZEOF_VOID_P MATCHES "8")
 		if (CMAKE_CL_64)
 			set( LIB_DIR win64 )
-			message( "BUILDING FOR 64 bit Windows" ) 
+			message(STATUS "BUILDING FOR 64 bit Windows" ) 
 		else (CMAKE_CL_64)
-			message( "FAILURE: BUILDING NO 64BIT GENERATOR SELECTED!")
-			exit()
+			message(FATAL_ERROR "FAILURE: BUILDING NO 64BIT GENERATOR SELECTED!")
 		endif(CMAKE_CL_64)
     else(CMAKE_SIZEOF_VOID_P MATCHES "8")
         set( LIB_DIR win32 )
-        message( "BUILDING FOR 32 bit Windows" )
+        message(STATUS "BUILDING FOR 32 bit Windows" )
     endif(CMAKE_SIZEOF_VOID_P MATCHES "8")
 
-    SET( MATLAB_ROOT_DIR "C:\\Program Files\\MATLAB\\R2011a" CACHE STRING "")
+    #SET( MATLAB_ROOT_DIR "C:\\Program Files\\MATLAB\\R2011a" CACHE STRING "")
     SET( MATLAB_INCLUDE_DIR "${MATLAB_ROOT_DIR}\\extern\\include" CACHE STRING "" FORCE )
 
     find_library(MATLAB_MX_LIBRARY libmx.lib PATHS ${MATLAB_ROOT_DIR} ${MATLAB_ROOT_DIR}/extern/lib/${LIB_DIR}/microsoft )
@@ -33,7 +32,7 @@ macro( matlab_config )
     SET( MATLAB_ENG_LIBRARY ${MATLAB_ROOT_DIR}/extern/lib/${LIB_DIR}/microsoft CACHE STRING "" FORCE )
 
 else(WIN32)
-    SET (MATLAB_ROOT_DIR "/usr/local/MATLAB/R2010b")
+    #SET (MATLAB_ROOT_DIR "/usr/local/MATLAB/R2010b")
     SET( MATLAB_INCLUDE_DIR "${MATLAB_ROOT_DIR}/extern/include" CACHE STRING "" FORCE )
 
     SET(LIBMEX "libmex.so")
@@ -42,10 +41,10 @@ else(WIN32)
 
     if (CMAKE_SIZEOF_VOID_P MATCHES "8")
         set( MATLAB_LIB_PATHS "${MATLAB_ROOT_DIR}/bin/glnxa64")
-        message( "BUILDING FOR 64 bit Linux" ) 
+        message(STATUS "BUILDING FOR 64 bit Linux" ) 
     else(CMAKE_SIZEOF_VOID_P MATCHES "8")
         set( MATLAB_LIB_PATHS "${MATLAB_ROOT_DIR}/bin/glnx86")
-        message( "BUILDING FOR 32 bit Linux" )
+        message(STATUS "BUILDING FOR 32 bit Linux" )
     endif(CMAKE_SIZEOF_VOID_P MATCHES "8")
 
     FIND_LIBRARY(MATLAB_MEX_LIBRARY ${LIBMEX} ${MATLAB_LIB_PATHS} NO_DEFAULT_PATH)
@@ -62,9 +61,9 @@ endmacro()
 
 matlab_config()
 
-MESSAGE("Using MATLAB MX LIB: ${MATLAB_MX_LIBRARY}")
-MESSAGE("Using MATLAB MEX LIB: ${MATLAB_MEX_LIBRARY}")
-MESSAGE("Using MATLAB INC DIR: ${MATLAB_INCLUDE_DIR}")
+MESSAGE(STATUS "Using MATLAB MX LIB: ${MATLAB_MX_LIBRARY}")
+MESSAGE(STATUS "Using MATLAB MEX LIB: ${MATLAB_MEX_LIBRARY}")
+MESSAGE(STATUS "Using MATLAB INC DIR: ${MATLAB_INCLUDE_DIR}")
 
 INCLUDE_DIRECTORIES(${MATLAB_INCLUDE_DIR})
 
@@ -86,18 +85,18 @@ SET_TARGET_PROPERTIES(${GRID_MEX_FORW_NAME} PROPERTIES PREFIX "" LINKER_LANGUAGE
 #determine mex suffix
 if(WIN32)
   if (CMAKE_SIZEOF_VOID_P MATCHES "8")
-	MESSAGE("set Win 64 suffix")
+	MESSAGE(STATUS "set Win 64 suffix")
 	SET(MEX_SUFFIX .mexw64)
   else(CMAKE_SIZEOF_VOID_P MATCHES "8")
-	MESSAGE("set Win 32 suffix")
+	MESSAGE(STATUS "set Win 32 suffix")
 	SET(MEX_SUFFIX .mexw32)
   endif(CMAKE_SIZEOF_VOID_P MATCHES "8")
 else(UNIX)
   if (CMAKE_SIZEOF_VOID_P MATCHES "8")
-	MESSAGE("set Linux 64 suffix")
+	MESSAGE(STATUS "set Linux 64 suffix")
 	SET(MEX_SUFFIX .mexa64)
   else()
-	MESSAGE("set Linux 32 suffix")
+	MESSAGE(STATUS "set Linux 32 suffix")
     SET(MEX_SUFFIX .mexglx)
   endif(CMAKE_SIZEOF_VOID_P MATCHES "8")
 endif()

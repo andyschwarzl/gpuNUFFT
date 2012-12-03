@@ -20,10 +20,19 @@ SET(PATCH_OUTPUT_DIR ${PROJECT_SOURCE_DIR}/deploy)
 SET(PATCH_OUTPUT_PATH ${PATCH_OUTPUT_DIR}/gridding3D.zip)
 
 #Searching CUDA
-FIND_PACKAGE(CUDA)
+FIND_PACKAGE(CUDA REQUIRED)
 
 #Searching MATLAB
+SET( MATLAB_ROOT_DIR "C:\\Program Files\\MATLAB\\R2011a" CACHE STRING "MATLAB Installation Directory")
+SET( MATLAB_DIR = "${MATLAB_ROOT_DIR}")
+
 FIND_PACKAGE(Matlab)
+
+IF (EXISTS "${MATLAB_ROOT_DIR}")
+  MESSAGE(STATUS "MATLAB Installation found in ${MATLAB_ROOT_DIR}")
+else()
+  MESSAGE(FATAL_ERROR "Please set variable MATLAB_ROOT_DIR correctly!")
+endif()
 
 #Options
 #General DEBUG output 
@@ -62,7 +71,7 @@ if(GEN_ATOMIC)
   SET(CUDA_NVCC_FLAGS "-arch;sm_20;--ptxas-options=-v")
 endif(GEN_ATOMIC)
 
-MESSAGE("setting NVCC FLAGS to: ${CUDA_NVCC_FLAGS}")
+MESSAGE(STATUS "setting NVCC FLAGS to: ${CUDA_NVCC_FLAGS}")
 
 #LIB and MEX-file names
 SET(GRID_LIB_NAME "gridding3D${PREC_SUFFIX}")
@@ -78,7 +87,7 @@ SET(GRID_MEX_ADJ_ATM_NAME "mex_gridding3D_adj_atomic${PREC_SUFFIX}")
 SET(GRID_MEX_FORW_SPARSE_NAME "mex_gridding3D_forw_sparse${PREC_SUFFIX}")
 SET(GRID_MEX_ADJ_SPARSE_NAME "mex_gridding3D_adj_sparse${PREC_SUFFIX}")
 
-MESSAGE("creating lib with name: ${GRID_LIB_NAME}")
+MESSAGE(STATUS "creating lib with name: ${GRID_LIB_NAME}")
 
 CONFIGURE_FILE( ${CMAKE_SOURCE_DIR}/inc/config.hpp.cmake ${CMAKE_SOURCE_DIR}/inc/config.hpp)
 CONFIGURE_FILE( ${CMAKE_SOURCE_DIR}/inc/cufft_config.hpp.cmake ${CMAKE_SOURCE_DIR}/inc/cufft_config.hpp)

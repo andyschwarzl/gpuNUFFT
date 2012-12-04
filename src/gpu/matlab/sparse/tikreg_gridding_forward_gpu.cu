@@ -77,14 +77,14 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     Ipk_we = prhs[pcnt++]; //3...Weight (Y)      
     CufftType *ipk_we = (CufftType*) mxGetData(Ipk_we);
   
-    int numP = dims_ipk[0];//125
-    int numK = dims_ipk[1];//11685
+    const int numP = dims_ipk[0];//125
+    const int numK = dims_ipk[1];//11685
 	
-	//output dimensions
-	const mwSize numdim =3;
-	const mwSize dims_k[] = {2, numK, numsens};
-    
-	int the_index[numP*numK];
+	  //output dimensions
+	  const mwSize numdim =3;
+	  const mwSize dims_k[] = {2, numK, numsens};
+
+	  int *the_index = new int[numP*numK];
     for(int i = 0; i < numP*numK; i++)
         the_index[i] = (int)(ipk_index[i]-1);
 
@@ -241,7 +241,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	
     cudaFree(_ipk_we);
     cudaFree(_the_index);
-	    
+	  free(the_index);
     cufftDestroy(plan);
 
 		//delete the_index;

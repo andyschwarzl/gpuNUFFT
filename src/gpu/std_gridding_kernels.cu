@@ -203,19 +203,26 @@ void performFFTShift(CufftType* gdata_d,
 					 FFTShiftDir shift_dir,
 					 int width)
 {
-	dim3 grid_dim(getOptimalGridDim(width*width,THREAD_BLOCK_SIZE));
-	dim3 block_dim(THREAD_BLOCK_SIZE);
 	int offset= 0;
-
+	int t_width = 0;
 	if (shift_dir == FORWARD)
 	{
 		offset = (int)ceil((DType)(width / (DType)2.0));
+		if (width % 2)
+			t_width = offset - 1;
+		else 
+			t_width = offset;
 	}
 	else
 	{
 		offset = (int)floor((DType)(width / (DType)2.0));
+		t_width = offset;
 	}
-	fftShiftKernel<<<grid_dim,block_dim>>>(gdata_d,offset,width*width*width/2);
+
+	dim3 grid_dim(getOptimalGridDim(width*width,THREAD_BLOCK_SIZE));
+	dim3 block_dim(THREAD_BLOCK_SIZE);
+
+	fftShiftKernel<<<grid_dim,block_dim>>>(gdata_d,offset,width*width*t_width);
 }
 
 __global__ void forwardDeapodizationKernel(DType2* imdata, DType beta, DType norm_val, int N)

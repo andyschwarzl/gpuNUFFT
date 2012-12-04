@@ -23,7 +23,12 @@ SET(PATCH_OUTPUT_PATH ${PATCH_OUTPUT_DIR}/gridding3D.zip)
 FIND_PACKAGE(CUDA REQUIRED)
 
 #Searching MATLAB
-SET( MATLAB_ROOT_DIR "C:\\Program Files\\MATLAB\\R2011a" CACHE STRING "MATLAB Installation Directory")
+if(WIN32)
+	SET( MATLAB_ROOT_DIR "C:\\Program Files\\MATLAB\\R2011a" CACHE STRING "MATLAB Installation Directory")
+else()
+	SET (MATLAB_ROOT_DIR "/usr/local/MATLAB/R2010b")
+endif()
+
 SET( MATLAB_DIR = "${MATLAB_ROOT_DIR}")
 
 FIND_PACKAGE(Matlab)

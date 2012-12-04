@@ -119,7 +119,7 @@ void gridding3D_gpu(CufftType**	data,
 		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
 			printf("error at thread synchronization 3: %s\n",cudaGetErrorString(cudaGetLastError()));
 		// shift image to get correct zero frequency position
-		performFFTShift(gdata_d,FORWARD,gi_host->grid_width);
+		performFFTShift(gdata_d,INVERSE,gi_host->grid_width);
 	
 		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
 			printf("error at thread synchronization 4: %s\n",cudaGetErrorString(cudaGetLastError()));
@@ -339,8 +339,8 @@ void gridding3D_gpu_adj(DType2*		data,
 		}
 		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
 			printf("error at adj thread synchronization 5: %s\n",cudaGetErrorString(cudaGetLastError()));
-		performFFTShift(gdata_d,INVERSE,gi_host->grid_width);
-		
+		performFFTShift(gdata_d,FORWARD,gi_host->grid_width);
+			
 		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
 			printf("error at adj thread synchronization 6: %s\n",cudaGetErrorString(cudaGetLastError()));
 		performCrop(gdata_d,imdata_d,gi_host);

@@ -1,5 +1,5 @@
 function [res] = gridding3D(k,w,n,osf,wg,sw,imageDim,varargin)
-% function m = GRIDDING3D(d,k,w,n,osf,kw,sw,opt)
+% function m = GRIDDING3D(d,k,w,n,osf,kw,sw,imageDim,varargin)
 %
 %     k -- k-trajectory, scaled -0.5 to 0.5
 %          dims: 3 ... x, y and z
@@ -10,8 +10,10 @@ function [res] = gridding3D(k,w,n,osf,wg,sw,imageDim,varargin)
 %     osf -- oversampling factor (usually between 1 and 2)
 %     wg -- kernel width (usually 3 to 7)
 %     sw -- sector width to use
-%     opt -- 'sparse', E operator
-%         -- 'atomic' (true/false)
+%     imageDim -- image dimensions [n n n] 
+%     varargin 
+%        opt  -- 'sparse' + E operator or
+%             -- 'true'/'false' for atomic operation
 %     res -- gridding operator
 %
 %  A. Schwarzl, Graz University of Technology

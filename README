@@ -1,3 +1,7 @@
+gridding3D - GPU Regridding of Radial 3-D MRI data
+
+Andreas Schwarzl - andreas.schwarzl@student.tugraz.at
+-------------------------------------------------------------------------------
 INFO:
 -------------------------------------------------------------------------------
 GPU 3D regridding library with MATLAB(R) Mexfile output.
@@ -30,7 +34,7 @@ build project via cmake, starting from project root directory:
 -------------------------------------------------------------------------------
 WINDOWS:
 -------------------------------------------------------------------------------
-build project using cmake, starting from project root directory:
+build project using cmake or cmake-gui, starting from project root directory:
 
     > mkdir build 
 	> cd build
@@ -40,3 +44,25 @@ build project using cmake, starting from project root directory:
 Ensure that at least a Visual Studio 2008 Express build environment is setup correctly.
 If the library shall run using Win64 check that all necessary Visual Studio Add-ons are
 installed correctly and a Win64 dummy project can be created using VS.
+
+-------------------------------------------------------------------------------
+KNOWN ISSUES:
+-------------------------------------------------------------------------------
+---------------- UNRESOLVED -----------------
+The software performed stable on the test environment described above. 
+However, unresolved problems on different Linux platforms may occur at the use 
+of MATLAB 'clear classes' command, leading to a crash of the MATLAB application. 
+
+----------------  RESOLVED  -----------------
+Invalid MEX-file
+'/home/florian/Documents/MATLAB/functions/gridding_gpu/mex_gridding3D_adj_atomic_f.mexa64':
+/home/florian/Programs/MATLAB/R2012b/bin/glnxa64/../../sys/os/glnxa64/libstdc++.so.6: 
+version `GLIBCXX_3.4.15' not found (required by
+/usr/local/cuda-5.0/lib64/libcudart.so.5.0)
+
+Zur Info, es ist Ubuntu 12.10, CUDA 5.0, gcc hab ich 4.4, 4.6 und 4.7 ausprobiert, Matlab ist 2012b.
+
+--> so, ich habs jetzt glaube ich geloest. Ziemlich bloeder Fehler, Matlab kommt standardmaessig mit einer (aelteren) libstdc++, und man muss es jetzt dazu bringen die neuere, die mit der Distribution mitkommt zu verwenden, und dazu den Link dorthin umleiten: 
+
+/usr/lib/x86_64-linux-gnu/libstdc++.so.6
+

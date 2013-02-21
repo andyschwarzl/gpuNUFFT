@@ -45,6 +45,16 @@ Ensure that at least a Visual Studio 2008 Express build environment is setup cor
 If the library shall run using Win64 check that all necessary Visual Studio Add-ons are
 installed correctly and a Win64 dummy project can be created using VS.
 
+In case of the following compile time error
+
+nvcc fatal   : Visual Studio configuration file '(null)' could not be found for installation at 'C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\x86_amd64/../../..'
+
+you have to manually build a 'vcvars64.bat' file in 'Program Files\Microsoft Visual Studio 10.0\VC\bin\amd64' containing: 
+
+CALL setenv /x64
+
+reference: http://stackoverflow.com/questions/8900617/how-can-i-setup-nvcc-to-use-visual-c-express-2010-x64-from-windows-sdk-7-1
+
 -------------------------------------------------------------------------------
 KNOWN ISSUES:
 -------------------------------------------------------------------------------

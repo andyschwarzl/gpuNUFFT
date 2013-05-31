@@ -20,8 +20,16 @@
 
 #include <string.h>
 
+/** 
+ * MEX file cleanup to reset CUDA Device 
+**/
+void cleanUp() 
+{
+	cudaDeviceReset();
+}
+
 /*
-  MATLAB Wrapper for NUFFT^H Operation
+  MATLAB Wrapper for NUFFT Operation
 
 	From MATLAB doc:
 	Arguments
@@ -35,17 +43,21 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	if (MATLAB_DEBUG)
 		mexPrintf("Starting Forward GRIDDING 3D Function...\n");
 	
-  int cuDevice;
-	cudaGetDevice(&cuDevice);
-	
+  // get cuda context associated to MATLAB 
+  // 
+  int cuDevice = 0;
+  cudaGetDevice(&cuDevice);
+  cudaSetDevice(cuDevice);//check if really necessary
+
+  mexAtExit(cleanUp);
 	//TODO check input params count first!
-	/*  if(nrhs != 9 ) {
-	printf("\nUsage:\n");
-    return;
-	} else if(nlhs>1) {
-	printf("Too many output arguments\n");
-    return;
-	}*/
+	// if(nrhs != 9 ) {
+	//printf("\nUsage:\n");
+    //return;
+//	} else if(nlhs>1) {
+//	printf("Too many output arguments\n");
+ //   return;
+//	}
 
   // fetching data from MATLAB
 
@@ -101,21 +113,22 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	if (MATLAB_DEBUG)
 		mexPrintf("grid width (incl. osr) = %d\n",grid_width);
 	//Output Image
+
 	CufftType* data;
 	const mwSize n_dims = 3;//2 * data_cnt * ncoils, 2 -> Re + Im
 	mwSize dims_data[n_dims];
-	dims_data[0] = 2; /* complex */
-	dims_data[1] = data_entries;
-	dims_data[2] = n_coils;
+	dims_data[0] =(mwSize)2; // complex 
+	dims_data[1] = (mwSize)data_entries;
+	dims_data[2] = (mwSize)n_coils;
 
 	plhs[0] = mxCreateNumericArray(n_dims,dims_data,mxSINGLE_CLASS,mxREAL);
 	
-    data = (CufftType*)mxGetData(plhs[0]);
+	data = (CufftType*)mxGetData(plhs[0]);
 	if (data == NULL)
      mexErrMsgTxt("Could not create output mxArray.\n");
 
 	gridding3D_gpu(&data,data_entries,n_coils,coords,imdata,im_count,grid_width,kernel,kernel_count,kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,CONVOLUTION);
-    cudaThreadSynchronize();	
+  cudaThreadSynchronize();	
 	free(kernel);
 	if (MATLAB_DEBUG)	
 	{

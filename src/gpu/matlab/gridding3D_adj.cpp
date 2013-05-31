@@ -20,6 +20,18 @@
 
 #include <string.h>
 
+
+
+/** 
+ * MEX file cleanup to reset CUDA Device 
+**/
+void cleanUp() 
+{
+	cudaDeviceReset();
+}
+
+
+
 /*
   MATLAB Wrapper for NUFFT^H Operation
 
@@ -34,10 +46,14 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 {
 	if (MATLAB_DEBUG)
 		mexPrintf("Starting ADJOINT GRIDDING 3D Function...\n");
-  
-  int cuDevice = 0;
-	cudaGetDevice(&cuDevice);
 
+  // get cuda context associated to MATLAB 
+  // 
+  int cuDevice = 0;
+  cudaGetDevice(&cuDevice);
+  cudaSetDevice(cuDevice);//check if really necessary
+
+  mexAtExit(cleanUp);
 	//TODO check input params count first!
 	/*  if(nrhs != 9 ) {
 	printf("\nUsage:\n");
@@ -67,7 +83,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	int sector_count;
 	readMatlabInputArray<int>(prhs, pcount++, 1,"sectors",&sectors, &sector_count);
 
-	//Sector centers
+//Sector centers
 	int* sector_centers = NULL;
 	readMatlabInputArray<int>(prhs, pcount++, 3,"sectors-centers",&sector_centers, &sector_count);
 

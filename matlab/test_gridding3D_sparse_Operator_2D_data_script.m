@@ -2,7 +2,7 @@ for (counter = 1:10)
 %% testscript with operator usage
 clear all; 
 close all; clc;
-
+disp(['counter..: ',num2str(counter)]);
 %% add bin to path
 addpath ../bin  
 addpath ../../daten

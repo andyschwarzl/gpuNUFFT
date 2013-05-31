@@ -2,7 +2,6 @@
 %% testscript with operator usage
 clear all; 
 close all; clc;
-
 %% add bin to path
 addpath ../bin  
 addpath ../../daten
@@ -48,11 +47,16 @@ osf = 1.25;
 wg = 3;
 sw = 8;
 w = ones(1,length(k(:)));
-FT = GRIDDING3D(k_traj,w,imwidth,osf,wg,sw,[trimmed_size trimmed_size trimmed_size],'false');
+FT = GRIDDING3D(k_traj,w,imwidth,osf,wg,sw,[trimmed_size trimmed_size trimmed_size],'true');
 %FT = NUFFT3D(k_traj', 1, 1, 0, [nPE,nFE,nFE], 2,n_chn);%cpu ref
 %% generate radial data
 tic
-dataRadial = inversegrid_multicoil_gpu(img_a,FT,2*nPE,numSpokes);
+try
+	dataRadial = inversegrid_multicoil_gpu(img_a,FT,2*nPE,numSpokes);
+size(dataRadial)
+catch E
+	disp(getReport(E))
+end
 inverse_time = toc
 dataRadial = reshape(dataRadial, [2*nPE*numSpokes n_chn]);
 %% density compensation
@@ -69,6 +73,7 @@ dataRadial_dc = dataRadial.*w_mc;
 %% density compensated
 %imgRegrid_kb_dc = FT'*dataRadial_dc;
 %pause;
+imgRegrid_kb_dc = zeros([trimmed_size trimmed_size trimmed_size n_chn]);
 tic
 imgRegrid_kb_dc = regrid_multicoil_gpu(reshape(dataRadial_dc,[size(k),chn]),FT);
 regrid_time = toc
@@ -84,4 +89,5 @@ disp('finished iteration');
 out_file = ['../../daten/results/2D_',num2str(trimmed_size),'_',strrep(num2str(osf),'.','_'),'_',num2str(wg),'_',num2str(slice)];
 save(out_file, 'recon_sos_res','inverse_time','regrid_time');
 disp(['output written to ',out_file]);
+clear all;
 exit;

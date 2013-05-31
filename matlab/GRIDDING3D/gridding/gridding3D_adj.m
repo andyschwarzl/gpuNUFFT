@@ -1,4 +1,7 @@
 function ress = gridding3D_adj(a,bb)
+%init gpu device
+%gpuDevice();
+
 kspace_data_dim = size(bb,2);
 
 if (kspace_data_dim > 1)

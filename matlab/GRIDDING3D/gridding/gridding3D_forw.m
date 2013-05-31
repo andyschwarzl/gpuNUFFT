@@ -1,4 +1,7 @@
 function ress = gridding3D_forw(a,bb)
+%init gpu device
+%gpuDevice();
+
 %bb ... image data
 n_chnls = size(bb,4);
 size(bb);

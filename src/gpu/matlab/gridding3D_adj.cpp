@@ -128,11 +128,11 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	CufftType* imdata = NULL;
 	const mwSize n_dims = 5;//2 * w * h * d * ncoils, 2 -> Re + Im
 	mwSize dims_im[n_dims];
-	dims_im[0] = 2; /* complex */
-	dims_im[1] = im_width;
-	dims_im[2] = im_width;
-	dims_im[3] = im_width;
-	dims_im[4] = n_coils;
+	dims_im[0] = (mwSize)2; /* complex */
+	dims_im[1] = (mwSize)im_width;
+	dims_im[2] = (mwSize)im_width;
+	dims_im[3] = (mwSize)im_width;
+	dims_im[4] = (mwSize)n_coils;
 
 	long im_count = dims_im[1]*dims_im[2]*dims_im[3];
 	

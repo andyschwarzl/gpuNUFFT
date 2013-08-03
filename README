@@ -58,10 +58,12 @@ reference: http://stackoverflow.com/questions/8900617/how-can-i-setup-nvcc-to-us
 -------------------------------------------------------------------------------
 KNOWN ISSUES:
 -------------------------------------------------------------------------------
----------------- UNRESOLVED -----------------
+---------------- RESOLVED -----------------
 The software performed stable on the test environment described above. 
 However, unresolved problems on different Linux platforms may occur at the use 
 of MATLAB 'clear classes' command, leading to a crash of the MATLAB application. 
+
+-> added cudaDeviceReset at mexExit function
 
 ----------------  RESOLVED  -----------------
 Invalid MEX-file

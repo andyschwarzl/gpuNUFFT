@@ -20,7 +20,7 @@
 
 #include <string.h>
 
-
+#include "gridding_operator.hpp"
 
 /** 
  * MEX file cleanup to reset CUDA Device 
@@ -138,9 +138,22 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	
 	plhs[0] = mxCreateNumericArray(n_dims,dims_im,mxSINGLE_CLASS,mxREAL);
 	
-  imdata = (CufftType*)mxGetData(plhs[0]);
+    imdata = (CufftType*)mxGetData(plhs[0]);
 	if (imdata == NULL)
      mexErrMsgTxt("Could not create output mxArray.\n");
+
+	GriddingND::GriddingOperator *griddingOp = new GriddingND::GriddingOperator();
+	griddingOp->setChnCount(n_coils);
+	griddingOp->setDataCount(data_count);
+	griddingOp->setData(data);
+	griddingOp->setKspaceCoords(coords);
+	griddingOp->setDens(density_comp);
+
+	griddingOp->setKSpaceWidth(dims_im[1]);
+	griddingOp->setKSpaceHeight(dims_im[2]);
+	griddingOp->setKSpaceDepth(dims_im[3]);
+
+	griddingOp->performGriddingAdj();
 
 	gridding3D_gpu_adj(data,data_count,n_coils,coords,&imdata,im_count,grid_width,kernel,kernel_count,kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,do_comp,density_comp,DEAPODIZATION);//CONVOLUTION);
     cudaThreadSynchronize();

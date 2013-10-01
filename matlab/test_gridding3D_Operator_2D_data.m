@@ -9,7 +9,7 @@ addpath(genpath('./GRIDDING3D'));
 addpath(genpath('./utils'));
 %% Load data
 load img_brain_4ch;
-load dataRadial;
+load kspaceRadial;
 %load noisy_phantom;
 %load calf_data_cs;
 %%
@@ -52,14 +52,14 @@ FT = GRIDDING3D(k_traj,w,imwidth,osf,wg,sw,[trimmed_size trimmed_size trimmed_si
 
 %% generate radial data
 tic
-%dataRadial = inversegrid_multicoil_gpu(img_a,FT,2*nPE,numSpokes);
+dataRadial = inversegrid_multicoil_gpu(img_a,FT,2*nPE,numSpokes);
 toc
 %dataRadial = reshape(dataRadial, [2*nPE*numSpokes n_chn]);
 %% density compensation
 w = abs(rho);
 w = repmat(w, [1, numSpokes,1]);
-w_mc = repmat(w(:),[1 n_chn]);
-%dataRadial_dc = dataRadial.*w_mc;
+w_mc = reshape(repmat(w(:),[1 n_chn]),[size(w), n_chn]);
+dataRadial_dc = dataRadial.*w_mc;
 %% recon
 %no density compnesation
 %imgRegrid_kb = FT'*dataRadial;

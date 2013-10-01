@@ -29,7 +29,7 @@ add_executable(runUnitTests ${CPU_SOURCES} ../inc/gridding_cpu.hpp)
 target_link_libraries(runUnitTests ${GTEST_LIB} ${GTESTMAIN_LIB})
 set_target_properties(runUnitTests PROPERTIES LINK_FLAGS -lpthread)
 
-cuda_add_executable(runGPUUnitTests ${GPU_SOURCES} ../inc/gridding_gpu.hpp ../inc/gridding_kernels.hpp)
+cuda_add_executable(runGPUUnitTests ${GPU_SOURCES} ../inc/gridding_gpu.hpp ../inc/gridding_operator.hpp ../inc/gridding_kernels.hpp)
 target_link_libraries(runGPUUnitTests ${GRID_LIB_NAME} ${GTEST_LIB} ${GTESTMAIN_LIB})
 
 if(GEN_ATOMIC)

@@ -4,6 +4,8 @@
 
 #include "gtest/gtest.h"
 
+#include "gridding_operator.hpp"
+
 #define epsilon 0.0001f
 
 #define get3DC2lin(_x,_y,_z,_width) ((_x) + (_width) * ( (_y) + (_z) * (_width)))
@@ -432,7 +434,25 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel3nData)
 	sector_centers[sector_cnt++] = 7;
 	sector_centers[sector_cnt++] = 7;
 
-    gridding3D_gpu_adj(data,data_entries,1,coords,&gdata,grid_size,dims_g[1],kern,kernel_entries, kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,false,NULL,CONVOLUTION);
+	GriddingND::GriddingOperator *griddingOp = new GriddingND::GriddingOperator(kernel_width,sector_width,osr);
+	griddingOp->setDataCount(data_entries);
+	griddingOp->setChnCount(1);	
+	griddingOp->setSectorCount(sector_count);
+	griddingOp->setOsf(osr);
+
+	griddingOp->setData(data);
+	griddingOp->setKspaceCoords(coords);
+	griddingOp->setDens(NULL);
+	griddingOp->setSectors((size_t*)sectors);
+	griddingOp->setSectorCenters((size_t*)sector_centers);
+
+	griddingOp->setKSpaceWidth(im_width);
+	griddingOp->setKSpaceHeight(im_width);
+	griddingOp->setKSpaceDepth(im_width);
+
+	griddingOp->performGriddingAdj(&gdata,CONVOLUTION);
+
+    //gridding3D_gpu_adj(data,data_entries,1,coords,&gdata,grid_size,dims_g[1],kern,kernel_entries, kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,false,NULL,CONVOLUTION);
 
 	int index = get3DC2lin(5,5,5,im_width);
 	printf("index to test %d\n",index);

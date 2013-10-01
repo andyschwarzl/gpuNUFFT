@@ -142,20 +142,26 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	if (imdata == NULL)
      mexErrMsgTxt("Could not create output mxArray.\n");
 
-	GriddingND::GriddingOperator *griddingOp = new GriddingND::GriddingOperator();
-	griddingOp->setChnCount(n_coils);
+	GriddingND::GriddingOperator *griddingOp = new GriddingND::GriddingOperator(kernel_width,sector_width,osr);
 	griddingOp->setDataCount(data_count);
+	griddingOp->setChnCount(n_coils);	
+	griddingOp->setSectorCount(sector_count);
+	griddingOp->setOsf(osr);
+
 	griddingOp->setData(data);
 	griddingOp->setKspaceCoords(coords);
 	griddingOp->setDens(density_comp);
+	griddingOp->setSectors((size_t*)sectors);
+	griddingOp->setSectorCenters((size_t*)sector_centers);
 
 	griddingOp->setKSpaceWidth(dims_im[1]);
 	griddingOp->setKSpaceHeight(dims_im[2]);
 	griddingOp->setKSpaceDepth(dims_im[3]);
 
-	griddingOp->performGriddingAdj();
+	griddingOp->performGriddingAdj(&imdata);
 
-	gridding3D_gpu_adj(data,data_count,n_coils,coords,&imdata,im_count,grid_width,kernel,kernel_count,kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,do_comp,density_comp,DEAPODIZATION);//CONVOLUTION);
+	//gridding3D_gpu_adj(data,data_count,n_coils,coords,&imdata,im_count,grid_width,kernel,kernel_count,kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,do_comp,density_comp,DEAPODIZATION);//CONVOLUTION);
+
     cudaThreadSynchronize();
 	free(kernel);
 	

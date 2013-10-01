@@ -440,7 +440,7 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel3nData)
 	griddingOp->setSectorCount(sector_count);
 	griddingOp->setOsf(osr);
 
-	griddingOp->setData(data);
+	//griddingOp->setData(data);
 	griddingOp->setKspaceCoords(coords);
 	griddingOp->setDens(NULL);
 	griddingOp->setSectors((size_t*)sectors);
@@ -450,7 +450,7 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel3nData)
 	griddingOp->setKSpaceHeight(im_width);
 	griddingOp->setKSpaceDepth(im_width);
 
-	griddingOp->performGriddingAdj(&gdata,CONVOLUTION);
+	griddingOp->performGriddingAdj(data,&gdata,CONVOLUTION);
 
     //gridding3D_gpu_adj(data,data_entries,1,coords,&gdata,grid_size,dims_g[1],kern,kernel_entries, kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,false,NULL,CONVOLUTION);
 

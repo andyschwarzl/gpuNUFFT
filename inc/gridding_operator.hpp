@@ -62,8 +62,12 @@ namespace GriddingND
 		// OPERATIONS
 
 		//adjoint gridding
-		void performGriddingAdj(CufftType** imgData);
-		void performGriddingAdj(CufftType** imgData, GriddingOutput griddingOut);
+		void performGriddingAdj(DType2* kspaceData, CufftType** imgData);
+		void performGriddingAdj(DType2* kspaceData, CufftType** imgData, GriddingOutput griddingOut);
+
+		//forward gridding
+		void performForwardGridding(DType2* imgData, CufftType** kspaceData);
+		void performForwardGridding(DType2* imgData, CufftType** kspaceData, GriddingOutput griddingOut);
 
 	private:
 		

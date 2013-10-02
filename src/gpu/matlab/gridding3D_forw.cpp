@@ -20,6 +20,8 @@
 
 #include <string.h>
 
+#include "gridding_operator.hpp"
+
 /** 
  * MEX file cleanup to reset CUDA Device 
 **/
@@ -127,8 +129,27 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	if (data == NULL)
      mexErrMsgTxt("Could not create output mxArray.\n");
 
-	gridding3D_gpu(&data,data_entries,n_coils,coords,imdata,im_count,grid_width,kernel,kernel_count,kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,CONVOLUTION);
-    cudaThreadSynchronize();	
+	GriddingND::GriddingOperator *griddingOp = new GriddingND::GriddingOperator(kernel_width,sector_width,osr);
+	griddingOp->setDataCount(data_entries);
+	griddingOp->setChnCount(n_coils);	
+	griddingOp->setSectorCount(sector_count);
+	griddingOp->setOsf(osr);
+
+	//griddingOp->setData(data);
+	griddingOp->setKspaceCoords(coords);
+//	griddingOp->setDens(density_comp);
+	griddingOp->setSectors((size_t*)sectors);
+	griddingOp->setSectorCenters((size_t*)sector_centers);
+
+	griddingOp->setKSpaceWidth(im_width);
+	griddingOp->setKSpaceHeight(im_width);
+	griddingOp->setKSpaceDepth(im_width);
+
+	griddingOp->performForwardGridding(imdata,&data);
+
+	//gridding3D_gpu(&data,data_entries,n_coils,coords,imdata,im_count,grid_width,kernel,kernel_count,kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,CONVOLUTION);
+    
+	cudaThreadSynchronize();	
 	free(kernel);
 	if (MATLAB_DEBUG)	
 	{

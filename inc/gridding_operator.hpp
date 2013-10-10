@@ -6,6 +6,13 @@
 
 namespace GriddingND
 {
+	template <typename T>
+	struct Array
+	{
+		size_t count;
+		T* data;
+	};
+
 	struct KSpaceDim
 	{
 		size_t width;
@@ -20,7 +27,6 @@ namespace GriddingND
 			chnCount(1), frameCount(1)
 		{
 		};
-
 
 		GriddingOperator(size_t kernelWidth, size_t sectorWidth, DType osf): 
 		chnCount(1), frameCount(1), osf(osf), kernelWidth(kernelWidth), sectorWidth(sectorWidth)
@@ -52,12 +58,18 @@ namespace GriddingND
 		void setKSpaceWidth(size_t width)	{this->kspaceDim.width = width;};
 		void setKSpaceHeight(size_t height)	{this->kspaceDim.height = height;};
 		void setKSpaceDepth(size_t depth)	{this->kspaceDim.depth = depth;};
+		
+		void setKernelWidth(size_t kernelWidth)	{this->kernelWidth= kernelWidth;};
+		void setSectorWidth(size_t sectorWidth)	{this->sectorWidth= sectorWidth;};
 
 		// GETTER
 		DType*	getKspaceCoords()	{return this->kspaceCoords;};
 		DType2* getData()			{return this->data;};
 		DType2* getSens()			{return this->sens;};
 		DType*	getDens()			{return this->dens;};
+
+		size_t getKernelWidth()		{return this->kernelWidth;};
+		size_T getSectorWidth()		{return this->sectorWidth;};
 
 		// OPERATIONS
 
@@ -94,8 +106,6 @@ namespace GriddingND
 
 		DType *kernel;
 
-
-
 		// simple array
 		// dimensions: n dimensions * dataCount
 		DType  *kspaceCoords;
@@ -122,7 +132,9 @@ namespace GriddingND
 		// oversampling factor
 		DType osf;
 		
+
 		size_t kernelWidth;
+
 		size_t sectorWidth;
 	};
 }

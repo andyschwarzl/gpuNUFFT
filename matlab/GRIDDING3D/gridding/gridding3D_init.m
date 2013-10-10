@@ -21,14 +21,25 @@ v = v +1;
 
 sector_data_cnt = zeros(1,sector_dim+1);
 cnt = 0;
+max_cnt = 512;
+offset=0;
 sector_data_cnt(1) = 0;
 for b=1:sector_dim+1
     while (cnt < length(v) && b == int32(v(cnt+1)))
         cnt = cnt +1;
+	%check if sector is densely filled
+        %and separate 
+        if (cnt - sector_data_cnt(b+offset)) >= max_cnt 
+            sector_data_cnt(b+1+offset)=cnt;
+            sector_centers = [sector_centers(1:3*(b+offset)) sector_centers(3*(b+offset)-2:3*(b+offset)) sector_centers(3*(b+offset)+1:end)];
+            offset = offset + 1;
+        end
     end
-    sector_data_cnt(b+1)=cnt;
+    sector_data_cnt(b+1+offset)=cnt;
 end
 res.sector_data_cnt = sector_data_cnt;
+sector_dim = sector_dim + offset;
+
 %sector_data_cnt
 % calculate indices of data elements in order to sort them
 data_ind = i-1;

@@ -14,7 +14,7 @@ load img_brain_4ch;
 %load calf_data_cs;
 %%
 slice=32;
-trimmed_size = 96;
+trimmed_size = 256;
 img = img(128-trimmed_size/2+1:128+trimmed_size/2,128-trimmed_size/2+1:128+trimmed_size/2,:);
 %%
 n_chn = 4;

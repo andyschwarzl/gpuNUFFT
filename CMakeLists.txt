@@ -24,8 +24,12 @@ FIND_PACKAGE(CUDA REQUIRED)
 
 #Searching MATLAB
 # for Windows something like 
-   SET(MATLAB_ROOT_DIR "C:\\Program Files\\MATLAB\\R2011a" CACHE STRING "MATLAB Installation Directory")
-#   SET(MATLAB_ROOT_DIR "/usr/local/MATLAB/R2010b" CACHE STRING "MATLAB Installation Directory")
+
+if(WIN32)
+  SET(MATLAB_ROOT_DIR "C:\\Program Files\\MATLAB\\R2011a" CACHE STRING "MATLAB Installation Directory")
+elseif(UNIX)
+  SET(MATLAB_ROOT_DIR "/usr/local/MATLAB/R2010b" CACHE STRING "MATLAB Installation Directory")
+endif()
 
 SET( MATLAB_DIR = "${MATLAB_ROOT_DIR}")
 
@@ -104,7 +108,8 @@ SET(GRIDDING_INCLUDE ${GRIDDING_INC_DIR}/cuda_utils.hpp
 					 ${GRIDDING_INC_DIR}/config.hpp
 					 ${GRIDDING_INC_DIR}/griddingFunctions.hpp
 					 ${GRIDDING_INC_DIR}/gridding_kernels.hpp
-					 ${GRIDDING_INC_DIR}/gridding_operator.hpp)
+                     ${GRIDDING_INC_DIR}/gridding_operator.hpp
+                     ${GRIDDING_INC_DIR}/gridding_operator_factory.hpp)
 					 
 SET(MATLAB_HELPER_INCLUDE ${GRIDDING_INC_DIR}/matlab_helper.h)
 SET(CONFIG_INCLUDE ${GRIDDING_INC_DIR}/config.hpp ${GRIDDING_INC_DIR}/cufft_config.hpp)

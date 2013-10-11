@@ -30,8 +30,7 @@ namespace GriddingND
       }
     public:
 
-        template <typename T>
-        GriddingOperator* createGriddingOperator(Array<T> kSpaceData, size_t kernelWidth, size_t sectorWidth, DType osf);
+        GriddingOperator* createGriddingOperator(Array<DType> kSpaceData, size_t kernelWidth, size_t sectorWidth, DType osf);
 
 		// SETTER 
 		
@@ -39,13 +38,8 @@ namespace GriddingND
 		
 		// OPERATIONS
 
-        static GriddingOperatorFactory* getInstance()
-        {
-          if (instance == NULL)
-            instance = new GriddingOperatorFactory();
-          return instance;
-        }
-
+        static GriddingOperatorFactory* getInstance();
+        
 	private:
         static GriddingOperatorFactory* instance;
 		

@@ -4,6 +4,8 @@
 #include "config.hpp"
 #include "gridding_gpu.hpp"
 
+#define DEFAULT_VALUE(a) ((a == 0) ? 1 : a)
+
 namespace GriddingND
 {
     struct Dimension
@@ -27,7 +29,7 @@ namespace GriddingND
 
         size_t count()
         {
-           return dim.width * dim.height * dim.depth * dim.channels* dim.frames;
+           return DEFAULT_VALUE(dim.width) * DEFAULT_VALUE(dim.height) * DEFAULT_VALUE(dim.depth) * DEFAULT_VALUE(dim.channels) * DEFAULT_VALUE(dim.frames);
         }
 	};
 

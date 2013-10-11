@@ -2,11 +2,18 @@
 #include "gridding_operator_factory.hpp"
 #include <iostream>
 
-static GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddingOperator()
+
+GriddingND::GriddingOperatorFactory* GriddingND::GriddingOperatorFactory::instance = NULL;
+
+
+template <typename T>
+GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddingOperator(GriddingND::Array<T> kSpaceCoords, size_t kernelWidth, size_t sectorWidth, DType osf)
 {
-	GriddingND::GriddingOperator *griddingOp = new GriddingND::GriddingOperator(kernel_width,sector_width,osr);
+    GriddingND::GriddingOperator *griddingOp = new GriddingND::GriddingOperator(kernelWidth,sectorWidth,osf);
 	
-	griddingOp->setDataCount(data_entries);
+    //griddingOp->setKspaceCoords(kSpaceCoords);
+
+    /*griddingOp->setDataCount(data_entries);
 
 	griddingOp->setChnCount(n_coils);	
 
@@ -24,7 +31,7 @@ static GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::create
 
 	griddingOp->setKSpaceHeight(im_width);
 
-	griddingOp->setKSpaceDepth(im_width);
+    griddingOp->setKSpaceDepth(im_width);*/
 
 	return griddingOp;
 }

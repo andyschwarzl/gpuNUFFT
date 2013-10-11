@@ -6,18 +6,29 @@
 
 namespace GriddingND
 {
-	template <typename T>
+    struct Dimension
+    {
+        Dimension():
+            width(0),height(0),depth(0),channels(0),frames(0)
+        {}
+
+        size_t width  ;
+        size_t height ;
+        size_t depth  ;
+        size_t channels ;
+        size_t frames ;
+    };
+
+    template <typename T>
 	struct Array
 	{
-		size_t count;
-		T* data;
-	};
+        T* data;
+        Dimension dim;
 
-	struct KSpaceDim
-	{
-		size_t width;
-		size_t height;
-		size_t depth;
+        size_t count()
+        {
+           return dim.width * dim.height * dim.depth * dim.channels* dim.frames;
+        }
 	};
 
 	class GriddingOperator 
@@ -42,31 +53,27 @@ namespace GriddingND
         }
 
 		// SETTER 
-                void setDataCount(size_t dataCount)	{this->dataCount = dataCount;}
-                void setChnCount(size_t chnCount)	{this->chnCount = chnCount;}
-                void setFrameCount(size_t frameCount)	{this->frameCount = frameCount;}
-                void setSectorCount(size_t sectorCount)	{this->sectorCount = sectorCount;}
-                void setOsf(DType osf)			{this->osf = osf;}
+        void setDataCount(size_t dataCount)	{this->dataCount = dataCount;}
+        void setChnCount(size_t chnCount)	{this->chnCount = chnCount;}
+        void setFrameCount(size_t frameCount)	{this->frameCount = frameCount;}
+        void setSectorCount(size_t sectorCount)	{this->sectorCount = sectorCount;}
+        void setOsf(DType osf)			{this->osf = osf;}
 
-                void setKspaceCoords(DType *kspaceCoords)	{this->kspaceCoords = kspaceCoords;}
-                void setData(DType2 *data)		{this->data = data;}
-                void setSens(DType2 *sens)		{this->sens = sens;}
-                void setDens(DType *dens)		{this->dens = dens;}
-                void setSectorCenters(size_t *sectorCenters)	{this->sectorCenters = sectorCenters;}
-                void setSectors(size_t *sectors)		{this->sectors = sectors;}
-
-                void setKSpaceWidth(size_t width)	{this->kspaceDim.width = width;}
-                void setKSpaceHeight(size_t height)	{this->kspaceDim.height = height;}
-                void setKSpaceDepth(size_t depth)	{this->kspaceDim.depth = depth;}
+        void setKspaceCoords(Array<DType> kSpaceCoords)	{this->kSpaceCoords = kSpaceCoords;}
+        void setData(DType2 *data)		{this->data = data;}
+        void setSens(DType2 *sens)		{this->sens = sens;}
+        void setDens(DType *dens)		{this->dens = dens;}
+        void setSectorCenters(size_t *sectorCenters)	{this->sectorCenters = sectorCenters;}
+        void setSectors(size_t *sectors)		{this->sectors = sectors;}
 
 		// GETTER
-                DType*	getKspaceCoords()	{return this->kspaceCoords;}
-                DType2* getData()			{return this->data;}
-                DType2* getSens()			{return this->sens;}
-                DType*	getDens()			{return this->dens;}
+        Array<DType>  getKspaceCoords()	{return this->kSpaceCoords;}
+        DType2* getData()			{return this->data;}
+        DType2* getSens()			{return this->sens;}
+        DType*	getDens()			{return this->dens;}
 
-		size_t getKernelWidth()		{return this->kernelWidth;};
-		size_T getSectorWidth()		{return this->sectorWidth;};
+        size_t getKernelWidth()		{return this->kernelWidth;}
+        size_t getSectorWidth()		{return this->sectorWidth;}
 
 		// OPERATIONS
 
@@ -80,12 +87,9 @@ namespace GriddingND
 
 	private:
 		
-                size_t getImgCount() {return kspaceDim.width * kspaceDim.height * kspaceDim.depth;}
-                size_t getGridWidth() {return (size_t)(kspaceDim.width * osf);}
-                bool applyDensComp(){return this->dens != NULL;}
-
-		// x y [z], image dimension
-		KSpaceDim kspaceDim;
+        size_t getImgCount() {return kSpaceCoords.count();}
+        size_t getGridWidth() {return (size_t)(kSpaceCoords.dim.width * osf);}
+        bool applyDensComp(){return this->dens != NULL;}
 
 		// n, aka trajectory length
 		size_t dataCount;
@@ -105,7 +109,7 @@ namespace GriddingND
 
 		// simple array
 		// dimensions: n dimensions * dataCount
-		DType  *kspaceCoords;
+        Array<DType> kSpaceCoords;
 
 		// complex array
 		// dimensions: dataCount * chnCount * frameCount

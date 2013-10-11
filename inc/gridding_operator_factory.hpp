@@ -16,21 +16,22 @@ namespace GriddingND
 	// * reuse of previously calculated mapping
 	// 
 	// T defines if the Factory works on 
-	template <typename T>
 	class GriddingOperatorFactory
 	{
-	public:
-		GriddingOperatorFactory()
-		{
+    protected:
+      GriddingOperatorFactory()
+      {
 
-		};
+      }
 
-		~GriddingOperatorFactory()
-		{
+      ~GriddingOperatorFactory()
+      {
+        delete instance;
+      }
+    public:
 
-		};
-
-		static GriddingOperator* createGriddingOperator(Array<T> kSpaceData, size_t kernelWidth, size_t sectorWidth, DType osf);
+        template <typename T>
+        GriddingOperator* createGriddingOperator(Array<T> kSpaceData, size_t kernelWidth, size_t sectorWidth, DType osf);
 
 		// SETTER 
 		
@@ -38,10 +39,18 @@ namespace GriddingND
 		
 		// OPERATIONS
 
+        static GriddingOperatorFactory* getInstance()
+        {
+          if (instance == NULL)
+            instance = new GriddingOperatorFactory();
+          return instance;
+        }
+
 	private:
+        static GriddingOperatorFactory* instance;
 		
-		
-	};
+    };
+
 }
 
 #endif //GRIDDING_OPERATOR_FACTORY_H_INCLUDED

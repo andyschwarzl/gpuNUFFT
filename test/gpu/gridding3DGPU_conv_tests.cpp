@@ -4,7 +4,8 @@
 
 #include "gtest/gtest.h"
 
-#include "gridding_operator.hpp"
+#include "gridding_operator_factory.hpp"
+
 
 #define epsilon 0.0001f
 
@@ -434,21 +435,30 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel3nData)
 	sector_centers[sector_cnt++] = 7;
 	sector_centers[sector_cnt++] = 7;
 
-	GriddingND::GriddingOperator *griddingOp = new GriddingND::GriddingOperator(kernel_width,sector_width,osr);
-	griddingOp->setDataCount(data_entries);
+    GriddingND::Array<DType> kSpaceData;
+    kSpaceData.data = coords;
+    kSpaceData.dim.width  = im_width;
+    kSpaceData.dim.height = im_width;
+    kSpaceData.dim.depth  = im_width;
+
+    GriddingND::GriddingOperator *griddingOp = new GriddingND::GriddingOperator(kernel_width,sector_width,osr);
+
+    //GriddingND::GriddingOperator *griddingOp = GriddingND::GriddingOperatorFactory::getInstance()->createGriddingOperator<DType>(kSpaceData,kernel_width,sector_width,osr);
+
+    griddingOp->setDataCount(data_entries);
 	griddingOp->setChnCount(1);	
 	griddingOp->setSectorCount(sector_count);
 	griddingOp->setOsf(osr);
 
 	//griddingOp->setData(data);
-	griddingOp->setKspaceCoords(coords);
+    //griddingOp->setKspaceCoords(coords);
 	griddingOp->setDens(NULL);
 	griddingOp->setSectors((size_t*)sectors);
 	griddingOp->setSectorCenters((size_t*)sector_centers);
 
-	griddingOp->setKSpaceWidth(im_width);
-	griddingOp->setKSpaceHeight(im_width);
-	griddingOp->setKSpaceDepth(im_width);
+    //griddingOp->setKSpaceWidth(im_width);
+    //griddingOp->setKSpaceHeight(im_width);
+    //griddingOp->setKSpaceDepth(im_width);
 
 	griddingOp->performGriddingAdj(data,&gdata,CONVOLUTION);
 

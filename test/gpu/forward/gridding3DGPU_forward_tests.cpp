@@ -5,7 +5,7 @@
 
 #include "gtest/gtest.h"
 
-#include "gridding_operator.hpp"
+#include "gridding_operator_factory.hpp"
 
 #define epsilon 0.0001f
 
@@ -71,21 +71,23 @@ TEST(TestGPUGriddingForwardConv,KernelCall1Sector)
 	sector_centers[2] = 5;*/
 	int sector_centers[3 * sector_count] = {4,4,4,4,4,12,4,4,20,4,4,28,4,4,36,4,12,4,4,12,12,4,12,20,4,12,28,4,12,36,4,20,4,4,20,12,4,20,20,4,20,28,4,20,36,4,28,4,4,28,12,4,28,20,4,28,28,4,28,36,4,36,4,4,36,12,4,36,20,4,36,28,4,36,36,12,4,4,12,4,12,12,4,20,12,4,28,12,4,36,12,12,4,12,12,12,12,12,20,12,12,28,12,12,36,12,20,4,12,20,12,12,20,20,12,20,28,12,20,36,12,28,4,12,28,12,12,28,20,12,28,28,12,28,36,12,36,4,12,36,12,12,36,20,12,36,28,12,36,36,20,4,4,20,4,12,20,4,20,20,4,28,20,4,36,20,12,4,20,12,12,20,12,20,20,12,28,20,12,36,20,20,4,20,20,12,20,20,20,20,20,28,20,20,36,20,28,4,20,28,12,20,28,20,20,28,28,20,28,36,20,36,4,20,36,12,20,36,20,20,36,28,20,36,36,28,4,4,28,4,12,28,4,20,28,4,28,28,4,36,28,12,4,28,12,12,28,12,20,28,12,28,28,12,36,28,20,4,28,20,12,28,20,20,28,20,28,28,20,36,28,28,4,28,28,12,28,28,20,28,28,28,28,28,36,28,36,4,28,36,12,28,36,20,28,36,28,28,36,36,36,4,4,36,4,12,36,4,20,36,4,28,36,4,36,36,12,4,36,12,12,36,12,20,36,12,28,36,12,36,36,20,4,36,20,12,36,20,20,36,20,28,36,20,36,36,28,4,36,28,12,36,28,20,36,28,28,36,28,36,36,36,4,36,36,12,36,36,20,36,36,28,36,36,36};
 
-	GriddingND::GriddingOperator *griddingOp = new GriddingND::GriddingOperator(kernel_width,sector_width,osr);
-	griddingOp->setDataCount(data_entries);
+
+    GriddingND::Array<DType> kSpaceData;
+    kSpaceData.data = coords;
+    kSpaceData.dim.width  = im_width;
+    kSpaceData.dim.height = im_width;
+    kSpaceData.dim.depth  = im_width;
+
+    //GriddingND::GriddingOperator *griddingOp = new GriddingND::GriddingOperator(kernel_width,sector_width,osr);
+    GriddingND::GriddingOperator *griddingOp = GriddingND::GriddingOperatorFactory::getInstance()->createGriddingOperator(kSpaceData,kernel_width,sector_width,osr);
+
+    griddingOp->setDataCount(data_entries);
 	griddingOp->setChnCount(1);	
 	griddingOp->setSectorCount(sector_count);
 	griddingOp->setOsf(osr);
 
-	//griddingOp->setData(data);
-	griddingOp->setKspaceCoords(coords);
-//	griddingOp->setDens(density_comp);
 	griddingOp->setSectors((size_t*)sectors);
 	griddingOp->setSectorCenters((size_t*)sector_centers);
-
-	griddingOp->setKSpaceWidth(im_width);
-	griddingOp->setKSpaceHeight(im_width);
-	griddingOp->setKSpaceDepth(im_width);
 
 	griddingOp->performForwardGridding(im_data,&data);
 

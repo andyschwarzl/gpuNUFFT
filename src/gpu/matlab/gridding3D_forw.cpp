@@ -20,7 +20,7 @@
 
 #include <string.h>
 
-#include "gridding_operator.hpp"
+#include "gridding_operator_factory.hpp"
 
 /** 
  * MEX file cleanup to reset CUDA Device 
@@ -129,21 +129,24 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	if (data == NULL)
      mexErrMsgTxt("Could not create output mxArray.\n");
 
-	GriddingND::GriddingOperator *griddingOp = new GriddingND::GriddingOperator(kernel_width,sector_width,osr);
+    GriddingND::Array<DType> kSpaceData;
+    kSpaceData.data = coords;
+    kSpaceData.dim.width  = im_width;
+    kSpaceData.dim.height = im_width;
+    kSpaceData.dim.depth  = im_width;
+
+    GriddingND::GriddingOperator *griddingOp = GriddingND::GriddingOperatorFactory::getInstance()->createGriddingOperator(kSpaceData,kernel_width,sector_width,osr);
+    //GriddingND::GriddingOperator *griddingOp = new GriddingND::GriddingOperator(kernel_width,sector_width,osr);
 	griddingOp->setDataCount(data_entries);
 	griddingOp->setChnCount(n_coils);	
 	griddingOp->setSectorCount(sector_count);
 	griddingOp->setOsf(osr);
 
 	//griddingOp->setData(data);
-	griddingOp->setKspaceCoords(coords);
-//	griddingOp->setDens(density_comp);
+    //griddingOp->setKspaceCoords(coords);
+    //griddingOp->setDens(density_comp);
 	griddingOp->setSectors((size_t*)sectors);
 	griddingOp->setSectorCenters((size_t*)sector_centers);
-
-	griddingOp->setKSpaceWidth(im_width);
-	griddingOp->setKSpaceHeight(im_width);
-	griddingOp->setKSpaceDepth(im_width);
 
 	griddingOp->performForwardGridding(imdata,&data);
 

@@ -149,10 +149,13 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     kSpaceData.dim.height = dims_im[2];
     kSpaceData.dim.depth  = dims_im[3];
 
+	GriddingND::Array<DType2> dataArray;
+	dataArray.data = data;
+	dataArray.dim.length = data_count;
+	dataArray.dim.channels = n_coils;
+
     //GriddingND::GriddingOperator *griddingOp = new GriddingND::GriddingOperator(kernel_width,sector_width,osr);
     GriddingND::GriddingOperator *griddingOp = GriddingND::GriddingOperatorFactory::getInstance()->createGriddingOperator(kSpaceData,kernel_width,sector_width,osr);
-	griddingOp->setDataCount(data_count);
-	griddingOp->setChnCount(n_coils);	
 	griddingOp->setSectorCount(sector_count);
 	griddingOp->setOsf(osr);
 
@@ -162,7 +165,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	griddingOp->setSectors((size_t*)sectors);
 	griddingOp->setSectorCenters((size_t*)sector_centers);
 
-	griddingOp->performGriddingAdj(data,&imdata);
+	griddingOp->performGriddingAdj(dataArray,&imdata);
 
 	//gridding3D_gpu_adj(data,data_count,n_coils,coords,&imdata,im_count,grid_width,kernel,kernel_count,kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,do_comp,density_comp,DEAPODIZATION);//CONVOLUTION);
 

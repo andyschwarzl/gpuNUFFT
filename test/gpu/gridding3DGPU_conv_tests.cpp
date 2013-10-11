@@ -445,10 +445,13 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel3nData)
 
     GriddingND::GriddingOperator *griddingOp = GriddingND::GriddingOperatorFactory::getInstance()->createGriddingOperator(kSpaceData,kernel_width,sector_width,osr);
 
-    griddingOp->setDataCount(data_entries);
-	griddingOp->setChnCount(1);	
 	griddingOp->setSectorCount(sector_count);
 	griddingOp->setOsf(osr);
+
+	GriddingND::Array<DType2> dataArray;
+	dataArray.data = data;
+	dataArray.dim.length = data_entries;
+	dataArray.dim.channels = 1;
 
 	//griddingOp->setData(data);
     //griddingOp->setKspaceCoords(coords);
@@ -460,7 +463,7 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel3nData)
     //griddingOp->setKSpaceHeight(im_width);
     //griddingOp->setKSpaceDepth(im_width);
 
-	griddingOp->performGriddingAdj(data,&gdata,CONVOLUTION);
+	griddingOp->performGriddingAdj(dataArray,&gdata,CONVOLUTION);
 
     //gridding3D_gpu_adj(data,data_entries,1,coords,&gdata,grid_size,dims_g[1],kern,kernel_entries, kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,false,NULL,CONVOLUTION);
 

@@ -100,7 +100,7 @@ CONFIGURE_FILE( ${CMAKE_SOURCE_DIR}/inc/config.hpp.cmake ${CMAKE_SOURCE_DIR}/inc
 CONFIGURE_FILE( ${CMAKE_SOURCE_DIR}/inc/cufft_config.hpp.cmake ${CMAKE_SOURCE_DIR}/inc/cufft_config.hpp)
 
 #Include dirs
-include_directories (inc)
+include_directories(inc)
 SET(GRIDDING_INC_DIR ${CMAKE_SOURCE_DIR}/inc)
 SET(GRIDDING_INCLUDE ${GRIDDING_INC_DIR}/cuda_utils.hpp 
 					 ${GRIDDING_INC_DIR}/cuda_utils.cuh 

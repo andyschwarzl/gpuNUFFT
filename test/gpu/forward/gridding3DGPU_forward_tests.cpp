@@ -82,6 +82,13 @@ TEST(TestGPUGriddingForwardConv,KernelCall1Sector)
 	dataArray.data = data;
 	dataArray.dim.length = data_entries;
 
+	GriddingND::Array<DType2> im_dataArray;
+	im_dataArray.data = im_data;
+	im_dataArray.dim.width = im_width;
+	im_dataArray.dim.height = im_width;
+	im_dataArray.dim.depth = im_width;
+
+
     //GriddingND::GriddingOperator *griddingOp = new GriddingND::GriddingOperator(kernel_width,sector_width,osr);
     GriddingND::GriddingOperator *griddingOp = GriddingND::GriddingOperatorFactory::getInstance()->createGriddingOperator(kSpaceData,kernel_width,sector_width,osr);
 
@@ -91,7 +98,7 @@ TEST(TestGPUGriddingForwardConv,KernelCall1Sector)
 	griddingOp->setSectors((size_t*)sectors);
 	griddingOp->setSectorCenters((size_t*)sector_centers);
 
-	griddingOp->performForwardGridding(im_data,dataArray);
+	griddingOp->performForwardGridding(im_dataArray,dataArray);
 
 	//gridding3D_gpu(&data,data_entries,1,coords,im_data,im_size,grid_width,kern,kernel_entries, kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,CONVOLUTION);
 	

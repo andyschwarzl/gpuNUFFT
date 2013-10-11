@@ -85,16 +85,15 @@ namespace GriddingND
 		// OPERATIONS
 
 		//adjoint gridding
-		void performGriddingAdj(Array<DType2> kspaceData, CufftType** imgData);
-		void performGriddingAdj(Array<DType2> kspaceData, CufftType** imgData, GriddingOutput griddingOut);
+		void performGriddingAdj(Array<DType2> kspaceData, Array<CufftType> imgData);
+		void performGriddingAdj(Array<DType2> kspaceData, Array<CufftType> imgData, GriddingOutput griddingOut);
 
 		//forward gridding
-		void performForwardGridding(DType2* imgData,  GriddingND::Array<CufftType> kspaceData);
-		void performForwardGridding(DType2* imgData,  GriddingND::Array<CufftType> kspaceData, GriddingOutput griddingOut);
+		void performForwardGridding(Array<DType2> imgData,  GriddingND::Array<CufftType> kspaceData);
+		void performForwardGridding(Array<DType2> imgData,  GriddingND::Array<CufftType> kspaceData, GriddingOutput griddingOut);
 
 	private:
 		
-        size_t getImgCount() {return kSpaceCoords.count();}
         size_t getGridWidth() {return (size_t)(kSpaceCoords.dim.width * osf);}
         bool applyDensComp(){return this->dens != NULL;}
 

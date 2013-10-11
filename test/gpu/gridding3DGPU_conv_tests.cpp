@@ -453,6 +453,12 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel3nData)
 	dataArray.dim.length = data_entries;
 	dataArray.dim.channels = 1;
 
+	GriddingND::Array<CufftType> gdataArray;
+	gdataArray.data = gdata;
+	gdataArray.dim.width = (unsigned long)(im_width * osr);
+	gdataArray.dim.height = (unsigned long)(im_width * osr);
+	gdataArray.dim.depth = (unsigned long)(im_width * osr);
+
 	//griddingOp->setData(data);
     //griddingOp->setKspaceCoords(coords);
 	griddingOp->setDens(NULL);
@@ -463,7 +469,7 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel3nData)
     //griddingOp->setKSpaceHeight(im_width);
     //griddingOp->setKSpaceDepth(im_width);
 
-	griddingOp->performGriddingAdj(dataArray,&gdata,CONVOLUTION);
+	griddingOp->performGriddingAdj(dataArray,gdataArray,CONVOLUTION);
 
     //gridding3D_gpu_adj(data,data_entries,1,coords,&gdata,grid_size,dims_g[1],kern,kernel_entries, kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,false,NULL,CONVOLUTION);
 

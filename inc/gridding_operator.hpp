@@ -64,14 +64,13 @@ namespace GriddingND
         }
 
 		// SETTER 
-        void setSectorCount(size_t sectorCount)	{this->sectorCount = sectorCount;}
         void setOsf(DType osf)			{this->osf = osf;}
 
         void setKspaceCoords(Array<DType> kSpaceCoords)	{this->kSpaceCoords = kSpaceCoords;}
         void setSens(DType2 *sens)		{this->sens = sens;}
         void setDens(DType *dens)		{this->dens = dens;}
-        void setSectorCenters(size_t *sectorCenters)	{this->sectorCenters = sectorCenters;}
-        void setSectors(size_t *sectors)		{this->sectors = sectors;}
+        void setSectorCenters(Array<size_t> sectorCenters)	{this->sectorCenters = sectorCenters;}
+        void setSectors(Array<size_t> sectors)		{this->sectors = sectors;}
 
 		// GETTER
         Array<DType>  getKspaceCoords()	{return this->kSpaceCoords;}
@@ -97,9 +96,6 @@ namespace GriddingND
         size_t getGridWidth() {return (size_t)(kSpaceCoords.dim.width * osf);}
         bool applyDensComp(){return this->dens != NULL;}
 
-		// number of sectors
-		size_t sectorCount;
-
 		// size of kernel
 		size_t kernelCount;
 
@@ -118,16 +114,15 @@ namespace GriddingND
 		DType *dens;
 
 		// sector centers
-		size_t* sectorCenters;
+		Array<size_t> sectorCenters;
 
 		// sectors 
 		// assignment of data index to according sector
-		size_t* sectors;
+		Array<size_t> sectors;
 
 		// oversampling factor
 		DType osf;
 		
-
 		size_t kernelWidth;
 
 		size_t sectorWidth;

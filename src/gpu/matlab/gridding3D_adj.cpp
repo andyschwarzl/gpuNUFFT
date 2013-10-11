@@ -159,16 +159,22 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	imdataArray.dim.length = im_count;
 	imdataArray.dim.channels = n_coils;
 
+	GriddingND::Array<size_t> sectorsArray;
+	sectorsArray.data = (size_t*)sectors;
+	sectorsArray.dim.length = sector_count;
+	GriddingND::Array<size_t> sectorCentersArray;
+	sectorCentersArray.data = (size_t*)sector_centers;
+
     //GriddingND::GriddingOperator *griddingOp = new GriddingND::GriddingOperator(kernel_width,sector_width,osr);
     GriddingND::GriddingOperator *griddingOp = GriddingND::GriddingOperatorFactory::getInstance()->createGriddingOperator(kSpaceData,kernel_width,sector_width,osr);
-	griddingOp->setSectorCount(sector_count);
+	
 	griddingOp->setOsf(osr);
 
 	//griddingOp->setData(data);
     //griddingOp->setKspaceCoords(coords);
 	griddingOp->setDens(density_comp);
-	griddingOp->setSectors((size_t*)sectors);
-	griddingOp->setSectorCenters((size_t*)sector_centers);
+	griddingOp->setSectors(sectorsArray);
+	griddingOp->setSectorCenters(sectorCentersArray);
 
 	griddingOp->performGriddingAdj(dataArray,imdataArray);
 

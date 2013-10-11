@@ -441,11 +441,16 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel3nData)
     kSpaceData.dim.height = im_width;
     kSpaceData.dim.depth  = im_width;
 
+	GriddingND::Array<size_t> sectorsArray;
+	sectorsArray.data = (size_t*)sectors;
+	sectorsArray.dim.length = sector_count;
+	GriddingND::Array<size_t> sectorCentersArray;
+	sectorCentersArray.data = (size_t*)sector_centers;
+
     //GriddingND::GriddingOperator *griddingOp = new GriddingND::GriddingOperator(kernel_width,sector_width,osr);
 
     GriddingND::GriddingOperator *griddingOp = GriddingND::GriddingOperatorFactory::getInstance()->createGriddingOperator(kSpaceData,kernel_width,sector_width,osr);
 
-	griddingOp->setSectorCount(sector_count);
 	griddingOp->setOsf(osr);
 
 	GriddingND::Array<DType2> dataArray;
@@ -462,8 +467,8 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel3nData)
 	//griddingOp->setData(data);
     //griddingOp->setKspaceCoords(coords);
 	griddingOp->setDens(NULL);
-	griddingOp->setSectors((size_t*)sectors);
-	griddingOp->setSectorCenters((size_t*)sector_centers);
+	griddingOp->setSectors(sectorsArray);
+	griddingOp->setSectorCenters(sectorCentersArray);
 
     //griddingOp->setKSpaceWidth(im_width);
     //griddingOp->setKSpaceHeight(im_width);

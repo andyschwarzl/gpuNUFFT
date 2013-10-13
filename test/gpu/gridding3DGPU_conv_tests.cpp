@@ -31,6 +31,28 @@ TEST(TestKernel, LoadKernel) {
 	EXPECT_EQ(1, 1);
 }
 
+
+TEST(TestKernel, LoadKernelFromGriddingFactory) {
+	printf("start creating kernel...\n");
+	size_t kernelWidth = 3;
+	size_t sectorWidth = 8;
+	DType osf = 1;
+	GriddingND::GriddingOperator *griddingOp = new GriddingND::GriddingOperator(kernelWidth,sectorWidth,osf);
+
+	assert(griddingOp->getKernel().count() > 0);
+
+	if (griddingOp->getKernel().data != NULL)
+	{
+		DType* kern = griddingOp->getKernel().data;
+		EXPECT_EQ(1.0f,kern[0]);
+		EXPECT_LT(0.9940f-kern[1],epsilon);
+		EXPECT_LT(0.0621f-kern[401],epsilon);
+		EXPECT_LT(0.0041f-kern[665],epsilon);
+		EXPECT_EQ(0.0f,kern[griddingOp->getKernel().count()-1]);
+	}
+}
+	
+
 TEST(TestGPUGriddingConv,KernelCall1Sector)
 {
 	int kernel_width = 3;
@@ -322,12 +344,12 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel3nData)
 	float osr = DEFAULT_OVERSAMPLING_RATIO;
 	//kernel width
 	int kernel_width = 3;
-
+	/*
 	long kernel_entries = calculateGrid3KernelSize(osr, kernel_width/2.0f);
 
 	DType *kern = (DType*) calloc(kernel_entries,sizeof(DType));
 	loadGrid3Kernel(kern,kernel_entries,kernel_width,osr);
-
+*/
 	//Image
 	int im_width = 10;
 
@@ -466,7 +488,7 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel3nData)
 
 	//griddingOp->setData(data);
     //griddingOp->setKspaceCoords(coords);
-	griddingOp->setDens(NULL);
+	//griddingOp->setDens(NULL);
 	griddingOp->setSectors(sectorsArray);
 	griddingOp->setSectorCenters(sectorCentersArray);
 
@@ -493,7 +515,6 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel3nData)
 	free(data);
 	free(coords);
 	free(gdata);
-	free(kern);
 	free(sectors);
 	free(sector_centers);
 }

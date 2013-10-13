@@ -21,7 +21,6 @@ namespace GriddingND
     protected:
       GriddingOperatorFactory()
       {
-
       }
 
       ~GriddingOperatorFactory()

@@ -16,7 +16,10 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
 
 	std::cout << "dataCount: " << kspaceData.count() << " chnCount: " << kspaceData.dim.channels << std::endl;
 	std::cout << "imgCount: " << imgData.count() << " gridWidth: " << this->getGridWidth() << std::endl;
-    gridding3D_gpu_adj(kspaceData.data,kspaceData.count(),kspaceData.dim.channels,this->kSpaceCoords.data,&imgData.data,imgData.count(),this->getGridWidth(),this->kernel,this->kernelCount,this->kernelWidth,(int*)this->sectors.data,this->sectors.count(),(int*)this->sectorCenters.data,this->sectorWidth, this->kSpaceCoords.dim.width,this->osf,this->applyDensComp(),this->dens,griddingOut);
+	std::cout << "apply density comp: " << this->applyDensComp() << std::endl;
+	std::cout << "kernel: " << this->kernel.data[3] << std::endl;
+	std::cout << (this->dens.data == NULL) << std::endl; 
+    gridding3D_gpu_adj(kspaceData.data,kspaceData.count(),kspaceData.dim.channels,this->kSpaceCoords.data,&imgData.data,imgData.count(),this->getGridWidth(),this->kernel.data,this->kernel.count(),this->kernelWidth,(int*)this->sectors.data,this->sectors.count(),(int*)this->sectorCenters.data,this->sectorWidth, this->kSpaceCoords.dim.width,this->osf,this->applyDensComp(),this->dens.data,griddingOut);
 }
 
 void GriddingND::GriddingOperator::performForwardGridding(Array<DType2> imgData, GriddingND::Array<CufftType> kspaceData)
@@ -32,5 +35,5 @@ void GriddingND::GriddingOperator::performForwardGridding(Array<DType2> imgData,
 
 	std::cout << "dataCount: " << kspaceData.count() << " chnCount: " << kspaceData.dim.channels << std::endl;
 	std::cout << "imgCount: " << imgData.count() << " gridWidth: " << this->getGridWidth() << std::endl;
-    gridding3D_gpu(&kspaceData.data,kspaceData.count(),kspaceData.dim.channels,this->kSpaceCoords.data,imgData.data,imgData.count(),this->getGridWidth(),this->kernel,this->kernelCount,this->kernelWidth,(int*)this->sectors.data,this->sectors.count(),(int*)this->sectorCenters.data,this->sectorWidth, this->kSpaceCoords.dim.width,this->osf,CONVOLUTION);
+    gridding3D_gpu(&kspaceData.data,kspaceData.count(),kspaceData.dim.channels,this->kSpaceCoords.data,imgData.data,imgData.count(),this->getGridWidth(),this->kernel.data,this->kernel.count(),this->kernelWidth,(int*)this->sectors.data,this->sectors.count(),(int*)this->sectorCenters.data,this->sectorWidth, this->kSpaceCoords.dim.width,this->osf,CONVOLUTION);
 }

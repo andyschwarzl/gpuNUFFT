@@ -165,6 +165,10 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	GriddingND::Array<size_t> sectorCentersArray;
 	sectorCentersArray.data = (size_t*)sector_centers;
 
+	GriddingND::Array<DType> density_compArray;
+	density_compArray.data = density_comp;
+	density_compArray.dim.length = data_count;
+
     //GriddingND::GriddingOperator *griddingOp = new GriddingND::GriddingOperator(kernel_width,sector_width,osr);
     GriddingND::GriddingOperator *griddingOp = GriddingND::GriddingOperatorFactory::getInstance()->createGriddingOperator(kSpaceData,kernel_width,sector_width,osr);
 	
@@ -172,7 +176,9 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
 	//griddingOp->setData(data);
     //griddingOp->setKspaceCoords(coords);
-	griddingOp->setDens(density_comp);
+
+
+	griddingOp->setDens(density_compArray);
 	griddingOp->setSectors(sectorsArray);
 	griddingOp->setSectorCenters(sectorCentersArray);
 

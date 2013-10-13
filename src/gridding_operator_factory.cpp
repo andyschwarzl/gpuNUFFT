@@ -15,8 +15,10 @@ GriddingND::GriddingOperatorFactory* GriddingND::GriddingOperatorFactory::getIns
 GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddingOperator(GriddingND::Array<DType> kSpaceCoords, size_t kernelWidth, size_t sectorWidth, DType osf)
 {
     GriddingND::GriddingOperator *griddingOp = new GriddingND::GriddingOperator(kernelWidth,sectorWidth,osf);
+	
 	std::cout << "create gridding operator" << std::endl;
-    griddingOp->setKspaceCoords(kSpaceCoords);
+    
+	griddingOp->setKspaceCoords(kSpaceCoords);
 
     /*griddingOp->setDataCount(data_entries);
 

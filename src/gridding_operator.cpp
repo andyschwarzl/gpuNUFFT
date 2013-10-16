@@ -19,6 +19,7 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
 	std::cout << "apply density comp: " << this->applyDensComp() << std::endl;
 	std::cout << "kernel: " << this->kernel.data[3] << std::endl;
 	std::cout << (this->dens.data == NULL) << std::endl; 
+
     gridding3D_gpu_adj(kspaceData.data,kspaceData.count(),kspaceData.dim.channels,this->kSpaceCoords.data,&imgData.data,imgData.count(),this->getGridWidth(),this->kernel.data,this->kernel.count(),this->kernelWidth,(int*)this->sectors.data,this->sectors.count(),(int*)this->sectorCenters.data,this->sectorWidth, this->kSpaceCoords.dim.width,this->osf,this->applyDensComp(),this->dens.data,griddingOut);
 }
 

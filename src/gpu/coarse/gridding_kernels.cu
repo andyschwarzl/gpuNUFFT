@@ -191,8 +191,8 @@ void performConvolution( DType2* data_d,
 {
 	long shared_mem_size = gi_host->sector_dim*sizeof(DType2);
 	
-	dim3 block_dim(gi_host->sector_pad_width,gi_host->sector_pad_width,N_THREADS_PER_SECTOR);
-	dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,(gi_host->sector_pad_width)*(gi_host->sector_pad_width)*(N_THREADS_PER_SECTOR)));
+	dim3 block_dim(gi_host->sector_pad_width,gi_host->sector_pad_width,1);
+	dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,(gi_host->sector_pad_width)*(gi_host->sector_pad_width)*(1)));
 	if (DEBUG)
 		printf("convolution requires %d bytes of shared memory!\n",shared_mem_size);
 	convolutionKernel<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,temp_gdata_d,gi_host->sector_count);
@@ -202,7 +202,7 @@ void performConvolution( DType2* data_d,
 void composeOutput(DType2* temp_gdata_d, CufftType* gdata_d, int* sector_centers_d, GriddingInfo* gi_host)
 {
 	dim3 grid_dim(1);
-	dim3 block_dim(gi_host->sector_pad_width,gi_host->sector_pad_width,N_THREADS_PER_SECTOR);
+	dim3 block_dim(gi_host->sector_pad_width,gi_host->sector_pad_width,1);
 	
 	composeOutputKernel<<<grid_dim,block_dim>>>(temp_gdata_d,gdata_d,sector_centers_d);
 }

@@ -2,6 +2,7 @@
 #include "cuda_utils.cuh"
 #include "cuda_utils.hpp"
 
+
 // ----------------------------------------------------------------------------
 // convolutionKernel: NUFFT^H kernel
 //

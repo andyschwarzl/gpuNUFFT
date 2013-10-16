@@ -20,7 +20,6 @@
 
 #include <string.h>
 
-#include "gridding_operator.hpp"
 #include "gridding_operator_factory.hpp"
 
 /** 

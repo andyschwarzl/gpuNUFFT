@@ -1,6 +1,6 @@
 %% testscript with operator usage
 clear all; 
-close all; clc;
+close all; clc; 
 
 %% add bin to path
 addpath ../bin  

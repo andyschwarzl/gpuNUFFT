@@ -117,6 +117,8 @@ inline void showMemoryInfo()
 	showMemoryInfo(false);
 }
 
+// prototype
+// implementation in cu file
 void initConstSymbol(const char* symbol, const void* src, size_t count);
 
 

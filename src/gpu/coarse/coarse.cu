@@ -1,3 +1,5 @@
+#include "cuda_utils.cuh"
 #include "gridding_kernels.cu"
-#include "../gridding_gpu.cu"
+#include "../std_gridding_kernels.cu"
+
 

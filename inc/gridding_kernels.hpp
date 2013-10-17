@@ -1,22 +1,41 @@
 #ifndef GRIDDING_KERNELS_H
 #define GRIDDING_KERNELS_H
 #include "gridding_gpu.hpp"
+#include "cuda_utils.hpp"
+#include "cuda_utils.cuh"
 
 //INVERSE Operations
-void performConvolution( DType* data_d, 
+
+// gridding function prototypes
+void performConvolution( DType2* data_d, 
 						 DType* crds_d, 
 						 CufftType* gdata_d,
 						 DType* kernel_d, 
 						 int* sectors_d, 
 						 int* sector_centers_d,
-						 DType* temp_gdata_d,
+						 DType2* temp_gdata_d,
 						 GriddingInfo* gi_host
 						);
-
-void composeOutput(DType* temp_gdata_d, 
+																	
+void performForwardConvolution( CufftType*		data_d, 
+								DType*			crds_d, 
+								CufftType*		gdata_d,
+								DType*			kernel_d, 
+								int*			sectors_d, 
+								int*			sector_centers_d,
+								GriddingInfo*	gi_host
+								);
+								
+void composeOutput(DType2* temp_gdata_d, 
 				   CufftType* gdata_d, 
 				   int* sector_centers_d,
 				   GriddingInfo* gi_host);
+
+void performFFTScaling(CufftType* data,
+	                   int N, 
+					   GriddingInfo* gi_host);
+
+void performDensityCompensation(DType2* data, DType* density_comp, GriddingInfo* gi_host);
 
 void performFFTShift(CufftType* gdata_d,
 					 FFTShiftDir shift_dir,
@@ -31,22 +50,12 @@ void performDeapodization(CufftType* imdata_d,
 
 //FORWARD Operations
 
-void performForwardDeapodization(DType* imdata_d,
+void performForwardDeapodization(DType2* imdata_d,
 						  GriddingInfo* gi_host);
 
-void performPadding(DType*			imdata_d,
-					CufftType*		gdata_d,					
-					GriddingInfo*	gi_host);
-
-void performForwardConvolution( CufftType* data_d, 
-								 DType* crds_d, 
-								 CufftType* gdata_d,
-								 DType* kernel_d, 
-								 int* sectors_d, 
-								 int* sector_centers_d,
-								 GriddingInfo* gi_host
-								);
-
+void performPadding(DType2* imdata_d,
+					CufftType* gdata_d,					
+					GriddingInfo* gi_host);
 
 
 #endif

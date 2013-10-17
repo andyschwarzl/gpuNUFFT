@@ -1,7 +1,21 @@
 #include "gridding_kernels.hpp"
 #include "cuda_utils.cuh"
-#include "cuda_utils.hpp"
 
+#include <string>
+
+// Method to initialize CONSTANT memory symbols. Needs to reside in *.cu file 
+// to work properly
+//
+// TODO find better solution
+//
+void initConstSymbol(const char* symbol, const void* src, size_t size)
+{
+	if (std::string("GI").compare(symbol)==0)
+		HANDLE_ERROR(cudaMemcpyToSymbol(GI, src,size));
+
+	if (std::string("KERNEL").compare(symbol)==0)
+		HANDLE_ERROR(cudaMemcpyToSymbol(KERNEL, src,size));
+}
 
 // ----------------------------------------------------------------------------
 // convolutionKernel: NUFFT^H kernel

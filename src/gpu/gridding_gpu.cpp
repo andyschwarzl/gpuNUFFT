@@ -1,30 +1,9 @@
-#include "std_gridding_kernels.cu"
-#include "cuda_utils.hpp"
+
 #include "gridding_gpu.hpp"
+#include "gridding_kernels.hpp"
 #include "cufft_config.hpp"
 
-// gridding function prototypes
-/*void performConvolution( DType2* data_d, 
-						 DType* crds_d, 
-						 CufftType* gdata_d,
-						 DType* kernel_d, 
-						 int* sectors_d, 
-						 int* sector_centers_d,
-						 DType2* temp_gdata_d,
-						 GriddingInfo* gi_host
-						);
-																	
-void performForwardConvolution( CufftType*		data_d, 
-								DType*			crds_d, 
-								CufftType*		gdata_d,
-								DType*			kernel_d, 
-								int*			sectors_d, 
-								int*			sector_centers_d,
-								GriddingInfo*	gi_host
-								);
-								
-void composeOutput(DType2* temp_gdata_d, CufftType* gdata_d, int* sector_centers_d, GriddingInfo* gi_host);
-*/
+#include "cuda_utils.hpp"
 
 // ----------------------------------------------------------------------------
 // gridding3D_gpu: NUFFT
@@ -98,7 +77,8 @@ void gridding3D_gpu(CufftType**	data,
 	
 	if (DEBUG)
 		printf("allocate and copy kernel of size %d...\n",kernel_count);
-	HANDLE_ERROR(cudaMemcpyToSymbol(KERNEL,(void*)kernel,kernel_count*sizeof(DType)));
+	//HANDLE_ERROR(cudaMemcpyToSymbol(KERNEL,(void*)kernel,kernel_count*sizeof(DType)));
+	initConstSymbol("KERNEL",(void*)kernel,kernel_count*sizeof(DType));
 
 	if (DEBUG)
 		printf("allocate and copy sectors of size %d...\n",sector_count+1);
@@ -265,7 +245,14 @@ void gridding3D_gpu_adj(DType2*		data,
 	
 	if (DEBUG)
 		printf("allocate and copy kernel of size %d...\n",kernel_count);
-	HANDLE_ERROR(cudaMemcpyToSymbol(KERNEL,(void*)kernel,kernel_count*sizeof(DType)));
+	
+	//DType *kpnt;
+	//HANDLE_ERROR(cudaGetSymbolAddress((void**)&kpnt, "KERNEL"));
+	//HANDLE_ERROR(cudaMemcpyToSymbol(kpnt, kernel, kernel_count*sizeof(DType)));
+
+	//HANDLE_ERROR(cudaMemcpyToSymbol(KERNEL,(void*)kernel,kernel_count*sizeof(DType)));
+	initConstSymbol("KERNEL",(void*)kernel,kernel_count*sizeof(DType));
+
 	//allocateAndCopyToDeviceMem<DType>(&kernel_d,kernel,kernel_count);
 	if (DEBUG)
 		printf("allocate and copy sectors of size %d...\n",sector_count+1);

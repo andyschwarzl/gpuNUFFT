@@ -58,7 +58,7 @@ inline void copyFromDevice(TypeName* device_ptr, TypeName* host_ptr, int num_ele
 	HANDLE_ERROR(cudaMemcpy(host_ptr, device_ptr,num_elements*sizeof(TypeName),cudaMemcpyDeviceToHost ));
 }
 
-void freeTotalDeviceMemory(void* ptr,...)
+inline void freeTotalDeviceMemory(void* ptr,...)
 {
 	va_list list;
 	va_start(list,ptr); 
@@ -80,7 +80,7 @@ void freeTotalDeviceMemory(void* ptr,...)
     va_end(list);
 }
 
-__device__ inline float atomicFloatAdd(float* address, float value)
+/*__device__ inline float atomicFloatAdd(float* address, float value)
 {
   float old = value;  
   float ret=atomicExch(address, 0.0f);
@@ -91,7 +91,7 @@ __device__ inline float atomicFloatAdd(float* address, float value)
         new_old += old;
   }
   return ret;
-}
+}*/
 
 inline dim3 getOptimalGridDim(long im_dim, long thread_count)
 {
@@ -117,17 +117,20 @@ inline void showMemoryInfo()
 	showMemoryInfo(false);
 }
 
-GriddingInfo* initAndCopyGriddingInfo(int sector_count, 
+void initConstSymbol(const char* symbol, const void* src, size_t count);
+
+
+inline GriddingInfo* initAndCopyGriddingInfo(int sector_count, 
 									  int sector_width,
 									  int kernel_width,
 									  int kernel_count, 
 									  int grid_width,
 									  int im_width,
 									  DType osr,
-										int data_count)
+									  int data_count)
 {
 	GriddingInfo* gi_host = (GriddingInfo*)malloc(sizeof(GriddingInfo));
-  gi_host->data_count = data_count;
+    gi_host->data_count = data_count;
 	gi_host->sector_count = sector_count;
 	gi_host->sector_width = sector_width;
 	
@@ -171,7 +174,9 @@ GriddingInfo* initAndCopyGriddingInfo(int sector_count,
 	
 	if (DEBUG)
 		printf("copy Gridding Info to symbol memory... size = %d \n",sizeof(GriddingInfo));
-	HANDLE_ERROR(cudaMemcpyToSymbol(GI, gi_host,sizeof(GriddingInfo)));
+
+	initConstSymbol("GI",gi_host,sizeof(GriddingInfo));
+
 	//free(gi_host);
 	if (DEBUG)
 		printf("...done!\n");

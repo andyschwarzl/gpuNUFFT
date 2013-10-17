@@ -13,5 +13,4 @@ __constant__ DType KERNEL[5000];
 	#define THREAD_BLOCK_SIZE 256
 #endif
 
-
 #endif

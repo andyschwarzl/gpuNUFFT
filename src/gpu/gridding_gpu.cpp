@@ -1,4 +1,6 @@
 
+
+
 #include "gridding_gpu.hpp"
 #include "gridding_kernels.hpp"
 #include "cufft_config.hpp"
@@ -8,9 +10,13 @@
 // ----------------------------------------------------------------------------
 // gridding3D_gpu: NUFFT
 //
-// Inverse gridding implementation - from image to grid/k-space
+// Inverse gridding implementation - interpolation from uniform grid data onto 
+//                                   nonuniform k-space data based on optimized 
+//                                   gridding kernel with minimal oversampling
+//                                   ratio (see Beatty et al.)
+//
 // Basic steps: - apodization correction
-//              - zero paddingwith osf
+//              - zero padding with osf
 //              - FFT
 //							- convolution and resampling
 //
@@ -18,7 +24,7 @@
 //	* data		     : output kspace data 
 //  * data_count   : number of samples on trajectory
 //  * n_coils      : number of channels or coils
-//  * crds         : coordinates on trajectory
+//  * crds         : coordinates on trajectory, passed as SoA
 //  * imdata       : input image data
 //  * imdata_count : number of image data points
 //  * grid_width   : size of grid 
@@ -55,7 +61,7 @@ void gridding3D_gpu(CufftType**	data,
 
 	//cuda mem allocation
 	DType2 *imdata_d;
-	DType*crds_d;//SoA
+	DType*crds_d, *deapo_d;
 	CufftType *gdata_d, *data_d;
 	int* sector_centers_d, *sectors_d;
 	
@@ -76,7 +82,7 @@ void gridding3D_gpu(CufftType**	data,
 	allocateAndCopyToDeviceMem<DType>(&crds_d,crds,3*data_count);
 	
 	if (DEBUG)
-		printf("allocate and copy kernel of size %d...\n",kernel_count);
+		printf("allocate and copy kernel in const memory of size %d...\n",kernel_count);
 	//HANDLE_ERROR(cudaMemcpyToSymbol(KERNEL,(void*)kernel,kernel_count*sizeof(DType)));
 	initConstSymbol("KERNEL",(void*)kernel,kernel_count*sizeof(DType));
 
@@ -86,6 +92,14 @@ void gridding3D_gpu(CufftType**	data,
 	if (DEBUG)
 		printf("allocate and copy sector_centers of size %d...\n",3*sector_count);
 	allocateAndCopyToDeviceMem<int>(&sector_centers_d,sector_centers,3*sector_count);
+	if (n_coils > 1)
+	{
+		if (DEBUG)
+			printf("allocate and precompute deapofunction of size %d...\n",imdata_count);
+		allocateDeviceMem<DType>(&deapo_d,imdata_count);
+		precomputeDeapodization(deapo_d,gi_host);
+	}
+	
 	if (DEBUG)
 		printf("sector pad width: %d\n",gi_host->sector_pad_width);
 	
@@ -111,7 +125,10 @@ void gridding3D_gpu(CufftType**	data,
 		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
 			printf("error at thread synchronization 1: %s\n",cudaGetErrorString(cudaGetLastError()));
 		// apodization Correction
-		performForwardDeapodization(imdata_d,gi_host);
+		if (n_coils > 1 && deapo_d != NULL)
+			performForwardDeapodization(imdata_d,deapo_d,gi_host);
+		else
+		  performForwardDeapodization(imdata_d,gi_host);
 		
 		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
 			printf("error at thread synchronization 2: %s\n",cudaGetErrorString(cudaGetLastError()));
@@ -130,7 +147,7 @@ void gridding3D_gpu(CufftType**	data,
 		if (err=pt2CufftExec(fft_plan, gdata_d, gdata_d, CUFFT_FORWARD) != CUFFT_SUCCESS)
 		{
 			fprintf(stderr,"cufft has failed with err %i \n",err);
-			showMemoryInfo(true);
+			showMemoryInfo(true,stderr);
 		}
 		
 		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
@@ -168,6 +185,12 @@ void gridding3D_gpu(CufftType**	data,
 // Gridding implementation - interpolation from nonuniform k-space data onto 
 //                           oversampled grid based on optimized gridding kernel
 //                           with minimal oversampling ratio (see Beatty et al.)
+//
+// Basic steps: - density compensation
+//              - convolution with interpolation function
+//              - iFFT
+//              - cropping due to oversampling ratio
+//              - apodization correction
 //
 // parameters:
 //	* data		     : input kspace data 
@@ -217,8 +240,8 @@ void gridding3D_gpu_adj(DType2*		data,
 	//and each data point to one thread inside this block 
 	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,sector_width,kernel_width,kernel_count,grid_width,im_width,osr,data_count);
 	
-	DType2* data_d, *temp_gdata_d;
-	DType* crds_d, *density_comp_d;
+	DType2* data_d;
+	DType* crds_d, *density_comp_d, *deapo_d;
 	CufftType *gdata_d, *imdata_d;
 	int* sector_centers_d, *sectors_d;
 
@@ -232,25 +255,16 @@ void gridding3D_gpu_adj(DType2*		data,
 
 	if (DEBUG)
 		printf("allocate and copy data of size %d...\n",data_count);
-	allocateAndCopyToDeviceMem<DType2>(&data_d,data,data_count);
+	allocateDeviceMem<DType2>(&data_d,data_count);
 
-	int temp_grid_count = sector_count * gi_host->sector_dim;
-	if (DEBUG)
-		printf("allocate temp grid data of size %d...\n",temp_grid_count);
-	allocateDeviceMem<DType2>(&temp_gdata_d,temp_grid_count);
-
+	
 	if (DEBUG)
 		printf("allocate and copy coords of size %d...\n",3*data_count);
 	allocateAndCopyToDeviceMem<DType>(&crds_d,crds,3*data_count);
 	
 	if (DEBUG)
-		printf("allocate and copy kernel of size %d...\n",kernel_count);
+		printf("allocate and copy kernel in const memory of size %d...\n",kernel_count);
 	
-	//DType *kpnt;
-	//HANDLE_ERROR(cudaGetSymbolAddress((void**)&kpnt, "KERNEL"));
-	//HANDLE_ERROR(cudaMemcpyToSymbol(kpnt, kernel, kernel_count*sizeof(DType)));
-
-	//HANDLE_ERROR(cudaMemcpyToSymbol(KERNEL,(void*)kernel,kernel_count*sizeof(DType)));
 	initConstSymbol("KERNEL",(void*)kernel,kernel_count*sizeof(DType));
 
 	//allocateAndCopyToDeviceMem<DType>(&kernel_d,kernel,kernel_count);
@@ -268,6 +282,13 @@ void gridding3D_gpu_adj(DType2*		data,
 		allocateAndCopyToDeviceMem<DType>(&density_comp_d,density_comp,data_count);
 	}
 	
+	if (n_coils > 1)
+	{
+		if (DEBUG)
+			printf("allocate precompute deapofunction of size %d...\n",imdata_count);
+		allocateDeviceMem<DType>(&deapo_d,imdata_count);
+		precomputeDeapodization(deapo_d,gi_host);
+	}
 	if (DEBUG)
 		printf("sector pad width: %d\n",gi_host->sector_pad_width);
 	
@@ -277,7 +298,7 @@ void gridding3D_gpu_adj(DType2*		data,
 		printf("creating cufft plan with %d,%d,%d dimensions\n",gi_host->grid_width,gi_host->grid_width,gi_host->grid_width);
 	cufftResult res = cufftPlan3d(&fft_plan, gi_host->grid_width,gi_host->grid_width,gi_host->grid_width, CufftTransformType) ;
 	if (res != CUFFT_SUCCESS) 
-		printf("error on CUFFT Plan creation!!! %d\n",res);
+		fprintf(stderr,"error on CUFFT Plan creation!!! %d\n",res);
 	int err;
 
 	//iterate over coils and compute result
@@ -285,8 +306,7 @@ void gridding3D_gpu_adj(DType2*		data,
 	{
 		int data_coil_offset = coil_it * data_count;
 		int im_coil_offset = coil_it * imdata_count;//gi_host->width_dim;
-		//reset temp array
-		cudaMemset(temp_gdata_d,0, sizeof(DType2)*temp_grid_count);
+
 		cudaMemset(gdata_d,0, sizeof(CufftType)*gi_host->grid_width_dim);
 		copyToDevice(data + data_coil_offset, data_d,data_count);
 	
@@ -295,13 +315,10 @@ void gridding3D_gpu_adj(DType2*		data,
 		
 		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
 			printf("error at adj thread synchronization 1: %s\n",cudaGetErrorString(cudaGetLastError()));
-		performConvolution(data_d,crds_d,gdata_d,NULL,sectors_d,sector_centers_d,temp_gdata_d,gi_host);
-
-		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
-			printf("error at adj thread synchronization 2: %s\n",cudaGetErrorString(cudaGetLastError()));
-		//compose total output from local blocks 
-		composeOutput(temp_gdata_d,gdata_d,sector_centers_d,gi_host);
+		performConvolution(data_d,crds_d,gdata_d,NULL,sectors_d,sector_centers_d,gi_host);
 	
+		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
+			fprintf(stderr,"error at adj  thread synchronization 2: %s\n",cudaGetErrorString(cudaGetLastError()));
 		if (gridding_out == CONVOLUTION)
 		{
 			if (DEBUG)
@@ -310,7 +327,7 @@ void gridding3D_gpu_adj(DType2*		data,
 			copyFromDevice<CufftType>(gdata_d,*imdata,gi_host->grid_width_dim);
 			if (DEBUG)
 				printf("test value at point zero: %f\n",(*imdata)[0].x);
-			freeTotalDeviceMemory(data_d,crds_d,imdata_d,gdata_d,sectors_d,sector_centers_d,temp_gdata_d,NULL);//NULL as stop token
+			freeTotalDeviceMemory(data_d,crds_d,imdata_d,gdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop token
 
 			free(gi_host);
 			// Destroy the cuFFT plan.
@@ -318,17 +335,17 @@ void gridding3D_gpu_adj(DType2*		data,
 			return;
 		}
 		if ((cudaThreadSynchronize() != cudaSuccess))
-			printf("error at adj thread synchronization 3: %s\n",cudaGetErrorString(cudaGetLastError()));
+			fprintf(stderr,"error at adj thread synchronization 3: %s\n",cudaGetErrorString(cudaGetLastError()));
 		performFFTShift(gdata_d,INVERSE,gi_host->grid_width);
 		
 		//Inverse FFT
 		if (err=pt2CufftExec(fft_plan, gdata_d, gdata_d, CUFFT_INVERSE) != CUFFT_SUCCESS)
 		{
 			fprintf(stderr,"cufft has failed at adj with err %i \n",err);
-			showMemoryInfo(true);
+			showMemoryInfo(true,stderr);
 		}
 	  	if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
-			printf("error at adj thread synchronization 4: %s\n",cudaGetErrorString(cudaGetLastError()));
+			 fprintf(stderr,"error at adj thread synchronization 4: %s\n",cudaGetErrorString(cudaGetLastError()));
 	
 		if (gridding_out == FFT)
 		{
@@ -340,7 +357,7 @@ void gridding3D_gpu_adj(DType2*		data,
 			//free memory
 			if (cufftDestroy(fft_plan) != CUFFT_SUCCESS)
 				printf("error on destroying cufft plan\n");
-			freeTotalDeviceMemory(data_d,crds_d,imdata_d,gdata_d,sectors_d,sector_centers_d,temp_gdata_d,NULL);//NULL as stop token
+			freeTotalDeviceMemory(data_d,crds_d,imdata_d,gdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop token
 			free(gi_host);
 			// Destroy the cuFFT plan.
 			printf("last cuda error: %s\n", cudaGetErrorString(cudaGetLastError()));
@@ -348,7 +365,7 @@ void gridding3D_gpu_adj(DType2*		data,
 		}
 		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
 			printf("error at adj thread synchronization 5: %s\n",cudaGetErrorString(cudaGetLastError()));
-		performFFTShift(gdata_d,FORWARD,gi_host->grid_width);
+		performFFTShift(gdata_d,INVERSE,gi_host->grid_width);
 			
 		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
 			printf("error at adj thread synchronization 6: %s\n",cudaGetErrorString(cudaGetLastError()));
@@ -356,7 +373,11 @@ void gridding3D_gpu_adj(DType2*		data,
 		
 		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
 			printf("error at adj thread synchronization 7: %s\n",cudaGetErrorString(cudaGetLastError()));
-		performDeapodization(imdata_d,gi_host);
+		//check if precomputed deapo function can be used
+		if (n_coils > 1 && deapo_d != NULL)
+			performDeapodization(imdata_d,deapo_d,gi_host);
+		else
+		  performDeapodization(imdata_d,gi_host);
 		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
 			printf("error at adj thread synchronization 8: %s\n",cudaGetErrorString(cudaGetLastError()));
 	
@@ -371,9 +392,11 @@ void gridding3D_gpu_adj(DType2*		data,
       printf("error: at adj  thread synchronization 10: %s\n",cudaGetErrorString(cudaGetLastError()));
 	// Destroy the cuFFT plan.
 	cufftDestroy(fft_plan);
-	freeTotalDeviceMemory(data_d,crds_d,gdata_d,imdata_d,sectors_d,sector_centers_d,temp_gdata_d,NULL);//NULL as stop
+	freeTotalDeviceMemory(data_d,crds_d,gdata_d,imdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop
 	if (do_comp == true)
 		cudaFree(density_comp_d);
+	if (n_coils > 1)
+		cudaFree(deapo_d);
 	
 	if ((cudaThreadSynchronize() != cudaSuccess))
 		fprintf(stderr,"error in gridding3D_gpu_adj function: %s\n",cudaGetErrorString(cudaGetLastError()));

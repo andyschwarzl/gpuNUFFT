@@ -5,9 +5,8 @@ include_directories(${GRIDDING_INC_DIR})
 													
 cuda_include_directories(${GRIDDING_INC_DIR})
 
-set(GPU_CU_SOURCES	${CMAKE_CURRENT_SOURCE_DIR}/coarse.cu
+set(GPU_CU_SOURCES	${CMAKE_CURRENT_SOURCE_DIR}/gridding_kernels.cu 
 					#${CMAKE_CURRENT_SOURCE_DIR}/../std_gridding_kernels.cu
-					${CMAKE_CURRENT_SOURCE_DIR}/gridding_kernels.cu 
 									 )
 
 if(WIN32)

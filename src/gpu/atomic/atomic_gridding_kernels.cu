@@ -1,6 +1,6 @@
 #include "gridding_kernels.hpp"
+#include "../std_gridding_kernels.cu"
 #include "cuda_utils.cuh"
-#include "cuda_utils.hpp"
 
 // convolve every data point on grid position -> controlled by threadIdx.x .y and .z 
 // shared data holds grid values as software managed cache
@@ -405,7 +405,6 @@ void performConvolution( DType2* data_d,
 						 DType*			kernel_d, 
 						 int* sectors_d, 
   						 int* sector_centers_d,
-						 DType* temp_gdata_d,
 						 GriddingInfo* gi_host
 						)
 {

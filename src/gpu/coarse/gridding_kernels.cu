@@ -2,6 +2,7 @@
 #define GRIDDING_KERNELS_CU
 
 #include "gridding_kernels.hpp"
+#include "../std_gridding_kernels.cu"
 #include "cuda_utils.cuh"
 
 // ----------------------------------------------------------------------------
@@ -181,25 +182,6 @@ __global__ void composeOutputKernel(DType2* temp_gdata, CufftType* gdata, int* s
 	}
 }
 
-void performConvolution( DType2* data_d, 
-						 DType* crds_d, 
-						 CufftType* gdata_d,
-						 DType* kernel_d, 
-						 int* sectors_d, 
-						 int* sector_centers_d,
-						 DType2* temp_gdata_d,
-						 GriddingInfo* gi_host
-						)
-{
-	long shared_mem_size = gi_host->sector_dim*sizeof(DType2);
-	
-	dim3 block_dim(gi_host->sector_pad_width,gi_host->sector_pad_width,1);
-	dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,(gi_host->sector_pad_width)*(gi_host->sector_pad_width)*(1)));
-	if (DEBUG)
-		printf("convolution requires %d bytes of shared memory!\n",shared_mem_size);
-	convolutionKernel<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,temp_gdata_d,gi_host->sector_count);
-}
-
 //very slow way of composing the output, should only be used on compute capabilties lower than 2.0
 void composeOutput(DType2* temp_gdata_d, CufftType* gdata_d, int* sector_centers_d, GriddingInfo* gi_host)
 {
@@ -208,6 +190,38 @@ void composeOutput(DType2* temp_gdata_d, CufftType* gdata_d, int* sector_centers
 	
 	composeOutputKernel<<<grid_dim,block_dim>>>(temp_gdata_d,gdata_d,sector_centers_d);
 }
+
+void performConvolution( DType2* data_d, 
+						 DType* crds_d, 
+						 CufftType* gdata_d,
+						 DType* kernel_d, 
+						 int* sectors_d, 
+						 int* sector_centers_d,
+						 GriddingInfo* gi_host
+						)
+{
+	DType2* temp_gdata_d;
+	int temp_grid_count = gi_host->sector_count * gi_host->sector_dim;
+	if (DEBUG)
+		printf("allocate temp grid data of size %d...\n",temp_grid_count);
+	allocateDeviceMem<DType2>(&temp_gdata_d,temp_grid_count);
+
+	long shared_mem_size = gi_host->sector_dim*sizeof(DType2);
+	
+	dim3 block_dim(gi_host->sector_pad_width,gi_host->sector_pad_width,1);
+	dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,(gi_host->sector_pad_width)*(gi_host->sector_pad_width)*(1)));
+	if (DEBUG)
+		printf("convolution requires %d bytes of shared memory!\n",shared_mem_size);
+	convolutionKernel<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,temp_gdata_d,gi_host->sector_count);
+		
+	if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
+		printf("error at adj thread synchronization 2: %s\n",cudaGetErrorString(cudaGetLastError()));
+	//compose total output from local blocks 
+	composeOutput(temp_gdata_d,gdata_d,sector_centers_d,gi_host);
+	
+	freeDeviceMem((void*)temp_gdata_d);
+}
+
 
 // ----------------------------------------------------------------------------
 // forwardConvolutionKernel: NUFFT kernel

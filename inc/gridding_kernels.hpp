@@ -12,7 +12,6 @@ void performConvolution( DType2* data_d,
 						 DType* kernel_d, 
 						 int* sectors_d, 
 						 int* sector_centers_d,
-						 DType2* temp_gdata_d,
 						 GriddingInfo* gi_host
 						);
 																	
@@ -24,11 +23,6 @@ void performForwardConvolution( CufftType*		data_d,
 								int*			sector_centers_d,
 								GriddingInfo*	gi_host
 								);
-								
-void composeOutput(DType2* temp_gdata_d, 
-				   CufftType* gdata_d, 
-				   int* sector_centers_d,
-				   GriddingInfo* gi_host);
 
 void performFFTScaling(CufftType* data,
 	                   int N, 
@@ -47,14 +41,23 @@ void performCrop(CufftType* gdata_d,
 void performDeapodization(CufftType* imdata_d,
 						 GriddingInfo* gi_host);
 
+void performDeapodization(CufftType* imdata_d,
+													DType* deapo_d,
+													GriddingInfo* gi_host);
 //FORWARD Operations
 
 void performForwardDeapodization(DType2* imdata_d,
-						  GriddingInfo* gi_host);
+								 GriddingInfo* gi_host);
+
+void performForwardDeapodization(DType2* imdata_d,
+								 DType* deapo_d,
+								 GriddingInfo* gi_host);
 
 void performPadding(DType2* imdata_d,
 					CufftType* gdata_d,					
 					GriddingInfo* gi_host);
 
+void precomputeDeapodization(DType* deapo_d,
+							 GriddingInfo* gi_host);
 
 #endif

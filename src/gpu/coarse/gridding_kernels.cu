@@ -1,7 +1,8 @@
+#ifndef GRIDDING_KERNELS_CU
+#define GRIDDING_KERNELS_CU
+
 #include "gridding_kernels.hpp"
 #include "cuda_utils.cuh"
-
-#include <string>
 
 // ----------------------------------------------------------------------------
 // convolutionKernel: NUFFT^H kernel
@@ -355,3 +356,5 @@ void performForwardConvolution( CufftType*		data_d,
 		printf("convolution requires %d bytes of shared memory!\n",shared_mem_size);
 	forwardConvolutionKernel<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
 }
+
+#endif //GRIDDING_KERNELS_CU

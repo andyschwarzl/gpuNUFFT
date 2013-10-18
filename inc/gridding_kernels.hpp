@@ -2,7 +2,6 @@
 #define GRIDDING_KERNELS_H
 #include "gridding_gpu.hpp"
 #include "cuda_utils.hpp"
-#include "cuda_utils.cuh"
 
 //INVERSE Operations
 

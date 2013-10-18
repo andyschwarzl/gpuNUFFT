@@ -1,6 +1,12 @@
+#ifndef STD_GRIDDING_KERNELS_CU
+#define STD_GRIDDING_KERNELS_CU
+
 #include "gridding_kernels.hpp"
-#include "cuda_utils.cuh"
 #include "cuda_utils.hpp"
+
+#include <string>
+
+#include "cuda_utils.cuh"
 
 // Method to initialize CONSTANT memory symbols. Needs to reside in *.cu file 
 // to work properly
@@ -317,3 +323,5 @@ void performPadding(DType2* imdata_d,
 	dim3 block_dim(THREAD_BLOCK_SIZE);
 	paddingKernel<<<grid_dim,block_dim>>>(imdata_d,gdata_d,ind_off,gi_host->im_width_dim);
 }
+
+#endif //STD_GRIDDING_KERNELS_CU

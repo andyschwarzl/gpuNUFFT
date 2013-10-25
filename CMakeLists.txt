@@ -74,9 +74,6 @@ else(GPU_DOUBLE_PREC)
   SET(PREC_SUFFIX "_f")
 SET(CUDA_NVCC_FLAGS "-arch;sm_11;--ptxas-options=-v")
 endif(GPU_DOUBLE_PREC)
-if(GEN_ATOMIC)
-  SET(CUDA_NVCC_FLAGS "-arch;sm_20;--ptxas-options=-v")
-endif(GEN_ATOMIC)
 
 MESSAGE(STATUS "setting NVCC FLAGS to: ${CUDA_NVCC_FLAGS}")
 

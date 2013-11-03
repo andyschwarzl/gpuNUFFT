@@ -52,12 +52,15 @@ end
 
 k_traj_3d = test(:,:);
 %%
+%[X,Y,Z] = meshgrid(-0.5:1/32:0.5-1/32,-0.5:1/32:0.5-1/32,-0.5:1/32:0.5-1/32);
+%k_traj_3d = [X(:),Y(:),Z(:)];
+%%
 imwidth = nPE;
 osf = 1.5;
 wg = 3;
 sw = 8;
 w = ones(1,length(k_traj_3d(:)));
-FT = gridding3D(k_traj_3d,w,imwidth,osf,wg,sw,'false');
+FT = GRIDDING3D(k_traj_3d,w,imwidth,osf,wg,sw,[imwidth imwidth imwidth],'false');
 
 %% generate radial data
 dataRadial = (FT*img);

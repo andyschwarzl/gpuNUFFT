@@ -4,6 +4,12 @@
 #include "gtest/gtest.h"
 #include "gridding_operator.hpp"
 
+// sort algorithm example
+#include <iostream>     // std::cout
+#include <algorithm>    // std::sort
+#include <vector>       // std::vector
+#include <map>
+
 #define EPS 0.0001
 
 TEST(PrecomputationTest, ComputeIsotropicSectorCount) {
@@ -278,4 +284,163 @@ TEST(PrecomputationTest, AssignSectors2D) {
 	}
 
 	free(sectorRange);
+}
+
+TEST(PrecomputationTest, AssignSectors3D) {
+	size_t imageWidth = 16; 
+	DType osr = 1.5;
+	size_t sectorWidth = 8;
+
+	const size_t coordCnt = 6;
+	
+	// Coords as StructureOfArrays
+	// i.e. first x-vals, then y-vals and z-vals
+	DType coords[coordCnt*3] = {-0.5,-0.3,-0.1, 0.1, 0.3, 0.5,//x
+	                            -0.5,-0.5,   0,   0, 0.5, 0.45,//y
+	                            -0.33,-0.16666,   0,   0, -0.23, 0.45};//z
+
+	GriddingND::Array<DType> kSpaceData;
+    kSpaceData.data = coords;
+    kSpaceData.dim.length = coordCnt;
+
+	GriddingND::Dimensions gridDim;
+	gridDim.width = (size_t)(imageWidth * osr);
+	gridDim.height = (size_t)(imageWidth * osr);
+	gridDim.depth = (size_t)(imageWidth * osr);
+
+	GriddingND::Dimensions sectorDims;
+	sectorDims.width = std::ceil(static_cast<float>(gridDim.width) / sectorWidth);
+	sectorDims.height = std::ceil(static_cast<float>(gridDim.height) / sectorWidth);
+	sectorDims.depth = std::ceil(static_cast<float>(gridDim.depth) / sectorWidth);
+
+	DType expected[4] = {-0.5000,-0.16666,0.16666,0.5000};
+
+	DType* sectorRange = (DType*)malloc((sectorDims.width +1) * sizeof(DType));
+	//linspace in range from -0.5 to 0.5
+	for (int i=0; i <= sectorDims.width; i++)
+	{
+		sectorRange[i] = -0.5 + i*(static_cast<DType>(1.0) / (sectorDims.width));
+		EXPECT_NEAR(sectorRange[i],expected[i],EPS);
+	}
+	std::cout << std::endl;
+	
+	size_t expectedSec[6] = {0,9,13,13,8,26};
+
+	for (int cCnt = 0; cCnt < coordCnt; cCnt++)
+	{
+		DType3 coord;
+		coord.x = kSpaceData.data[cCnt];
+		coord.y = kSpaceData.data[cCnt + kSpaceData.count()];
+		coord.z = kSpaceData.data[cCnt + 2*kSpaceData.count()];
+		
+		std::cout << "processing x var: " << coord.x << " y: " << coord.y << " z: " << coord.z  << std::endl;
+
+		size_t x_sector = std::floor(static_cast<float>(coord.x + 0.5) * sectorDims.width);
+		if (x_sector == sectorDims.width) 
+			x_sector--;
+
+		size_t y_sector = std::floor(static_cast<float>(coord.y + 0.5) * sectorDims.height);
+		if (y_sector == sectorDims.height) 
+			y_sector--;
+
+		size_t z_sector = std::floor(static_cast<float>(coord.z + 0.5) * sectorDims.depth);
+		if (z_sector == sectorDims.depth) 
+			z_sector--;
+
+		std::cout << "into sector x: " << x_sector << " y: " << y_sector << " z: " << z_sector << std::endl;
+		EXPECT_EQ(expectedSec[cCnt],x_sector + sectorDims.height * (y_sector + sectorDims.depth * z_sector));
+	}
+
+	free(sectorRange);
+}
+
+bool myfunction (std::pair<size_t,size_t> i,std::pair<size_t,size_t> j) 
+{ return (i.second < j.second); }
+
+TEST(PrecomputationTest, TestIndexSorting) 
+{
+  size_t expectedSectors[6] = {0,9,13,13,8,26};
+  std::vector<std::pair<size_t,size_t>> secVector;
+
+  for (size_t i=0; i< 6; i++)
+	  secVector.push_back(std::pair<size_t,size_t>(i,expectedSectors[i]));
+
+  // using default comparison (operator <):
+  std::sort(secVector.begin(), secVector.end());
+
+  // using function as comp
+  std::sort (secVector.begin(), secVector.end(), myfunction);
+  
+  // print out content:
+  std::cout << "vector contains:";
+  for (std::vector<std::pair<size_t,size_t>>::iterator it=secVector.begin(); it!=secVector.end(); ++it)
+    std::cout << " " << it->second << " (" << it->first << ") ";
+  std::cout << '\n';
+
+  std::pair<size_t,size_t>* sortedArray = &secVector[0];
+
+  for (size_t i=0; i<6;i++)
+	  std::cout << sortedArray[i].first << std::endl;
+
+}
+
+TEST(PrecomputationTest, AssignSectors3DSorted) {
+	size_t imageWidth = 16; 
+	DType osr = 1.5;
+	size_t sectorWidth = 8;
+
+	const size_t coordCnt = 6;
+	
+	// Coords as StructureOfArrays
+	// i.e. first x-vals, then y-vals and z-vals
+	DType coords[coordCnt*3] = {-0.5,-0.3,-0.1, 0.1, 0.3, 0.5,//x
+	                            -0.5,-0.5,   0,   0, 0.5, 0.45,//y
+	                            -0.33,-0.16666,   0,   0, -0.23, 0.45};//z
+
+	GriddingND::Array<DType> kSpaceData;
+    kSpaceData.data = coords;
+    kSpaceData.dim.length = coordCnt;
+
+	GriddingND::Dimensions gridDim;
+	gridDim.width = (size_t)(imageWidth * osr);
+	gridDim.height = (size_t)(imageWidth * osr);
+	gridDim.depth = (size_t)(imageWidth * osr);
+
+	GriddingND::Dimensions sectorDims;
+	sectorDims.width = std::ceil(static_cast<float>(gridDim.width) / sectorWidth);
+	sectorDims.height = std::ceil(static_cast<float>(gridDim.height) / sectorWidth);
+	sectorDims.depth = std::ceil(static_cast<float>(gridDim.depth) / sectorWidth);
+
+	size_t expectedSec[6] = {0,9,13,13,8,26};
+
+	GriddingND::Array<size_t> assignedSectors;
+    assignedSectors.data = (size_t*)malloc(coordCnt * sizeof(size_t));
+    assignedSectors.dim.length = coordCnt;
+
+	for (int cCnt = 0; cCnt < coordCnt; cCnt++)
+	{
+		DType3 coord;
+		coord.x = kSpaceData.data[cCnt];
+		coord.y = kSpaceData.data[cCnt + kSpaceData.count()];
+		coord.z = kSpaceData.data[cCnt + 2*kSpaceData.count()];
+
+		size_t x_sector = std::floor(static_cast<float>(coord.x + 0.5) * sectorDims.width);
+		if (x_sector == sectorDims.width) 
+			x_sector--;
+
+		size_t y_sector = std::floor(static_cast<float>(coord.y + 0.5) * sectorDims.height);
+		if (y_sector == sectorDims.height) 
+			y_sector--;
+
+		size_t z_sector = std::floor(static_cast<float>(coord.z + 0.5) * sectorDims.depth);
+		if (z_sector == sectorDims.depth) 
+			z_sector--;
+		size_t sector = x_sector + sectorDims.height * (y_sector + sectorDims.depth * z_sector);
+		assignedSectors.data[cCnt] = sector;
+		EXPECT_EQ(expectedSec[cCnt],sector);
+	}
+
+	size_t expectedSecSorted[6] = {0,9,13,13,8,26};
+	
+	free(assignedSectors.data);
 }

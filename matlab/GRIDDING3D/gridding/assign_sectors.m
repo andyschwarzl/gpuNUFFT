@@ -25,7 +25,6 @@ end
 
 sectors = (im_width / sector_width);
 
-
 sector_count = (sectors).^3;
 sector_dim = sector_count;
 

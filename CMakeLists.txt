@@ -24,14 +24,13 @@ FIND_PACKAGE(CUDA REQUIRED)
 
 #Searching MATLAB
 # for Windows something like 
-
 if(WIN32)
   SET(MATLAB_ROOT_DIR "C:\\Program Files\\MATLAB\\R2011a" CACHE STRING "MATLAB Installation Directory")
 elseif(UNIX)
   SET(MATLAB_ROOT_DIR "/usr/local/MATLAB/R2010b" CACHE STRING "MATLAB Installation Directory")
 endif()
 
-SET( MATLAB_DIR = "${MATLAB_ROOT_DIR}")
+SET(MATLAB_DIR = "${MATLAB_ROOT_DIR}")
 
 FIND_PACKAGE(Matlab)
 
@@ -127,13 +126,13 @@ if(GEN_TESTS)
 		NAME runGPUUnitTests
 		COMMAND runGPUUnitTests
 	)
-endif(GEN_TESTS)
 
-if(GEN_ATOMIC)
-	add_test(
-    NAME runGPUATMUnitTests
-    COMMAND runGPUATMUnitTests)
-endif(GEN_ATOMIC)
+	if(GEN_ATOMIC)
+		add_test(
+			NAME runGPUATMUnitTests
+			COMMAND runGPUATMUnitTests)
+	endif(GEN_ATOMIC)
+endif(GEN_TESTS)
 
 #CREATE zip Archive using JAVA in order to deploy project patch
 if (GEN_ZIP)

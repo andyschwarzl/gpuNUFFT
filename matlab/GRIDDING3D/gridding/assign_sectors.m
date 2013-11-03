@@ -62,9 +62,9 @@ Rz = q1 & q2;
 
 data_sector_idx = zeros(1,length(x_coords));
 
-base_x = (2.^(2*(log2(sectors))));
+base_x = (2.^(0*(log2(sectors))));
 base_y = (2.^(1*(log2(sectors))));
-base_z = (2.^(0*(log2(sectors))));
+base_z = (2.^(2*(log2(sectors))));
 
 for n = 1:length(x_coords)
    temp = base_x * (default_value(find(Rx(n,:))-1)) ...
@@ -76,12 +76,12 @@ end
 %calculate sector centers -> needed for computational purpose
 sector_centers = zeros(1,3*sector_count);
 
-for x = 0: sectors-1
+for z = 0: sectors-1
     for y = 0:sectors-1
-        for z = 0:sectors-1
-        sector_centers(3*(z+sectors*(y + sectors*x))+1) = (x)*sector_width +  floor(sector_width / 2);
-        sector_centers(3*(z+sectors*(y + sectors*x))+2) = (y)*sector_width +  floor(sector_width / 2);
-        sector_centers(3*(z+sectors*(y + sectors*x))+3) = (z)*sector_width +  floor(sector_width / 2);
+        for x = 0:sectors-1
+        sector_centers(3*(x+sectors*(y + sectors*z))+1) = (x)*sector_width +  floor(sector_width / 2);
+        sector_centers(3*(x+sectors*(y + sectors*z))+2) = (y)*sector_width +  floor(sector_width / 2);
+        sector_centers(3*(x+sectors*(y + sectors*z))+3) = (z)*sector_width +  floor(sector_width / 2);
         end
     end
 end

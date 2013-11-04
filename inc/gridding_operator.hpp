@@ -31,6 +31,14 @@ namespace GriddingND
            return DEFAULT_VALUE(length) * DEFAULT_VALUE(width) * DEFAULT_VALUE(height) * DEFAULT_VALUE(depth) * DEFAULT_VALUE(channels) * DEFAULT_VALUE(frames);
         }
 
+		Dimensions operator*(DType alpha)
+		{
+			(*this).width = (size_t)((*this).width * alpha);
+			(*this).height = (size_t)((*this).height * alpha);
+			(*this).depth = (size_t)((*this).depth * alpha);
+			(*this).length = (size_t)((*this).length * alpha);
+			return (*this);
+		}
     };
 
     template <typename T>

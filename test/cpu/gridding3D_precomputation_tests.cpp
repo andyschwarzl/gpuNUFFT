@@ -12,26 +12,45 @@
 
 #define EPS 0.0001
 
+size_t computeSectorCountPerDimension(size_t dim, size_t sectorWidth)
+{
+	return std::ceil(static_cast<DType>(dim) / sectorWidth);
+}
+
+GriddingND::Dimensions computeSectorCountPerDimension(GriddingND::Dimensions dim, size_t sectorWidth)
+{
+	GriddingND::Dimensions sectorDims;
+	sectorDims.width = computeSectorCountPerDimension(dim.width,sectorWidth);
+	sectorDims.height = computeSectorCountPerDimension(dim.height,sectorWidth);
+	sectorDims.depth = computeSectorCountPerDimension(dim.depth,sectorWidth);
+	return sectorDims;
+}
+
+size_t computeTotalSectorCount(GriddingND::Dimensions dim, size_t sectorWidth)
+{
+	return computeSectorCountPerDimension(dim,sectorWidth).count();
+}
+
 TEST(PrecomputationTest, ComputeIsotropicSectorCount) {
 	size_t imageWidth = 128; 
 	size_t sectorWidth = 8;
 
-	size_t sectors = std::ceil(static_cast<float>(imageWidth) / sectorWidth);
+	size_t sectors = computeSectorCountPerDimension(imageWidth,sectorWidth);
 	EXPECT_EQ(16,sectors);
 
 	imageWidth = 124; 
 	sectorWidth = 8;
-    sectors = std::ceil(static_cast<float>(imageWidth) / sectorWidth);
+    sectors = computeSectorCountPerDimension(imageWidth,sectorWidth);
 	EXPECT_EQ(16,sectors);
 
 	imageWidth = 7; 
 	sectorWidth = 8;
-    sectors = std::ceil(static_cast<float>(imageWidth) / sectorWidth);
+    sectors = computeSectorCountPerDimension(imageWidth,sectorWidth);
 	EXPECT_EQ(1,sectors);
 
 	imageWidth = 120; 
 	sectorWidth = 8;
-    sectors = std::ceil(static_cast<float>(imageWidth) / sectorWidth);
+    sectors = computeSectorCountPerDimension(imageWidth,sectorWidth);
 	EXPECT_EQ(15,sectors);
 }
 
@@ -45,19 +64,14 @@ TEST(PrecomputationTest, ComputeIsotropicSectorDim) {
 	gridDim.height = (size_t)(imageWidth * osr);
 	gridDim.depth = (size_t)(imageWidth * osr);
 
-	size_t sectors = std::ceil(static_cast<float>(gridDim.width) / sectorWidth);
-	size_t sectorDim = std::ceil(static_cast<float>(gridDim.width) / sectorWidth) * 
-		               std::ceil(static_cast<float>(gridDim.height) / sectorWidth) *
-	                   std::ceil(static_cast<float>(gridDim.depth) / sectorWidth);
+	size_t sectors = computeSectorCountPerDimension(gridDim.width, sectorWidth);
+	size_t sectorDim = computeTotalSectorCount(gridDim,sectorWidth);
 	EXPECT_EQ(16*osr,sectors);
 	
 	size_t expected = 16*16*16*osr*osr*osr;
 	EXPECT_EQ(expected,sectorDim);	
 
-	GriddingND::Dimensions sectorDims;
-	sectorDims.width = std::ceil(static_cast<float>(gridDim.width) / sectorWidth);
-	sectorDims.height = std::ceil(static_cast<float>(gridDim.height) / sectorWidth);
-	sectorDims.depth = std::ceil(static_cast<float>(gridDim.depth) / sectorWidth);
+	GriddingND::Dimensions sectorDims = computeSectorCountPerDimension(gridDim,sectorWidth);
 
 	EXPECT_EQ(expected,sectorDims.count());
 }
@@ -68,21 +82,20 @@ TEST(PrecomputationTest, ComputeAnisotropicSectorDim) {
 	size_t sectorWidth = 8;
 
     GriddingND::Dimensions gridDim;
-	gridDim.width = (size_t)(imageWidth * osr);
-	gridDim.height = (size_t)(imageWidth * osr);
-	gridDim.depth = (size_t)((imageWidth-16) * osr);
+	gridDim.width = (size_t)(imageWidth);
+	gridDim.height = (size_t)(imageWidth);
+	gridDim.depth = (size_t)((imageWidth-16));
+	
+	std::cout << " dimensions before: w: " << gridDim.width << " h: " << gridDim.height << " d: " << gridDim.depth << std::endl;
+	gridDim = gridDim * osr;
+	std::cout << " dimensions scaled: w: " << gridDim.width << " h: " << gridDim.height << " d: " << gridDim.depth << std::endl;
 
-	size_t sectorDim = std::ceil(static_cast<float>(gridDim.width) / sectorWidth) * 
-		               std::ceil(static_cast<float>(gridDim.height) / sectorWidth) *
-	                   std::ceil(static_cast<float>(gridDim.depth) / sectorWidth);
+	size_t sectorDim = computeTotalSectorCount(gridDim,sectorWidth);
 	 
 	size_t expected = 16*16*14*osr*osr*osr;
 	EXPECT_EQ(expected,sectorDim);	
 
-	GriddingND::Dimensions sectorDims;
-	sectorDims.width = std::ceil(static_cast<float>(gridDim.width) / sectorWidth);
-	sectorDims.height = std::ceil(static_cast<float>(gridDim.height) / sectorWidth);
-	sectorDims.depth = std::ceil(static_cast<float>(gridDim.depth) / sectorWidth);
+	GriddingND::Dimensions sectorDims = computeSectorCountPerDimension(gridDim,sectorWidth);
 
 	EXPECT_EQ(expected,sectorDims.count());
 }
@@ -97,10 +110,7 @@ TEST(PrecomputationTest, ComputeSectorRanges) {
 	gridDim.height = (size_t)(imageWidth * osr);
 	gridDim.depth = (size_t)(imageWidth * osr);
 
-	GriddingND::Dimensions sectorDims;
-	sectorDims.width = std::ceil(static_cast<float>(gridDim.width) / sectorWidth);
-	sectorDims.height = std::ceil(static_cast<float>(gridDim.height) / sectorWidth);
-	sectorDims.depth = std::ceil(static_cast<float>(gridDim.depth) / sectorWidth);
+	GriddingND::Dimensions sectorDims = computeSectorCountPerDimension(gridDim,sectorWidth);
 
 	DType expected[17] = {-0.5000,-0.4375,-0.3750,-0.3125,-0.2500,-0.1875,-0.1250,-0.0625,0,0.0625,0.1250,0.1875,0.2500,0.3125,0.3750,0.4375,0.5000};
 
@@ -137,10 +147,7 @@ TEST(PrecomputationTest, AssignSectors1D) {
 	gridDim.height = (size_t)(imageWidth * osr);
 	gridDim.depth = (size_t)(imageWidth * osr);
 
-	GriddingND::Dimensions sectorDims;
-	sectorDims.width = std::ceil(static_cast<float>(gridDim.width) / sectorWidth);
-	sectorDims.height = std::ceil(static_cast<float>(gridDim.height) / sectorWidth);
-	sectorDims.depth = std::ceil(static_cast<float>(gridDim.depth) / sectorWidth);
+	GriddingND::Dimensions sectorDims = computeSectorCountPerDimension(gridDim,sectorWidth);
 
 	DType expected[4] = {-0.5000,-0.16666,0.16666,0.5000};
 
@@ -190,10 +197,7 @@ TEST(PrecomputationTest, AssignSectors1DOnBorders) {
 	gridDim.height = (size_t)(imageWidth * osr);
 	gridDim.depth = (size_t)(imageWidth * osr);
 
-	GriddingND::Dimensions sectorDims;
-	sectorDims.width = std::ceil(static_cast<float>(gridDim.width) / sectorWidth);
-	sectorDims.height = std::ceil(static_cast<float>(gridDim.height) / sectorWidth);
-	sectorDims.depth = std::ceil(static_cast<float>(gridDim.depth) / sectorWidth);
+	GriddingND::Dimensions sectorDims= computeSectorCountPerDimension(gridDim,sectorWidth);
 
 	DType expected[4] = {-0.5000,-0.16666,0.16666,0.5000};
 
@@ -245,10 +249,7 @@ TEST(PrecomputationTest, AssignSectors2D) {
 	gridDim.height = (size_t)(imageWidth * osr);
 	gridDim.depth = (size_t)(imageWidth * osr);
 
-	GriddingND::Dimensions sectorDims;
-	sectorDims.width = std::ceil(static_cast<float>(gridDim.width) / sectorWidth);
-	sectorDims.height = std::ceil(static_cast<float>(gridDim.height) / sectorWidth);
-	sectorDims.depth = std::ceil(static_cast<float>(gridDim.depth) / sectorWidth);
+	GriddingND::Dimensions sectorDims= computeSectorCountPerDimension(gridDim,sectorWidth);
 
 	DType expected[4] = {-0.5000,-0.16666,0.16666,0.5000};
 
@@ -286,6 +287,41 @@ TEST(PrecomputationTest, AssignSectors2D) {
 	free(sectorRange);
 }
 
+size_t computeSectorMapping(DType coord, size_t sectorCount)
+{
+	size_t sector = std::floor(static_cast<DType>(coord + 0.5) * sectorCount);
+	if (sector == sectorCount) 
+		sector--;
+	return sector;
+}
+
+IndType3 computeSectorMapping(DType3 coord, GriddingND::Dimensions sectorDims)
+{
+	IndType3 sector;
+	sector.x = computeSectorMapping(coord.x,sectorDims.width);
+	sector.y  = computeSectorMapping(coord.y,sectorDims.height);
+	sector.z  = computeSectorMapping(coord.z,sectorDims.depth);
+	return sector;
+}
+
+IndType2 computeSectorMapping(DType2 coord, GriddingND::Dimensions sectorDims)
+{
+	IndType2 sector;
+	sector.x = computeSectorMapping(coord.x,sectorDims.width);
+	sector.y  = computeSectorMapping(coord.y,sectorDims.height);
+	return sector;
+}
+
+size_t computeXYZ2Lin(size_t x, size_t y, size_t z, GriddingND::Dimensions dim)
+{
+	return x + dim.height * (y + dim.depth * z);
+}
+
+size_t computeInd32Lin(IndType3 sector, GriddingND::Dimensions dim)
+{
+	return sector.x + dim.height * (sector.y + dim.depth * sector.z);
+}
+
 TEST(PrecomputationTest, AssignSectors3D) {
 	size_t imageWidth = 16; 
 	DType osr = 1.5;
@@ -308,10 +344,7 @@ TEST(PrecomputationTest, AssignSectors3D) {
 	gridDim.height = (size_t)(imageWidth * osr);
 	gridDim.depth = (size_t)(imageWidth * osr);
 
-	GriddingND::Dimensions sectorDims;
-	sectorDims.width = std::ceil(static_cast<float>(gridDim.width) / sectorWidth);
-	sectorDims.height = std::ceil(static_cast<float>(gridDim.height) / sectorWidth);
-	sectorDims.depth = std::ceil(static_cast<float>(gridDim.depth) / sectorWidth);
+	GriddingND::Dimensions sectorDims= computeSectorCountPerDimension(gridDim,sectorWidth);
 
 	DType expected[4] = {-0.5000,-0.16666,0.16666,0.5000};
 
@@ -335,20 +368,15 @@ TEST(PrecomputationTest, AssignSectors3D) {
 		
 		std::cout << "processing x var: " << coord.x << " y: " << coord.y << " z: " << coord.z  << std::endl;
 
-		size_t x_sector = std::floor(static_cast<float>(coord.x + 0.5) * sectorDims.width);
-		if (x_sector == sectorDims.width) 
-			x_sector--;
-
-		size_t y_sector = std::floor(static_cast<float>(coord.y + 0.5) * sectorDims.height);
-		if (y_sector == sectorDims.height) 
-			y_sector--;
-
-		size_t z_sector = std::floor(static_cast<float>(coord.z + 0.5) * sectorDims.depth);
-		if (z_sector == sectorDims.depth) 
-			z_sector--;
+		size_t x_sector = computeSectorMapping(coord.x,sectorDims.width);
+		size_t y_sector = computeSectorMapping(coord.y,sectorDims.height);
+		size_t z_sector = computeSectorMapping(coord.z,sectorDims.depth);
 
 		std::cout << "into sector x: " << x_sector << " y: " << y_sector << " z: " << z_sector << std::endl;
-		EXPECT_EQ(expectedSec[cCnt],x_sector + sectorDims.height * (y_sector + sectorDims.depth * z_sector));
+		EXPECT_EQ(expectedSec[cCnt],computeXYZ2Lin(x_sector,y_sector,z_sector,sectorDims));
+
+		IndType3 mappedSectors = computeSectorMapping(coord,sectorDims);
+		EXPECT_EQ(expectedSec[cCnt],computeInd32Lin(mappedSectors,sectorDims));
 	}
 
 	free(sectorRange);
@@ -422,10 +450,7 @@ TEST(PrecomputationTest, AssignSectors3DSorted) {
 	gridDim.height = (size_t)(imageWidth * osr);
 	gridDim.depth = (size_t)(imageWidth * osr);
 
-	GriddingND::Dimensions sectorDims;
-	sectorDims.width = std::ceil(static_cast<float>(gridDim.width) / sectorWidth);
-	sectorDims.height = std::ceil(static_cast<float>(gridDim.height) / sectorWidth);
-	sectorDims.depth = std::ceil(static_cast<float>(gridDim.depth) / sectorWidth);
+	GriddingND::Dimensions sectorDims= computeSectorCountPerDimension(gridDim,sectorWidth);
 
 	size_t expectedSec[6] = {0,9,13,13,8,26};
 
@@ -440,18 +465,9 @@ TEST(PrecomputationTest, AssignSectors3DSorted) {
 		coord.y = kSpaceData.data[cCnt + kSpaceData.count()];
 		coord.z = kSpaceData.data[cCnt + 2*kSpaceData.count()];
 
-		size_t x_sector = std::floor(static_cast<float>(coord.x + 0.5) * sectorDims.width);
-		if (x_sector == sectorDims.width) 
-			x_sector--;
+		IndType3 mappedSectors = computeSectorMapping(coord,sectorDims);
 
-		size_t y_sector = std::floor(static_cast<float>(coord.y + 0.5) * sectorDims.height);
-		if (y_sector == sectorDims.height) 
-			y_sector--;
-
-		size_t z_sector = std::floor(static_cast<float>(coord.z + 0.5) * sectorDims.depth);
-		if (z_sector == sectorDims.depth) 
-			z_sector--;
-		size_t sector = x_sector + sectorDims.height * (y_sector + sectorDims.depth * z_sector);
+		size_t sector = computeInd32Lin(mappedSectors,sectorDims);
 		assignedSectors.data[cCnt] = sector;
 		EXPECT_EQ(expectedSec[cCnt],sector);
 	}
@@ -461,12 +477,58 @@ TEST(PrecomputationTest, AssignSectors3DSorted) {
 
     std::vector<std::pair<size_t,size_t>> secVector = sortVector(assignedSectors);
 	
+	DType coords_sorted[coordCnt*3];
+
 	for (int i=0; i<assignedSectors.count();i++)
 	{
 		//compare index
 		EXPECT_EQ(expectedSecIndexSorted[i],secVector[i].first);
 		EXPECT_EQ(expectedSecSorted[i],secVector[i].second);
+		coords_sorted[i] = kSpaceData.data[secVector[i].first];
+		coords_sorted[i + 1*coordCnt] = kSpaceData.data[secVector[i].first + 1*coordCnt];
+		coords_sorted[i + 2*coordCnt] = kSpaceData.data[secVector[i].first + 2*coordCnt];
+	}
+
+	for (int i=0;i<kSpaceData.count();i++)
+	{
+		std::cout << " x: "  << coords_sorted[i] << " y: " << coords_sorted[i+ 1*coordCnt] << " z:" << coords_sorted[i+ 2*coordCnt] << std::endl;
 	}
 
 	free(assignedSectors.data);
+}
+
+
+TEST(PrecomputationTest, ComputeSectorCenters) {
+	size_t imageWidth = 16; 
+	DType osr = 1.5;
+	size_t sectorWidth = 8;
+
+	GriddingND::Dimensions gridDim;
+	gridDim.width = (size_t)(imageWidth * osr);
+	gridDim.height = (size_t)(imageWidth * osr);
+	gridDim.depth = (size_t)(imageWidth * osr);
+	
+	GriddingND::Dimensions sectorDims= computeSectorCountPerDimension(gridDim,sectorWidth);
+
+	GriddingND::Array<IndType3> sectorCenters; 
+	sectorCenters.data = (IndType3*)malloc(sectorDims.count() * sizeof(IndType3));
+	sectorCenters.dim.length = sectorDims.count();
+
+	for (size_t z=0;z<sectorDims.depth; z++)
+		for (size_t y=0;y<sectorDims.height;y++)
+			for (size_t x=0;x<sectorDims.width;x++)
+			{
+				IndType3 center;
+				center.x = x*sectorWidth +  std::floor(static_cast<DType>(sectorWidth) / (DType)2.0);
+				center.y = y*sectorWidth +  std::floor(static_cast<DType>(sectorWidth) / (DType)2.0);
+				center.z = z*sectorWidth +  std::floor(static_cast<DType>(sectorWidth) / (DType)2.0);
+				sectorCenters.data[computeXYZ2Lin(x,y,z,sectorDims)] = center;
+			}
+
+	for (int i=0; i<sectorDims.count(); i++)
+	{
+		std::cout << " x: " << sectorCenters.data[i].x << " y: " << sectorCenters.data[i].y << " z: " << sectorCenters.data[i].z << std::endl;
+	}
+
+	free(sectorCenters.data);
 }

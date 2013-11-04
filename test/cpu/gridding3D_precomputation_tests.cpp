@@ -354,23 +354,35 @@ TEST(PrecomputationTest, AssignSectors3D) {
 	free(sectorRange);
 }
 
-bool myfunction (std::pair<size_t,size_t> i,std::pair<size_t,size_t> j) 
-{ return (i.second < j.second); }
+bool pairComp (std::pair<size_t,size_t> i,std::pair<size_t,size_t> j) 
+{ 
+	return (i.second < j.second); 
+}
+
+std::vector<std::pair<size_t,size_t>> sortVector(GriddingND::Array<size_t> assignedSectors)
+{
+	std::vector<std::pair<size_t,size_t>> secVector;
+	
+	for (size_t i=0; i< assignedSectors.count(); i++)
+	  secVector.push_back(std::pair<size_t,size_t>(i,assignedSectors.data[i]));
+
+	// using function as comp
+	std::sort (secVector.begin(), secVector.end(), pairComp);
+
+	return secVector;
+}
 
 TEST(PrecomputationTest, TestIndexSorting) 
 {
-  size_t expectedSectors[6] = {0,9,13,13,8,26};
-  std::vector<std::pair<size_t,size_t>> secVector;
+  size_t assSectors[6] = {0,9,13,13,8,26};
+  size_t expectedSectors[6] = {0,8,9,13,13,26};
 
-  for (size_t i=0; i< 6; i++)
-	  secVector.push_back(std::pair<size_t,size_t>(i,expectedSectors[i]));
+  GriddingND::Array<size_t> assignedSectors;
+  assignedSectors.data = assSectors;
+  assignedSectors.dim.length = 6;
 
-  // using default comparison (operator <):
-  std::sort(secVector.begin(), secVector.end());
+  std::vector<std::pair<size_t,size_t>> secVector = sortVector(assignedSectors);
 
-  // using function as comp
-  std::sort (secVector.begin(), secVector.end(), myfunction);
-  
   // print out content:
   std::cout << "vector contains:";
   for (std::vector<std::pair<size_t,size_t>>::iterator it=secVector.begin(); it!=secVector.end(); ++it)
@@ -379,9 +391,13 @@ TEST(PrecomputationTest, TestIndexSorting)
 
   std::pair<size_t,size_t>* sortedArray = &secVector[0];
 
+  //print indices for reselect
   for (size_t i=0; i<6;i++)
-	  std::cout << sortedArray[i].first << std::endl;
-
+  {
+	  std::cout << sortedArray[i].first ;
+	  EXPECT_EQ(sortedArray[i].second, expectedSectors[i]);
+  }
+  std::cout << std::endl;
 }
 
 TEST(PrecomputationTest, AssignSectors3DSorted) {
@@ -440,7 +456,17 @@ TEST(PrecomputationTest, AssignSectors3DSorted) {
 		EXPECT_EQ(expectedSec[cCnt],sector);
 	}
 
-	size_t expectedSecSorted[6] = {0,9,13,13,8,26};
+	size_t expectedSecSorted[6] = {0,8,9,13,13,26};
+	size_t expectedSecIndexSorted[6] = {0,4,1,2,3,5};
+
+    std::vector<std::pair<size_t,size_t>> secVector = sortVector(assignedSectors);
 	
+	for (int i=0; i<assignedSectors.count();i++)
+	{
+		//compare index
+		EXPECT_EQ(expectedSecIndexSorted[i],secVector[i].first);
+		EXPECT_EQ(expectedSecSorted[i],secVector[i].second);
+	}
+
 	free(assignedSectors.data);
 }

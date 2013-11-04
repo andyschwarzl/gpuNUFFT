@@ -19,4 +19,17 @@
 	typedef cufftComplex CufftType;
 #endif
 
+	typedef size_t IndType;
+	
+	typedef
+	struct { size_t x;
+	         size_t y;
+	}  IndType2;
+
+	typedef
+	struct { size_t x;
+	         size_t y;
+			 size_t z;
+	}  IndType3;
+
 #endif // CONFIG_H

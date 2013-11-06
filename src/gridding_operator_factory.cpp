@@ -193,6 +193,8 @@ GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddin
 
 	griddingOp->setSectorDataCount(computeSectorDataCount(griddingOp,assignedSectors));
 	griddingOp->setSectorCenters(computeSectorCenters(griddingOp));
+	
+	std::cout << "finished creation of gridding operator" << std::endl;
 	return griddingOp;
 }
 

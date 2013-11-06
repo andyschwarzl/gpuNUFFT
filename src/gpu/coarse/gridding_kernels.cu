@@ -22,8 +22,8 @@
 __global__ void convolutionKernel(DType2* data, 
                                   DType* crds, 
                                   CufftType* gdata,
-                                  int* sectors, 
-                                  int* sector_centers,
+                                  IndType* sectors, 
+                                  IndType* sector_centers,
                                   DType2* temp_gdata,
                                   int N
                                   )
@@ -50,7 +50,7 @@ __global__ void convolutionKernel(DType2* data,
 
 		DType dx_sqr, dy_sqr, dz_sqr, val, ix, jy, kz;
 
-		__shared__ int3 center;
+		__shared__ IndType3 center;
 		center.x = sector_centers[sec * 3];
 		center.y = sector_centers[sec * 3 + 1];
 		center.z = sector_centers[sec * 3 + 2];
@@ -146,12 +146,12 @@ __global__ void convolutionKernel(DType2* data,
 	}//sec < sector_count
 }
 
-__global__ void composeOutputKernel(DType2* temp_gdata, CufftType* gdata, int* sector_centers)
+__global__ void composeOutputKernel(DType2* temp_gdata, CufftType* gdata, IndType* sector_centers)
 {
 	for (int sec = 0; sec < GI.sector_count; sec++)
 	{
 		__syncthreads();
-		__shared__ int3 center;
+		__shared__ IndType3 center;
 		center.x = sector_centers[sec * 3];
 		center.y = sector_centers[sec * 3 + 1];
 		center.z = sector_centers[sec * 3 + 2];
@@ -183,7 +183,7 @@ __global__ void composeOutputKernel(DType2* temp_gdata, CufftType* gdata, int* s
 }
 
 //very slow way of composing the output, should only be used on compute capabilties lower than 2.0
-void composeOutput(DType2* temp_gdata_d, CufftType* gdata_d, int* sector_centers_d, GriddingInfo* gi_host)
+void composeOutput(DType2* temp_gdata_d, CufftType* gdata_d, IndType* sector_centers_d, GriddingInfo* gi_host)
 {
 	dim3 grid_dim(1);
 	dim3 block_dim(gi_host->sector_pad_width,gi_host->sector_pad_width,1);
@@ -195,8 +195,8 @@ void performConvolution( DType2* data_d,
 						 DType* crds_d, 
 						 CufftType* gdata_d,
 						 DType* kernel_d, 
-						 int* sectors_d, 
-						 int* sector_centers_d,
+						 IndType* sectors_d, 
+						 IndType* sector_centers_d,
 						 GriddingInfo* gi_host
 						)
 {
@@ -239,8 +239,8 @@ void performConvolution( DType2* data_d,
 __global__ void forwardConvolutionKernel(CufftType* data, 
                                          DType*     crds, 
                                          CufftType* gdata,
-                                         int* sectors, 
-                                         int* sector_centers,
+                                         IndType* sectors, 
+                                         IndType* sector_centers,
                                          int N)
 {
 	extern __shared__ CufftType shared_out_data[];//externally managed shared memory
@@ -258,7 +258,7 @@ __global__ void forwardConvolutionKernel(CufftType* data,
 		int ind, imin, imax, jmin, jmax,kmin,kmax, k, i, j;
 		DType dx_sqr, dy_sqr, dz_sqr, val, ix, jy, kz;
 
-		__shared__ int3 center;
+		__shared__ IndType3 center;
 		center.x = sector_centers[sec * 3];
 		center.y = sector_centers[sec * 3 + 1];
 		center.z = sector_centers[sec * 3 + 2];
@@ -355,8 +355,8 @@ void performForwardConvolution( CufftType*		data_d,
 								DType*			crds_d, 
 								CufftType*		gdata_d,
 								DType*			kernel_d, 
-								int*			sectors_d, 
-								int*			sector_centers_d,
+								IndType*		sectors_d, 
+								IndType*		sector_centers_d,
 								GriddingInfo*	gi_host
 								)
 {

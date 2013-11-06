@@ -68,7 +68,6 @@ TEST(TestGPUGriddingForwardConv,KernelCall1Sector)
 	sector_centers[2] = 5;*/
 	int sector_centers[3 * sector_count] = {4,4,4,4,4,12,4,4,20,4,4,28,4,4,36,4,12,4,4,12,12,4,12,20,4,12,28,4,12,36,4,20,4,4,20,12,4,20,20,4,20,28,4,20,36,4,28,4,4,28,12,4,28,20,4,28,28,4,28,36,4,36,4,4,36,12,4,36,20,4,36,28,4,36,36,12,4,4,12,4,12,12,4,20,12,4,28,12,4,36,12,12,4,12,12,12,12,12,20,12,12,28,12,12,36,12,20,4,12,20,12,12,20,20,12,20,28,12,20,36,12,28,4,12,28,12,12,28,20,12,28,28,12,28,36,12,36,4,12,36,12,12,36,20,12,36,28,12,36,36,20,4,4,20,4,12,20,4,20,20,4,28,20,4,36,20,12,4,20,12,12,20,12,20,20,12,28,20,12,36,20,20,4,20,20,12,20,20,20,20,20,28,20,20,36,20,28,4,20,28,12,20,28,20,20,28,28,20,28,36,20,36,4,20,36,12,20,36,20,20,36,28,20,36,36,28,4,4,28,4,12,28,4,20,28,4,28,28,4,36,28,12,4,28,12,12,28,12,20,28,12,28,28,12,36,28,20,4,28,20,12,28,20,20,28,20,28,28,20,36,28,28,4,28,28,12,28,28,20,28,28,28,28,28,36,28,36,4,28,36,12,28,36,20,28,36,28,28,36,36,36,4,4,36,4,12,36,4,20,36,4,28,36,4,36,36,12,4,36,12,12,36,12,20,36,12,28,36,12,36,36,20,4,36,20,12,36,20,20,36,20,28,36,20,36,36,28,4,36,28,12,36,28,20,36,28,28,36,28,36,36,36,4,36,36,12,36,36,20,36,36,28,36,36,36};
 
-
     GriddingND::Array<DType> kSpaceData;
     kSpaceData.data = coords;
     kSpaceData.dim.width  = im_width;
@@ -91,13 +90,18 @@ TEST(TestGPUGriddingForwardConv,KernelCall1Sector)
 	GriddingND::Array<size_t> sectorCentersArray;
 	sectorCentersArray.data = (size_t*)sector_centers;
 
+	GriddingND::Dimensions imgDims;
+	imgDims.width = im_width;
+	imgDims.height = im_width;
+	imgDims.depth = im_width;
+
     //GriddingND::GriddingOperator *griddingOp = new GriddingND::GriddingOperator(kernel_width,sector_width,osr);
-    GriddingND::GriddingOperator *griddingOp = GriddingND::GriddingOperatorFactory::getInstance()->createGriddingOperator(kSpaceData,kernel_width,sector_width,osr);
+    GriddingND::GriddingOperator *griddingOp = GriddingND::GriddingOperatorFactory::getInstance()->createGriddingOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
 
 	griddingOp->setOsf(osr);
 
-	griddingOp->setSectors(sectorsArray);
-	griddingOp->setSectorCenters(sectorCentersArray);
+	//griddingOp->setSectors(sectorsArray);
+	//griddingOp->setSectorCenters(sectorCentersArray);
 
 	griddingOp->performForwardGridding(im_dataArray,dataArray);
 
@@ -116,6 +120,6 @@ TEST(TestGPUGriddingForwardConv,KernelCall1Sector)
 	free(kern);
 	free(sectors);
 	//free(sector_centers);
-
+	delete griddingOp;
 	EXPECT_EQ(1, 1);
 }

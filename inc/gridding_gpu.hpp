@@ -51,7 +51,6 @@ struct GriddingInfo
 	DType dist_multiplier;
 };
 
-
 void gridding3D_gpu(CufftType**	data,			// kspace output data array 
 					int			data_count,		// data count, samples per trajectory
 					int			n_coils,		// number of coils 
@@ -62,9 +61,9 @@ void gridding3D_gpu(CufftType**	data,			// kspace output data array
 					DType*		kernel,			//
 					int			kernel_count,	//
 					int			kernel_width,	//
-					int*		sectors,		//
+					IndType*	sectors,		//
 					int			sector_count,	//
-					int*		sector_centers,	//
+					IndType*	sector_centers,	//
 					int			sector_width,	//
 					int			im_width,		//
 					DType		osr,			// oversampling ratio
@@ -80,9 +79,9 @@ void gridding3D_gpu_adj(DType2*		data,			// kspace input data array
 						DType*		kernel,			//
 						int			kernel_count,	//
 						int			kernel_width,	//
-						int*		sectors,		//
+						IndType*	sectors,		//
 						int			sector_count,	//
-						int*		sector_centers,	//
+						IndType*	sector_centers,	//
 						int			sector_width,	//
 						int			im_width,		//
 						DType		osr,			// oversampling ratio

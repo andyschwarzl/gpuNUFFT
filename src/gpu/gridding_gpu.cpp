@@ -48,9 +48,9 @@ void gridding3D_gpu(CufftType**	data,
                     DType*		kernel,
                     int			kernel_count,
                     int			kernel_width,
-                    int*		sectors,
+                    IndType*	sectors,
                     int			sector_count,
-                    int*		sector_centers,
+                    IndType*	sector_centers,
                     int			sector_width,
                     int			im_width,
                     DType		osr,
@@ -63,7 +63,7 @@ void gridding3D_gpu(CufftType**	data,
 	DType2 *imdata_d;
 	DType*crds_d, *deapo_d;
 	CufftType *gdata_d, *data_d;
-	int* sector_centers_d, *sectors_d;
+	IndType* sector_centers_d, *sectors_d;
 	
 	if (DEBUG)
 		printf("allocate and copy imdata of size %d...\n",imdata_count);
@@ -88,10 +88,10 @@ void gridding3D_gpu(CufftType**	data,
 
 	if (DEBUG)
 		printf("allocate and copy sectors of size %d...\n",sector_count+1);
-	allocateAndCopyToDeviceMem<int>(&sectors_d,sectors,sector_count+1);
+	allocateAndCopyToDeviceMem<IndType>(&sectors_d,sectors,sector_count+1);
 	if (DEBUG)
 		printf("allocate and copy sector_centers of size %d...\n",3*sector_count);
-	allocateAndCopyToDeviceMem<int>(&sector_centers_d,sector_centers,3*sector_count);
+	allocateAndCopyToDeviceMem<IndType>(&sector_centers_d,sector_centers,3*sector_count);
 	if (n_coils > 1)
 	{
 		if (DEBUG)
@@ -222,9 +222,9 @@ void gridding3D_gpu_adj(DType2*		data,
                         DType*		kernel,
                         int			kernel_count,
                         int			kernel_width,
-                        int*		sectors,
+                        IndType*	sectors,
                         int			sector_count,
-                        int*		sector_centers,
+                        IndType*	sector_centers,
                         int			sector_width,
                         int			im_width,
                         DType		osr,
@@ -243,7 +243,7 @@ void gridding3D_gpu_adj(DType2*		data,
 	DType2* data_d;
 	DType* crds_d, *density_comp_d, *deapo_d;
 	CufftType *gdata_d, *imdata_d;
-	int* sector_centers_d, *sectors_d;
+	IndType* sector_centers_d, *sectors_d;
 
 	if (DEBUG)
 		printf("allocate and copy imdata of size %d...\n",imdata_count);
@@ -270,10 +270,10 @@ void gridding3D_gpu_adj(DType2*		data,
 	//allocateAndCopyToDeviceMem<DType>(&kernel_d,kernel,kernel_count);
 	if (DEBUG)
 		printf("allocate and copy sectors of size %d...\n",sector_count+1);
-	allocateAndCopyToDeviceMem<int>(&sectors_d,sectors,sector_count+1);
+	allocateAndCopyToDeviceMem<IndType>(&sectors_d,sectors,sector_count+1);
 	if (DEBUG)
 		printf("allocate and copy sector_centers of size %d...\n",3*sector_count);
-	allocateAndCopyToDeviceMem<int>(&sector_centers_d,sector_centers,3*sector_count);
+	allocateAndCopyToDeviceMem<IndType>(&sector_centers_d,sector_centers,3*sector_count);
 	
 	if (do_comp == true)	
 	{

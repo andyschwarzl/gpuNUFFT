@@ -87,6 +87,9 @@ namespace GriddingND
 		~GriddingOperator()
 		{
 			free(this->kernel.data);
+			free(this->dataIndices.data);
+			free(this->kSpaceCoords.data);
+			free(this->sectorCenters.data);
         }
 
 		// SETTER 
@@ -116,6 +119,10 @@ namespace GriddingND
 		Dimensions getSectorDims() {return this->sectorDims;}
 
 		Array<IndType3> getSectorCenters()	{return this->sectorCenters; }
+
+		/// 
+		/// this is my comment
+		///
 		Array<IndType>  getDataIndices()		{return this->dataIndices;}
 
 
@@ -137,7 +144,7 @@ namespace GriddingND
 			loadGrid3Kernel(this->kernel.data,(int)this->kernel.count(),(int)kernelWidth,osf);
 		}
 
-        size_t getGridWidth() {return (size_t)(kSpaceCoords.dim.width * osf);}
+        size_t getGridWidth() {return (size_t)(gridDims.width * osf);}
         bool applyDensComp(){return this->dens.data != NULL;}
 
 		Array<DType> kernel;

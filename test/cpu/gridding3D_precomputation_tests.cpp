@@ -387,15 +387,15 @@ bool pairComp (std::pair<size_t,size_t> i,std::pair<size_t,size_t> j)
 	return (i.second < j.second); 
 }
 
-std::vector<std::pair<size_t,size_t>> sortVector(GriddingND::Array<size_t> assignedSectors)
+std::vector<GriddingND::IndPair> sortVector(GriddingND::Array<size_t> assignedSectors)
 {
-	std::vector<std::pair<size_t,size_t>> secVector;
+	std::vector<GriddingND::IndPair> secVector;
 	
 	for (size_t i=0; i< assignedSectors.count(); i++)
-	  secVector.push_back(std::pair<size_t,size_t>(i,assignedSectors.data[i]));
+	  secVector.push_back(GriddingND::IndPair(i,assignedSectors.data[i]));
 
 	// using function as comp
-	std::sort (secVector.begin(), secVector.end(), pairComp);
+	std::sort (secVector.begin(), secVector.end());
 
 	return secVector;
 }
@@ -409,15 +409,15 @@ TEST(PrecomputationTest, TestIndexSorting)
   assignedSectors.data = assSectors;
   assignedSectors.dim.length = 6;
 
-  std::vector<std::pair<size_t,size_t>> secVector = sortVector(assignedSectors);
+  std::vector<GriddingND::IndPair> secVector = sortVector(assignedSectors);
 
   // print out content:
   std::cout << "vector contains:";
-  for (std::vector<std::pair<size_t,size_t>>::iterator it=secVector.begin(); it!=secVector.end(); ++it)
+  for (std::vector<GriddingND::IndPair>::iterator it=secVector.begin(); it!=secVector.end(); ++it)
     std::cout << " " << it->second << " (" << it->first << ") ";
   std::cout << '\n';
 
-  std::pair<size_t,size_t>* sortedArray = &secVector[0];
+  GriddingND::IndPair* sortedArray = &secVector[0];
 
   //print indices for reselect
   for (size_t i=0; i<6;i++)
@@ -475,7 +475,7 @@ TEST(PrecomputationTest, AssignSectors3DSorted) {
 	size_t expectedSecSorted[6] = {0,8,9,13,13,26};
 	size_t expectedSecIndexSorted[6] = {0,4,1,2,3,5};
 
-    std::vector<std::pair<size_t,size_t>> secVector = sortVector(assignedSectors);
+    std::vector<GriddingND::IndPair> secVector = sortVector(assignedSectors);
 	
 	DType coords_sorted[coordCnt*3];
 
@@ -497,6 +497,89 @@ TEST(PrecomputationTest, AssignSectors3DSorted) {
 	free(assignedSectors.data);
 }
 
+TEST(PrecomputationTest, ComputeDataIndices) {
+	size_t imageWidth = 16; 
+	DType osr = 1.5;
+	size_t sectorWidth = 8;
+
+	const size_t coordCnt = 6;
+	
+	// Coords as StructureOfArrays
+	// i.e. first x-vals, then y-vals and z-vals
+	DType coords[coordCnt*3] = {-0.5,-0.3,-0.1, 0.1, 0.3, 0.5,//x
+	                            -0.5,-0.5,   0,   0, 0.5, 0.45,//y
+	                            -0.33,-0.16666,   0,   0, -0.23, 0.45};//z
+
+	GriddingND::Array<DType> kSpaceData;
+    kSpaceData.data = coords;
+    kSpaceData.dim.length = coordCnt;
+
+	GriddingND::Dimensions gridDim;
+	gridDim.width = (size_t)(imageWidth * osr);
+	gridDim.height = (size_t)(imageWidth * osr);
+	gridDim.depth = (size_t)(imageWidth * osr);
+
+	GriddingND::Dimensions sectorDims= computeSectorCountPerDimension(gridDim,sectorWidth);
+
+	size_t expectedSec[6] = {0,9,13,13,8,26};
+
+	GriddingND::Array<size_t> assignedSectors;
+    assignedSectors.data = (size_t*)malloc(coordCnt * sizeof(size_t));
+    assignedSectors.dim.length = coordCnt;
+
+	for (int cCnt = 0; cCnt < coordCnt; cCnt++)
+	{
+		DType3 coord;
+		coord.x = kSpaceData.data[cCnt];
+		coord.y = kSpaceData.data[cCnt + kSpaceData.count()];
+		coord.z = kSpaceData.data[cCnt + 2*kSpaceData.count()];
+
+		IndType3 mappedSectors = computeSectorMapping(coord,sectorDims);
+
+		size_t sector = computeInd32Lin(mappedSectors,sectorDims);
+		assignedSectors.data[cCnt] = sector;
+		EXPECT_EQ(expectedSec[cCnt],sector);
+	}
+
+	size_t expectedSecSorted[6] = {0,8,9,13,13,26};
+	size_t expectedSecIndexSorted[6] = {0,4,1,2,3,5};
+
+    std::vector<GriddingND::IndPair> secVector = sortVector(assignedSectors);
+
+	DType coords_sorted[coordCnt*3];
+	
+	for (int i=0; i<coordCnt;i++)
+	{
+		//compare index
+		EXPECT_EQ(expectedSecIndexSorted[i],secVector[i].first);
+		EXPECT_EQ(expectedSecSorted[i],secVector[i].second);
+		coords_sorted[i] = kSpaceData.data[secVector[i].first];
+		coords_sorted[i + 1*coordCnt] = kSpaceData.data[secVector[i].first + 1*coordCnt];
+		coords_sorted[i + 2*coordCnt] = kSpaceData.data[secVector[i].first + 2*coordCnt];
+	}
+
+	size_t cnt = 0;
+	std::vector<IndType> dataIndices;
+
+	IndType sectorDataCount[29] = {0,1,1,1,1,1,1,1,1,2,3,3,3,3,5,5,5,5,5,5,5,5,5,5,5,5,5,6,6};
+	
+	dataIndices.push_back(0);
+	for (int i=0; i<=sectorDims.count(); i++)
+	{	
+		while (cnt < coordCnt && i == secVector[cnt].second)
+			cnt++;
+		
+		dataIndices.push_back(cnt);
+		EXPECT_EQ(sectorDataCount[i+1],cnt);
+	}
+
+	for (int i=0; i<dataIndices.size(); i++)
+	{
+		std::cout << dataIndices.at(i) << " " ;
+	}
+	std::cout << std::endl;
+	free(assignedSectors.data);
+}
 
 TEST(PrecomputationTest, ComputeSectorCenters) {
 	size_t imageWidth = 16; 
@@ -529,6 +612,10 @@ TEST(PrecomputationTest, ComputeSectorCenters) {
 	{
 		std::cout << " x: " << sectorCenters.data[i].x << " y: " << sectorCenters.data[i].y << " z: " << sectorCenters.data[i].z << std::endl;
 	}
+
+	EXPECT_EQ(IndType3(4,4,4).x,sectorCenters.data[0].x);
+	EXPECT_EQ(IndType3(4,4,4).y,sectorCenters.data[0].y);
+	EXPECT_EQ(IndType3(4,4,4).z,sectorCenters.data[0].z);
 
 	free(sectorCenters.data);
 }

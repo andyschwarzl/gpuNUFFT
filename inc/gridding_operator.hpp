@@ -9,6 +9,19 @@
 
 namespace GriddingND
 {
+	struct IndPair : std::pair<IndType,IndType>
+	{
+		IndPair(IndType first, IndType second):
+			std::pair<IndType,IndType>(first,second)
+		{	
+		}
+
+		bool operator<(const IndPair& a) const
+		{
+			return this->second < a.second;
+		}
+	};
+
 	//TODO work on dimensions
 	//avoid ambiguity between length (1D) and multidimensional case (2D/3D)
     struct Dimensions
@@ -82,8 +95,11 @@ namespace GriddingND
         void setKspaceCoords(Array<DType> kSpaceCoords)	{this->kSpaceCoords = kSpaceCoords;}
         void setSens(Array<DType2> sens)		{this->sens = sens;}
 		void setDens(Array<DType> dens)		{this->dens = dens;}
-        void setSectorCenters(Array<size_t> sectorCenters)	{this->sectorCenters = sectorCenters;}
-        void setSectors(Array<size_t> sectors)		{this->sectors = sectors;}
+        void setSectorCenters(Array<IndType3> sectorCenters)	{this->sectorCenters = sectorCenters;}
+        void setSectorDataCount(Array<IndType> sectorDataCount)		{this->sectorDataCount = sectorDataCount;}
+		void setDataIndices(Array<IndType> dataIndices)		{this->dataIndices = dataIndices;}
+		void setGridDims(Dimensions dims)  {this->gridDims = dims;}
+		void setSectorDims(Dimensions dims)  {this->sectorDims = dims;}
 
 		// GETTER
         Array<DType>  getKspaceCoords()	{return this->kSpaceCoords;}
@@ -91,9 +107,17 @@ namespace GriddingND
 		Array<DType2>	getSens()			{return this->sens;}
         Array<DType>	getDens()			{return this->dens;}
 		Array<DType>    getKernel()			{return this->kernel;}
+		Array<IndType>  getSectorDataCount(){return this->sectorDataCount;}
 
         size_t getKernelWidth()		{return this->kernelWidth;}
         size_t getSectorWidth()		{return this->sectorWidth;}
+		Dimensions getGridDims() {return this->gridDims;}
+
+		Dimensions getSectorDims() {return this->sectorDims;}
+
+		Array<IndType3> getSectorCenters()	{return this->sectorCenters; }
+		Array<IndType>  getDataIndices()		{return this->dataIndices;}
+
 
 		// OPERATIONS
 
@@ -113,7 +137,6 @@ namespace GriddingND
 			loadGrid3Kernel(this->kernel.data,(int)this->kernel.count(),(int)kernelWidth,osf);
 		}
 
-
         size_t getGridWidth() {return (size_t)(kSpaceCoords.dim.width * osf);}
         bool applyDensComp(){return this->dens.data != NULL;}
 
@@ -132,11 +155,13 @@ namespace GriddingND
 		Array<DType> dens;
 
 		// sector centers
-		Array<size_t> sectorCenters;
+		Array<IndType3> sectorCenters;
 
-		// sectors 
+		// dataCount per sector
+		Array<IndType> sectorDataCount;
+
 		// assignment of data index to according sector
-		Array<size_t> sectors;
+		Array<IndType> dataIndices;
 
 		// oversampling factor
 		DType osf;
@@ -146,6 +171,10 @@ namespace GriddingND
 
 		// sector size in grid units
 		size_t sectorWidth;
+
+		Dimensions gridDims;
+
+		Dimensions sectorDims;
 	};
 }
 

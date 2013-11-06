@@ -10,8 +10,8 @@ void performConvolution( DType2* data_d,
 						 DType* crds_d, 
 						 CufftType* gdata_d,
 						 DType* kernel_d, 
-						 int* sectors_d, 
-						 int* sector_centers_d,
+						 IndType* sectors_d, 
+						 IndType* sector_centers_d,
 						 GriddingInfo* gi_host
 						);
 																	
@@ -19,8 +19,8 @@ void performForwardConvolution( CufftType*		data_d,
 								DType*			crds_d, 
 								CufftType*		gdata_d,
 								DType*			kernel_d, 
-								int*			sectors_d, 
-								int*			sector_centers_d,
+								IndType*		sectors_d, 
+								IndType*		sector_centers_d,
 								GriddingInfo*	gi_host
 								);
 

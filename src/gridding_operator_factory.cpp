@@ -162,7 +162,7 @@ GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddin
 	std::cout << "create gridding operator" << std::endl;
     
 	griddingOp->setKspaceCoords(kSpaceCoords);
-	griddingOp->setImgDims(imgDims);
+	griddingOp->setImageDims(imgDims);
 
 	GriddingND::Array<IndType> assignedSectors = assignSectors(griddingOp, kSpaceCoords);
 

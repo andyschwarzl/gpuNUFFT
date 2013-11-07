@@ -392,18 +392,6 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel3nData)
 	coords[coord_cnt++] = 0;
 	coords[coord_cnt++] = 0;
 
-	//Output Grid
-    CufftType* gdata;
-	unsigned long dims_g[4];
-    dims_g[0] = 1; // complex
-	dims_g[1] = (unsigned long)(im_width * osr); 
-    dims_g[2] = (unsigned long)(im_width * osr);
-    dims_g[3] = (unsigned long)(im_width * osr);
-
-	long grid_size = dims_g[0]*dims_g[1]*dims_g[2]*dims_g[3];
-
-    gdata = (CufftType*) calloc(grid_size,sizeof(CufftType));
-	
 	//sectors of data, count and start indices
 	int sector_width = 5;
 	
@@ -418,24 +406,15 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel3nData)
 
     GriddingND::GriddingOperator *griddingOp = GriddingND::GriddingOperatorFactory::getInstance()->createGriddingOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
 
-	DType2* dataSorted = (DType2*) calloc(data_entries,sizeof(DType2)); //2* re + im
-	GriddingND::Array<IndType> indices = griddingOp->getDataIndices();
-	for (int i=0; i<indices.count();i++)
-	{
-		dataSorted[i] = data[indices.data[i]];
-	}
-
 	GriddingND::Array<DType2> dataArray;
-	dataArray.data = dataSorted;
+	dataArray.data = data;
 	dataArray.dim.length = data_entries;
 
 	GriddingND::Array<CufftType> gdataArray;
-	gdataArray.data = gdata;
-	gdataArray.dim.width = (unsigned long)(im_width * osr);
-	gdataArray.dim.height = (unsigned long)(im_width * osr);
-	gdataArray.dim.depth = (unsigned long)(im_width * osr);
-
-	griddingOp->performGriddingAdj(dataArray,gdataArray,CONVOLUTION);
+	
+	gdataArray = griddingOp->performGriddingAdj(dataArray,CONVOLUTION);
+	//Output Grid
+	CufftType* gdata = gdataArray.data;
 
 	int index = get3DC2lin(5,5,5,im_width);
 	printf("index to test %d\n",index);

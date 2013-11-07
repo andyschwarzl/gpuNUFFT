@@ -101,7 +101,7 @@ namespace GriddingND
         void setSectorCenters(Array<IndType3> sectorCenters)	{this->sectorCenters = sectorCenters;}
         void setSectorDataCount(Array<IndType> sectorDataCount)		{this->sectorDataCount = sectorDataCount;}
 		void setDataIndices(Array<IndType> dataIndices)		{this->dataIndices = dataIndices;}
-		void setGridDims(Dimensions dims)  {this->gridDims = dims;}
+		void setImgDims(Dimensions dims)  {this->imgDims = dims;}
 		void setSectorDims(Dimensions dims)  {this->sectorDims = dims;}
 
 		// GETTER
@@ -114,7 +114,9 @@ namespace GriddingND
 
         size_t getKernelWidth()		{return this->kernelWidth;}
         size_t getSectorWidth()		{return this->sectorWidth;}
-		Dimensions getGridDims() {return this->gridDims;}
+		
+		Dimensions getImageDims() {return this->imgDims;}
+		Dimensions getGridDims() {return this->imgDims * osf;}
 
 		Dimensions getSectorDims() {return this->sectorDims;}
 
@@ -129,12 +131,12 @@ namespace GriddingND
 		// OPERATIONS
 
 		//adjoint gridding
-		void performGriddingAdj(Array<DType2> kspaceData, Array<CufftType> imgData);
-		void performGriddingAdj(Array<DType2> kspaceData, Array<CufftType> imgData, GriddingOutput griddingOut);
+		Array<CufftType> performGriddingAdj(Array<DType2> kspaceData);
+		Array<CufftType> performGriddingAdj(Array<DType2> kspaceData, GriddingOutput griddingOut);
 
 		//forward gridding
-		void performForwardGridding(Array<DType2> imgData,  GriddingND::Array<CufftType> kspaceData);
-		void performForwardGridding(Array<DType2> imgData,  GriddingND::Array<CufftType> kspaceData, GriddingOutput griddingOut);
+		Array<CufftType> performForwardGridding(Array<DType2> imgData);
+		Array<CufftType> performForwardGridding(Array<DType2> imgData,GriddingOutput griddingOut);
 
 	private:
 		void initKernel()
@@ -144,7 +146,7 @@ namespace GriddingND
 			loadGrid3Kernel(this->kernel.data,(int)this->kernel.count(),(int)kernelWidth,osf);
 		}
 
-        size_t getGridWidth() {return (size_t)(gridDims.width * osf);}
+		size_t getGridWidth() {return (size_t)(this->getGridDims().width * osf);}
         bool applyDensComp(){return this->dens.data != NULL;}
 
 		Array<DType> kernel;
@@ -179,9 +181,12 @@ namespace GriddingND
 		// sector size in grid units
 		size_t sectorWidth;
 
-		Dimensions gridDims;
+		Dimensions imgDims;
 
 		Dimensions sectorDims;
+
+		template <typename T>
+		T* selectOrdered(Array<T> dataArray);
 	};
 }
 

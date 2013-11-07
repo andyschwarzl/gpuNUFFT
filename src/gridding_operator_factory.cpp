@@ -127,6 +127,11 @@ GriddingND::Array<IndType> GriddingND::GriddingOperatorFactory::computeSectorDat
 	return sectorDataCount;
 }
 
+inline IndType GriddingND::GriddingOperatorFactory::computeSectorCenter(IndType var, IndType sectorWidth)
+{
+	return (IndType)(var*sectorWidth + std::floor(static_cast<DType>(sectorWidth) / (DType)2.0));
+}
+
 GriddingND::Array<IndType3> GriddingND::GriddingOperatorFactory::computeSectorCenters(GriddingND::GriddingOperator *griddingOp)
 {
 	GriddingND::Array<IndType3> sectorCenters; 
@@ -141,9 +146,9 @@ GriddingND::Array<IndType3> GriddingND::GriddingOperatorFactory::computeSectorCe
 			for (size_t x=0;x<sectorDims.width;x++)
 			{
 				IndType3 center;
-				center.x = x*sectorWidth +  std::floor(static_cast<DType>(sectorWidth) / (DType)2.0);
-				center.y = y*sectorWidth +  std::floor(static_cast<DType>(sectorWidth) / (DType)2.0);
-				center.z = z*sectorWidth +  std::floor(static_cast<DType>(sectorWidth) / (DType)2.0);
+				center.x = computeSectorCenter(x,sectorWidth);
+				center.y = computeSectorCenter(y,sectorWidth);
+				center.z = computeSectorCenter(z,sectorWidth);
 				size_t index = computeXYZ2Lin(x,y,z,sectorDims);
 				sectorCenters.data[index] = center;
 			}
@@ -157,8 +162,7 @@ GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddin
 	std::cout << "create gridding operator" << std::endl;
     
 	griddingOp->setKspaceCoords(kSpaceCoords);
-
-	griddingOp->setGridDims(imgDims * osf);
+	griddingOp->setImgDims(imgDims);
 
 	GriddingND::Array<IndType> assignedSectors = assignSectors(griddingOp, kSpaceCoords);
 

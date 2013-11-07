@@ -73,8 +73,8 @@ TEST(TestGPUGriddingForwardConv,KernelCall1Sector)
     kSpaceData.dim.length = data_entries;
 
 	GriddingND::Array<CufftType> dataArray;
-	dataArray.data = data;
-	dataArray.dim.length = data_entries;
+	//dataArray.data = data;
+	//dataArray.dim.length = data_entries;
 
 	GriddingND::Array<DType2> im_dataArray;
 	im_dataArray.data = im_data;
@@ -96,7 +96,7 @@ TEST(TestGPUGriddingForwardConv,KernelCall1Sector)
     //GriddingND::GriddingOperator *griddingOp = new GriddingND::GriddingOperator(kernel_width,sector_width,osr);
     GriddingND::GriddingOperator *griddingOp = GriddingND::GriddingOperatorFactory::getInstance()->createGriddingOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
 
-	griddingOp->performForwardGridding(im_dataArray,dataArray);
+	dataArray = griddingOp->performForwardGridding(im_dataArray);
 
 	for (int j=0; j<data_entries; j++)
 	{

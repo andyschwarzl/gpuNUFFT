@@ -57,6 +57,7 @@ namespace GriddingND
 		std::vector<IndPair> sortVector(Array<size_t> assignedSectors);
 		Array<IndType> computeSectorDataCount(GriddingND::GriddingOperator *griddingOp,GriddingND::Array<IndType> assignedSectors);
 		Array<IndType3> computeSectorCenters(GriddingOperator *griddingOp);
+		IndType computeSectorCenter(IndType var, IndType sectorWidth);
     };
 
 }

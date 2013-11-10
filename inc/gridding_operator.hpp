@@ -129,10 +129,12 @@ namespace GriddingND
 
 		//adjoint gridding
 		Array<CufftType> performGriddingAdj(Array<DType2> kspaceData);
+		void             performGriddingAdj(Array<DType2> kspaceData, Array<CufftType>& imgData, GriddingOutput griddingOut = DEAPODIZATION);
 		Array<CufftType> performGriddingAdj(Array<DType2> kspaceData, GriddingOutput griddingOut);
 
 		//forward gridding
 		Array<CufftType> performForwardGridding(Array<DType2> imgData);
+		void             performForwardGridding(Array<DType2> imgData,Array<CufftType>& kspaceData, GriddingOutput griddingOut = DEAPODIZATION);
 		Array<CufftType> performForwardGridding(Array<DType2> imgData,GriddingOutput griddingOut);
 
 	private:
@@ -143,7 +145,7 @@ namespace GriddingND
 			loadGrid3Kernel(this->kernel.data,(int)this->kernel.count(),(int)kernelWidth,osf);
 		}
 
-		size_t getGridWidth() {return (size_t)(this->getGridDims().width * osf);}
+		size_t getGridWidth() {return (size_t)(this->getGridDims().width);}
         bool applyDensComp(){return this->dens.data != NULL;}
 
 		Array<DType> kernel;

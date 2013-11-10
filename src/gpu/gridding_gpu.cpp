@@ -217,7 +217,7 @@ void gridding3D_gpu_adj(DType2*		data,
                         int			n_coils,
                         DType*		crds,
                         CufftType**	imdata,
-                        int			imdata_count,
+                        IndType		imdata_count,
                         int			grid_width,
                         DType*		kernel,
                         int			kernel_count,
@@ -257,7 +257,6 @@ void gridding3D_gpu_adj(DType2*		data,
 		printf("allocate and copy data of size %d...\n",data_count);
 	allocateDeviceMem<DType2>(&data_d,data_count);
 
-	
 	if (DEBUG)
 		printf("allocate and copy coords of size %d...\n",3*data_count);
 	allocateAndCopyToDeviceMem<DType>(&crds_d,crds,3*data_count);

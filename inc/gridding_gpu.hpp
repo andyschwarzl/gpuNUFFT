@@ -74,7 +74,7 @@ void gridding3D_gpu_adj(DType2*		data,			// kspace input data array
 						int			n_coils,		// number of coils 
 						DType*		crds,			// 
 						CufftType**	imdata,			// image output data array
-						int			imdata_count,	//			
+						IndType		imdata_count,	//			
 						int			grid_width,		//
 						DType*		kernel,			//
 						int			kernel_count,	//

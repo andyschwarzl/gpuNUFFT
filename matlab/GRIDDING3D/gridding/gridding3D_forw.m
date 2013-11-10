@@ -32,11 +32,14 @@ if (n_chnls > 1)
     data = squeeze(data(1,:,:) + 1j*(data(2,:,:)));
     %data_test = zeros([length(a.data_ind),n_chnls]);
     %data_test(a.data_ind,:) = data;
-    ress(a.data_ind,:) = data;
+    %ress(a.data_ind,:) = data;%v2
+    ress(:,:) = data;
 else
     data = transpose(squeeze(data(1,:) + 1j*(data(2,:))));
     %data_test = zeros(1,length(a.data_ind));
     %data_test(a.data_ind) = data;
-    ress(a.data_ind) = data;
+    %ress(a.data_ind) = data;%v2
+    ress = data;
     ress = transpose(ress);
 end
+size(find(ress))

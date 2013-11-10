@@ -50,14 +50,14 @@ coord_ind = i-1;
 res.coord_ind = [3*coord_ind+1;
              3*coord_ind+2;
              3*coord_ind+3];
-res.coords = coords(res.coord_ind);
+res.coords = coords;%(res.coord_ind);%edit v2
 %
 res.sector_centers = int32(reshape(sector_centers,[3,sector_dim]));
 
 % density compensation
 
 if ~isempty(w)
-    res.density_comp = w(res.data_ind);
+    res.density_comp = w(:);%w(res.data_ind);%v2
 else
     res.density_comp = [];
 end

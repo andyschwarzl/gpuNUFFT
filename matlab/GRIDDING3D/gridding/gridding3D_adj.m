@@ -5,7 +5,7 @@ function ress = gridding3D_adj(a,bb)
 kspace_data_dim = size(bb,2);
 
 if (kspace_data_dim > 1)
-    kspace = bb(a.data_ind,:);
+    kspace = bb(:,:);%bb(a.data_ind,:);%v2
     kspace = [real(kspace(:))'; imag(kspace(:))'];
 
     if a.verbose
@@ -29,7 +29,7 @@ if (kspace_data_dim > 1)
     ress = m;
 else
     %prepare data
-    kspace = bb(a.data_ind);
+    kspace = bb;%bb(a.data_ind);%v2
     kspace = [real(kspace(:))'; imag(kspace(:))'];
 
     % preweight, DCF

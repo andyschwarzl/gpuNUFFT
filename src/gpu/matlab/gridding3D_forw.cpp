@@ -131,10 +131,9 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
     GriddingND::Array<DType> kSpaceData;
     kSpaceData.data = coords;
-    kSpaceData.dim.width  = im_width;
-    kSpaceData.dim.height = im_width;
-    kSpaceData.dim.depth  = im_width;
-
+    kSpaceData.dim.length = data_entries;
+	kSpaceData.dim.channels = n_coils;
+	
 	GriddingND::Array<CufftType> dataArray;
 	dataArray.data = data;
 	dataArray.dim.length = data_entries;
@@ -142,7 +141,9 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	
 	GriddingND::Array<DType2> imdataArray;
 	imdataArray.data = imdata;
-	imdataArray.dim.length = im_count;
+	imdataArray.dim.width = (IndType)im_width;
+	imdataArray.dim.height = (IndType)im_width;
+	imdataArray.dim.depth = (IndType)im_width;
 	imdataArray.dim.channels = n_coils;
 
 	GriddingND::Array<size_t> sectorsArray;
@@ -151,18 +152,26 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	GriddingND::Array<size_t> sectorCentersArray;
 	sectorCentersArray.data = (size_t*)sector_centers;
 
-    GriddingND::GriddingOperator *griddingOp = GriddingND::GriddingOperatorFactory::getInstance()->createGriddingOperator(kSpaceData,kernel_width,sector_width,osr);
-    //GriddingND::GriddingOperator *griddingOp = new GriddingND::GriddingOperator(kernel_width,sector_width,osr);
-	
-	griddingOp->setOsf(osr);
+	GriddingND::Dimensions imgDims;
+	imgDims.width = (IndType)im_width;
+	imgDims.height = (IndType)im_width;
+	imgDims.depth = (IndType)im_width;
+	imgDims.channels = n_coils;
+	try
+	{
+		GriddingND::GriddingOperator *griddingOp = GriddingND::GriddingOperatorFactory::getInstance()->createGriddingOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
 
-	griddingOp->setSectors(sectorsArray);
-	griddingOp->setSectorCenters(sectorCentersArray);
+		GriddingND::Array<IndType> indices = griddingOp->getDataIndices();
 
-	griddingOp->performForwardGridding(imdataArray,dataArray);
+		griddingOp->performForwardGridding(imdataArray,dataArray);
+		
+		delete griddingOp;
+	}
+	catch (...)
+	{
+		mexPrintf("FAILURE in gridding operation\n");
+	}
 
-	//gridding3D_gpu(&data,data_entries,n_coils,coords,imdata,im_count,grid_width,kernel,kernel_count,kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,CONVOLUTION);
-    
 	cudaThreadSynchronize();	
 	free(kernel);
 	if (MATLAB_DEBUG)	

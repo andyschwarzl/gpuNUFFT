@@ -30,8 +30,6 @@ void cleanUp()
 	cudaDeviceReset();
 }
 
-
-
 /*
   MATLAB Wrapper for NUFFT^H Operation
 
@@ -110,7 +108,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 		
 	if (MATLAB_DEBUG)
 	{
-		mexPrintf("passed Params, IM_WIDTH: %d, OSR: %f, KERNEL_WIDTH: %d, SECTOR_WIDTH: %d\n",im_width,osr,kernel_width,sector_width);
+		mexPrintf("passed Params, IM_WIDTH: %d, OSR: %f, KERNEL_WIDTH: %d, SECTOR_WIDTH: %d do_comp: %d\n",im_width,osr,kernel_width,sector_width,do_comp);
 		size_t free_mem = 0;
 		size_t total_mem = 0;
 		cudaMemGetInfo(&free_mem, &total_mem);
@@ -144,9 +142,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
     GriddingND::Array<DType> kSpaceData;
     kSpaceData.data = coords;
-    kSpaceData.dim.width  = dims_im[1];
-    kSpaceData.dim.height = dims_im[2];
-    kSpaceData.dim.depth  = dims_im[3];
+    kSpaceData.dim.length = data_count;
+	kSpaceData.dim.channels = n_coils;
 
 	GriddingND::Array<DType2> dataArray;
 	dataArray.data = data;
@@ -155,39 +152,41 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
 	GriddingND::Array<DType2> imdataArray;
 	imdataArray.data = imdata;
-	imdataArray.dim.length = im_count;
+	imdataArray.dim.width = im_width;
+	imdataArray.dim.height = im_width;
+	imdataArray.dim.depth = im_width;
 	imdataArray.dim.channels = n_coils;
-
-	GriddingND::Array<size_t> sectorsArray;
-	sectorsArray.data = (size_t*)sectors;
-	sectorsArray.dim.length = sector_count;
-	GriddingND::Array<size_t> sectorCentersArray;
-	sectorCentersArray.data = (size_t*)sector_centers;
 
 	GriddingND::Array<DType> density_compArray;
 	density_compArray.data = density_comp;
 	density_compArray.dim.length = data_count;
 
-    //GriddingND::GriddingOperator *griddingOp = new GriddingND::GriddingOperator(kernel_width,sector_width,osr);
-    GriddingND::GriddingOperator *griddingOp = GriddingND::GriddingOperatorFactory::getInstance()->createGriddingOperator(kSpaceData,kernel_width,sector_width,osr);
+	mexPrintf(" data count: %d \n",data_count);
+
+	GriddingND::Dimensions imgDims;
+	imgDims.width = (IndType)im_width;
+	imgDims.height = (IndType)im_width;
+	imgDims.depth = (IndType)im_width;
+	imgDims.channels = n_coils;
+
+	try
+	{
+		GriddingND::GriddingOperator *griddingOp = GriddingND::GriddingOperatorFactory::getInstance()->createGriddingOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
+		
+		if (do_comp)
+			griddingOp->setDens(density_compArray);
+
+		griddingOp->performGriddingAdj(dataArray,imdataArray);
 	
-	griddingOp->setOsf(osr);
-
-	//griddingOp->setData(data);
-    //griddingOp->setKspaceCoords(coords);
-
-
-	griddingOp->setDens(density_compArray);
-	griddingOp->setSectors(sectorsArray);
-	griddingOp->setSectorCenters(sectorCentersArray);
-
-	griddingOp->performGriddingAdj(dataArray,imdataArray);
-
-	//gridding3D_gpu_adj(data,data_count,n_coils,coords,&imdata,im_count,grid_width,kernel,kernel_count,kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,do_comp,density_comp,DEAPODIZATION);//CONVOLUTION);
-
+		delete griddingOp;
+	}
+	catch(...)
+	{
+		mexPrintf("FAILURE in gridding operation\n");
+	}
+	
     cudaThreadSynchronize();
 	free(kernel);
-	
 	if (MATLAB_DEBUG)
 	{
 		size_t free_mem = 0;
@@ -196,16 +195,3 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 		mexPrintf("memory usage on device afterwards, free: %lu total: %lu\n",free_mem,total_mem);
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

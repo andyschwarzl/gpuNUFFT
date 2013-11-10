@@ -352,20 +352,21 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel3nData)
     DType2* data = (DType2*) calloc(data_entries,sizeof(DType2)); //2* re + im
 	int data_cnt = 0;
 	
-	data[data_cnt].x = 0.7f;
-	data[data_cnt++].y= 1;
-	
-	data[data_cnt].x = 1;
-	data[data_cnt++].y = 1;
-
-	data[data_cnt].x = 1;
-	data[data_cnt++].y = 1;
-
-	data[data_cnt].x = 1;
-	data[data_cnt++].y = 1;
-	
 	data[data_cnt].x = 0.5f;
 	data[data_cnt++].y = 0.5f;
+
+	data[data_cnt].x = 0.7f;
+	data[data_cnt++].y= 1;
+
+	data[data_cnt].x = 1;
+	data[data_cnt++].y = 1;
+
+	data[data_cnt].x = 1;
+	data[data_cnt++].y = 1;
+	
+	data[data_cnt].x = 1;
+	data[data_cnt++].y = 1;
+
 
 	//Coords
 	//Scaled between -0.5 and 0.5
@@ -374,19 +375,19 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel3nData)
 	int coord_cnt = 0;
 	//7.Sektor
 	
-	coords[coord_cnt++] = -0.1f;//X
-	coords[coord_cnt++] = 0; 
+	coords[coord_cnt++] = -0.3f; //x
+	coords[coord_cnt++] = -0.1f; 
+	coords[coord_cnt++] = 0;    
 	coords[coord_cnt++] = 0.5f; 
 	coords[coord_cnt++] = 0.3f;
-	coords[coord_cnt++] = -0.3f; 
-	
-	coords[coord_cnt++] = 0;//Y
+
+	coords[coord_cnt++] = 0.2f; //y
+	coords[coord_cnt++] = 0;
 	coords[coord_cnt++] = 0;
 	coords[coord_cnt++] = 0;
 	coords[coord_cnt++] = 0.3f;
-	coords[coord_cnt++] = 0.2f;
 	
-	coords[coord_cnt++] = 0;//Z
+	coords[coord_cnt++] = 0; //z
 	coords[coord_cnt++] = 0;
 	coords[coord_cnt++] = 0;
 	coords[coord_cnt++] = 0;
@@ -415,6 +416,13 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel3nData)
 	gdataArray = griddingOp->performGriddingAdj(dataArray,CONVOLUTION);
 	//Output Grid
 	CufftType* gdata = gdataArray.data;
+
+	for (int j=0; j<im_width; j++)
+	{
+		for (int i=0; i<im_width; i++)
+			printf("%.4f ",gdata[get3DC2lin(i,im_width-1-j,5,im_width)].x);
+		printf("\n");
+	}
 
 	int index = get3DC2lin(5,5,5,im_width);
 	printf("index to test %d\n",index);

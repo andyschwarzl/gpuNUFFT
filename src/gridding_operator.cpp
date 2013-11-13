@@ -9,7 +9,7 @@ GriddingND::Array<CufftType> GriddingND::GriddingOperator::performGriddingAdj(Gr
 }
 
 template <typename T>
-T* GriddingND::GriddingOperator::selectOrdered(GriddingND::Array<T> dataArray)
+T* GriddingND::GriddingOperator::selectOrdered(GriddingND::Array<T>& dataArray)
 {
 	T* dataSorted = (T*) calloc(dataArray.count(),sizeof(T)); //2* re + im
 
@@ -20,12 +20,21 @@ T* GriddingND::GriddingOperator::selectOrdered(GriddingND::Array<T> dataArray)
 	return dataSorted;
 }
 
+template <typename T>
+void GriddingND::GriddingOperator::writeOrdered(GriddingND::Array<T>& destArray, T* sortedArray)
+{
+	for (int i=0; i<dataIndices.count();i++)
+	{
+		destArray.data[dataIndices.data[i]] = sortedArray[i];
+	}
+}
+
 void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> kspaceData, GriddingND::Array<CufftType>& imgData, GriddingOutput griddingOut)
 {
 	std::cout << "performing gridding adjoint!!!" << std::endl;
 
 	// select data ordered
-	DType2* dataSorted = kspaceData.data;//selectOrdered<DType2>(kspaceData);
+	DType2* dataSorted = selectOrdered<DType2>(kspaceData);
 	DType* densSorted = NULL;
 	if (this->applyDensComp())
 		densSorted = selectOrdered<DType>(this->dens);
@@ -68,10 +77,16 @@ void GriddingND::GriddingOperator::performForwardGridding(GriddingND::Array<DTyp
 
 	std::cout << "dataCount: " << kspaceData.count() << " chnCount: " << kspaceData.dim.channels << std::endl;
 	std::cout << "imgCount: " << imgData.count() << " gridWidth: " << this->getGridWidth() << std::endl;
-    gridding3D_gpu(&kspaceData.data,kspaceData.count(),kspaceData.dim.channels,this->kSpaceCoords.data,
+    
+	CufftType* kspaceDataSorted = (CufftType*) calloc(kspaceData.count(),sizeof(CufftType));
+
+	gridding3D_gpu(&kspaceDataSorted,kspaceData.count(),kspaceData.dim.channels,this->kSpaceCoords.data,
 		           imgData.data,imgData.count(),this->getGridWidth(),this->kernel.data,this->kernel.count(),
 				   this->kernelWidth,this->sectorDataCount.data,this->sectorDims.count(),
 				   (IndType*)this->sectorCenters.data,this->sectorWidth, imgData.dim.width,this->osf,griddingOut);
+
+	writeOrdered<CufftType>(kspaceData,kspaceDataSorted);
+	free(kspaceDataSorted);
 }
 
 GriddingND::Array<CufftType> GriddingND::GriddingOperator::performForwardGridding(Array<DType2> imgData,GriddingOutput griddingOut)

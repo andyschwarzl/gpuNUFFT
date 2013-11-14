@@ -188,7 +188,7 @@ namespace GriddingND
 		T* selectOrdered(Array<T>& dataArray);
 		
 		template <typename T>
-		void writeOrdered(Array<T>& destArray, T* sortedArray);
+		void writeOrdered(Array<T>& destArray, T* sortedArray, int offset=0);
 	};
 }
 

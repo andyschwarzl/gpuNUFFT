@@ -143,7 +143,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     GriddingND::Array<DType> kSpaceData;
     kSpaceData.data = coords;
     kSpaceData.dim.length = data_count;
-	kSpaceData.dim.channels = n_coils;
+	//kSpaceData.dim.channels = n_coils;
 
 	GriddingND::Array<DType2> dataArray;
 	dataArray.data = data;
@@ -164,10 +164,9 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	mexPrintf(" data count: %d \n",data_count);
 
 	GriddingND::Dimensions imgDims;
-	imgDims.width = (IndType)im_width;
-	imgDims.height = (IndType)im_width;
-	imgDims.depth = (IndType)im_width;
-	imgDims.channels = n_coils;
+	imgDims.width = imdataArray.dim.width;
+	imgDims.height = imdataArray.dim.height;
+	imgDims.depth = imdataArray.dim.depth;
 
 	try
 	{

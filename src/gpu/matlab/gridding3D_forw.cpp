@@ -132,7 +132,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     GriddingND::Array<DType> kSpaceData;
     kSpaceData.data = coords;
     kSpaceData.dim.length = data_entries;
-	kSpaceData.dim.channels = n_coils;
+	//kSpaceData.dim.channels = n_coils;
 	
 	GriddingND::Array<CufftType> dataArray;
 	dataArray.data = data;
@@ -153,15 +153,13 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	sectorCentersArray.data = (size_t*)sector_centers;
 
 	GriddingND::Dimensions imgDims;
-	imgDims.width = (IndType)im_width;
-	imgDims.height = (IndType)im_width;
-	imgDims.depth = (IndType)im_width;
-	imgDims.channels = n_coils;
+	imgDims.width = imdataArray.dim.width;
+	imgDims.height = imdataArray.dim.height;
+	imgDims.depth = imdataArray.dim.depth;
+
 	try
 	{
 		GriddingND::GriddingOperator *griddingOp = GriddingND::GriddingOperatorFactory::getInstance()->createGriddingOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
-
-		GriddingND::Array<IndType> indices = griddingOp->getDataIndices();
 
 		griddingOp->performForwardGridding(imdataArray,dataArray);
 		

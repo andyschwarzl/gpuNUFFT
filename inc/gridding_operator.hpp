@@ -185,7 +185,7 @@ namespace GriddingND
 		Dimensions sectorDims;
 
 		template <typename T>
-		T* selectOrdered(Array<T>& dataArray);
+		T* selectOrdered(Array<T>& dataArray, int offset=0);
 		
 		template <typename T>
 		void writeOrdered(Array<T>& destArray, T* sortedArray, int offset=0);

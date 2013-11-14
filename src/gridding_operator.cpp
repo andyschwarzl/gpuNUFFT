@@ -9,13 +9,16 @@ GriddingND::Array<CufftType> GriddingND::GriddingOperator::performGriddingAdj(Gr
 }
 
 template <typename T>
-T* GriddingND::GriddingOperator::selectOrdered(GriddingND::Array<T>& dataArray)
+T* GriddingND::GriddingOperator::selectOrdered(GriddingND::Array<T>& dataArray,int offset)
 {
 	T* dataSorted = (T*) calloc(dataArray.count(),sizeof(T)); //2* re + im
 
 	for (int i=0; i<dataIndices.count();i++)
 	{
-		dataSorted[i] = dataArray.data[dataIndices.data[i]];
+		for (int chn=0; chn<dataArray.dim.channels; chn++)
+		{
+			dataSorted[i+chn*offset] = dataArray.data[dataIndices.data[i]+chn*offset];
+		}
 	}
 	return dataSorted;
 }
@@ -27,7 +30,7 @@ void GriddingND::GriddingOperator::writeOrdered(GriddingND::Array<T>& destArray,
 	{
 		for (int chn=0; chn<destArray.dim.channels; chn++)
 		{
-			destArray.data[dataIndices.data[i]+chn*offset] = sortedArray[i];
+			destArray.data[dataIndices.data[i]+chn*offset] = sortedArray[i+chn*offset];
 		}
 	}
 }
@@ -37,7 +40,7 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
 	std::cout << "performing gridding adjoint!!!" << std::endl;
 
 	// select data ordered
-	DType2* dataSorted = selectOrdered<DType2>(kspaceData);
+	DType2* dataSorted = selectOrdered<DType2>(kspaceData,this->kSpaceCoords.count());
 	DType* densSorted = NULL;
 	if (this->applyDensComp())
 		densSorted = selectOrdered<DType>(this->dens);

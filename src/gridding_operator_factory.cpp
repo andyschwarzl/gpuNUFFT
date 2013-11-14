@@ -14,8 +14,10 @@ GriddingND::GriddingOperatorFactory* GriddingND::GriddingOperatorFactory::getIns
 size_t GriddingND::GriddingOperatorFactory::computeSectorMapping(DType coord, size_t sectorCount)
 {
 	size_t sector = (size_t)std::floor(static_cast<DType>(coord + 0.5) * sectorCount);
-	if (sector == sectorCount) 
-		sector--;
+	if (sector >= sectorCount) 
+		sector = sectorCount -1;
+	if (sector < 0)
+		sector = 0;
 	return sector;
 }
 
@@ -80,7 +82,7 @@ std::vector<GriddingND::IndPair> GriddingND::GriddingOperatorFactory::sortVector
 }
 
 
-GriddingND::Array<IndType> GriddingND::GriddingOperatorFactory::assignSectors(GriddingND::GriddingOperator* griddingOp, GriddingND::Array<DType> kSpaceCoords)
+GriddingND::Array<IndType> GriddingND::GriddingOperatorFactory::assignSectors(GriddingND::GriddingOperator* griddingOp, GriddingND::Array<DType>& kSpaceCoords)
 {
 	griddingOp->setSectorDims(computeSectorCountPerDimension(griddingOp->getGridDims(),griddingOp->getSectorWidth()));
 

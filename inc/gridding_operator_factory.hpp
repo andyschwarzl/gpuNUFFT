@@ -30,7 +30,8 @@ namespace GriddingND
         delete instance;
       }
 
-	  Array<IndType> assignSectors(GriddingOperator* griddingOp, Array<DType> kSpaceCoords);
+	  Array<IndType> assignSectors(GriddingOperator* griddingOp, Array<DType>& kSpaceCoords);
+
     public:
 
         GriddingOperator* createGriddingOperator(Array<DType> kSpaceData, size_t kernelWidth, size_t sectorWidth, DType osf, Dimensions imgDims);

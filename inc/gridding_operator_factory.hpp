@@ -13,11 +13,10 @@ namespace GriddingND
 	// Manages the initialization of the Gridding Operator.
 	// Distinguishes between two cases:
 	//
-	// * new calculation of "data - sector" mapping
+	// * new calculation of "data - sector" mapping, sorting etc.
 	//  
 	// * reuse of previously calculated mapping
 	// 
-	// T defines if the Factory works on 
 	class GriddingOperatorFactory
 	{
     protected:
@@ -34,7 +33,12 @@ namespace GriddingND
 
     public:
 
-        GriddingOperator* createGriddingOperator(Array<DType> kSpaceData, size_t kernelWidth, size_t sectorWidth, DType osf, Dimensions imgDims);
+        GriddingOperator* createGriddingOperator(Array<DType>& kSpaceCoords, const size_t& kernelWidth, const size_t& sectorWidth, const DType& osf, Dimensions& imgDims);
+
+		GriddingOperator* createGriddingOperator(Array<DType>& kSpaceCoords, Array<DType>& densCompData, const size_t& kernelWidth, const size_t& sectorWidth, const DType& osf, Dimensions& imgDims);
+
+		GriddingOperator* createGriddingOperator(Array<DType>& kSpaceCoords, Array<DType>& densCompData, Array<DType>& sensData, const size_t& kernelWidth, const size_t& sectorWidth, const DType& osf, Dimensions& imgDims);
+
 
 		// SETTER 
 		

@@ -93,12 +93,12 @@ namespace GriddingND
 			free(this->sectorCenters.data);
         }
 
+		friend class GriddingOperatorFactory;
+
 		// SETTER 
         void setOsf(DType osf)			{this->osf = osf;}
 
         void setKspaceCoords(Array<DType> kSpaceCoords)	{this->kSpaceCoords = kSpaceCoords;}
-        void setSens(Array<DType2> sens)		{this->sens = sens;}
-		void setDens(Array<DType> dens)		{this->dens = dens;}
         void setSectorCenters(Array<IndType3> sectorCenters)	{this->sectorCenters = sectorCenters;}
         void setSectorDataCount(Array<IndType> sectorDataCount)		{this->sectorDataCount = sectorDataCount;}
 		void setDataIndices(Array<IndType> dataIndices)		{this->dataIndices = dataIndices;}
@@ -145,8 +145,12 @@ namespace GriddingND
 			loadGrid3Kernel(this->kernel.data,(int)this->kernel.count(),(int)kernelWidth,osf);
 		}
 
+		void setSens(Array<DType2> sens)		{this->sens = sens;}
+		void setDens(Array<DType> dens)		{this->dens = dens;}
+        
 		size_t getGridWidth() {return (size_t)(this->getGridDims().width);}
-        bool applyDensComp(){return this->dens.data != NULL;}
+
+		bool applyDensComp(){return (this->dens.data != NULL && this->dens.count()>1);}
 
 		Array<DType> kernel;
 

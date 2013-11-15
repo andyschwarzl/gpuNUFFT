@@ -157,7 +157,7 @@ GriddingND::Array<IndType3> GriddingND::GriddingOperatorFactory::computeSectorCe
     return sectorCenters;
 }
 
-GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddingOperator(GriddingND::Array<DType> kSpaceCoords, size_t kernelWidth, size_t sectorWidth, DType osf, GriddingND::Dimensions imgDims)
+GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddingOperator(GriddingND::Array<DType>& kSpaceCoords, const size_t& kernelWidth, const size_t& sectorWidth, const DType& osf, GriddingND::Dimensions& imgDims)
 {
     GriddingND::GriddingOperator *griddingOp = new GriddingND::GriddingOperator(kernelWidth,sectorWidth,osf);
 	
@@ -202,5 +202,17 @@ GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddin
 	
 	std::cout << "finished creation of gridding operator" << std::endl;
 	return griddingOp;
+}
+
+GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddingOperator(GriddingND::Array<DType>& kSpaceCoords, GriddingND::Array<DType>& densCompData, const size_t& kernelWidth, const size_t& sectorWidth, const DType& osf, GriddingND::Dimensions& imgDims)
+{
+	GriddingOperator* op = createGriddingOperator(kSpaceCoords, kernelWidth, sectorWidth, osf, imgDims);
+	op->setDens(densCompData);
+	return op;
+}
+
+GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddingOperator(GriddingND::Array<DType>& kSpaceCoords, GriddingND::Array<DType>& densCompData, GriddingND::Array<DType>& sensData, const size_t& kernelWidth, const size_t& sectorWidth, const DType& osf, GriddingND::Dimensions& imgDims)
+{
+	return createGriddingOperator(kSpaceCoords, kernelWidth, sectorWidth, osf, imgDims);
 }
 

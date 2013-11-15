@@ -140,10 +140,9 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	if (imdata == NULL)
      mexErrMsgTxt("Could not create output mxArray.\n");
 
-    GriddingND::Array<DType> kSpaceData;
-    kSpaceData.data = coords;
-    kSpaceData.dim.length = data_count;
-	//kSpaceData.dim.channels = n_coils;
+    GriddingND::Array<DType> kSpaceTraj;
+    kSpaceTraj.data = coords;
+    kSpaceTraj.dim.length = data_count;
 
 	GriddingND::Array<DType2> dataArray;
 	dataArray.data = data;
@@ -172,9 +171,9 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	{
 		GriddingND::GriddingOperator *griddingOp;
 		if (do_comp)
-			griddingOp = GriddingND::GriddingOperatorFactory::getInstance()->createGriddingOperator(kSpaceData,density_compArray,kernel_width,sector_width,osr,imgDims);
+			griddingOp = GriddingND::GriddingOperatorFactory::getInstance()->createGriddingOperator(kSpaceTraj,density_compArray,kernel_width,sector_width,osr,imgDims);
 		else
-			griddingOp = GriddingND::GriddingOperatorFactory::getInstance()->createGriddingOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
+			griddingOp = GriddingND::GriddingOperatorFactory::getInstance()->createGriddingOperator(kSpaceTraj,kernel_width,sector_width,osr,imgDims);
 
 		griddingOp->performGriddingAdj(dataArray,imdataArray);
 	

@@ -67,7 +67,7 @@ TEST(OperatorFactoryTest,TestInit)
 		EXPECT_EQ(expectedSecIndexSorted[i],dataIndices.data[i]);
 	}
 
-	GriddingND::Array<DType> sortedCoords = griddingOp->getKspaceCoords();
+	GriddingND::Array<DType> sortedCoords = griddingOp->getKSpaceTraj();
 	EXPECT_NEAR(-0.5,sortedCoords.data[0],EPS);
 	EXPECT_NEAR(-0.5,sortedCoords.data[6],EPS);
 	EXPECT_NEAR(-0.33,sortedCoords.data[12],EPS);

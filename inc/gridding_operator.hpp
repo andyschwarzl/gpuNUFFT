@@ -89,7 +89,7 @@ namespace GriddingND
 		{
 			free(this->kernel.data);
 			free(this->dataIndices.data);
-			free(this->kSpaceCoords.data);
+			free(this->kSpaceTraj.data);
 			free(this->sectorCenters.data);
         }
 
@@ -98,7 +98,7 @@ namespace GriddingND
 		// SETTER 
         void setOsf(DType osf)			{this->osf = osf;}
 
-        void setKspaceCoords(Array<DType> kSpaceCoords)	{this->kSpaceCoords = kSpaceCoords;}
+        void setKSpaceTraj(Array<DType> kSpaceTraj)	{this->kSpaceTraj = kSpaceTraj;}
         void setSectorCenters(Array<IndType3> sectorCenters)	{this->sectorCenters = sectorCenters;}
         void setSectorDataCount(Array<IndType> sectorDataCount)		{this->sectorDataCount = sectorDataCount;}
 		void setDataIndices(Array<IndType> dataIndices)		{this->dataIndices = dataIndices;}
@@ -106,7 +106,7 @@ namespace GriddingND
 		void setSectorDims(Dimensions dims)  {this->sectorDims = dims;}
 
 		// GETTER
-        Array<DType>  getKspaceCoords()	{return this->kSpaceCoords;}
+        Array<DType>  getKSpaceTraj()	{return this->kSpaceTraj;}
 
 		Array<DType2>	getSens()			{return this->sens;}
         Array<DType>	getDens()			{return this->dens;}
@@ -156,7 +156,7 @@ namespace GriddingND
 
 		// simple array
 		// dimensions: n dimensions * dataCount
-        Array<DType> kSpaceCoords;
+        Array<DType> kSpaceTraj;
 
 		// complex array
 		// dimensions: kspaceDim * chnCount

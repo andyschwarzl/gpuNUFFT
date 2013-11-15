@@ -50,7 +50,7 @@ sw = 8;
 % density compensation
 w = abs(rho);
 w = repmat(w, [1, numSpokes,1]);
-%w_mc = reshape(repmat(w(:),[1 n_chn]),[size(w), n_chn]);
+w_mc = reshape(repmat(w(:),[1 n_chn]),[size(w), n_chn]);
 %w = ones(1,length(k(:)));%v2
 %w = w_mc(:);
 %%

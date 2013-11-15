@@ -159,7 +159,14 @@ GriddingND::Array<IndType3> GriddingND::GriddingOperatorFactory::computeSectorCe
 
 GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddingOperator(GriddingND::Array<DType>& kSpaceTraj, const size_t& kernelWidth, const size_t& sectorWidth, const DType& osf, GriddingND::Dimensions& imgDims)
 {
-    GriddingND::GriddingOperator *griddingOp = new GriddingND::GriddingOperator(kernelWidth,sectorWidth,osf);
+    //validate arguments
+	if (kSpaceTraj.dim.channels > 1)
+		throw std::invalid_argument("Trajectory dimension must not contain a channel size greater than 1!");
+	
+	if (imgDims.channels > 1)
+		throw std::invalid_argument("Image dimensions must not contain a channel size greater than 1!");
+	
+	GriddingND::GriddingOperator *griddingOp = new GriddingND::GriddingOperator(kernelWidth,sectorWidth,osf);
 	
 	std::cout << "create gridding operator" << std::endl;
     

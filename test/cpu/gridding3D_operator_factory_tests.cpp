@@ -27,16 +27,16 @@ TEST(OperatorFactoryTest,TestInit)
 	                            -0.5,-0.5,   0,   0, 0.5, 0.45,//y
 	                            -0.33,-0.16666,   0,   0, -0.23, 0.45};//z
 
-	GriddingND::Array<DType> kSpaceData;
-    kSpaceData.data = coords;
-    kSpaceData.dim.length = coordCnt;
+	GriddingND::Array<DType> kSpaceTraj;
+    kSpaceTraj.data = coords;
+    kSpaceTraj.dim.length = coordCnt;
 
 	GriddingND::Dimensions imgDims;
 	imgDims.width = imageWidth;
 	imgDims.height = imageWidth;
 	imgDims.depth = imageWidth;
 
-	GriddingND::GriddingOperator *griddingOp = GriddingND::GriddingOperatorFactory::getInstance()->createGriddingOperator(kSpaceData, kernelWidth, sectorWidth, osf, imgDims);
+	GriddingND::GriddingOperator *griddingOp = GriddingND::GriddingOperatorFactory::getInstance()->createGriddingOperator(kSpaceTraj, kernelWidth, sectorWidth, osf, imgDims);
 
 	EXPECT_TRUE(griddingOp != NULL);
 
@@ -71,4 +71,34 @@ TEST(OperatorFactoryTest,TestInit)
 	EXPECT_NEAR(-0.5,sortedCoords.data[0],EPS);
 	EXPECT_NEAR(-0.5,sortedCoords.data[6],EPS);
 	EXPECT_NEAR(-0.33,sortedCoords.data[12],EPS);
+}
+
+TEST(OperatorFactoryTest,TestInvalidArgumentInit)
+{
+	size_t imageWidth = 16; 
+	DType osf = 1.5;
+	size_t sectorWidth = 8;
+	size_t kernelWidth = 3;
+
+	const size_t coordCnt = 6;
+	
+	// Coords as StructureOfArrays
+	// i.e. first x-vals, then y-vals and z-vals
+	DType coords[coordCnt*3] = {-0.5,-0.3,-0.1, 0.1, 0.3, 0.5,//x
+	                            -0.5,-0.5,   0,   0, 0.5, 0.45,//y
+	                            -0.33,-0.16666,   0,   0, -0.23, 0.45};//z
+
+	GriddingND::Array<DType> kSpaceTraj;
+    kSpaceTraj.data = coords;
+    kSpaceTraj.dim.length = coordCnt;
+	kSpaceTraj.dim.channels = 3;
+
+	GriddingND::Dimensions imgDims;
+	imgDims.width = imageWidth;
+	imgDims.height = imageWidth;
+	imgDims.depth = imageWidth;
+
+	EXPECT_THROW({
+	GriddingND::GriddingOperator *griddingOp = GriddingND::GriddingOperatorFactory::getInstance()->createGriddingOperator(kSpaceTraj, kernelWidth, sectorWidth, osf, imgDims);
+	},std::invalid_argument);
 }

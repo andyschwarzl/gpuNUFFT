@@ -20,7 +20,7 @@
 
 #include <string.h>
 
-#include "gridding_operator_factory.hpp"
+#include "gridding_operator_matlabfactory.hpp"
 
 /** 
  * MEX file cleanup to reset CUDA Device 
@@ -171,9 +171,9 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	{
 		GriddingND::GriddingOperator *griddingOp;
 		if (do_comp)
-			griddingOp = GriddingND::GriddingOperatorFactory::getInstance()->createGriddingOperator(kSpaceTraj,density_compArray,kernel_width,sector_width,osr,imgDims);
+			griddingOp = GriddingND::GriddingOperatorMatlabFactory::getInstance().createGriddingOperator(kSpaceTraj,density_compArray,kernel_width,sector_width,osr,imgDims);
 		else
-			griddingOp = GriddingND::GriddingOperatorFactory::getInstance()->createGriddingOperator(kSpaceTraj,kernel_width,sector_width,osr,imgDims);
+			griddingOp = GriddingND::GriddingOperatorMatlabFactory::getInstance().createGriddingOperator(kSpaceTraj,kernel_width,sector_width,osr,imgDims);
 
 		griddingOp->performGriddingAdj(dataArray,imdataArray);
 	

@@ -405,7 +405,7 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel3nData)
 	imgDims.height = im_width;
 	imgDims.depth = im_width;
 
-    GriddingND::GriddingOperator *griddingOp = GriddingND::GriddingOperatorFactory::getInstance()->createGriddingOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
+    GriddingND::GriddingOperator *griddingOp = GriddingND::GriddingOperatorFactory::getInstance().createGriddingOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
 
 	GriddingND::Array<DType2> dataArray;
 	dataArray.data = data;

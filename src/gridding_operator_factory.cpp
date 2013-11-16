@@ -2,13 +2,11 @@
 #include "gridding_operator_factory.hpp"
 #include <iostream>
 
-GriddingND::GriddingOperatorFactory* GriddingND::GriddingOperatorFactory::instance = NULL;
+GriddingND::GriddingOperatorFactory GriddingND::GriddingOperatorFactory::instance;
 
-GriddingND::GriddingOperatorFactory* GriddingND::GriddingOperatorFactory::getInstance()
+GriddingND::GriddingOperatorFactory& GriddingND::GriddingOperatorFactory::getInstance()
 {
-          if (instance == NULL)
-            instance = new GriddingOperatorFactory();
-          return instance;
+	return instance;
 }
 
 size_t GriddingND::GriddingOperatorFactory::computeSectorMapping(DType coord, size_t sectorCount)

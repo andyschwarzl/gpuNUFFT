@@ -91,7 +91,7 @@ TEST(TestGPUGriddingForwardConv,KernelCall1Sector)
 	imgDims.depth = im_width;
 
     //GriddingND::GriddingOperator *griddingOp = new GriddingND::GriddingOperator(kernel_width,sector_width,osr);
-    GriddingND::GriddingOperator *griddingOp = GriddingND::GriddingOperatorFactory::getInstance()->createGriddingOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
+    GriddingND::GriddingOperator *griddingOp = GriddingND::GriddingOperatorFactory::getInstance().createGriddingOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
 
 	dataArray = griddingOp->performForwardGridding(im_dataArray);
 
@@ -158,7 +158,7 @@ TEST(TestGPUGriddingForwardConv,KernelCall1Sector2Channels)
     imgDims.height = im_dataArray.dim.height;
 	imgDims.depth  = im_dataArray.dim.depth;
 
-    GriddingND::GriddingOperator *griddingOp = GriddingND::GriddingOperatorFactory::getInstance()->createGriddingOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
+    GriddingND::GriddingOperator *griddingOp = GriddingND::GriddingOperatorFactory::getInstance().createGriddingOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
 
 	dataArray = griddingOp->performForwardGridding(im_dataArray);
 

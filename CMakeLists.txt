@@ -86,6 +86,9 @@ SET(GRID_MEX_ADJ_NAME "mex_gridding3D_adj${PREC_SUFFIX}")
 SET(GRID_MEX_FORW_ATM_NAME "mex_gridding3D_forw_atomic${PREC_SUFFIX}")
 SET(GRID_MEX_ADJ_ATM_NAME "mex_gridding3D_adj_atomic${PREC_SUFFIX}")
 
+#Precomputation MEX file
+SET(GRID_MEX_PRECOMP_NAME "mex_griddingND_precomp${PREC_SUFFIX}")
+
 #Freiburg Reference Implementation
 SET(GRID_MEX_FORW_SPARSE_NAME "mex_gridding3D_forw_sparse${PREC_SUFFIX}")
 SET(GRID_MEX_ADJ_SPARSE_NAME "mex_gridding3D_adj_sparse${PREC_SUFFIX}")
@@ -99,13 +102,14 @@ CONFIGURE_FILE( ${CMAKE_SOURCE_DIR}/inc/cufft_config.hpp.cmake ${CMAKE_SOURCE_DI
 include_directories(inc)
 SET(GRIDDING_INC_DIR ${CMAKE_SOURCE_DIR}/inc)
 SET(GRIDDING_INCLUDE ${GRIDDING_INC_DIR}/cuda_utils.hpp 
-					 ${GRIDDING_INC_DIR}/cuda_utils.cuh 					 
-					 ${GRIDDING_INC_DIR}/gridding_gpu.hpp 
-					 ${GRIDDING_INC_DIR}/config.hpp
-					 ${GRIDDING_INC_DIR}/griddingFunctions.hpp
-					 ${GRIDDING_INC_DIR}/gridding_kernels.hpp
+										 ${GRIDDING_INC_DIR}/cuda_utils.cuh 					 
+										 ${GRIDDING_INC_DIR}/gridding_gpu.hpp 
+										 ${GRIDDING_INC_DIR}/config.hpp
+										 ${GRIDDING_INC_DIR}/griddingFunctions.hpp
+										 ${GRIDDING_INC_DIR}/gridding_kernels.hpp
                      ${GRIDDING_INC_DIR}/gridding_operator.hpp
-                     ${GRIDDING_INC_DIR}/gridding_operator_factory.hpp)
+                     ${GRIDDING_INC_DIR}/gridding_operator_factory.hpp
+										 ${GRIDDING_INC_DIR}/gridding_operator_matlabfactory.hpp)
 					 
 SET(MATLAB_HELPER_INCLUDE ${GRIDDING_INC_DIR}/matlab_helper.h)
 SET(CONFIG_INCLUDE ${GRIDDING_INC_DIR}/config.hpp ${GRIDDING_INC_DIR}/cufft_config.hpp)

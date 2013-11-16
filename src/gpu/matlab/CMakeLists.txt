@@ -136,3 +136,4 @@ if(GEN_ATOMIC)
 endif()
 
 ADD_SUBDIRECTORY(sparse)
+ADD_SUBDIRECTORY(precomputation)

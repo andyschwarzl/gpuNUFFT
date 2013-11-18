@@ -45,13 +45,21 @@ if strcmp(method,'gridding')
         warning('GRIDDING3D:init:density','density compensation dim does not match k space data dim. k: %s w: %s',num2str(size(k)),num2str(size(w)));
     end
     
-    res.op = gridding3D_init(k,n,osf,sw,w);
+    %res.op = gridding3D_init(k,n,osf,sw,w);
 
+    
     res.op.params.im_width = uint32(n);
     res.op.params.osr = single(osf);
     res.op.params.kernel_width = uint32(wg);
     res.op.params.sector_width = uint32(sw);
     res.op.params.trajectory_length = uint32(length(k));
+    
+    [a,b,c,d,e] = mex_griddingND_precomp_f(single(k)',single(w)',[],res.op.params);
+    a
+    b
+    c
+    d
+    e
     res.op.atomic = atomic;
     res.op.verbose = false;
 elseif strcmp(method,'sparse')

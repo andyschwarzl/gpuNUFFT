@@ -66,7 +66,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	//Sensitivity data
 	DType* sens = NULL;
 	int sens_count;
-	readMatlabInputArray<DType>(prhs, pcount++, 2,"sens",&sens, &sens_count);
+	readMatlabInputArray<DType>(prhs, pcount++, 0,"sens",&sens, &sens_count);
 	
 	//Parameters
     const mxArray *matParams = prhs[pcount++];

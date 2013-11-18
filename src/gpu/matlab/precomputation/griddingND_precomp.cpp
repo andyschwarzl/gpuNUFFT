@@ -62,11 +62,11 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	DType* density_comp = NULL;
 	int density_count;
 	readMatlabInputArray<DType>(prhs, pcount++, 0,"density-comp",&density_comp, &density_count);
-
-	bool do_comp = false;
-
-	if (density_count == coord_count)
-		do_comp = true;
+	
+	//Sensitivity data
+	DType* sens = NULL;
+	int sens_count;
+	readMatlabInputArray<DType>(prhs, pcount++, 2,"sens",&sens, &sens_count);
 	
 	//Parameters
     const mxArray *matParams = prhs[pcount++];
@@ -81,7 +81,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 		
 	if (MATLAB_DEBUG)
 	{
-		mexPrintf("passed Params, IM_WIDTH: %d, OSR: %f, KERNEL_WIDTH: %d, SECTOR_WIDTH: %d do_comp: %d\n",im_width,osr,kernel_width,sector_width,do_comp);
+		mexPrintf("passed Params, IM_WIDTH: %d, OSR: %f, KERNEL_WIDTH: %d, SECTOR_WIDTH: %d dens_count: %d sens_count: %d\n",im_width,osr,kernel_width,sector_width,density_count,sens_count);
 		size_t free_mem = 0;
 		size_t total_mem = 0;
 		cudaMemGetInfo(&free_mem, &total_mem);
@@ -94,25 +94,17 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	// sectorCenters
 	// 
 
-	IndType* dataIndicesMatlab = NULL;
-	const mwSize n_dI_dims = 1;//2 * w * h * d * ncoils, 2 -> Re + Im
-	mwSize dims_dI[n_dI_dims];
-	dims_dI[0] = (mwSize)1;
-	
-	plhs[0] = mxCreateNumericArray(n_dI_dims,dims_dI,mxSINGLE_CLASS,mxREAL);
-	
-    dataIndicesMatlab = (IndType*)mxGetData(plhs[0]);
-
-	if (dataIndicesMatlab == NULL)
-     mexErrMsgTxt("Could not create output mxArray.\n");
-
     GriddingND::Array<DType> kSpaceTraj;
     kSpaceTraj.data = coords;
     kSpaceTraj.dim.length = coord_count;
 
 	GriddingND::Array<DType> density_compArray;
 	density_compArray.data = density_comp;
-	density_compArray.dim.length = coord_count;
+	density_compArray.dim.length = density_count;
+
+	GriddingND::Array<DType> sensArray;
+	sensArray.data = NULL;
+	sensArray.dim.length = 0;
 
 	GriddingND::Dimensions imgDims;
 	imgDims.width = im_width;
@@ -121,12 +113,10 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
 	try
 	{
-		GriddingND::GriddingOperator *griddingOp;
-		if (do_comp)
-			griddingOp = GriddingND::GriddingOperatorMatlabFactory::getInstance().createGriddingOperator(kSpaceTraj,density_compArray,kernel_width,sector_width,osr,imgDims);
-		else
-			griddingOp = GriddingND::GriddingOperatorMatlabFactory::getInstance().createGriddingOperator(kSpaceTraj,kernel_width,sector_width,osr,imgDims);
+		GriddingND::GriddingOperatorMatlabFactory factory = GriddingND::GriddingOperatorMatlabFactory::getInstance();
 
+		GriddingND::GriddingOperator *griddingOp;
+		griddingOp = factory.createGriddingOperator(kSpaceTraj,density_compArray,sensArray,kernel_width,sector_width,osr,imgDims,plhs);
 		delete griddingOp;
 	}
 	catch(...)

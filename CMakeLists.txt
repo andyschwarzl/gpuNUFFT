@@ -108,8 +108,7 @@ SET(GRIDDING_INCLUDE ${GRIDDING_INC_DIR}/cuda_utils.hpp
 										 ${GRIDDING_INC_DIR}/griddingFunctions.hpp
 										 ${GRIDDING_INC_DIR}/gridding_kernels.hpp
                      ${GRIDDING_INC_DIR}/gridding_operator.hpp
-                     ${GRIDDING_INC_DIR}/gridding_operator_factory.hpp
-										 ${GRIDDING_INC_DIR}/gridding_operator_matlabfactory.hpp)
+                     ${GRIDDING_INC_DIR}/gridding_operator_factory.hpp)
 					 
 SET(MATLAB_HELPER_INCLUDE ${GRIDDING_INC_DIR}/matlab_helper.h)
 SET(CONFIG_INCLUDE ${GRIDDING_INC_DIR}/config.hpp ${GRIDDING_INC_DIR}/cufft_config.hpp)

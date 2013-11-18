@@ -5,6 +5,10 @@
 #include "gridding_operator_factory.hpp"
 #include <algorithm>    // std::sort
 #include <vector>       // std::vector
+#include "matlab_helper.h"
+
+#include "mex.h"
+#include "matrix.h"
 
 namespace GriddingND
 {
@@ -25,13 +29,13 @@ namespace GriddingND
       {
       }
 
-      ~GriddingOperatorMatlabFactory()
-      {
-		  std::cout << "GOMF destruct " << std::endl;
-      }
-
     public:
-				
+	
+		  ~GriddingOperatorMatlabFactory()
+		  {
+			  std::cout << "GOMF destruct " << std::endl;
+		  }
+
 		// SETTER 
 		
 		// GETTER
@@ -40,6 +44,7 @@ namespace GriddingND
 
         static GriddingOperatorMatlabFactory& getInstance();
         
+		GriddingOperator* createGriddingOperator(Array<DType>& kSpaceTraj, Array<DType>& densCompData, Array<DType>& sensData, const size_t& kernelWidth, const size_t& sectorWidth, const DType& osf, Dimensions& imgDims,mxArray *plhs[]);
 
 	private:
 		static GriddingOperatorMatlabFactory instance;

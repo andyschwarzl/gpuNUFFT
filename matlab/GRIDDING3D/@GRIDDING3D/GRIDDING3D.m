@@ -54,12 +54,10 @@ if strcmp(method,'gridding')
     res.op.params.sector_width = uint32(sw);
     res.op.params.trajectory_length = uint32(length(k));
     
-    [a,b,c,d,e] = mex_griddingND_precomp_f(single(k)',single(w)',[],res.op.params);
-    a
-    b
-    c
-    d
-    e
+    [res.op.dataIndices,b,c,res.op.coords,res.op.sectorCenters] = mex_griddingND_precomp_f(single(k)',single(w)',[],res.op.params);
+    size(b)
+    size(c)
+    size(e)
     res.op.atomic = atomic;
     res.op.verbose = false;
 elseif strcmp(method,'sparse')

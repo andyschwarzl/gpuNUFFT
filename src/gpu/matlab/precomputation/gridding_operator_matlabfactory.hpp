@@ -29,6 +29,11 @@ namespace GriddingND
       {
       }
 
+	  
+	  Array<IndType> initDataIndices(GriddingOperator* griddingOp, size_t coordCnt);
+	  Array<DType> initCoordsData(GriddingOperator* griddingOp, size_t coordCnt);
+	  Array<IndType3> initSectorCenters(GriddingOperator* griddingOp, size_t sectorCnt);
+
     public:
 	
 		  ~GriddingOperatorMatlabFactory()
@@ -48,6 +53,8 @@ namespace GriddingND
 
 	private:
 		static GriddingOperatorMatlabFactory instance;
+
+		mxArray **plhs;
 		
     };
 

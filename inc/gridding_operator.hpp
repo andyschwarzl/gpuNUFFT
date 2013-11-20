@@ -89,9 +89,6 @@ namespace GriddingND
 		{
 			std::cout << "GO destruct " << std::endl;
 			free(this->kernel.data);
-			free(this->dataIndices.data);
-			free(this->kSpaceTraj.data);
-			free(this->sectorCenters.data);
         }
 
 		friend class GriddingOperatorFactory;

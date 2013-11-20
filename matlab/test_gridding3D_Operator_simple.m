@@ -20,7 +20,7 @@ img(13,13,3) = 1;
 
 size(img)
 
-show3DImageasArray([4 4],img,'input image','slice ');
+%show3DImageasArray([4 4],img,'input image','slice ');
 [nPE,nFE,nCh]=size(img);
 
 %% check fft output
@@ -30,7 +30,7 @@ Xk = fftn(img);
 
 img_fft = ifftn(Xk);
 
-show3DImageasArray([4 4],img_fft,'fft reconstruction','fft slice ');
+%show3DImageasArray([4 4],img_fft,'fft reconstruction','fft slice ');
 %% Generate 96 radial projections rawdata
 numSpokes = 96;
 
@@ -59,7 +59,12 @@ imwidth = nPE;
 osf = 1.5;
 wg = 3;
 sw = 8;
-w = ones(1,length(k_traj_3d(:)));
+
+w = abs(rho);
+w = repmat(w, [1, numSpokes,1]);
+w = w(:);
+w = repmat(w, [1 im_size]);
+
 FT = GRIDDING3D(k_traj_3d,w,imwidth,osf,wg,sw,[imwidth imwidth imwidth],'false');
 
 %% generate radial data

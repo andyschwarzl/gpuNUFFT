@@ -13,7 +13,7 @@ img = zeros([im_size im_size im_size]);
 img(9,9,9) = 1;
 size(img)
 
-show3DImageasArray([4 4],img,'input image','slice ');
+%show3DImageasArray([4 4],img,'input image','slice ');
 [nPE,nFE,nCh]=size(img);
 
 %% Generate k space trajectory

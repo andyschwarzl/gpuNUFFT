@@ -134,13 +134,12 @@ inline IndType GriddingND::GriddingOperatorFactory::computeSectorCenter(IndType 
 
 GriddingND::Array<IndType3> GriddingND::GriddingOperatorFactory::computeSectorCenters(GriddingND::GriddingOperator *griddingOp)
 {
-	GriddingND::Array<IndType3> sectorCenters; 
+	
 	GriddingND::Dimensions sectorDims = griddingOp->getSectorDims();
 	IndType sectorWidth = griddingOp->getSectorWidth();
 
-	sectorCenters.data = (IndType3*)malloc(sectorDims.count() * sizeof(IndType3));
-	sectorCenters.dim.length = sectorDims.count();
-
+	GriddingND::Array<IndType3> sectorCenters = initSectorCenters(griddingOp,sectorDims.count());
+	
 	for (size_t z=0;z<sectorDims.depth; z++)
 		for (size_t y=0;y<sectorDims.height;y++)
 			for (size_t x=0;x<sectorDims.width;x++)
@@ -153,6 +152,44 @@ GriddingND::Array<IndType3> GriddingND::GriddingOperatorFactory::computeSectorCe
 				sectorCenters.data[index] = center;
 			}
     return sectorCenters;
+}
+
+//default implementation
+GriddingND::Array<IndType> GriddingND::GriddingOperatorFactory::initDataIndices(GriddingND::GriddingOperator* griddingOp, size_t coordCnt)
+{
+	GriddingND::Array<IndType> dataIndices;
+	dataIndices.data = (IndType*)malloc(coordCnt*sizeof(IndType));
+	dataIndices.dim.length = coordCnt;
+	return dataIndices;
+}
+
+GriddingND::Array<IndType> GriddingND::GriddingOperatorFactory::initSectorDataCount(GriddingND::GriddingOperator* griddingOp, size_t coordCnt)
+{
+	GriddingND::Array<IndType> dataCount;
+	return dataCount;
+}
+
+GriddingND::Array<IndType> GriddingND::GriddingOperatorFactory::initDensData(GriddingND::GriddingOperator* griddingOp, size_t coordCnt)
+{
+	GriddingND::Array<IndType> densData;
+	return densData;
+}
+
+GriddingND::Array<DType> GriddingND::GriddingOperatorFactory::initCoordsData(GriddingND::GriddingOperator* griddingOp, size_t coordCnt)
+{
+	GriddingND::Array<DType> coordsData;
+	coordsData.data = (DType*)malloc(coordCnt*3*sizeof(DType));
+	coordsData.dim.length = coordCnt;
+	return coordsData;
+}
+
+GriddingND::Array<IndType3> GriddingND::GriddingOperatorFactory::initSectorCenters(GriddingND::GriddingOperator* griddingOp, size_t sectorCnt)
+{
+	GriddingND::Array<IndType3> sectorCenters; 
+	sectorCenters.data = (IndType3*)malloc(sectorCnt * sizeof(IndType3));
+	sectorCenters.dim.length = sectorCnt;
+
+	return sectorCenters;
 }
 
 GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddingOperator(GriddingND::Array<DType>& kSpaceTraj, const size_t& kernelWidth, const size_t& sectorWidth, const DType& osf, GriddingND::Dimensions& imgDims)
@@ -168,7 +205,6 @@ GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddin
 	
 	std::cout << "create gridding operator" << std::endl;
     
-	griddingOp->setKSpaceTraj(kSpaceTraj);
 	griddingOp->setImageDims(imgDims);
 
 	GriddingND::Array<IndType> assignedSectors = assignSectors(griddingOp, kSpaceTraj);
@@ -176,31 +212,27 @@ GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddin
 	std::vector<IndPair> assignedSectorsAndIndicesSorted = sortVector(assignedSectors);
 	
 	size_t coordCnt = kSpaceTraj.dim.count();
-	DType* coords_sorted = (DType*)malloc(coordCnt*3*sizeof(DType));
 
-	GriddingND::Array<IndType> dataIndices;
-	dataIndices.data = (IndType*)malloc(assignedSectors.count()*sizeof(IndType));
-	dataIndices.dim.length = assignedSectors.count();
+	Array<DType>   trajSorted = initCoordsData(griddingOp,coordCnt);
+	Array<IndType> dataIndices = initDataIndices(griddingOp,coordCnt);
 
 	//sort kspace data coords
 	for (int i=0; i<coordCnt;i++)
 	{
-		coords_sorted[i] = kSpaceTraj.data[assignedSectorsAndIndicesSorted[i].first];
-		coords_sorted[i + 1*coordCnt] = kSpaceTraj.data[assignedSectorsAndIndicesSorted[i].first + 1*coordCnt];
-		coords_sorted[i + 2*coordCnt] = kSpaceTraj.data[assignedSectorsAndIndicesSorted[i].first + 2*coordCnt];
+		trajSorted.data[i] = kSpaceTraj.data[assignedSectorsAndIndicesSorted[i].first];
+		trajSorted.data[i + 1*coordCnt] = kSpaceTraj.data[assignedSectorsAndIndicesSorted[i].first + 1*coordCnt];
+		trajSorted.data[i + 2*coordCnt] = kSpaceTraj.data[assignedSectorsAndIndicesSorted[i].first + 2*coordCnt];
 		
 		//todo sort density compensation
 
 		dataIndices.data[i] = assignedSectorsAndIndicesSorted[i].first;
 		assignedSectors.data[i] = assignedSectorsAndIndicesSorted[i].second;		
 	}
-
-	//todo free mem
-	//free(kSpaceTraj.data);
-	kSpaceTraj.data = coords_sorted;
-
-	griddingOp->setKSpaceTraj(kSpaceTraj);
 	griddingOp->setDataIndices(dataIndices);
+	//todo free mem ?
+	//free(kSpaceTraj.data);
+
+	griddingOp->setKSpaceTraj(trajSorted);
 
 	griddingOp->setSectorDataCount(computeSectorDataCount(griddingOp,assignedSectors));
 	griddingOp->setSectorCenters(computeSectorCenters(griddingOp));

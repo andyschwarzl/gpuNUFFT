@@ -31,6 +31,12 @@ namespace GriddingND
 
 	  Array<IndType> assignSectors(GriddingOperator* griddingOp, Array<DType>& kSpaceTraj);
 
+	  virtual Array<IndType> initDataIndices(GriddingOperator* griddingOp, size_t coordCnt);
+	  virtual Array<IndType> initSectorDataCount(GriddingOperator* griddingOp, size_t coordCnt);
+	  virtual Array<IndType> initDensData(GriddingOperator* griddingOp, size_t coordCnt);
+	  virtual Array<DType> initCoordsData(GriddingOperator* griddingOp, size_t coordCnt);
+	  virtual Array<IndType3> initSectorCenters(GriddingOperator* griddingOp, size_t sectorCnt);
+
     public:
 
         GriddingOperator* createGriddingOperator(Array<DType>& kSpaceTraj, const size_t& kernelWidth, const size_t& sectorWidth, const DType& osf, Dimensions& imgDims);
@@ -67,7 +73,7 @@ namespace GriddingND
 		Array<IndType3> computeSectorCenters(GriddingOperator *griddingOp);
 
 		IndType computeSectorCenter(IndType var, IndType sectorWidth);
-    };
+	};
 
 }
 

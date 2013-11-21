@@ -135,6 +135,8 @@ namespace GriddingND
 		void             performForwardGridding(Array<DType2> imgData,Array<CufftType>& kspaceData, GriddingOutput griddingOut = DEAPODIZATION);
 		Array<CufftType> performForwardGridding(Array<DType2> imgData,GriddingOutput griddingOut);
 
+		bool applyDensComp(){return (this->dens.data != NULL && this->dens.count()>1);}
+
 	private:
 		void initKernel()
 		{
@@ -147,8 +149,6 @@ namespace GriddingND
 		void setDens(Array<DType> dens)		{this->dens = dens;}
         
 		size_t getGridWidth() {return (size_t)(this->getGridDims().width);}
-
-		bool applyDensComp(){return (this->dens.data != NULL && this->dens.count()>1);}
 
 		Array<DType> kernel;
 

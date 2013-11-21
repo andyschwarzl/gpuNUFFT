@@ -105,7 +105,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
 	GriddingND::Array<DType> sensArray;
 	sensArray.data = NULL;
-	sensArray.dim.length = 0;
+	sensArray.dim.length = sens_count;
 
 	GriddingND::Dimensions imgDims;
 	imgDims.width = im_width;

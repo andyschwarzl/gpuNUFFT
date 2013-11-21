@@ -82,8 +82,10 @@ std::vector<GriddingND::IndPair> GriddingND::GriddingOperatorFactory::sortVector
 
 GriddingND::Array<IndType> GriddingND::GriddingOperatorFactory::assignSectors(GriddingND::GriddingOperator* griddingOp, GriddingND::Array<DType>& kSpaceTraj)
 {
-	griddingOp->setSectorDims(computeSectorCountPerDimension(griddingOp->getGridDims(),griddingOp->getSectorWidth()));
 	debug("in assign sectors\n");
+
+	griddingOp->setSectorDims(computeSectorCountPerDimension(griddingOp->getGridDims(),griddingOp->getSectorWidth()));
+	
 	size_t coordCnt = kSpaceTraj.count();
 
 	//create temporary array to store assigned values
@@ -91,24 +93,13 @@ GriddingND::Array<IndType> GriddingND::GriddingOperatorFactory::assignSectors(Gr
     assignedSectors.data = (IndType*)malloc(coordCnt * sizeof(IndType));
     assignedSectors.dim.length = coordCnt;
 	
-	debug("compute mappings\n");
 	for (int cCnt = 0; cCnt < coordCnt; cCnt++)
 	{
 		DType3 coord;
-		
-		debug("read traj x\n");
-		
 		coord.x = kSpaceTraj.data[cCnt];
-		
-		debug("read traj y\n");
-		
 		coord.y = kSpaceTraj.data[cCnt + coordCnt];
-		
-		debug("read traj z\n");
-		
 		coord.z = kSpaceTraj.data[cCnt + 2*coordCnt];
 		
-		debug("compute sec mapping\n");
 		IndType3 mappedSector = computeSectorMapping(coord,griddingOp->getSectorDims());
 
 		//linearize mapped sector

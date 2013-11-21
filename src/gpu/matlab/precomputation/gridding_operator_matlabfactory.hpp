@@ -6,6 +6,7 @@
 #include <algorithm>    // std::sort
 #include <vector>       // std::vector
 #include "matlab_helper.h"
+#include <string>
 
 #include "mex.h"
 #include "matrix.h"
@@ -30,9 +31,14 @@ namespace GriddingND
       }
 
 	  
+	  //abstract methods from GriddingOperatorFactory
 	  Array<IndType> initDataIndices(GriddingOperator* griddingOp, size_t coordCnt);
 	  Array<DType> initCoordsData(GriddingOperator* griddingOp, size_t coordCnt);
 	  Array<IndType3> initSectorCenters(GriddingOperator* griddingOp, size_t sectorCnt);
+	  Array<IndType> initSectorDataCount(GriddingOperator* griddingOp, size_t dataCount);
+	  Array<DType> initDensData(GriddingOperator* griddingOp, size_t coordCnt);
+
+	  void debug(const std::string& message);
 
     public:
 	

@@ -5,6 +5,7 @@
 #include "gridding_operator.hpp"
 #include <algorithm>    // std::sort
 #include <vector>       // std::vector
+#include <string>
 
 namespace GriddingND
 {
@@ -33,9 +34,10 @@ namespace GriddingND
 
 	  virtual Array<IndType> initDataIndices(GriddingOperator* griddingOp, size_t coordCnt);
 	  virtual Array<IndType> initSectorDataCount(GriddingOperator* griddingOp, size_t coordCnt);
-	  virtual Array<IndType> initDensData(GriddingOperator* griddingOp, size_t coordCnt);
+	  virtual Array<DType> initDensData(GriddingOperator* griddingOp, size_t coordCnt);
 	  virtual Array<DType> initCoordsData(GriddingOperator* griddingOp, size_t coordCnt);
 	  virtual Array<IndType3> initSectorCenters(GriddingOperator* griddingOp, size_t sectorCnt);
+	  virtual void debug(const std::string& message);
 
     public:
 

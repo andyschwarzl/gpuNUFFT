@@ -40,7 +40,7 @@ void cleanUp()
 void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 {
 	if (MATLAB_DEBUG)
-		mexPrintf("Starting ADJOINT GRIDDING 3D Function...\n");
+		mexPrintf("Starting GRIDDING 3D Precomputation...\n");
 
 	// get cuda context associated to MATLAB 
 	// 
@@ -78,12 +78,11 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	DType osr = getParamField<DType>(matParams,"osr"); 
 	int kernel_width = getParamField<int>(matParams,"kernel_width");
 	int sector_width = getParamField<int>(matParams,"sector_width");
-	size_t traj_length = getParamField<size_t>(matParams,"trajectory_length");
-
+	int traj_length = getParamField<int>(matParams,"trajectory_length");
 		
 	if (MATLAB_DEBUG)
 	{
-		mexPrintf("passed Params, IM_WIDTH: %d, OSR: %f, KERNEL_WIDTH: %d, SECTOR_WIDTH: %d dens_count: %d sens_count: %d\n",im_width,osr,kernel_width,sector_width,density_count,sens_count);
+		mexPrintf("passed Params, IM_WIDTH: %d, OSR: %f, KERNEL_WIDTH: %d, SECTOR_WIDTH: %d dens_count: %d sens_count: %d traj_len: %d\n",im_width,osr,kernel_width,sector_width,density_count,sens_count,traj_length);
 		size_t free_mem = 0;
 		size_t total_mem = 0;
 		cudaMemGetInfo(&free_mem, &total_mem);
@@ -99,7 +98,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     GriddingND::Array<DType> kSpaceTraj;
     kSpaceTraj.data = coords;
     kSpaceTraj.dim.length = traj_length;
-
+	
 	GriddingND::Array<DType> density_compArray;
 	density_compArray.data = density_comp;
 	density_compArray.dim.length = density_count;

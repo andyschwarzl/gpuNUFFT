@@ -2,11 +2,18 @@
 #include "gridding_operator_matlabfactory.hpp"
 #include <iostream>
 
+
 GriddingND::GriddingOperatorMatlabFactory GriddingND::GriddingOperatorMatlabFactory::instance;
 
 GriddingND::GriddingOperatorMatlabFactory& GriddingND::GriddingOperatorMatlabFactory::getInstance()
 {
 	return instance;
+}
+
+void GriddingND::GriddingOperatorMatlabFactory::debug(const std::string& message)
+{
+	if (MATLAB_DEBUG)
+		mexPrintf(message.c_str());
 }
 
 mxArray* createIndicesArray(const size_t arrSize)
@@ -15,15 +22,15 @@ mxArray* createIndicesArray(const size_t arrSize)
 	return mxCreateNumericArray(1,indSize,mxUINT64_CLASS,mxREAL);
 }
 
-mxArray* createSectorDataArray()
+mxArray* createSectorDataArray(const size_t arrSize)
 {
-	mwSize secSize[] = {10};	
-	return mxCreateNumericArray(1,secSize,mxSINGLE_CLASS,mxREAL);
+	mwSize secSize[] = {arrSize};	
+	return mxCreateNumericArray(1,secSize,mxUINT64_CLASS,mxREAL);
 }
 
-mxArray* createDensArray()
+mxArray* createDensArray(const size_t arrSize)
 {
-	mwSize densSize[] = {1,10};
+	mwSize densSize[] = {2,arrSize}; // complex
 	return mxCreateNumericArray(2,densSize,mxSINGLE_CLASS,mxREAL);
 }
 
@@ -40,7 +47,10 @@ mxArray* createSectorCentersArray(const size_t arrSize)
 }
 
 GriddingND::Array<IndType> GriddingND::GriddingOperatorMatlabFactory::initDataIndices(GriddingND::GriddingOperator* griddingOp, size_t coordCnt)
-{
+{	
+	if (MATLAB_DEBUG)
+		mexPrintf("init Data Index Output Array: %d\n",coordCnt);
+
 	plhs[0] = createIndicesArray(coordCnt);
 	
 	GriddingND::Array<IndType> dataIndices;
@@ -54,7 +64,10 @@ GriddingND::Array<IndType> GriddingND::GriddingOperatorMatlabFactory::initDataIn
 }
 
 GriddingND::Array<DType> GriddingND::GriddingOperatorMatlabFactory::initCoordsData(GriddingND::GriddingOperator* griddingOp, size_t coordCnt)
-{
+{	
+	if (MATLAB_DEBUG)
+		mexPrintf("init Coords Output Array: %d\n",coordCnt);
+
 	plhs[3] = createCoordsArray(coordCnt);
 
 	GriddingND::Array<DType> coordsData;
@@ -65,6 +78,8 @@ GriddingND::Array<DType> GriddingND::GriddingOperatorMatlabFactory::initCoordsDa
 
 GriddingND::Array<IndType3> GriddingND::GriddingOperatorMatlabFactory::initSectorCenters(GriddingND::GriddingOperator* griddingOp, size_t sectorCnt)
 {
+	if (MATLAB_DEBUG)
+		mexPrintf("init Sector Centers Output Array: %d\n",sectorCnt);
 	plhs[4] = createSectorCentersArray(sectorCnt);
 
 	GriddingND::Array<IndType3> sectorCenters;
@@ -73,20 +88,48 @@ GriddingND::Array<IndType3> GriddingND::GriddingOperatorMatlabFactory::initSecto
 	return sectorCenters;
 }
 
+GriddingND::Array<IndType> GriddingND::GriddingOperatorMatlabFactory::initSectorDataCount(GriddingND::GriddingOperator* griddingOp, size_t dataCount)
+{
+	if (MATLAB_DEBUG)
+		mexPrintf("init SectorData Output Array: %d\n",dataCount);
+	plhs[1] = createSectorDataArray(dataCount);
+
+	Array<IndType> sectorDataCount;
+	sectorDataCount.data = (IndType*)mxGetData(plhs[1]);
+	sectorDataCount.dim.length = dataCount;
+	return sectorDataCount;
+
+}
+
+GriddingND::Array<DType> GriddingND::GriddingOperatorMatlabFactory::initDensData(GriddingND::GriddingOperator* griddingOp, size_t coordCnt)
+{
+	if (MATLAB_DEBUG)
+		mexPrintf("init Dens Output Array: %d\n",coordCnt);
+	plhs[2] = createDensArray(coordCnt);
+
+	Array<DType> densData;
+	densData.data = (DType*)mxGetData(plhs[2]);
+	densData.dim.length = coordCnt;
+
+	return densData;
+}
+
 GriddingND::GriddingOperator* GriddingND::GriddingOperatorMatlabFactory::createGriddingOperator(GriddingND::Array<DType>& kSpaceTraj, Array<DType>& densCompData, Array<DType>& sensData, const size_t& kernelWidth, const size_t& sectorWidth, const DType& osf, GriddingND::Dimensions& imgDims,mxArray *plhs[])
 {
-	IndType* dataSectorDataCount = NULL;
-	DType*   dataSortedDens = NULL;
-	DType*   dataSortedCoords = NULL;
-	IndType* sectorCenters = NULL;
-	mexPrintf("trying to create index array with size %d\n",kSpaceTraj.count());
-	plhs[1] = createSectorDataArray();
-    plhs[2] = createDensArray();
+	if (MATLAB_DEBUG)
+		mexPrintf("Start init of Gridding Operator\n");
+
 	this->plhs = plhs;
 	
-	dataSectorDataCount = (IndType*)mxGetData(plhs[1]);
-	dataSortedDens   = (DType*)mxGetData(plhs[2]);
+	GriddingOperator* griddingOp = GriddingOperatorFactory::createGriddingOperator(kSpaceTraj,densCompData,sensData,kernelWidth,sectorWidth,osf,imgDims);
 
-	return GriddingOperatorFactory::createGriddingOperator(kSpaceTraj,densCompData,sensData,kernelWidth,sectorWidth,osf,imgDims);
+	if (!griddingOp->applyDensComp())
+	{		
+		if (MATLAB_DEBUG)
+			mexPrintf("returning empty dens array\n");
+		plhs[2] = createDensArray(1);
+	}
+
+	return griddingOp;
 }
 

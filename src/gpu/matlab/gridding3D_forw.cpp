@@ -45,45 +45,37 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	if (MATLAB_DEBUG)
 		mexPrintf("Starting Forward GRIDDING 3D Function...\n");
 	
-  // get cuda context associated to MATLAB 
-  // 
-  int cuDevice = 0;
-  cudaGetDevice(&cuDevice);
-  cudaSetDevice(cuDevice);//check if really necessary
+	// get cuda context associated to MATLAB 
+	int cuDevice = 0;
+	cudaGetDevice(&cuDevice);
+	cudaSetDevice(cuDevice);
 
-  mexAtExit(cleanUp);
-	//TODO check input params count first!
-	// if(nrhs != 9 ) {
-	//printf("\nUsage:\n");
-    //return;
-//	} else if(nlhs>1) {
-//	printf("Too many output arguments\n");
- //   return;
-//	}
+	mexAtExit(cleanUp);
 
-  // fetching data from MATLAB
-
+	// fetch data from MATLAB
 	int pcount = 0;  //Parametercounter
     
-	//Data
+	// Input: Image data
 	DType2* imdata = NULL;
 	int im_count;
 	int n_coils;
 	readMatlabInputArray<DType2>(prhs, pcount++, 2,"imdata",&imdata, &im_count,3,&n_coils);
 	
-	//Coords
-	DType* coords = NULL;
-	int coord_count;
-	readMatlabInputArray<DType>(prhs, pcount++, 0,"coords",&coords, &coord_count);
+	// Data indices
+	GriddingND::Array<IndType> dataIndicesArray = readAndCreateArray<IndType>(prhs,pcount++,0,"data-indices");
 
-	//Sectors
-	int* sectors = NULL;
-	int sector_count;
-	readMatlabInputArray<int>(prhs, pcount++, 1,"sectors",&sectors, &sector_count);
+	// Coords
+	GriddingND::Array<DType> kSpaceTraj = readAndCreateArray<DType>(prhs, pcount++, 0,"coords");
 
-	//Sector centers
-	int* sector_centers = NULL;
-	readMatlabInputArray<int>(prhs, pcount++, 3,"sectors-centers",&sector_centers, &sector_count);
+	// SectorData Count
+	GriddingND::Array<IndType> sectorDataCountArray = readAndCreateArray<IndType>(prhs,pcount++,0,"sector-data-count");
+
+	// Sector centers
+	GriddingND::Array<IndType3> sectorCentersArray = readAndCreateArray<IndType3>(prhs,pcount++,0,"sector-centers");
+	
+	//TODO Sens array	
+	GriddingND::Array<DType2>  sensArray;
+	sensArray.data = NULL;
 
 	//Parameters
     const mxArray *matParams = prhs[pcount++];
@@ -96,6 +88,13 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	int kernel_width = getParamField<int>(matParams,"kernel_width");
 	int sector_width = getParamField<int>(matParams,"sector_width");
 	mwSize data_entries = getParamField<mwSize>(matParams,"trajectory_length");
+	
+	GriddingND::Array<DType2> imdataArray;
+	imdataArray.data = imdata;
+	imdataArray.dim.width = (IndType)im_width;
+	imdataArray.dim.height = (IndType)im_width;
+	imdataArray.dim.depth = (IndType)im_width;
+	imdataArray.dim.channels = n_coils;
 
 	if (MATLAB_DEBUG)
 	{
@@ -129,28 +128,10 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	if (data == NULL)
      mexErrMsgTxt("Could not create output mxArray.\n");
 
-    GriddingND::Array<DType> kSpaceData;
-    kSpaceData.data = coords;
-    kSpaceData.dim.length = data_entries;
-	//kSpaceData.dim.channels = n_coils;
-	
 	GriddingND::Array<CufftType> dataArray;
 	dataArray.data = data;
 	dataArray.dim.length = data_entries;
 	dataArray.dim.channels = n_coils;
-	
-	GriddingND::Array<DType2> imdataArray;
-	imdataArray.data = imdata;
-	imdataArray.dim.width = (IndType)im_width;
-	imdataArray.dim.height = (IndType)im_width;
-	imdataArray.dim.depth = (IndType)im_width;
-	imdataArray.dim.channels = n_coils;
-
-	GriddingND::Array<size_t> sectorsArray;
-	sectorsArray.data = (size_t*)sectors;
-	sectorsArray.dim.length = sector_count;
-	GriddingND::Array<size_t> sectorCentersArray;
-	sectorCentersArray.data = (size_t*)sector_centers;
 
 	GriddingND::Dimensions imgDims;
 	imgDims.width = imdataArray.dim.width;
@@ -159,7 +140,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
 	try
 	{
-		GriddingND::GriddingOperator *griddingOp = GriddingND::GriddingOperatorMatlabFactory::getInstance().createGriddingOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
+		GriddingND::GriddingOperator* griddingOp = GriddingND::GriddingOperatorMatlabFactory::getInstance().loadPrecomputedGriddingOperator(kSpaceTraj,dataIndicesArray,sectorDataCountArray,sectorCentersArray,sensArray,kernel_width,sector_width,osr,imgDims);
 
 		griddingOp->performForwardGridding(imdataArray,dataArray);
 		

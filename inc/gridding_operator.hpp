@@ -85,6 +85,12 @@ namespace GriddingND
 			initKernel();	
         }
 
+		GriddingOperator(size_t kernelWidth, size_t sectorWidth, DType osf, Dimensions imgDims): 
+		osf(osf), kernelWidth(kernelWidth), sectorWidth(sectorWidth),imgDims(imgDims)
+		{
+			initKernel();	
+        }
+
 		~GriddingOperator()
 		{
 			std::cout << "GO destruct " << std::endl;
@@ -96,12 +102,15 @@ namespace GriddingND
 		// SETTER 
         void setOsf(DType osf)			{this->osf = osf;}
 
-        void setKSpaceTraj(Array<DType> kSpaceTraj)	{this->kSpaceTraj = kSpaceTraj;}
+        void setKSpaceTraj(Array<DType> kSpaceTraj)				{this->kSpaceTraj = kSpaceTraj;}
         void setSectorCenters(Array<IndType3> sectorCenters)	{this->sectorCenters = sectorCenters;}
-        void setSectorDataCount(Array<IndType> sectorDataCount)		{this->sectorDataCount = sectorDataCount;}
-		void setDataIndices(Array<IndType> dataIndices)		{this->dataIndices = dataIndices;}
-		void setImageDims(Dimensions dims)  {this->imgDims = dims;}
-		void setSectorDims(Dimensions dims)  {this->sectorDims = dims;}
+        void setSectorDataCount(Array<IndType> sectorDataCount)	{this->sectorDataCount = sectorDataCount;}
+		void setDataIndices(Array<IndType> dataIndices)			{this->dataIndices = dataIndices;}
+		void setSens(Array<DType2> sens)						{this->sens = sens;}
+		void setDens(Array<DType> dens)							{this->dens = dens;}
+
+		void setImageDims(Dimensions dims)						{this->imgDims = dims;}
+		void setSectorDims(Dimensions dims)						{this->sectorDims = dims;}
 
 		// GETTER
         Array<DType>  getKSpaceTraj()	{return this->kSpaceTraj;}
@@ -145,9 +154,6 @@ namespace GriddingND
 			loadGrid3Kernel(this->kernel.data,(int)this->kernel.count(),(int)kernelWidth,osf);
 		}
 
-		void setSens(Array<DType2> sens)		{this->sens = sens;}
-		void setDens(Array<DType> dens)		{this->dens = dens;}
-        
 		size_t getGridWidth() {return (size_t)(this->getGridDims().width);}
 
 		Array<DType> kernel;

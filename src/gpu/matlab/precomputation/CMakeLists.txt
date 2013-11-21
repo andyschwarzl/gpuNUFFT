@@ -1,9 +1,6 @@
 MESSAGE("Generate precomputation MEX file")
 
-set(PRECOMP_MEX_FILE griddingND_precomp.cpp
-                     gridding_operator_matlabfactory.hpp
-										 gridding_operator_matlabfactory.cpp
-                     ${MATLAB_HELPER_INCLUDE})
+set(PRECOMP_MEX_FILE griddingND_precomp.cpp ${MATLAB_SOURCES})
 
 CUDA_COMPILE(mex_griddingND_precomp_generated ${PRECOMP_MEX_FILE} SHARED)
 

@@ -67,8 +67,12 @@ MESSAGE(STATUS "Using MATLAB INC DIR: ${MATLAB_INCLUDE_DIR}")
 
 INCLUDE_DIRECTORIES(${MATLAB_INCLUDE_DIR})
 
-set(MEX_FILE gridding3D_adj.cpp ${MATLAB_HELPER_INCLUDE})
-set(MEX_FILE_FORW gridding3D_forw.cpp ${MATLAB_HELPER_INCLUDE})
+set(MATLAB_SOURCES   ${CMAKE_CURRENT_SOURCE_DIR}/gridding_operator_matlabfactory.hpp
+										 ${CMAKE_CURRENT_SOURCE_DIR}/gridding_operator_matlabfactory.cpp
+                     ${MATLAB_HELPER_INCLUDE})
+
+set(MEX_FILE gridding3D_adj.cpp ${MATLAB_SOURCES})
+set(MEX_FILE_FORW gridding3D_forw.cpp ${MATLAB_SOURCES})
 
 CUDA_COMPILE( mex_gridding3D_adj_generated ${MEX_FILE} SHARED)
 CUDA_COMPILE( mex_gridding3D_forw_generated ${MEX_FILE_FORW} SHARED)

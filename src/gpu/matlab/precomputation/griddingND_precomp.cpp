@@ -17,7 +17,7 @@
 
 #include <string.h>
 
-#include "gridding_operator_matlabfactory.hpp"
+#include "../gridding_operator_matlabfactory.hpp"
 
 /** 
  * MEX file cleanup to reset CUDA Device 
@@ -59,15 +59,11 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	readMatlabInputArray<DType>(prhs, pcount++, 0,"coords",&coords, &coord_count);
 
 	//Density compensation
-	DType* density_comp = NULL;
-	int density_count;
-	readMatlabInputArray<DType>(prhs, pcount++, 0,"density-comp",&density_comp, &density_count);
-	
+	GriddingND::Array<DType> density_compArray = readAndCreateArray<DType>(prhs,pcount++,0,"density-comp");
+
 	//Sensitivity data
-	DType* sens = NULL;
-	int sens_count;
-	readMatlabInputArray<DType>(prhs, pcount++, 0,"sens",&sens, &sens_count);
-	
+	GriddingND::Array<DType2> sensArray = readAndCreateArray<DType2>(prhs,pcount++,0,"sens");
+
 	//Parameters
     const mxArray *matParams = prhs[pcount++];
 	
@@ -82,7 +78,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 		
 	if (MATLAB_DEBUG)
 	{
-		mexPrintf("passed Params, IM_WIDTH: %d, OSR: %f, KERNEL_WIDTH: %d, SECTOR_WIDTH: %d dens_count: %d sens_count: %d traj_len: %d\n",im_width,osr,kernel_width,sector_width,density_count,sens_count,traj_length);
+		mexPrintf("passed Params, IM_WIDTH: %d, OSR: %f, KERNEL_WIDTH: %d, SECTOR_WIDTH: %d dens_count: %d sens_count: %d traj_len: %d\n",im_width,osr,kernel_width,sector_width,density_compArray.count(),sensArray.count(),traj_length);
 		size_t free_mem = 0;
 		size_t total_mem = 0;
 		cudaMemGetInfo(&free_mem, &total_mem);
@@ -98,14 +94,6 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     GriddingND::Array<DType> kSpaceTraj;
     kSpaceTraj.data = coords;
     kSpaceTraj.dim.length = traj_length;
-	
-	GriddingND::Array<DType> density_compArray;
-	density_compArray.data = density_comp;
-	density_compArray.dim.length = density_count;
-
-	GriddingND::Array<DType> sensArray;
-	sensArray.data = NULL;
-	sensArray.dim.length = sens_count;
 
 	GriddingND::Dimensions imgDims;
 	imgDims.width = im_width;
@@ -122,7 +110,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	}
 	catch(...)
 	{
-		mexPrintf("FAILURE in gridding operation\n");
+		mexPrintf("FAILURE in Gridding Initialization\n");
 	}
 	
     cudaThreadSynchronize();

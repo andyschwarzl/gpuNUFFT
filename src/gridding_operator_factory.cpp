@@ -211,12 +211,10 @@ GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddin
 	if (imgDims.channels > 1)
 		throw std::invalid_argument("Image dimensions must not contain a channel size greater than 1!");
 	
-	GriddingND::GriddingOperator *griddingOp = new GriddingND::GriddingOperator(kernelWidth,sectorWidth,osf);
-	
 	std::cout << "create gridding operator" << std::endl;
-    
-	griddingOp->setImageDims(imgDims);
-
+    GriddingND::GriddingOperator *griddingOp = new GriddingND::GriddingOperator(kernelWidth,sectorWidth,osf,imgDims);
+	
+	//assign Sectors
 	GriddingND::Array<IndType> assignedSectors = assignSectors(griddingOp, kSpaceTraj);
 
 	std::vector<IndPair> assignedSectorsAndIndicesSorted = sortVector(assignedSectors);
@@ -265,7 +263,7 @@ GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddin
 	return op;
 }
 
-GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddingOperator(GriddingND::Array<DType>& kSpaceTraj, GriddingND::Array<DType>& densCompData, GriddingND::Array<DType>& sensData, const size_t& kernelWidth, const size_t& sectorWidth, const DType& osf, GriddingND::Dimensions& imgDims)
+GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddingOperator(GriddingND::Array<DType>& kSpaceTraj, GriddingND::Array<DType>& densCompData, GriddingND::Array<DType2>& sensData, const size_t& kernelWidth, const size_t& sectorWidth, const DType& osf, GriddingND::Dimensions& imgDims)
 {
 	return createGriddingOperator(kSpaceTraj, kernelWidth, sectorWidth, osf, imgDims);
 }

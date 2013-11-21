@@ -39,9 +39,10 @@ osf = 1.5;
 wg = 3;
 sw = 8;
 w = ones(1,length(k_traj(:)));
-global temp
-FT = GRIDDING3D(k_traj,w,imwidth,osf,wg,sw,[imwidth imwidth imwidth],'false');
 
+tic
+FT = GRIDDING3D(k_traj,w,imwidth,osf,wg,sw,[imwidth imwidth imwidth],'false');
+toc
 %% generate radial data
 dataRadial = (FT*img);
 dataRadial_x = (1/sqrt(prod([16 16 16]))) * dataRadial;

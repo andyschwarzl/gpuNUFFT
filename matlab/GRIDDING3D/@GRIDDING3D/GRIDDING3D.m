@@ -47,17 +47,13 @@ if strcmp(method,'gridding')
     
     %res.op = gridding3D_init(k,n,osf,sw,w);
 
-    
     res.op.params.im_width = uint32(n);
     res.op.params.osr = single(osf);
     res.op.params.kernel_width = uint32(wg);
     res.op.params.sector_width = uint32(sw);
     res.op.params.trajectory_length = uint32(length(k));
     
-    [res.op.dataIndices,b,c,res.op.coords,res.op.sectorCenters] = mex_griddingND_precomp_f(single(k)',single(w)',[],res.op.params);
-    size(b)
-    size(c)
-    size(e)
+    [res.op.dataIndices,res.op.sectorDataCount,res.op.densSorted,res.op.coords,res.op.sectorCenters] = mex_griddingND_precomp_f(single(k)',single(w)',[],res.op.params);
     res.op.atomic = atomic;
     res.op.verbose = false;
 elseif strcmp(method,'sparse')

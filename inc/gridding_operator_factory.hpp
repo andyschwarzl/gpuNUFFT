@@ -21,37 +21,24 @@ namespace GriddingND
 	class GriddingOperatorFactory
 	{
     protected:
-      GriddingOperatorFactory()
-      {
-      }
+		GriddingOperatorFactory()
+		{
+		}
 
-      ~GriddingOperatorFactory()
-      {
+		~GriddingOperatorFactory()
+		{
 		std::cout << "GOF destruct " << std::endl;
-      }
+		}
 
-	  Array<IndType> assignSectors(GriddingOperator* griddingOp, Array<DType>& kSpaceTraj);
+		Array<IndType> assignSectors(GriddingOperator* griddingOp, Array<DType>& kSpaceTraj);
 
-	  virtual Array<IndType> initDataIndices(GriddingOperator* griddingOp, size_t coordCnt);
-	  virtual Array<IndType> initSectorDataCount(GriddingOperator* griddingOp, size_t coordCnt);
-	  virtual Array<DType> initDensData(GriddingOperator* griddingOp, size_t coordCnt);
-	  virtual Array<DType> initCoordsData(GriddingOperator* griddingOp, size_t coordCnt);
-	  virtual Array<IndType3> initSectorCenters(GriddingOperator* griddingOp, size_t sectorCnt);
-	  virtual void debug(const std::string& message);
+		virtual Array<IndType> initDataIndices(GriddingOperator* griddingOp, size_t coordCnt);
+		virtual Array<IndType> initSectorDataCount(GriddingOperator* griddingOp, size_t coordCnt);
+		virtual Array<DType> initDensData(GriddingOperator* griddingOp, size_t coordCnt);
+		virtual Array<DType> initCoordsData(GriddingOperator* griddingOp, size_t coordCnt);
+		virtual Array<IndType3> initSectorCenters(GriddingOperator* griddingOp, size_t sectorCnt);
+		virtual void debug(const std::string& message);
 
-    public:
-
-        GriddingOperator* createGriddingOperator(Array<DType>& kSpaceTraj, const size_t& kernelWidth, const size_t& sectorWidth, const DType& osf, Dimensions& imgDims);
-
-		GriddingOperator* createGriddingOperator(Array<DType>& kSpaceTraj, Array<DType>& densCompData, const size_t& kernelWidth, const size_t& sectorWidth, const DType& osf, Dimensions& imgDims);
-
-		GriddingOperator* createGriddingOperator(Array<DType>& kSpaceTraj, Array<DType>& densCompData, Array<DType2>& sensData, const size_t& kernelWidth, const size_t& sectorWidth, const DType& osf, Dimensions& imgDims);
-
-        static GriddingOperatorFactory& getInstance();
-        
-	private:
-		static GriddingOperatorFactory instance;
-		
 		size_t computeSectorMapping(DType coord, size_t sectorCount);
 
 		IndType3 computeSectorMapping(DType3 coord, Dimensions sectorDims);
@@ -75,6 +62,19 @@ namespace GriddingND
 		Array<IndType3> computeSectorCenters(GriddingOperator *griddingOp);
 
 		IndType computeSectorCenter(IndType var, IndType sectorWidth);
+
+    public:
+
+        GriddingOperator* createGriddingOperator(Array<DType>& kSpaceTraj, const size_t& kernelWidth, const size_t& sectorWidth, const DType& osf, Dimensions& imgDims);
+
+		GriddingOperator* createGriddingOperator(Array<DType>& kSpaceTraj, Array<DType>& densCompData, const size_t& kernelWidth, const size_t& sectorWidth, const DType& osf, Dimensions& imgDims);
+
+		GriddingOperator* createGriddingOperator(Array<DType>& kSpaceTraj, Array<DType>& densCompData, Array<DType2>& sensData, const size_t& kernelWidth, const size_t& sectorWidth, const DType& osf, Dimensions& imgDims);
+
+        static GriddingOperatorFactory& getInstance();
+        
+	private:
+		static GriddingOperatorFactory instance;
 	};
 
 }

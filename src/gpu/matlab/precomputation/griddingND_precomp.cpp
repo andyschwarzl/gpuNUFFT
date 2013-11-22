@@ -106,6 +106,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
 		GriddingND::GriddingOperator *griddingOp;
 		griddingOp = factory.createGriddingOperator(kSpaceTraj,density_compArray,sensArray,kernel_width,sector_width,osr,imgDims,plhs);
+
 		delete griddingOp;
 	}
 	catch(...)

@@ -58,7 +58,7 @@ void readMatlabInputArray(const mxArray *prhs[], int input_index, int highest_va
     matlabData = prhs[input_index];
 	bool is_int = false;
 
-	if (mxIsInt32(matlabData) || mxIsUint32(matlabData))
+	if (mxIsInt32(matlabData) || mxIsUint32(matlabData) || mxIsUint64(matlabData))
 	{
 		is_int = true;
 		*data = ( TType*) mxGetData(matlabData);		

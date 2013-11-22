@@ -97,6 +97,7 @@ void GriddingND::GriddingOperator::performForwardGridding(GriddingND::Array<DTyp
 				   (IndType*)this->sectorCenters.data,this->sectorWidth, imgData.dim.width,this->osf,griddingOut);
 
 	writeOrdered<CufftType>(kspaceData,kspaceDataSorted,this->kSpaceTraj.count());
+
 	free(kspaceDataSorted);
 }
 

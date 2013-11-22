@@ -45,6 +45,7 @@ FT = GRIDDING3D(k_traj',w,imwidth,osf,wg,sw,[imwidth imwidth imwidth],'false');
 toc
 %% generate radial data
 dataRadial = (FT*img);
+%%
 dataRadial_x = (1/sqrt(prod([16 16 16]))) * dataRadial;
 %% density compensation
 w = abs(rho);
@@ -56,4 +57,5 @@ dataRadial_dc = dataRadial;
 
 %% recon
 imgRegrid_kb = FT'*dataRadial_dc;
+%%
 show3DImageasArray([4 4],imgRegrid_kb,'gridding reconstruction','fft slice ');

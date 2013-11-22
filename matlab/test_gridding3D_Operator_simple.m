@@ -64,12 +64,13 @@ w = abs(rho);
 w = repmat(w, [1, numSpokes,1]);
 w = w(:);
 w = repmat(w, [1 im_size]);
-
-FT = GRIDDING3D(k_traj_3d,w,imwidth,osf,wg,sw,[imwidth imwidth imwidth],'false');
+%%
+FT = GRIDDING3D(k_traj_3d,w(:),imwidth,osf,wg,sw,[imwidth imwidth imwidth],'false');
 
 %% generate radial data
 dataRadial = (FT*img);
 dataRadial_x = (1/sqrt(prod([16 16 16]))) * dataRadial;
+dataRadial_dc = dataRadial_x;
 %% density compensation
 w = abs(rho);
 w = repmat(w, [1, numSpokes,1]);

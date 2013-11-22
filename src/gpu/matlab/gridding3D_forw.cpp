@@ -63,16 +63,20 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	
 	// Data indices
 	GriddingND::Array<IndType> dataIndicesArray = readAndCreateArray<IndType>(prhs,pcount++,0,"data-indices");
+	mexPrintf("data indices count: %d\n",dataIndicesArray.count());
 
 	// Coords
 	GriddingND::Array<DType> kSpaceTraj = readAndCreateArray<DType>(prhs, pcount++, 0,"coords");
+	mexPrintf("coords count: %d\n",kSpaceTraj.count());
 
 	// SectorData Count
 	GriddingND::Array<IndType> sectorDataCountArray = readAndCreateArray<IndType>(prhs,pcount++,0,"sector-data-count");
+	mexPrintf("sector data count: %d\n",sectorDataCountArray.count());
 
 	// Sector centers
-	GriddingND::Array<IndType3> sectorCentersArray = readAndCreateArray<IndType3>(prhs,pcount++,0,"sector-centers");
-	
+	GriddingND::Array<IndType3> sectorCentersArray = readAndCreateArray<IndType3>(prhs,pcount++,3,"sector-centers");
+	mexPrintf("centers count: %d\n",sectorCentersArray.count());
+
 	//TODO Sens array	
 	GriddingND::Array<DType2>  sensArray;
 	sensArray.data = NULL;
@@ -87,7 +91,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	DType osr = getParamField<DType>(matParams,"osr"); 
 	int kernel_width = getParamField<int>(matParams,"kernel_width");
 	int sector_width = getParamField<int>(matParams,"sector_width");
-	mwSize data_entries = getParamField<mwSize>(matParams,"trajectory_length");
+	int data_entries = getParamField<int>(matParams,"trajectory_length");
 	
 	GriddingND::Array<DType2> imdataArray;
 	imdataArray.data = imdata;
@@ -105,16 +109,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 		mexPrintf("memory usage on device, free: %lu total: %lu\n",free_mem,total_mem);
 	}
    
-	long kernel_count = calculateGrid3KernelSize(osr, kernel_width/2.0f);
-	DType* kernel = (DType*) calloc(kernel_count,sizeof(DType));
-	loadGrid3Kernel(kernel,kernel_count,kernel_width,osr);
-	
-	//calc grid width -> oversampling
-	int grid_width = (unsigned long)(im_width * osr);
-	if (MATLAB_DEBUG)
-		mexPrintf("grid width (incl. osr) = %d\n",grid_width);
 	//Output Image
-
 	CufftType* data;
 	const mwSize n_dims = 3;//2 * data_cnt * ncoils, 2 -> Re + Im
 	mwSize dims_data[n_dims];
@@ -151,8 +146,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 		mexPrintf("FAILURE in gridding operation\n");
 	}
 
-	cudaThreadSynchronize();	
-	free(kernel);
+	cudaThreadSynchronize();
 	if (MATLAB_DEBUG)	
 	{
 		size_t free_mem = 0;

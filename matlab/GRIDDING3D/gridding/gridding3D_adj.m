@@ -40,9 +40,9 @@ else
         disp('call gridding mex kernel')
     end
     if a.atomic == true
-        m = mex_gridding3D_adj_atomic_f(single(kspace),uint64(a.dataIndices),single(a.coords)',uint64(a.sectorDataCount),uint64(a.sectorCenters),single(a.densSorted)',a.params);
+        m = mex_gridding3D_adj_atomic_f(single(kspace),uint64(a.dataIndices),single(a.coords),uint64(a.sectorDataCount),uint64(a.sectorCenters),single(a.densSorted),a.params);
     else
-        m = mex_gridding3D_adj_f(single(kspace),uint64(a.dataIndices),single(a.coords)',uint64(a.sectorDataCount),uint64(a.sectorCenters),single(a.densSorted)',a.params);
+        m = mex_gridding3D_adj_f(single(kspace),uint64(a.dataIndices),single(a.coords),uint64(a.sectorDataCount),uint64(a.sectorCenters),single(a.densSorted),a.params);
     end
     size(m);
     m = squeeze(m(1,:,:,:) + 1j*(m(2,:,:,:)));

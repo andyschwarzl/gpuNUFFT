@@ -68,23 +68,18 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
 	// Data indices
 	GriddingND::Array<IndType> dataIndicesArray = readAndCreateArray<IndType>(prhs,pcount++,0,"data-indices");
-	mexPrintf("data indices count: %d\n",dataIndicesArray.count());
-
+	
 	// Coords
 	GriddingND::Array<DType> kSpaceTraj = readAndCreateArray<DType>(prhs, pcount++, 0,"coords");
-	mexPrintf("coords count: %d\n",kSpaceTraj.count());
 
 	// SectorData Count
 	GriddingND::Array<IndType> sectorDataCountArray = readAndCreateArray<IndType>(prhs,pcount++,0,"sector-data-count");
-	mexPrintf("sector data count: %d\n",sectorDataCountArray.count());
 
 	// Sector centers
 	GriddingND::Array<IndType3> sectorCentersArray = readAndCreateArray<IndType3>(prhs,pcount++,3,"sector-centers");
-	mexPrintf("centers count: %d\n",sectorCentersArray.count());
 
 	// Density compensation
 	GriddingND::Array<DType> density_compArray = readAndCreateArray<DType>(prhs, pcount++, 0,"density-comp");
-	mexPrintf("dens count: %d\n",density_compArray.count());
 
 	//TODO Sens array	
 	GriddingND::Array<DType2>  sensArray;
@@ -104,6 +99,12 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 		
 	if (MATLAB_DEBUG)
 	{
+		mexPrintf("data indices count: %d\n",dataIndicesArray.count());
+		mexPrintf("coords count: %d\n",kSpaceTraj.count());
+		mexPrintf("sector data count: %d\n",sectorDataCountArray.count());
+		mexPrintf("centers count: %d\n",sectorCentersArray.count());
+		mexPrintf("dens count: %d\n",density_compArray.count());
+		
 		mexPrintf("passed Params, IM_WIDTH: %d, OSR: %f, KERNEL_WIDTH: %d, SECTOR_WIDTH: %d dens_count: %d traj_len: %d n coils: %d\n",im_width,osr,kernel_width,sector_width,density_compArray.count(),traj_length,n_coils);
 		size_t free_mem = 0;
 		size_t total_mem = 0;

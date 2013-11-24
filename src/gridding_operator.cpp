@@ -3,11 +3,6 @@
 
 #include <iostream>
 
-GriddingND::Array<CufftType> GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> kspaceData)
-{
-	return performGriddingAdj(kspaceData,DEAPODIZATION);
-}
-
 template <typename T>
 T* GriddingND::GriddingOperator::selectOrdered(GriddingND::Array<T>& dataArray,int offset)
 {
@@ -38,23 +33,21 @@ void GriddingND::GriddingOperator::writeOrdered(GriddingND::Array<T>& destArray,
 void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> kspaceData, GriddingND::Array<CufftType>& imgData, GriddingOutput griddingOut)
 {
 	if (DEBUG)
+	{
 		std::cout << "performing gridding adjoint!!!" << std::endl;
-
-	// select data ordered
-	DType2* dataSorted = selectOrdered<DType2>(kspaceData,this->kSpaceTraj.count());
-	DType* densSorted = NULL;
-	if (this->applyDensComp())
-		densSorted = this->dens.data;//selectOrdered<DType>(this->dens);
-
-	if (DEBUG)
-    {
 		std::cout << "test " << imgData.dim.width << std::endl;
 		std::cout << "dataCount: " << kspaceData.count() << " chnCount: " << kspaceData.dim.channels << std::endl;
 		std::cout << "imgCount: " << imgData.count() << " gridWidth: " << this->getGridWidth() << std::endl;
 		std::cout << "apply density comp: " << this->applyDensComp() << std::endl;
 		std::cout << "kernel: " << this->kernel.data[3] << std::endl;
+		std::cout << (this->dens.data == NULL) << std::endl; 
 	}
-	std::cout << (this->dens.data == NULL) << std::endl; 
+	
+	// select data ordered
+	DType2* dataSorted = selectOrdered<DType2>(kspaceData,this->kSpaceTraj.count());
+	DType* densSorted = NULL;
+	if (this->applyDensComp())
+		densSorted = this->dens.data;//selectOrdered<DType>(this->dens);
 
     gridding3D_gpu_adj(dataSorted,this->kSpaceTraj.count(),kspaceData.dim.channels,this->kSpaceTraj.data,
 		               &imgData.data,this->imgDims.count(),this->getGridWidth(),this->kernel.data,this->kernel.count(),
@@ -75,15 +68,16 @@ GriddingND::Array<CufftType> GriddingND::GriddingOperator::performGriddingAdj(Gr
 	return imgData;
 }
 
-GriddingND::Array<CufftType> GriddingND::GriddingOperator::performForwardGridding(Array<DType2> imgData)
+GriddingND::Array<CufftType> GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> kspaceData)
 {
-	return performForwardGridding(imgData,CONVOLUTION);
+	return performGriddingAdj(kspaceData,DEAPODIZATION);
 }
 
 void GriddingND::GriddingOperator::performForwardGridding(GriddingND::Array<DType2> imgData,GriddingND::Array<CufftType>& kspaceData, GriddingOutput griddingOut)
 {
 	if (DEBUG)
 	{
+		std::cout << "performing forward gridding!!!" << std::endl;
 		std::cout << "test " << this->kSpaceTraj.dim.width << std::endl;
 		std::cout << "dataCount: " << kspaceData.count() << " chnCount: " << kspaceData.dim.channels << std::endl;
 		std::cout << "imgCount: " << imgData.count() << " gridWidth: " << this->getGridWidth() << std::endl;
@@ -103,9 +97,6 @@ void GriddingND::GriddingOperator::performForwardGridding(GriddingND::Array<DTyp
 
 GriddingND::Array<CufftType> GriddingND::GriddingOperator::performForwardGridding(Array<DType2> imgData,GriddingOutput griddingOut)
 {
-	if (DEBUG)
-		std::cout << "performing forward gridding!!!" << std::endl;
-
 	GriddingND::Array<CufftType> kspaceData;
 	kspaceData.data = (CufftType*)calloc(this->kSpaceTraj.count()*imgData.dim.channels,sizeof(CufftType));
 	kspaceData.dim = this->kSpaceTraj.dim;
@@ -114,4 +105,9 @@ GriddingND::Array<CufftType> GriddingND::GriddingOperator::performForwardGriddin
 	performForwardGridding(imgData,kspaceData,griddingOut);
 
 	return kspaceData;
+}
+
+GriddingND::Array<CufftType> GriddingND::GriddingOperator::performForwardGridding(Array<DType2> imgData)
+{
+	return performForwardGridding(imgData,CONVOLUTION);
 }

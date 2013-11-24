@@ -61,7 +61,7 @@ tic
 dataRadial = inversegrid_multicoil_gpu(img_a,FT,2*nPE,numSpokes);
 toc
 %dataRadial = reshape(dataRadial, [2*nPE*numSpokes n_chn]);
-dataRadial_dc = dataRadial;%.*w_mc;%v2
+dataRadial_dc = dataRadial.*w_mc;%v2
 %% recon
 %no density compnesation
 %imgRegrid_kb = FT'*dataRadial;

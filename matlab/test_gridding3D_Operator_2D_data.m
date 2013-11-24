@@ -16,10 +16,8 @@ load kspaceRadial;
 slice=32;
 trimmed_size = 96;
 img = img(128-trimmed_size/2+1:128+trimmed_size/2,128-trimmed_size/2+1:128+trimmed_size/2,:);
-%%
 n_chn = 4;
 img_a = zeros([trimmed_size,trimmed_size,trimmed_size,n_chn]);
-%%
 for chn = 1:n_chn,
     img_a(:,:,:,chn) = repmat(img(:,:,chn),[1 1 trimmed_size]);
 end
@@ -61,7 +59,7 @@ tic
 dataRadial = inversegrid_multicoil_gpu(img_a,FT,2*nPE,numSpokes);
 toc
 %dataRadial = reshape(dataRadial, [2*nPE*numSpokes n_chn]);
-dataRadial_dc = dataRadial.*w_mc;%v2
+dataRadial_dc = dataRadial;%.*w_mc;%v2
 %% recon
 %no density compnesation
 %imgRegrid_kb = FT'*dataRadial;

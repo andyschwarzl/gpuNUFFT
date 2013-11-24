@@ -52,6 +52,15 @@ size_t GriddingND::GriddingOperatorFactory::computeSectorCountPerDimension(size_
 	return (size_t)std::ceil(static_cast<DType>(dim) / sectorWidth);
 }
 
+template <typename T>
+GriddingND::Array<T> GriddingND::GriddingOperatorFactory::initLinArray(size_t arrCount)
+{
+	GriddingND::Array<T> new_array;
+	new_array.data = (T*)malloc(arrCount * sizeof(T));
+	new_array.dim.length = arrCount;
+	return new_array;
+}
+
 GriddingND::Dimensions GriddingND::GriddingOperatorFactory::computeSectorCountPerDimension(GriddingND::Dimensions dim, size_t sectorWidth)
 {
 	GriddingND::Dimensions sectorDims;
@@ -164,45 +173,32 @@ GriddingND::Array<IndType3> GriddingND::GriddingOperatorFactory::computeSectorCe
 //default implementation
 GriddingND::Array<IndType> GriddingND::GriddingOperatorFactory::initDataIndices(GriddingND::GriddingOperator* griddingOp, size_t coordCnt)
 {
-	GriddingND::Array<IndType> dataIndices;
-	dataIndices.data = (IndType*)malloc(coordCnt*sizeof(IndType));
-	dataIndices.dim.length = coordCnt;
-	return dataIndices;
+	return initLinArray<IndType>(coordCnt);
 }
 
 GriddingND::Array<IndType> GriddingND::GriddingOperatorFactory::initSectorDataCount(GriddingND::GriddingOperator* griddingOp, size_t dataCount)
 {
-	Array<IndType> sectorDataCount;
-	sectorDataCount.data = (IndType*)malloc(dataCount*sizeof(IndType));
-	sectorDataCount.dim.length = dataCount;
-	return sectorDataCount;
+	return initLinArray<IndType>(dataCount);
 }
 
 GriddingND::Array<DType> GriddingND::GriddingOperatorFactory::initDensData(GriddingND::GriddingOperator* griddingOp, size_t coordCnt)
 {
-	GriddingND::Array<DType> densData;
-
-	return densData;
+	return initLinArray<DType>(coordCnt);
 }
 
 GriddingND::Array<DType> GriddingND::GriddingOperatorFactory::initCoordsData(GriddingND::GriddingOperator* griddingOp, size_t coordCnt)
 {
-	GriddingND::Array<DType> coordsData;
-	coordsData.data = (DType*)malloc(coordCnt*3*sizeof(DType));
+	GriddingND::Array<DType> coordsData = initLinArray<DType>(3*coordCnt);
 	coordsData.dim.length = coordCnt;
 	return coordsData;
 }
 
 GriddingND::Array<IndType3> GriddingND::GriddingOperatorFactory::initSectorCenters(GriddingND::GriddingOperator* griddingOp, size_t sectorCnt)
 {
-	GriddingND::Array<IndType3> sectorCenters; 
-	sectorCenters.data = (IndType3*)malloc(sectorCnt * sizeof(IndType3));
-	sectorCenters.dim.length = sectorCnt;
-
-	return sectorCenters;
+	return initLinArray<IndType3>(sectorCnt);
 }
 
-GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddingOperator(GriddingND::Array<DType>& kSpaceTraj, const size_t& kernelWidth, const size_t& sectorWidth, const DType& osf, GriddingND::Dimensions& imgDims)
+GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddingOperator(GriddingND::Array<DType>& kSpaceTraj, GriddingND::Array<DType>& densCompData,GriddingND::Array<DType2>& sensData, const size_t& kernelWidth, const size_t& sectorWidth, const DType& osf, GriddingND::Dimensions& imgDims)
 {
     //validate arguments
 	if (kSpaceTraj.dim.channels > 1)
@@ -211,7 +207,9 @@ GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddin
 	if (imgDims.channels > 1)
 		throw std::invalid_argument("Image dimensions must not contain a channel size greater than 1!");
 	
-	std::cout << "create gridding operator" << std::endl;
+	if (DEBUG)
+		std::cout << "create gridding operator..." << std::endl;
+
     GriddingND::GriddingOperator *griddingOp = new GriddingND::GriddingOperator(kernelWidth,sectorWidth,osf,imgDims);
 	
 	//assign Sectors
@@ -223,10 +221,13 @@ GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddin
 
 	Array<DType>   trajSorted = initCoordsData(griddingOp,coordCnt);
 	Array<IndType> dataIndices = initDataIndices(griddingOp,coordCnt);
+	
 	Array<DType>   densData;
-	if (griddingOp->applyDensComp())
-	 densData = initDensData(griddingOp,coordCnt);
+	if (densCompData.data != NULL)
+		densData = initDensData(griddingOp,coordCnt);
 
+	if (sensData.data != NULL)
+		griddingOp->setSens(sensData);
 	//sort kspace data coords
 	for (int i=0; i<coordCnt;i++)
 	{
@@ -235,16 +236,18 @@ GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddin
 		trajSorted.data[i + 2*coordCnt] = kSpaceTraj.data[assignedSectorsAndIndicesSorted[i].first + 2*coordCnt];
 		
 		//todo sort density compensation
-		//densData.data[i] = dens.data[assignedSectorsAndIndicesSorted[i].first];
+		if (densCompData.data != NULL)
+			densData.data[i] = densCompData.data[assignedSectorsAndIndicesSorted[i].first];
 
 		dataIndices.data[i] = assignedSectorsAndIndicesSorted[i].first;
 		assignedSectors.data[i] = assignedSectorsAndIndicesSorted[i].second;		
 	}
+
 	griddingOp->setDataIndices(dataIndices);
-	//todo free mem ?
-	//free(kSpaceTraj.data);
 
 	griddingOp->setKSpaceTraj(trajSorted);
+
+	griddingOp->setDens(densData);
 
 	griddingOp->setSectorDataCount(computeSectorDataCount(griddingOp,assignedSectors));
 	
@@ -252,19 +255,19 @@ GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddin
 
 	//free temporary array
 	free(assignedSectors.data);
-	std::cout << "finished creation of gridding operator" << std::endl;
+	
+	debug("finished creation of gridding operator\n");
 	return griddingOp;
 }
 
 GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddingOperator(GriddingND::Array<DType>& kSpaceTraj, GriddingND::Array<DType>& densCompData, const size_t& kernelWidth, const size_t& sectorWidth, const DType& osf, GriddingND::Dimensions& imgDims)
 {
-	GriddingOperator* op = createGriddingOperator(kSpaceTraj, kernelWidth, sectorWidth, osf, imgDims);
-	op->setDens(densCompData);
-	return op;
+	GriddingND::Array<DType2> sensData;
+	return createGriddingOperator(kSpaceTraj,densCompData,sensData, kernelWidth, sectorWidth, osf, imgDims);
 }
 
-GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddingOperator(GriddingND::Array<DType>& kSpaceTraj, GriddingND::Array<DType>& densCompData, GriddingND::Array<DType2>& sensData, const size_t& kernelWidth, const size_t& sectorWidth, const DType& osf, GriddingND::Dimensions& imgDims)
+GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddingOperator(GriddingND::Array<DType>& kSpaceTraj, const size_t& kernelWidth, const size_t& sectorWidth, const DType& osf, GriddingND::Dimensions& imgDims)
 {
-	return createGriddingOperator(kSpaceTraj, kernelWidth, sectorWidth, osf, imgDims);
+	GriddingND::Array<DType> densCompData;
+	return createGriddingOperator(kSpaceTraj,densCompData, kernelWidth, sectorWidth, osf, imgDims);
 }
-

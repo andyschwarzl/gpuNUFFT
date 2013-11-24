@@ -44,7 +44,7 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
 	DType2* dataSorted = selectOrdered<DType2>(kspaceData,this->kSpaceTraj.count());
 	DType* densSorted = NULL;
 	if (this->applyDensComp())
-		densSorted = selectOrdered<DType>(this->dens);
+		densSorted = this->dens.data;//selectOrdered<DType>(this->dens);
 
 	if (DEBUG)
     {

@@ -32,6 +32,9 @@ namespace GriddingND
 
 		Array<IndType> assignSectors(GriddingOperator* griddingOp, Array<DType>& kSpaceTraj);
 
+		template <typename T> 
+		Array<T> initLinArray(size_t arrCount);
+
 		virtual Array<IndType> initDataIndices(GriddingOperator* griddingOp, size_t coordCnt);
 		virtual Array<IndType> initSectorDataCount(GriddingOperator* griddingOp, size_t coordCnt);
 		virtual Array<DType> initDensData(GriddingOperator* griddingOp, size_t coordCnt);

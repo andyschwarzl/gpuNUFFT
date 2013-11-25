@@ -170,7 +170,9 @@ void gridding3D_gpu(CufftType**	data,
 	if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
 			printf("error at thread synchronization 9: %s\n",cudaGetErrorString(cudaGetLastError()));
 	freeTotalDeviceMemory(data_d,crds_d,gdata_d,imdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop
-	
+	if (n_coils > 1 && deapo_d != NULL)
+		cudaFree(deapo_d);
+
 	if ((cudaThreadSynchronize() != cudaSuccess))
 		fprintf(stderr,"error in gridding3D_gpu function: %s\n",cudaGetErrorString(cudaGetLastError()));
 	free(gi_host);
@@ -241,7 +243,7 @@ void gridding3D_gpu_adj(DType2*		data,
 	DType* crds_d, *density_comp_d, *deapo_d;
 	CufftType *gdata_d, *imdata_d;
 	IndType* sector_centers_d, *sectors_d;
-
+	
 	if (DEBUG)
 		printf("allocate and copy imdata of size %d...\n",imdata_count);
 	allocateAndCopyToDeviceMem<CufftType>(&imdata_d,*imdata,imdata_count);//Konvention!!!

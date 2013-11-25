@@ -151,7 +151,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 		griddingOp = GriddingND::GriddingOperatorMatlabFactory::getInstance().loadPrecomputedGriddingOperator(kSpaceTraj,dataIndicesArray,sectorDataCountArray,sectorCentersArray,density_compArray,sensArray,kernel_width,sector_width,osr,imgDims);
 
 		griddingOp->performGriddingAdj(dataArray,imdataArray);
-	
+
 		delete griddingOp;
 	}
 	catch(...)

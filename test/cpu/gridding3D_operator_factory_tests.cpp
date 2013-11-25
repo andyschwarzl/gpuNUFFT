@@ -14,12 +14,12 @@
 
 TEST(OperatorFactoryTest,TestInit)
 {
-	size_t imageWidth = 16; 
+	IndType imageWidth = 16; 
 	DType osf = 1.5;
-	size_t sectorWidth = 8;
-	size_t kernelWidth = 3;
+	IndType sectorWidth = 8;
+	IndType kernelWidth = 3;
 
-	const size_t coordCnt = 6;
+	const IndType coordCnt = 6;
 	
 	// Coords as StructureOfArrays
 	// i.e. first x-vals, then y-vals and z-vals
@@ -51,7 +51,7 @@ TEST(OperatorFactoryTest,TestInit)
 	}
 
 	GriddingND::Dimensions sectorDims = griddingOp->getSectorDims();
-	size_t expected = 3*3*3;
+	IndType expected = 3*3*3;
 	EXPECT_EQ(expected,sectorDims.count());	
 
 	GriddingND::Array<IndType3> sectorCenters = griddingOp->getSectorCenters();
@@ -76,12 +76,12 @@ TEST(OperatorFactoryTest,TestInit)
 
 TEST(OperatorFactoryTest,TestInvalidArgumentInit)
 {
-	size_t imageWidth = 16; 
+	IndType imageWidth = 16; 
 	DType osf = 1.5;
-	size_t sectorWidth = 8;
-	size_t kernelWidth = 3;
+	IndType sectorWidth = 8;
+	IndType kernelWidth = 3;
 
-	const size_t coordCnt = 6;
+	const IndType coordCnt = 6;
 	
 	// Coords as StructureOfArrays
 	// i.e. first x-vals, then y-vals and z-vals

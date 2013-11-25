@@ -32,8 +32,8 @@ TEST(TestKernel, LoadKernel) {
 
 TEST(TestKernel, LoadKernelFromGriddingFactory) {
 	printf("start creating kernel...\n");
-	size_t kernelWidth = 3;
-	size_t sectorWidth = 8;
+	IndType kernelWidth = 3;
+	IndType sectorWidth = 8;
 	DType osf = 1;
 	GriddingND::GriddingOperator *griddingOp = new GriddingND::GriddingOperator(kernelWidth,sectorWidth,osf);
 

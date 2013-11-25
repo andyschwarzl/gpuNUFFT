@@ -35,7 +35,7 @@ void loadGrid3Kernel(DType *kernTab,long kernel_entries, int kernel_width, DType
     assert( kernTab != NULL );
 	long i;
 
-	DType rsqr = 0.0f;
+	DType rsqr = (DType)0.0;
     /* load table */
 	for (i=1; i<kernel_entries-1; i++)	
     {

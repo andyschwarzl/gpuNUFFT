@@ -13,7 +13,7 @@
 //
 // TODO find better solution
 //
-void initConstSymbol(const char* symbol, const void* src, size_t size)
+void initConstSymbol(const char* symbol, const void* src, IndType size)
 {
 	if (std::string("GI").compare(symbol)==0)
 		HANDLE_ERROR(cudaMemcpyToSymbol(GI, src,size));

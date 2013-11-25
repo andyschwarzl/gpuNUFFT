@@ -8,9 +8,9 @@ T* GriddingND::GriddingOperator::selectOrdered(GriddingND::Array<T>& dataArray,i
 {
 	T* dataSorted = (T*) calloc(dataArray.count(),sizeof(T)); //2* re + im
 
-	for (int i=0; i<dataIndices.count();i++)
+	for (IndType i=0; i<dataIndices.count();i++)
 	{
-		for (int chn=0; chn<dataArray.dim.channels; chn++)
+		for (IndType chn=0; chn<dataArray.dim.channels; chn++)
 		{
 			dataSorted[i+chn*offset] = dataArray.data[dataIndices.data[i]+chn*offset];
 		}
@@ -21,9 +21,9 @@ T* GriddingND::GriddingOperator::selectOrdered(GriddingND::Array<T>& dataArray,i
 template <typename T>
 void GriddingND::GriddingOperator::writeOrdered(GriddingND::Array<T>& destArray, T* sortedArray, int offset)
 {
-	for (int i=0; i<dataIndices.count();i++)
+	for (IndType i=0; i<dataIndices.count();i++)
 	{
-		for (int chn=0; chn<destArray.dim.channels; chn++)
+		for (IndType chn=0; chn<destArray.dim.channels; chn++)
 		{
 			destArray.data[dataIndices.data[i]+chn*offset] = sortedArray[i+chn*offset];
 		}

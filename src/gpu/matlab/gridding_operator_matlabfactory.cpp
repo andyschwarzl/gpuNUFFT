@@ -16,37 +16,37 @@ void GriddingND::GriddingOperatorMatlabFactory::debug(const std::string& message
 		mexPrintf(message.c_str());
 }
 
-mxArray* createIndicesArray(const size_t arrSize)
+mxArray* createIndicesArray(const IndType arrSize)
 {
 	mwSize indSize[] = {1,arrSize};
 	return mxCreateNumericArray(2,indSize,mxUINT64_CLASS,mxREAL);
 }
 
-mxArray* createSectorDataArray(const size_t arrSize)
+mxArray* createSectorDataArray(const IndType arrSize)
 {
 	mwSize secSize[] = {1,arrSize};	
 	return mxCreateNumericArray(2,secSize,mxUINT64_CLASS,mxREAL);
 }
 
-mxArray* createDensArray(const size_t arrSize)
+mxArray* createDensArray(const IndType arrSize)
 {
 	mwSize densSize[] = {1,arrSize}; //scaling factor
 	return mxCreateNumericArray(2,densSize,mxSINGLE_CLASS,mxREAL);
 }
 
-mxArray* createCoordsArray(const size_t arrSize)
+mxArray* createCoordsArray(const IndType arrSize)
 {
 	mwSize coordSize[] = {3,arrSize};//row major in matlab, SoA (DType3)
 	return mxCreateNumericArray(2,coordSize,mxSINGLE_CLASS,mxREAL);
 }
 
-mxArray* createSectorCentersArray(const size_t arrSize)
+mxArray* createSectorCentersArray(const IndType arrSize)
 {
 	mwSize secSize[] = {3,arrSize};//IndType3
 	return mxCreateNumericArray(2,secSize,mxUINT64_CLASS,mxREAL);
 }
 
-GriddingND::Array<IndType> GriddingND::GriddingOperatorMatlabFactory::initDataIndices(GriddingND::GriddingOperator* griddingOp, size_t coordCnt)
+GriddingND::Array<IndType> GriddingND::GriddingOperatorMatlabFactory::initDataIndices(GriddingND::GriddingOperator* griddingOp, IndType coordCnt)
 {	
 	if (MATLAB_DEBUG)
 		mexPrintf("init Data Index Output Array: %d\n",coordCnt);
@@ -63,7 +63,7 @@ GriddingND::Array<IndType> GriddingND::GriddingOperatorMatlabFactory::initDataIn
 	return dataIndices;
 }
 
-GriddingND::Array<DType> GriddingND::GriddingOperatorMatlabFactory::initCoordsData(GriddingND::GriddingOperator* griddingOp, size_t coordCnt)
+GriddingND::Array<DType> GriddingND::GriddingOperatorMatlabFactory::initCoordsData(GriddingND::GriddingOperator* griddingOp, IndType coordCnt)
 {	
 	if (MATLAB_DEBUG)
 		mexPrintf("init Coords Output Array: %d\n",coordCnt);
@@ -76,7 +76,7 @@ GriddingND::Array<DType> GriddingND::GriddingOperatorMatlabFactory::initCoordsDa
 	return coordsData;
 }
 
-GriddingND::Array<IndType3> GriddingND::GriddingOperatorMatlabFactory::initSectorCenters(GriddingND::GriddingOperator* griddingOp, size_t sectorCnt)
+GriddingND::Array<IndType3> GriddingND::GriddingOperatorMatlabFactory::initSectorCenters(GriddingND::GriddingOperator* griddingOp, IndType sectorCnt)
 {
 	if (MATLAB_DEBUG)
 		mexPrintf("init Sector Centers Output Array: %d\n",sectorCnt);
@@ -88,7 +88,7 @@ GriddingND::Array<IndType3> GriddingND::GriddingOperatorMatlabFactory::initSecto
 	return sectorCenters;
 }
 
-GriddingND::Array<IndType> GriddingND::GriddingOperatorMatlabFactory::initSectorDataCount(GriddingND::GriddingOperator* griddingOp, size_t dataCount)
+GriddingND::Array<IndType> GriddingND::GriddingOperatorMatlabFactory::initSectorDataCount(GriddingND::GriddingOperator* griddingOp, IndType dataCount)
 {
 	if (MATLAB_DEBUG)
 		mexPrintf("init SectorData Output Array: %d\n",dataCount);
@@ -101,7 +101,7 @@ GriddingND::Array<IndType> GriddingND::GriddingOperatorMatlabFactory::initSector
 
 }
 
-GriddingND::Array<DType> GriddingND::GriddingOperatorMatlabFactory::initDensData(GriddingND::GriddingOperator* griddingOp, size_t coordCnt)
+GriddingND::Array<DType> GriddingND::GriddingOperatorMatlabFactory::initDensData(GriddingND::GriddingOperator* griddingOp, IndType coordCnt)
 {
 	if (MATLAB_DEBUG)
 		mexPrintf("init Dens Output Array: %d\n",coordCnt);
@@ -114,7 +114,7 @@ GriddingND::Array<DType> GriddingND::GriddingOperatorMatlabFactory::initDensData
 	return densData;
 }
 
-GriddingND::GriddingOperator* GriddingND::GriddingOperatorMatlabFactory::createGriddingOperator(GriddingND::Array<DType>& kSpaceTraj, Array<DType>& densCompData, Array<DType2>& sensData, const size_t& kernelWidth, const size_t& sectorWidth, const DType& osf, GriddingND::Dimensions& imgDims,mxArray *plhs[])
+GriddingND::GriddingOperator* GriddingND::GriddingOperatorMatlabFactory::createGriddingOperator(GriddingND::Array<DType>& kSpaceTraj, Array<DType>& densCompData, Array<DType2>& sensData, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, GriddingND::Dimensions& imgDims,mxArray *plhs[])
 {
 	if (MATLAB_DEBUG)
 		mexPrintf("Start init of Gridding Operator\n");
@@ -133,7 +133,7 @@ GriddingND::GriddingOperator* GriddingND::GriddingOperatorMatlabFactory::createG
 	return griddingOp;
 }
 
-GriddingND::GriddingOperator* GriddingND::GriddingOperatorMatlabFactory::loadPrecomputedGriddingOperator(GriddingND::Array<DType>& kSpaceTraj, GriddingND::Array<IndType>& dataIndices, GriddingND::Array<IndType>& sectorDataCount,GriddingND::Array<IndType3>& sectorCenters, GriddingND::Array<DType>& densCompData, GriddingND::Array<DType2>& sensData, const size_t& kernelWidth, const size_t& sectorWidth, const DType& osf, GriddingND::Dimensions& imgDims)
+GriddingND::GriddingOperator* GriddingND::GriddingOperatorMatlabFactory::loadPrecomputedGriddingOperator(GriddingND::Array<DType>& kSpaceTraj, GriddingND::Array<IndType>& dataIndices, GriddingND::Array<IndType>& sectorDataCount,GriddingND::Array<IndType3>& sectorCenters, GriddingND::Array<DType>& densCompData, GriddingND::Array<DType2>& sensData, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, GriddingND::Dimensions& imgDims)
 {
 	GriddingOperator* griddingOp = new GriddingOperator(kernelWidth,sectorWidth,osf,imgDims);
 	griddingOp->setSectorDims(GriddingOperatorFactory::computeSectorCountPerDimension(griddingOp->getGridDims(),griddingOp->getSectorWidth()));
@@ -147,7 +147,7 @@ GriddingND::GriddingOperator* GriddingND::GriddingOperatorMatlabFactory::loadPre
 	return griddingOp;
 }
 
-GriddingND::GriddingOperator* GriddingND::GriddingOperatorMatlabFactory::loadPrecomputedGriddingOperator(GriddingND::Array<DType>& kSpaceTraj, GriddingND::Array<IndType>& dataIndices, GriddingND::Array<IndType>& sectorDataCount,GriddingND::Array<IndType3>& sectorCenters, GriddingND::Array<DType2>& sensData, const size_t& kernelWidth, const size_t& sectorWidth, const DType& osf, GriddingND::Dimensions& imgDims)
+GriddingND::GriddingOperator* GriddingND::GriddingOperatorMatlabFactory::loadPrecomputedGriddingOperator(GriddingND::Array<DType>& kSpaceTraj, GriddingND::Array<IndType>& dataIndices, GriddingND::Array<IndType>& sectorDataCount,GriddingND::Array<IndType3>& sectorCenters, GriddingND::Array<DType2>& sensData, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, GriddingND::Dimensions& imgDims)
 {
 	GriddingOperator* griddingOp = new GriddingOperator(kernelWidth,sectorWidth,osf,imgDims);
 	griddingOp->setSectorDims(GriddingOperatorFactory::computeSectorCountPerDimension(griddingOp->getGridDims(),griddingOp->getSectorWidth()));

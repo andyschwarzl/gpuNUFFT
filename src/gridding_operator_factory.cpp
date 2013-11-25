@@ -9,9 +9,9 @@ GriddingND::GriddingOperatorFactory& GriddingND::GriddingOperatorFactory::getIns
 	return instance;
 }
 
-size_t GriddingND::GriddingOperatorFactory::computeSectorMapping(DType coord, size_t sectorCount)
+IndType GriddingND::GriddingOperatorFactory::computeSectorMapping(DType coord, IndType sectorCount)
 {
-	size_t sector = (size_t)std::floor(static_cast<DType>(coord + 0.5) * sectorCount);
+	IndType sector = (IndType)std::floor(static_cast<DType>(coord + 0.5) * sectorCount);
 	if (sector >= sectorCount) 
 		sector = sectorCount -1;
 	if (sector < 0)
@@ -36,24 +36,24 @@ IndType2 GriddingND::GriddingOperatorFactory::computeSectorMapping(DType2 coord,
 	return sector;
 }
 
-size_t GriddingND::GriddingOperatorFactory::computeXYZ2Lin(size_t x, size_t y, size_t z, GriddingND::Dimensions dim)
+IndType GriddingND::GriddingOperatorFactory::computeXYZ2Lin(IndType x, IndType y, IndType z, GriddingND::Dimensions dim)
 {
 	return x + dim.height * (y + dim.depth * z);
 }
 
-size_t GriddingND::GriddingOperatorFactory::computeInd32Lin(IndType3 sector, GriddingND::Dimensions dim)
+IndType GriddingND::GriddingOperatorFactory::computeInd32Lin(IndType3 sector, GriddingND::Dimensions dim)
 {
 	return sector.x + dim.height * (sector.y + dim.depth * sector.z);
 }
 
 
-size_t GriddingND::GriddingOperatorFactory::computeSectorCountPerDimension(size_t dim, size_t sectorWidth)
+IndType GriddingND::GriddingOperatorFactory::computeSectorCountPerDimension(IndType dim, IndType sectorWidth)
 {
-	return (size_t)std::ceil(static_cast<DType>(dim) / sectorWidth);
+	return (IndType)std::ceil(static_cast<DType>(dim) / sectorWidth);
 }
 
 template <typename T>
-GriddingND::Array<T> GriddingND::GriddingOperatorFactory::initLinArray(size_t arrCount)
+GriddingND::Array<T> GriddingND::GriddingOperatorFactory::initLinArray(IndType arrCount)
 {
 	GriddingND::Array<T> new_array;
 	new_array.data = (T*)malloc(arrCount * sizeof(T));
@@ -61,7 +61,7 @@ GriddingND::Array<T> GriddingND::GriddingOperatorFactory::initLinArray(size_t ar
 	return new_array;
 }
 
-GriddingND::Dimensions GriddingND::GriddingOperatorFactory::computeSectorCountPerDimension(GriddingND::Dimensions dim, size_t sectorWidth)
+GriddingND::Dimensions GriddingND::GriddingOperatorFactory::computeSectorCountPerDimension(GriddingND::Dimensions dim, IndType sectorWidth)
 {
 	GriddingND::Dimensions sectorDims;
 	sectorDims.width = computeSectorCountPerDimension(dim.width,sectorWidth);
@@ -70,16 +70,17 @@ GriddingND::Dimensions GriddingND::GriddingOperatorFactory::computeSectorCountPe
 	return sectorDims;
 }
 
-size_t GriddingND::GriddingOperatorFactory::computeTotalSectorCount(GriddingND::Dimensions dim, size_t sectorWidth)
+IndType GriddingND::GriddingOperatorFactory::computeTotalSectorCount(GriddingND::Dimensions dim, IndType sectorWidth)
 {
 	return computeSectorCountPerDimension(dim,sectorWidth).count();
 }
 
-std::vector<GriddingND::IndPair> GriddingND::GriddingOperatorFactory::sortVector(GriddingND::Array<size_t> assignedSectors)
+template <typename T>
+std::vector<GriddingND::IndPair> GriddingND::GriddingOperatorFactory::sortVector(GriddingND::Array<T> assignedSectors)
 {
 	std::vector<IndPair> secVector;
 	
-	for (size_t i=0; i< assignedSectors.count(); i++)
+	for (IndType i=0; i< assignedSectors.count(); i++)
 	  secVector.push_back(IndPair(i,assignedSectors.data[i]));
 
 	// using function as comp
@@ -95,14 +96,14 @@ GriddingND::Array<IndType> GriddingND::GriddingOperatorFactory::assignSectors(Gr
 
 	griddingOp->setSectorDims(computeSectorCountPerDimension(griddingOp->getGridDims(),griddingOp->getSectorWidth()));
 	
-	size_t coordCnt = kSpaceTraj.count();
+	IndType coordCnt = kSpaceTraj.count();
 
 	//create temporary array to store assigned values
 	GriddingND::Array<IndType> assignedSectors;
     assignedSectors.data = (IndType*)malloc(coordCnt * sizeof(IndType));
     assignedSectors.dim.length = coordCnt;
 	
-	for (int cCnt = 0; cCnt < coordCnt; cCnt++)
+	for (IndType cCnt = 0; cCnt < coordCnt; cCnt++)
 	{
 		DType3 coord;
 		coord.x = kSpaceTraj.data[cCnt];
@@ -112,7 +113,7 @@ GriddingND::Array<IndType> GriddingND::GriddingOperatorFactory::assignSectors(Gr
 		IndType3 mappedSector = computeSectorMapping(coord,griddingOp->getSectorDims());
 
 		//linearize mapped sector
-		size_t sector = computeInd32Lin(mappedSector,griddingOp->getSectorDims());
+		IndType sector = computeInd32Lin(mappedSector,griddingOp->getSectorDims());
 		assignedSectors.data[cCnt] = sector;
 	}
 	debug("finished assign sectors\n");
@@ -121,18 +122,18 @@ GriddingND::Array<IndType> GriddingND::GriddingOperatorFactory::assignSectors(Gr
 
 GriddingND::Array<IndType> GriddingND::GriddingOperatorFactory::computeSectorDataCount(GriddingND::GriddingOperator *griddingOp,GriddingND::Array<IndType> assignedSectors)
 {
-	size_t cnt = 0;
+	IndType cnt = 0;
 	std::vector<IndType> dataCount;
 
 	dataCount.push_back(0);
-	for (int i=0; i<=griddingOp->getSectorDims().count(); i++)
+	for (IndType i=0; i<=griddingOp->getSectorDims().count(); i++)
 	{	
 		while (cnt < assignedSectors.count() && i == assignedSectors.data[cnt])
 			cnt++;
 		
 		dataCount.push_back(cnt);
 	}
-	Array<IndType> sectorDataCount = initSectorDataCount(griddingOp,dataCount.size());
+	Array<IndType> sectorDataCount = initSectorDataCount(griddingOp,(IndType)dataCount.size());
 	std::copy( dataCount.begin(), dataCount.end(), sectorDataCount.data );
 	
 	return sectorDataCount;
@@ -156,49 +157,49 @@ GriddingND::Array<IndType3> GriddingND::GriddingOperatorFactory::computeSectorCe
 
 	GriddingND::Array<IndType3> sectorCenters = initSectorCenters(griddingOp,sectorDims.count());
 	
-	for (size_t z=0;z<sectorDims.depth; z++)
-		for (size_t y=0;y<sectorDims.height;y++)
-			for (size_t x=0;x<sectorDims.width;x++)
+	for (IndType z=0;z<sectorDims.depth; z++)
+		for (IndType y=0;y<sectorDims.height;y++)
+			for (IndType x=0;x<sectorDims.width;x++)
 			{
 				IndType3 center;
 				center.x = computeSectorCenter(x,sectorWidth);
 				center.y = computeSectorCenter(y,sectorWidth);
 				center.z = computeSectorCenter(z,sectorWidth);
-				size_t index = computeXYZ2Lin(x,y,z,sectorDims);
+				IndType index = computeXYZ2Lin(x,y,z,sectorDims);
 				sectorCenters.data[index] = center;
 			}
     return sectorCenters;
 }
 
 //default implementation
-GriddingND::Array<IndType> GriddingND::GriddingOperatorFactory::initDataIndices(GriddingND::GriddingOperator* griddingOp, size_t coordCnt)
+GriddingND::Array<IndType> GriddingND::GriddingOperatorFactory::initDataIndices(GriddingND::GriddingOperator* griddingOp, IndType coordCnt)
 {
 	return initLinArray<IndType>(coordCnt);
 }
 
-GriddingND::Array<IndType> GriddingND::GriddingOperatorFactory::initSectorDataCount(GriddingND::GriddingOperator* griddingOp, size_t dataCount)
+GriddingND::Array<IndType> GriddingND::GriddingOperatorFactory::initSectorDataCount(GriddingND::GriddingOperator* griddingOp, IndType dataCount)
 {
 	return initLinArray<IndType>(dataCount);
 }
 
-GriddingND::Array<DType> GriddingND::GriddingOperatorFactory::initDensData(GriddingND::GriddingOperator* griddingOp, size_t coordCnt)
+GriddingND::Array<DType> GriddingND::GriddingOperatorFactory::initDensData(GriddingND::GriddingOperator* griddingOp, IndType coordCnt)
 {
 	return initLinArray<DType>(coordCnt);
 }
 
-GriddingND::Array<DType> GriddingND::GriddingOperatorFactory::initCoordsData(GriddingND::GriddingOperator* griddingOp, size_t coordCnt)
+GriddingND::Array<DType> GriddingND::GriddingOperatorFactory::initCoordsData(GriddingND::GriddingOperator* griddingOp, IndType coordCnt)
 {
 	GriddingND::Array<DType> coordsData = initLinArray<DType>(3*coordCnt);
 	coordsData.dim.length = coordCnt;
 	return coordsData;
 }
 
-GriddingND::Array<IndType3> GriddingND::GriddingOperatorFactory::initSectorCenters(GriddingND::GriddingOperator* griddingOp, size_t sectorCnt)
+GriddingND::Array<IndType3> GriddingND::GriddingOperatorFactory::initSectorCenters(GriddingND::GriddingOperator* griddingOp, IndType sectorCnt)
 {
 	return initLinArray<IndType3>(sectorCnt);
 }
 
-GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddingOperator(GriddingND::Array<DType>& kSpaceTraj, GriddingND::Array<DType>& densCompData,GriddingND::Array<DType2>& sensData, const size_t& kernelWidth, const size_t& sectorWidth, const DType& osf, GriddingND::Dimensions& imgDims)
+GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddingOperator(GriddingND::Array<DType>& kSpaceTraj, GriddingND::Array<DType>& densCompData,GriddingND::Array<DType2>& sensData, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, GriddingND::Dimensions& imgDims)
 {
     //validate arguments
 	if (kSpaceTraj.dim.channels > 1)
@@ -215,9 +216,9 @@ GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddin
 	//assign Sectors
 	GriddingND::Array<IndType> assignedSectors = assignSectors(griddingOp, kSpaceTraj);
 
-	std::vector<IndPair> assignedSectorsAndIndicesSorted = sortVector(assignedSectors);
+	std::vector<IndPair> assignedSectorsAndIndicesSorted = sortVector<IndType>(assignedSectors);
 	
-	size_t coordCnt = kSpaceTraj.dim.count();
+	IndType coordCnt = kSpaceTraj.dim.count();
 
 	Array<DType>   trajSorted = initCoordsData(griddingOp,coordCnt);
 	Array<IndType> dataIndices = initDataIndices(griddingOp,coordCnt);
@@ -260,13 +261,13 @@ GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddin
 	return griddingOp;
 }
 
-GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddingOperator(GriddingND::Array<DType>& kSpaceTraj, GriddingND::Array<DType>& densCompData, const size_t& kernelWidth, const size_t& sectorWidth, const DType& osf, GriddingND::Dimensions& imgDims)
+GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddingOperator(GriddingND::Array<DType>& kSpaceTraj, GriddingND::Array<DType>& densCompData, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, GriddingND::Dimensions& imgDims)
 {
 	GriddingND::Array<DType2> sensData;
 	return createGriddingOperator(kSpaceTraj,densCompData,sensData, kernelWidth, sectorWidth, osf, imgDims);
 }
 
-GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddingOperator(GriddingND::Array<DType>& kSpaceTraj, const size_t& kernelWidth, const size_t& sectorWidth, const DType& osf, GriddingND::Dimensions& imgDims)
+GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddingOperator(GriddingND::Array<DType>& kSpaceTraj, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, GriddingND::Dimensions& imgDims)
 {
 	GriddingND::Array<DType> densCompData;
 	return createGriddingOperator(kSpaceTraj,densCompData, kernelWidth, sectorWidth, osf, imgDims);

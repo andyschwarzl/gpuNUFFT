@@ -79,11 +79,11 @@ TEST(TestGPUGriddingForwardConv,KernelCall1Sector)
 	im_dataArray.dim.height = im_width;
 	im_dataArray.dim.depth = im_width;
 
-	GriddingND::Array<size_t> sectorsArray;
-	sectorsArray.data = (size_t*)sectors;
+	GriddingND::Array<IndType> sectorsArray;
+	sectorsArray.data = (IndType*)sectors;
 	sectorsArray.dim.length = sector_count;
-	GriddingND::Array<size_t> sectorCentersArray;
-	sectorCentersArray.data = (size_t*)sector_centers;
+	GriddingND::Array<IndType> sectorCentersArray;
+	sectorCentersArray.data = (IndType*)sector_centers;
 
 	GriddingND::Dimensions imgDims;
 	imgDims.width = im_width;

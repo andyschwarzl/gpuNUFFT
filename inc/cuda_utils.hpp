@@ -117,7 +117,7 @@ inline void showMemoryInfo()
 
 // prototype
 // implementation in cu file
-void initConstSymbol(const char* symbol, const void* src, size_t count);
+void initConstSymbol(const char* symbol, const void* src, IndType count);
 
 
 inline GriddingInfo* initAndCopyGriddingInfo(int sector_count, 

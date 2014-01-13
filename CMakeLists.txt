@@ -24,8 +24,8 @@ FIND_PACKAGE(CUDA REQUIRED)
 
 #Searching MATLAB
 # for Windows something like 
-#   SET(MATLAB_ROOT_DIR "C:\\Program Files\\MATLAB\\R2011a" CACHE STRING "MATLAB Installation Directory")
-   SET(MATLAB_ROOT_DIR "/usr/local/MATLAB/R2010b" CACHE STRING "MATLAB Installation Directory")
+   SET(MATLAB_ROOT_DIR "C:\\Program Files\\MATLAB\\R2011a" CACHE STRING "MATLAB Installation Directory")
+#  SET(MATLAB_ROOT_DIR "/usr/local/MATLAB/R2010b" CACHE STRING "MATLAB Installation Directory")
 
 SET( MATLAB_DIR = "${MATLAB_ROOT_DIR}")
 

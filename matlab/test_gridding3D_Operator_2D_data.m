@@ -4,17 +4,17 @@ close all; clc;
 
 %% add bin to path
 addpath ../bin  
-addpath ../../daten
+addpath ../../cuda-test/gridding3D/daten
 addpath(genpath('./GRIDDING3D'));
 addpath(genpath('./utils'));
 %% Load data
 load img_brain_4ch;
-load dataRadial;
+load kspaceRadial;
 %load noisy_phantom;
 %load calf_data_cs;
 %%
 slice=32;
-trimmed_size = 256;
+trimmed_size = 64;
 img = img(128-trimmed_size/2+1:128+trimmed_size/2,128-trimmed_size/2+1:128+trimmed_size/2,:);
 %%
 n_chn = 4;
@@ -52,7 +52,7 @@ FT = GRIDDING3D(k_traj,w,imwidth,osf,wg,sw,[trimmed_size trimmed_size trimmed_si
 
 %% generate radial data
 tic
-%dataRadial = inversegrid_multicoil_gpu(img_a,FT,2*nPE,numSpokes);
+dataRadial = inversegrid_multicoil_gpu(img_a,FT,2*nPE,numSpokes);
 toc
 %dataRadial = reshape(dataRadial, [2*nPE*numSpokes n_chn]);
 %% density compensation

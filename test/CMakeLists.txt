@@ -1,7 +1,7 @@
 #setup testframework
 MESSAGE("------setting up testframework-------")
 
-set(GTEST_DIR "${CMAKE_SOURCE_DIR}/../gtest-1.6.0")
+set(GTEST_DIR "${CMAKE_SOURCE_DIR}/../cuda-test/gridding3D/gtest-1.6.0")
 MESSAGE("GTEST_DIR " ${GTEST_DIR})
 
 include_directories("${GTEST_DIR}/include")

@@ -54,12 +54,12 @@ FT = GRIDDING3D(k_traj,w,imwidth,osf,wg,sw,[trimmed_size trimmed_size trimmed_si
 tic
 dataRadial = inversegrid_multicoil_gpu(img_a,FT,2*nPE,numSpokes);
 toc
-%dataRadial = reshape(dataRadial, [2*nPE*numSpokes n_chn]);
+dataRadial = reshape(dataRadial, [2*nPE*numSpokes n_chn]);
 %% density compensation
 w = abs(rho);
 w = repmat(w, [1, numSpokes,1]);
 w_mc = repmat(w(:),[1 n_chn]);
-%dataRadial_dc = dataRadial.*w_mc;
+dataRadial_dc = dataRadial.*w_mc;
 %% recon
 %no density compnesation
 %imgRegrid_kb = FT'*dataRadial;
@@ -80,7 +80,7 @@ recon_sos_dc = sqrt(sum(abs(imgRegrid_kb_dc).^2,4));
 recon_sos_res = recon_sos_dc(:,:,slice);
 figure, imshow(imresize(((abs(recon_sos_res(:,:)))),1),[]), title('gridding dc sos');
 disp('finished');
-out_file = ['../../daten/results/2D_',num2str(trimmed_size),'_',strrep(num2str(osf), '.', '_'),'_',num2str(wg),'_',num2str(slice)];
-save(out_file, 'recon_sos_res');
+%out_file = ['../../daten/results/2D_',num2str(trimmed_size),'_',strrep(num2str(osf), '.', '_'),'_',num2str(wg),'_',num2str(slice)];
+%save(out_file, 'recon_sos_res');
 disp(['output written to ',out_file]);
 %exit;

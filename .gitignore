@@ -39,3 +39,4 @@ gridding3D/gridding3D/inc/*config.hpp
 build/
 *.out
 *.out.*
+inc/*config.hpp

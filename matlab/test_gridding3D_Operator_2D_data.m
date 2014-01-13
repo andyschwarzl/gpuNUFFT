@@ -82,5 +82,5 @@ figure, imshow(imresize(((abs(recon_sos_res(:,:)))),1),[]), title('gridding dc s
 disp('finished');
 %out_file = ['../../daten/results/2D_',num2str(trimmed_size),'_',strrep(num2str(osf), '.', '_'),'_',num2str(wg),'_',num2str(slice)];
 %save(out_file, 'recon_sos_res');
-disp(['output written to ',out_file]);
+%disp(['output written to ',out_file]);
 %exit;

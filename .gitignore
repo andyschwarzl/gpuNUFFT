@@ -40,3 +40,4 @@ build/
 *.out
 *.out.*
 inc/*config.hpp
+*.mat

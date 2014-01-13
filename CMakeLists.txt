@@ -23,11 +23,13 @@ SET(PATCH_OUTPUT_PATH ${PATCH_OUTPUT_DIR}/gridding3D.zip)
 FIND_PACKAGE(CUDA REQUIRED)
 
 #Searching MATLAB
-# for Windows something like 
-   SET(MATLAB_ROOT_DIR "C:\\Program Files\\MATLAB\\R2011a" CACHE STRING "MATLAB Installation Directory")
-#  SET(MATLAB_ROOT_DIR "/usr/local/MATLAB/R2010b" CACHE STRING "MATLAB Installation Directory")
+if(WIN32)
+  SET(MATLAB_ROOT_DIR "C:\\Program Files\\MATLAB\\R2011a" CACHE STRING "MATLAB Installation Directory")
+elseif(UNIX)
+  SET(MATLAB_ROOT_DIR "/usr/local/MATLAB/R2010b" CACHE STRING "MATLAB Installation Directory")
+endif()
 
-SET( MATLAB_DIR = "${MATLAB_ROOT_DIR}")
+SET(MATLAB_DIR = "${MATLAB_ROOT_DIR}")
 
 FIND_PACKAGE(Matlab)
 
@@ -70,9 +72,6 @@ else(GPU_DOUBLE_PREC)
   SET(PREC_SUFFIX "_f")
 SET(CUDA_NVCC_FLAGS "-arch;sm_11;--ptxas-options=-v")
 endif(GPU_DOUBLE_PREC)
-if(GEN_ATOMIC)
-  SET(CUDA_NVCC_FLAGS "-arch;sm_20;--ptxas-options=-v")
-endif(GEN_ATOMIC)
 
 MESSAGE(STATUS "setting NVCC FLAGS to: ${CUDA_NVCC_FLAGS}")
 
@@ -86,6 +85,9 @@ SET(GRID_MEX_ADJ_NAME "mex_gridding3D_adj${PREC_SUFFIX}")
 SET(GRID_MEX_FORW_ATM_NAME "mex_gridding3D_forw_atomic${PREC_SUFFIX}")
 SET(GRID_MEX_ADJ_ATM_NAME "mex_gridding3D_adj_atomic${PREC_SUFFIX}")
 
+#Precomputation MEX file
+SET(GRID_MEX_PRECOMP_NAME "mex_griddingND_precomp${PREC_SUFFIX}")
+
 #Freiburg Reference Implementation
 SET(GRID_MEX_FORW_SPARSE_NAME "mex_gridding3D_forw_sparse${PREC_SUFFIX}")
 SET(GRID_MEX_ADJ_SPARSE_NAME "mex_gridding3D_adj_sparse${PREC_SUFFIX}")
@@ -96,14 +98,16 @@ CONFIGURE_FILE( ${CMAKE_SOURCE_DIR}/inc/config.hpp.cmake ${CMAKE_SOURCE_DIR}/inc
 CONFIGURE_FILE( ${CMAKE_SOURCE_DIR}/inc/cufft_config.hpp.cmake ${CMAKE_SOURCE_DIR}/inc/cufft_config.hpp)
 
 #Include dirs
-include_directories (inc)
+include_directories(inc)
 SET(GRIDDING_INC_DIR ${CMAKE_SOURCE_DIR}/inc)
 SET(GRIDDING_INCLUDE ${GRIDDING_INC_DIR}/cuda_utils.hpp 
-					 ${GRIDDING_INC_DIR}/cuda_utils.cuh 
-					 ${GRIDDING_INC_DIR}/gridding_gpu.hpp 
-					 ${GRIDDING_INC_DIR}/config.hpp
-					 ${GRIDDING_INC_DIR}/griddingFunctions.hpp
-					 ${GRIDDING_INC_DIR}/gridding_kernels.hpp)
+										 ${GRIDDING_INC_DIR}/cuda_utils.cuh 					 
+										 ${GRIDDING_INC_DIR}/gridding_gpu.hpp 
+										 ${GRIDDING_INC_DIR}/config.hpp
+										 ${GRIDDING_INC_DIR}/griddingFunctions.hpp
+										 ${GRIDDING_INC_DIR}/gridding_kernels.hpp
+                     ${GRIDDING_INC_DIR}/gridding_operator.hpp
+                     ${GRIDDING_INC_DIR}/gridding_operator_factory.hpp)
 					 
 SET(MATLAB_HELPER_INCLUDE ${GRIDDING_INC_DIR}/matlab_helper.h)
 SET(CONFIG_INCLUDE ${GRIDDING_INC_DIR}/config.hpp ${GRIDDING_INC_DIR}/cufft_config.hpp)
@@ -124,13 +128,13 @@ if(GEN_TESTS)
 		NAME runGPUUnitTests
 		COMMAND runGPUUnitTests
 	)
-endif(GEN_TESTS)
 
-if(GEN_ATOMIC)
-	add_test(
-    NAME runGPUATMUnitTests
-    COMMAND runGPUATMUnitTests)
-endif(GEN_ATOMIC)
+	if(GEN_ATOMIC)
+		add_test(
+			NAME runGPUATMUnitTests
+			COMMAND runGPUATMUnitTests)
+	endif(GEN_ATOMIC)
+endif(GEN_TESTS)
 
 #CREATE zip Archive using JAVA in order to deploy project patch
 if (GEN_ZIP)

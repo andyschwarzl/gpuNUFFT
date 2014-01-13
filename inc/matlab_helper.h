@@ -5,6 +5,7 @@
 #include "matrix.h"
 
 #include "config.hpp" 
+#include "gridding_operator.hpp"
 
 #define MIN(X,Y) ((X) < (Y) ? (X) : (Y))
 
@@ -57,7 +58,7 @@ void readMatlabInputArray(const mxArray *prhs[], int input_index, int highest_va
     matlabData = prhs[input_index];
 	bool is_int = false;
 
-	if (mxIsInt32(matlabData) || mxIsUint32(matlabData))
+	if (mxIsInt32(matlabData) || mxIsUint32(matlabData) || mxIsUint64(matlabData))
 	{
 		is_int = true;
 		*data = ( TType*) mxGetData(matlabData);		
@@ -83,6 +84,19 @@ void readMatlabInputArray(const mxArray *prhs[], int input_index, int highest_va
 {
 	int dummy;
 	readMatlabInputArray<TType>(prhs, input_index, highest_varying_dim,name,data, data_entries,2,&dummy);
+}
+
+template <typename TType>
+GriddingND::Array<TType> readAndCreateArray(const mxArray *prhs[], int input_index, int highest_varying_dim, const char* name)
+{
+	TType* data = NULL;
+	int data_count;
+	readMatlabInputArray<TType>(prhs, input_index, highest_varying_dim,name,&data, &data_count);
+	
+	GriddingND::Array<TType> dataArray;
+	dataArray.data = (TType*)data;
+	dataArray.dim.length = data_count;
+	return dataArray;
 }
 
 template <typename TType>

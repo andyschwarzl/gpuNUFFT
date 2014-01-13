@@ -1,14 +1,14 @@
 #include "gridding_kernels.hpp"
+#include "../std_gridding_kernels.cu"
 #include "cuda_utils.cuh"
-#include "cuda_utils.hpp"
 
 // convolve every data point on grid position -> controlled by threadIdx.x .y and .z 
 // shared data holds grid values as software managed cache
 __global__ void convolutionKernel3( DType2* data, 
 							    DType* crds, 
 							    CufftType* gdata,
-							    int* sectors, 
-								int* sector_centers,
+							    IndType* sectors, 
+								IndType* sector_centers,
 								int N,
 								int CACHE_SIZE
 								)
@@ -26,7 +26,7 @@ __global__ void convolutionKernel3( DType2* data,
 
 		DType dx_sqr, dy_sqr, dz_sqr, val, ix, jy, kz;
 
-		__shared__ int3 center;
+		__shared__ IndType3 center;
 		center.x = sector_centers[sec * 3];
 		center.y = sector_centers[sec * 3 + 1];
 		center.z = sector_centers[sec * 3 + 2];
@@ -154,8 +154,8 @@ __global__ void convolutionKernel3( DType2* data,
 __global__ void convolutionKernel2(DType2* data, 
                                    DType* crds, 
                                    CufftType* gdata,
-                                   int* sectors, 
-                                   int* sector_centers,
+                                   IndType* sectors, 
+                                   IndType* sector_centers,
                                    int N
                                    )
 {
@@ -178,7 +178,7 @@ __global__ void convolutionKernel2(DType2* data,
 
 		DType dx_sqr, dy_sqr, dz_sqr, val, ix, jy, kz;
 
-		__shared__ int3 center;
+		__shared__ IndType3 center;
 		center.x = sector_centers[sec[threadIdx.x] * 3];
 		center.y = sector_centers[sec[threadIdx.x] * 3 + 1];
 		center.z = sector_centers[sec[threadIdx.x] * 3 + 2];
@@ -301,8 +301,8 @@ __global__ void convolutionKernel2(DType2* data,
 __global__ void convolutionKernel( DType2* data, 
 							    DType* crds, 
 							    CufftType* gdata,
-							    int* sectors, 
-								int* sector_centers,
+							    IndType* sectors, 
+								IndType* sector_centers,
 								int N
 								)
 {
@@ -314,7 +314,7 @@ __global__ void convolutionKernel( DType2* data,
 
 		DType dx_sqr, dy_sqr, dz_sqr, val, ix, jy, kz;
 
-		__shared__ int3 center;
+		__shared__ IndType3 center;
 		center.x = sector_centers[sec * 3];
 		center.y = sector_centers[sec * 3 + 1];
 		center.z = sector_centers[sec * 3 + 2];
@@ -403,9 +403,8 @@ void performConvolution( DType2* data_d,
 						 DType* crds_d, 
 						 CufftType* gdata_d,
 						 DType*			kernel_d, 
-						 int* sectors_d, 
-  						 int* sector_centers_d,
-						 DType* temp_gdata_d,
+						 IndType* sectors_d, 
+  						 IndType* sector_centers_d,
 						 GriddingInfo* gi_host
 						)
 {
@@ -457,8 +456,8 @@ void performConvolution( DType2* data_d,
 __global__ void forwardConvolutionKernel( CufftType* data, 
                                          DType* crds, 
                                          CufftType* gdata,
-                                         int* sectors, 
-                                         int* sector_centers,
+                                         IndType* sectors, 
+                                         IndType* sector_centers,
                                          int N)
 {
 	extern __shared__ CufftType shared_out_data[];//externally managed shared memory
@@ -572,8 +571,8 @@ void performForwardConvolution( CufftType*		data_d,
 								DType*			crds_d, 
 								CufftType*		gdata_d,
 								DType*			kernel_d, 
-								int*			sectors_d, 
-								int*			sector_centers_d,
+								IndType*		sectors_d, 
+								IndType*		sector_centers_d,
 								GriddingInfo*	gi_host
 								)
 {

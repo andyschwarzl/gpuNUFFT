@@ -1,8 +1,9 @@
 #include <limits.h>
 
-#include "gridding_gpu.hpp"
-
 #include "gtest/gtest.h"
+
+#include "gridding_operator_factory.hpp"
+
 
 #define epsilon 0.0001f
 
@@ -27,6 +28,30 @@ TEST(TestKernel, LoadKernel) {
 	}
 	EXPECT_EQ(1, 1);
 }
+
+
+TEST(TestKernel, LoadKernelFromGriddingFactory) {
+	printf("start creating kernel...\n");
+	IndType kernelWidth = 3;
+	IndType sectorWidth = 8;
+	DType osf = 1;
+	GriddingND::GriddingOperator *griddingOp = new GriddingND::GriddingOperator(kernelWidth,sectorWidth,osf);
+
+	assert(griddingOp->getKernel().count() > 0);
+
+	if (griddingOp->getKernel().data != NULL)
+	{
+		DType* kern = griddingOp->getKernel().data;
+		EXPECT_EQ(1.0f,kern[0]);
+		EXPECT_LT(0.9940f-kern[1],epsilon);
+		EXPECT_LT(0.0621f-kern[401],epsilon);
+		EXPECT_LT(0.0041f-kern[665],epsilon);
+		EXPECT_EQ(0.0f,kern[griddingOp->getKernel().count()-1]);
+	}
+	
+	delete griddingOp;
+}
+	
 
 TEST(TestGPUGriddingConv,KernelCall1Sector)
 {
@@ -71,11 +96,11 @@ TEST(TestGPUGriddingConv,KernelCall1Sector)
 	int sector_width = 9;
 	
 	int sector_count = 1;
-	int* sectors = (int*) calloc(2*sector_count,sizeof(int));
+	IndType* sectors = (IndType*) calloc(2*sector_count,sizeof(IndType));
 	sectors[0]=0;
 	sectors[1]=1;
 
-	int* sector_centers = (int*) calloc(3*sector_count,sizeof(int));
+	IndType* sector_centers = (IndType*) calloc(3*sector_count,sizeof(IndType));
 	sector_centers[0] = 5;
 	sector_centers[1] = 5;
 	sector_centers[2] = 5;
@@ -156,11 +181,11 @@ TEST(TestGPUGriddingConv,GPUTest_1SectorKernel5)
 	int sector_width = 5;
 	
 	int sector_count = 1;
-	int* sectors = (int*) calloc(2*sector_count,sizeof(int));
+	IndType* sectors = (IndType*) calloc(2*sector_count,sizeof(IndType));
 	sectors[0]=0;
 	sectors[1]=1;
 
-	int* sector_centers = (int*) calloc(3*sector_count,sizeof(int));
+	IndType* sector_centers = (IndType*) calloc(3*sector_count,sizeof(IndType));
 	sector_centers[0] = 5;
 	sector_centers[1] = 5;
 	sector_centers[2] = 5;
@@ -269,12 +294,12 @@ TEST(TestGPUGriddingConv,GPUTest_2SectorsKernel3nData)
 	int sector_width = 5;
 	
 	int sector_count = 2;
-	int* sectors = (int*) calloc(2*sector_count,sizeof(int));
+	IndType* sectors = (IndType*) calloc(2*sector_count,sizeof(IndType));
 	sectors[0]=0;
 	sectors[1]=2;
 	sectors[2]=5;
 
-	int* sector_centers = (int*) calloc(3*sector_count,sizeof(int));
+	IndType* sector_centers = (IndType*) calloc(3*sector_count,sizeof(IndType));
 	sector_centers[0] = 2;
 	sector_centers[1] = 7;
 	sector_centers[2] = 5;
@@ -319,33 +344,29 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel3nData)
 	float osr = DEFAULT_OVERSAMPLING_RATIO;
 	//kernel width
 	int kernel_width = 3;
-
-	long kernel_entries = calculateGrid3KernelSize(osr, kernel_width/2.0f);
-
-	DType *kern = (DType*) calloc(kernel_entries,sizeof(DType));
-	loadGrid3Kernel(kern,kernel_entries,kernel_width,osr);
-
 	//Image
 	int im_width = 10;
 
 	//Data
 	int data_entries = 5;
-    DType2* data = (DType2*) calloc(2*data_entries,sizeof(DType2)); //2* re + im
+    DType2* data = (DType2*) calloc(data_entries,sizeof(DType2)); //2* re + im
 	int data_cnt = 0;
+	
 	data[data_cnt].x = 0.5f;
 	data[data_cnt++].y = 0.5f;
-	
+
 	data[data_cnt].x = 0.7f;
 	data[data_cnt++].y= 1;
+
+	data[data_cnt].x = 1;
+	data[data_cnt++].y = 1;
+
+	data[data_cnt].x = 1;
+	data[data_cnt++].y = 1;
 	
 	data[data_cnt].x = 1;
 	data[data_cnt++].y = 1;
 
-	data[data_cnt].x = 1;
-	data[data_cnt++].y = 1;
-
-	data[data_cnt].x = 1;
-	data[data_cnt++].y = 1;
 
 	//Coords
 	//Scaled between -0.5 and 0.5
@@ -353,86 +374,55 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel3nData)
     DType* coords = (DType*) calloc(3*data_entries,sizeof(DType));//3* x,y,z
 	int coord_cnt = 0;
 	//7.Sektor
+	
 	coords[coord_cnt++] = -0.3f; //x
-	coords[coord_cnt++] = -0.1f;
-	coords[coord_cnt++] = 0; 
+	coords[coord_cnt++] = -0.1f; 
+	coords[coord_cnt++] = 0;    
 	coords[coord_cnt++] = 0.5f; 
 	coords[coord_cnt++] = 0.3f;
 
-	coords[coord_cnt++] = 0.2f;//Y
+	coords[coord_cnt++] = 0.2f; //y
 	coords[coord_cnt++] = 0;
 	coords[coord_cnt++] = 0;
 	coords[coord_cnt++] = 0;
 	coords[coord_cnt++] = 0.3f;
 	
-	coords[coord_cnt++] = 0;//Z
+	coords[coord_cnt++] = 0; //z
 	coords[coord_cnt++] = 0;
 	coords[coord_cnt++] = 0;
 	coords[coord_cnt++] = 0;
 	coords[coord_cnt++] = 0;
 
-	//Output Grid
-    CufftType* gdata;
-	unsigned long dims_g[4];
-    dims_g[0] = 1; // complex
-	dims_g[1] = (unsigned long)(im_width * osr); 
-    dims_g[2] = (unsigned long)(im_width * osr);
-    dims_g[3] = (unsigned long)(im_width * osr);
-
-	long grid_size = dims_g[0]*dims_g[1]*dims_g[2]*dims_g[3];
-
-    gdata = (CufftType*) calloc(grid_size,sizeof(CufftType));
-	
 	//sectors of data, count and start indices
 	int sector_width = 5;
 	
-	int sector_count = 8;
-	int* sectors = (int*) calloc(2*sector_count,sizeof(int));
-	sectors[0]=0;
-	sectors[1]=0;
-	sectors[2]=0;
-	sectors[3]=0;
-	sectors[4]=0;
-	sectors[5]=0;
-	sectors[6]=0;
-	sectors[7]=2;
-	sectors[8]=5;
+    GriddingND::Array<DType> kSpaceData;
+    kSpaceData.data = coords;
+    kSpaceData.dim.length = data_entries;
 
-	int* sector_centers = (int*) calloc(3*sector_count,sizeof(int));
-	int sector_cnt = 0;
-	sector_centers[sector_cnt++] = 2;
-	sector_centers[sector_cnt++] = 2;
-	sector_centers[sector_cnt++] = 2;
+	GriddingND::Dimensions imgDims;
+	imgDims.width = im_width;
+	imgDims.height = im_width;
+	imgDims.depth = im_width;
 
-	sector_centers[sector_cnt++] = 7;
-	sector_centers[sector_cnt++] = 2;
-	sector_centers[sector_cnt++] = 2;
+    GriddingND::GriddingOperator *griddingOp = GriddingND::GriddingOperatorFactory::getInstance().createGriddingOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
 
-	sector_centers[sector_cnt++] = 2;
-	sector_centers[sector_cnt++] = 7;
-	sector_centers[sector_cnt++] = 2;
+	GriddingND::Array<DType2> dataArray;
+	dataArray.data = data;
+	dataArray.dim.length = data_entries;
 
-	sector_centers[sector_cnt++] = 7;
-	sector_centers[sector_cnt++] = 7;
-	sector_centers[sector_cnt++] = 2;
+	GriddingND::Array<CufftType> gdataArray;
+	
+	gdataArray = griddingOp->performGriddingAdj(dataArray,CONVOLUTION);
+	//Output Grid
+	CufftType* gdata = gdataArray.data;
 
-	sector_centers[sector_cnt++] = 2;
-	sector_centers[sector_cnt++] = 2;
-	sector_centers[sector_cnt++] = 7;
-
-	sector_centers[sector_cnt++] = 7;
-	sector_centers[sector_cnt++] = 2;
-	sector_centers[sector_cnt++] = 7;
-
-	sector_centers[sector_cnt++] = 2;
-	sector_centers[sector_cnt++] = 7;
-	sector_centers[sector_cnt++] = 7;
-
-	sector_centers[sector_cnt++] = 7;
-	sector_centers[sector_cnt++] = 7;
-	sector_centers[sector_cnt++] = 7;
-
-    gridding3D_gpu_adj(data,data_entries,1,coords,&gdata,grid_size,dims_g[1],kern,kernel_entries, kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,false,NULL,CONVOLUTION);
+	for (int j=0; j<im_width; j++)
+	{
+		for (int i=0; i<im_width; i++)
+			printf("%.4f ",gdata[get3DC2lin(i,im_width-1-j,5,im_width)].x);
+		printf("\n");
+	}
 
 	int index = get3DC2lin(5,5,5,im_width);
 	printf("index to test %d\n",index);
@@ -449,9 +439,8 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel3nData)
 	free(data);
 	free(coords);
 	free(gdata);
-	free(kern);
-	free(sectors);
-	free(sector_centers);
+	
+	delete griddingOp;
 }
 
 
@@ -530,7 +519,7 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel4nData)
 	int sector_width = 5;
 	
 	int sector_count = 8;
-	int* sectors = (int*) calloc(2*sector_count,sizeof(int));
+	IndType* sectors = (IndType*) calloc(2*sector_count,sizeof(IndType));
 	sectors[0]=0;
 	sectors[1]=0;
 	sectors[2]=0;
@@ -541,7 +530,7 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel4nData)
 	sectors[7]=2;
 	sectors[8]=5;
 
-	int* sector_centers = (int*) calloc(3*sector_count,sizeof(int));
+	IndType* sector_centers = (IndType*) calloc(3*sector_count,sizeof(IndType));
 	int sector_cnt = 0;
 	sector_centers[sector_cnt++] = 2;
 	sector_centers[sector_cnt++] = 2;
@@ -682,7 +671,7 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel5nData)
 	int sector_width = 5;
 	
 	int sector_count = 8;
-	int* sectors = (int*) calloc(2*sector_count,sizeof(int));
+	IndType* sectors = (IndType*) calloc(2*sector_count,sizeof(IndType));
 	sectors[0]=0;
 	sectors[1]=0;
 	sectors[2]=0;
@@ -693,7 +682,7 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel5nData)
 	sectors[7]=2;
 	sectors[8]=5;
 
-	int* sector_centers = (int*) calloc(3*sector_count,sizeof(int));
+	IndType* sector_centers = (IndType*) calloc(3*sector_count,sizeof(IndType));
 	int sector_cnt = 0;
 	sector_centers[sector_cnt++] = 2;
 	sector_centers[sector_cnt++] = 2;
@@ -832,7 +821,7 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel3nDataw128)
 	int sector_width = 5;
 	
 	int sector_count = 8;
-	int* sectors = (int*) calloc(2*sector_count,sizeof(int));
+	IndType* sectors = (IndType*) calloc(2*sector_count,sizeof(IndType));
 	sectors[0]=0;
 	sectors[1]=0;
 	sectors[2]=0;
@@ -843,7 +832,7 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel3nDataw128)
 	sectors[7]=2;
 	sectors[8]=5;
 
-	int* sector_centers = (int*) calloc(3*sector_count,sizeof(int));
+	IndType* sector_centers = (IndType*) calloc(3*sector_count,sizeof(IndType));
 	int sector_cnt = 0;
 	sector_centers[sector_cnt++] = 2;
 	sector_centers[sector_cnt++] = 2;
@@ -967,7 +956,7 @@ TEST(TestGPUGriddingConv,GPUTest_FactorTwoTest)
 	int sector_width = 8;
 	
 	int sector_count = 8;
-	int* sectors = (int*) calloc(2*sector_count,sizeof(int));
+	IndType* sectors = (IndType*) calloc(2*sector_count,sizeof(IndType));
 	sectors[0]=0;
 	sectors[1]=0;
 	sectors[2]=0;
@@ -978,7 +967,7 @@ TEST(TestGPUGriddingConv,GPUTest_FactorTwoTest)
 	sectors[7]=0;
 	sectors[8]=5;
 
-	int* sector_centers = (int*) calloc(3*sector_count,sizeof(int));
+	IndType* sector_centers = (IndType*) calloc(3*sector_count,sizeof(IndType));
 	int sector_cnt = 0;
 	sector_centers[sector_cnt++] = 2;
 	sector_centers[sector_cnt++] = 2;
@@ -1104,12 +1093,12 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel3nDataw32)
 	const int sector_count = 64;
 	//int* sectors = (int*) calloc(sector_count+1,sizeof(int));
 	//extracted from matlab
-	int sectors[sector_count+1] = {0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,5,5,5,5,5,5,5};
+	IndType sectors[sector_count+1] = {0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,5,5,5,5,5,5,5};
 
 	//int* sector_centers = (int*) calloc(3*sector_count,sizeof(int));
 	int sector_cnt = 0;
 	
-	int sector_centers[3*sector_count] = {4,4,4,4,4,12,4,4,20,4,4,28,4,12,4,4,12,12,4,12,20,4,12,28,4,20,4,4,20,12,4,20,20,4,20,28,4,28,4,4,28,12,4,28,20,4,28,28,12,4,4,12,4,12,12,4,20,12,4,28,12,12,4,12,12,12,12,12,20,12,12,28,12,20,4,12,20,12,12,20,20,12,20,28,12,28,4,12,28,12,12,28,20,12,28,28,20,4,4,20,4,12,20,4,20,20,4,28,20,12,4,20,12,12,20,12,20,20,12,28,20,20,4,20,20,12,20,20,20,20,20,28,20,28,4,20,28,12,20,28,20,20,28,28,28,4,4,28,4,12,28,4,20,28,4,28,28,12,4,28,12,12,28,12,20,28,12,28,28,20,4,28,20,12,28,20,20,28,20,28,28,28,4,28,28,12,28,28,20,28,28,28};
+	IndType sector_centers[3*sector_count] = {4,4,4,4,4,12,4,4,20,4,4,28,4,12,4,4,12,12,4,12,20,4,12,28,4,20,4,4,20,12,4,20,20,4,20,28,4,28,4,4,28,12,4,28,20,4,28,28,12,4,4,12,4,12,12,4,20,12,4,28,12,12,4,12,12,12,12,12,20,12,12,28,12,20,4,12,20,12,12,20,20,12,20,28,12,28,4,12,28,12,12,28,20,12,28,28,20,4,4,20,4,12,20,4,20,20,4,28,20,12,4,20,12,12,20,12,20,20,12,28,20,20,4,20,20,12,20,20,20,20,20,28,20,28,4,20,28,12,20,28,20,20,28,28,28,4,4,28,4,12,28,4,20,28,4,28,28,12,4,28,12,12,28,12,20,28,12,28,28,20,4,28,20,12,28,20,20,28,20,28,28,28,4,28,28,12,28,28,20,28,28,28};
 
     gridding3D_gpu_adj(data,data_entries,1,coords,&gdata,grid_size,dims_g[1],kern,kernel_entries, kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,false,NULL,CONVOLUTION);
 
@@ -1198,12 +1187,12 @@ TEST(TestGPUGriddingConv,MatlabTest_8SK3w32)
 	const int sector_count = 64;
 	//int* sectors = (int*) calloc(sector_count+1,sizeof(int));
 	//extracted from matlab
-	int sectors[sector_count+1] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
+	IndType sectors[sector_count+1] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
 
 	//int* sector_centers = (int*) calloc(3*sector_count,sizeof(int));
 	int sector_cnt = 0;
 	
-	int sector_centers[3*sector_count] = {4,4,4,4,4,12,4,4,20,4,4,28,4,12,4,4,12,12,4,12,20,4,12,28,4,20,4,4,20,12,4,20,20,4,20,28,4,28,4,4,28,12,4,28,20,4,28,28,12,4,4,12,4,12,12,4,20,12,4,28,12,12,4,12,12,12,12,12,20,12,12,28,12,20,4,12,20,12,12,20,20,12,20,28,12,28,4,12,28,12,12,28,20,12,28,28,20,4,4,20,4,12,20,4,20,20,4,28,20,12,4,20,12,12,20,12,20,20,12,28,20,20,4,20,20,12,20,20,20,20,20,28,20,28,4,20,28,12,20,28,20,20,28,28,28,4,4,28,4,12,28,4,20,28,4,28,28,12,4,28,12,12,28,12,20,28,12,28,28,20,4,28,20,12,28,20,20,28,20,28,28,28,4,28,28,12,28,28,20,28,28,28};
+	IndType sector_centers[3*sector_count] = {4,4,4,4,4,12,4,4,20,4,4,28,4,12,4,4,12,12,4,12,20,4,12,28,4,20,4,4,20,12,4,20,20,4,20,28,4,28,4,4,28,12,4,28,20,4,28,28,12,4,4,12,4,12,12,4,20,12,4,28,12,12,4,12,12,12,12,12,20,12,12,28,12,20,4,12,20,12,12,20,20,12,20,28,12,28,4,12,28,12,12,28,20,12,28,28,20,4,4,20,4,12,20,4,20,20,4,28,20,12,4,20,12,12,20,12,20,20,12,28,20,20,4,20,20,12,20,20,20,20,20,28,20,28,4,20,28,12,20,28,20,20,28,28,28,4,4,28,4,12,28,4,20,28,4,28,28,12,4,28,12,12,28,12,20,28,12,28,28,20,4,28,20,12,28,20,20,28,20,28,28,28,4,28,28,12,28,28,20,28,28,28};
 
     gridding3D_gpu_adj(data,data_entries,1,coords,&gdata,grid_size,dims_g[1],kern,kernel_entries, kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,false,NULL,CONVOLUTION);
 

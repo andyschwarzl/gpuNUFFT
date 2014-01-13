@@ -20,7 +20,7 @@
 
 #include <string.h>
 
-
+#include "gridding_operator_matlabfactory.hpp"
 
 /** 
  * MEX file cleanup to reset CUDA Device 
@@ -29,8 +29,6 @@ void cleanUp()
 {
 	cudaDeviceReset();
 }
-
-
 
 /*
   MATLAB Wrapper for NUFFT^H Operation
@@ -47,56 +45,46 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	if (MATLAB_DEBUG)
 		mexPrintf("Starting ADJOINT GRIDDING 3D Function...\n");
 
-  // get cuda context associated to MATLAB 
-  // 
-  int cuDevice = 0;
-  cudaGetDevice(&cuDevice);
-  cudaSetDevice(cuDevice);//check if really necessary
+	// get cuda context associated to MATLAB 
+	int cuDevice = 0;
+	cudaGetDevice(&cuDevice);
+	cudaSetDevice(cuDevice);
 
-  mexAtExit(cleanUp);
-	//TODO check input params count first!
-	/*  if(nrhs != 9 ) {
-	printf("\nUsage:\n");
-    return;
-	} else if(nlhs>1) {
-	printf("Too many output arguments\n");
-    return;
-	}*/
+	mexAtExit(cleanUp);
 
-  // fetching data from MATLAB
-
-	int pcount = 0;  //Parametercounter
+	// fetch data from MATLAB
+	int pcount = 0;  //param counter
     
-	//Data
+	// Input: K-space Data
 	DType2* data = NULL;
 	int data_count;
 	int n_coils;
 	readMatlabInputArray<DType2>(prhs, pcount++, 2,"data",&data, &data_count,3,&n_coils);
 	
-	//Coords
-	DType* coords = NULL;
-	int coord_count;
-	readMatlabInputArray<DType>(prhs, pcount++, 0,"coords",&coords, &coord_count);
+	GriddingND::Array<DType2> dataArray;
+	dataArray.data = data;
+	dataArray.dim.length = data_count;
+	dataArray.dim.channels = n_coils;
 
-	//Sectors
-	int* sectors = NULL;
-	int sector_count;
-	readMatlabInputArray<int>(prhs, pcount++, 1,"sectors",&sectors, &sector_count);
-
-//Sector centers
-	int* sector_centers = NULL;
-	readMatlabInputArray<int>(prhs, pcount++, 3,"sectors-centers",&sector_centers, &sector_count);
-
-	//Density compensation
-	DType* density_comp = NULL;
-  int density_count;
-	readMatlabInputArray<DType>(prhs, pcount++, 0,"density-comp",&density_comp, &density_count);
-
-	bool do_comp = false;
-
-	if (density_count == data_count)
-		do_comp = true;
+	// Data indices
+	GriddingND::Array<IndType> dataIndicesArray = readAndCreateArray<IndType>(prhs,pcount++,0,"data-indices");
 	
+	// Coords
+	GriddingND::Array<DType> kSpaceTraj = readAndCreateArray<DType>(prhs, pcount++, 0,"coords");
+
+	// SectorData Count
+	GriddingND::Array<IndType> sectorDataCountArray = readAndCreateArray<IndType>(prhs,pcount++,0,"sector-data-count");
+
+	// Sector centers
+	GriddingND::Array<IndType3> sectorCentersArray = readAndCreateArray<IndType3>(prhs,pcount++,3,"sector-centers");
+
+	// Density compensation
+	GriddingND::Array<DType> density_compArray = readAndCreateArray<DType>(prhs, pcount++, 0,"density-comp");
+
+	//TODO Sens array	
+	GriddingND::Array<DType2>  sensArray;
+	sensArray.data = NULL;
+
 	//Parameters
     const mxArray *matParams = prhs[pcount++];
 	
@@ -106,25 +94,25 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	int im_width = getParamField<int>(matParams,"im_width");
 	DType osr = getParamField<DType>(matParams,"osr"); 
 	int kernel_width = getParamField<int>(matParams,"kernel_width");
-	int sector_width = getParamField<int>(matParams,"sector_width");
+	int sector_width = getParamField<int>(matParams,"sector_width");	
+	int traj_length = getParamField<int>(matParams,"trajectory_length");
 		
 	if (MATLAB_DEBUG)
 	{
-		mexPrintf("passed Params, IM_WIDTH: %d, OSR: %f, KERNEL_WIDTH: %d, SECTOR_WIDTH: %d\n",im_width,osr,kernel_width,sector_width);
+		mexPrintf("data indices count: %d\n",dataIndicesArray.count());
+		mexPrintf("coords count: %d\n",kSpaceTraj.count());
+		mexPrintf("sector data count: %d\n",sectorDataCountArray.count());
+		mexPrintf("centers count: %d\n",sectorCentersArray.count());
+		mexPrintf("dens count: %d\n",density_compArray.count());
+		
+		mexPrintf("passed Params, IM_WIDTH: %d, OSR: %f, KERNEL_WIDTH: %d, SECTOR_WIDTH: %d dens_count: %d traj_len: %d n coils: %d\n",im_width,osr,kernel_width,sector_width,density_compArray.count(),traj_length,n_coils);
 		size_t free_mem = 0;
 		size_t total_mem = 0;
 		cudaMemGetInfo(&free_mem, &total_mem);
 		mexPrintf("memory usage on device, free: %lu total: %lu\n",free_mem,total_mem);
 	}
- 
-	long kernel_count = calculateGrid3KernelSize(osr, kernel_width/2.0f);
-	DType* kernel = (DType*) calloc(kernel_count,sizeof(float));
-	loadGrid3Kernel(kernel,kernel_count,kernel_width,osr);
 	
-	//calc grid width -> oversampling
-	int grid_width = (unsigned long)(im_width * osr);
-	
-	//Output Image
+	// Allocate Output: Image
 	CufftType* imdata = NULL;
 	const mwSize n_dims = 5;//2 * w * h * d * ncoils, 2 -> Re + Im
 	mwSize dims_im[n_dims];
@@ -138,14 +126,40 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	
 	plhs[0] = mxCreateNumericArray(n_dims,dims_im,mxSINGLE_CLASS,mxREAL);
 	
-  imdata = (CufftType*)mxGetData(plhs[0]);
+    imdata = (CufftType*)mxGetData(plhs[0]);
 	if (imdata == NULL)
      mexErrMsgTxt("Could not create output mxArray.\n");
 
-	gridding3D_gpu_adj(data,data_count,n_coils,coords,&imdata,im_count,grid_width,kernel,kernel_count,kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,do_comp,density_comp,DEAPODIZATION);//CONVOLUTION);
-    cudaThreadSynchronize();
-	free(kernel);
+	GriddingND::Array<DType2> imdataArray;
+	imdataArray.data = imdata;
+	imdataArray.dim.width = im_width;
+	imdataArray.dim.height = im_width;
+	imdataArray.dim.depth = im_width;
+	imdataArray.dim.channels = n_coils;
+
+	mexPrintf(" data count: %d \n",data_count);
+
+	GriddingND::Dimensions imgDims;
+	imgDims.width = imdataArray.dim.width;
+	imgDims.height = imdataArray.dim.height;
+	imgDims.depth = imdataArray.dim.depth;
+
+	try
+	{
+		GriddingND::GriddingOperator *griddingOp;
+
+		griddingOp = GriddingND::GriddingOperatorMatlabFactory::getInstance().loadPrecomputedGriddingOperator(kSpaceTraj,dataIndicesArray,sectorDataCountArray,sectorCentersArray,density_compArray,sensArray,kernel_width,sector_width,osr,imgDims);
+
+		griddingOp->performGriddingAdj(dataArray,imdataArray);
+
+		delete griddingOp;
+	}
+	catch(...)
+	{
+		mexPrintf("FAILURE in gridding operation\n");
+	}
 	
+    cudaThreadSynchronize();
 	if (MATLAB_DEBUG)
 	{
 		size_t free_mem = 0;
@@ -154,16 +168,3 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 		mexPrintf("memory usage on device afterwards, free: %lu total: %lu\n",free_mem,total_mem);
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

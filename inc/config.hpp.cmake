@@ -19,4 +19,20 @@
 	typedef cufftComplex CufftType;
 #endif
 
+	typedef size_t IndType;
+	
+	typedef
+	struct IndType2 { size_t x;
+	         size_t y;
+			 IndType2(){}
+								 IndType2(size_t x, size_t y): x(x),y(y){}
+	}  IndType2;
+
+	typedef struct IndType3 {	 size_t x;
+								 size_t y;
+								 size_t z;
+								 IndType3(){}
+								 IndType3(size_t x, size_t y, size_t z): x(x),y(y),z(z){}
+	} IndType3;
+
 #endif // CONFIG_H

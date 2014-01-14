@@ -49,45 +49,23 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
 	}
 	
 	// select data ordered
-	
 	DType2* dataSorted = selectOrdered<DType2>(kspaceData,this->kSpaceTraj.count());
 	DType* densSorted = NULL;
 	if (this->applyDensComp())
 		densSorted = this->dens.data;//selectOrdered<DType>(this->dens);
 
-    //gridding3D_gpu_adj(dataSorted,this->kSpaceTraj.count(),kspaceData.dim.channels,this->kSpaceTraj.data,
-	//	               &imgData.data,this->imgDims.count(),this->getGridWidth(),this->kernel.data,this->kernel.count(),
-	//				   this->kernelWidth,this->sectorDataCount.data,this->sectorDims.count(),
-	//				   (IndType*)this->sectorCenters.data,this->sectorWidth, imgData.dim.width,
-	//				   this->osf,this->applyDensComp(),densSorted,griddingOut);
-
-	DType2*		data				= dataSorted;
 	int			data_count          = this->kSpaceTraj.count();
 	int			n_coils             = kspaceData.dim.channels;
-	DType*		crds                = this->kSpaceTraj.data;
-	CufftType**	imdata              = &imgData.data;
 	IndType		imdata_count        = this->imgDims.count();
-	int			grid_width          = this->getGridWidth();
-	DType*		kernel              = this->kernel.data;
-	int			kernel_count        = this->kernel.count();
-	int			kernel_width        = this->kernelWidth;
-	IndType*	sectors             = this->sectorDataCount.data;
 	int			sector_count        = this->sectorDims.count();
-	IndType*	sector_centers      = (IndType*)this->sectorCenters.data;
-	int			sector_width        = this->sectorWidth;
-	int			im_width            = imgData.dim.width;
-	DType		osr                 = this->osf;
-	bool		do_comp             = this->applyDensComp();
+		
 	DType*  density_comp            = densSorted;
-	const GriddingOutput gridding_out = griddingOut;
 
-	assert(sectors != NULL);
-	
 	showMemoryInfo();
 
 	//split and run sectors into blocks
 	//and each data point to one thread inside this block 
-	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,sector_width,kernel_width,kernel_count,grid_width,im_width,osr,data_count);
+	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,this->sectorWidth,this->kernelWidth,this->kernel.count(),this->getGridWidth(), imgData.dim.width, this->osf,data_count);
 	
 	DType2* data_d;
 	DType* crds_d, *density_comp_d, *deapo_d;
@@ -96,7 +74,7 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
 	
 	if (DEBUG)
 		printf("allocate and copy imdata of size %d...\n",imdata_count);
-	allocateAndCopyToDeviceMem<CufftType>(&imdata_d,*imdata,imdata_count);//Konvention!!!
+	allocateAndCopyToDeviceMem<CufftType>(&imdata_d,imgData.data,imdata_count);//Konvention!!!
 
 	if (DEBUG)
 		printf("allocate and copy gdata of size %d...\n",gi_host->grid_width_dim);
@@ -108,22 +86,22 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
 
 	if (DEBUG)
 		printf("allocate and copy coords of size %d...\n",3*data_count);
-	allocateAndCopyToDeviceMem<DType>(&crds_d,crds,3*data_count);
+	allocateAndCopyToDeviceMem<DType>(&crds_d,this->kSpaceTraj.data,3*data_count);
 	
 	if (DEBUG)
-		printf("allocate and copy kernel in const memory of size %d...\n",kernel_count);
+		printf("allocate and copy kernel in const memory of size %d...\n",this->kernel.count());
 	
-	initConstSymbol("KERNEL",(void*)kernel,kernel_count*sizeof(DType));
+	initConstSymbol("KERNEL",(void*)this->kernel.data,this->kernel.count()*sizeof(DType));
 
 	//allocateAndCopyToDeviceMem<DType>(&kernel_d,kernel,kernel_count);
 	if (DEBUG)
 		printf("allocate and copy sectors of size %d...\n",sector_count+1);
-	allocateAndCopyToDeviceMem<IndType>(&sectors_d,sectors,sector_count+1);
+	allocateAndCopyToDeviceMem<IndType>(&sectors_d,this->sectorDataCount.data,sector_count+1);
 	if (DEBUG)
 		printf("allocate and copy sector_centers of size %d...\n",3*sector_count);
-	allocateAndCopyToDeviceMem<IndType>(&sector_centers_d,sector_centers,3*sector_count);
+	allocateAndCopyToDeviceMem<IndType>(&sector_centers_d,(IndType*)this->sectorCenters.data,3*sector_count);
 	
-	if (do_comp == true)	
+	if (this->applyDensComp())	
 	{
 		if (DEBUG)
 			printf("allocate and copy density compensation of size %d...\n",data_count);
@@ -156,9 +134,9 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
 		int im_coil_offset = coil_it * imdata_count;//gi_host->width_dim;
 
 		cudaMemset(gdata_d,0, sizeof(CufftType)*gi_host->grid_width_dim);
-		copyToDevice(data + data_coil_offset, data_d,data_count);
+		copyToDevice(dataSorted + data_coil_offset, data_d,data_count);
 	
-		if (do_comp == true)
+		if (this->applyDensComp())
 			performDensityCompensation(data_d,density_comp_d,gi_host);
 		
 		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
@@ -167,14 +145,14 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
 	
 		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
 			fprintf(stderr,"error at adj  thread synchronization 2: %s\n",cudaGetErrorString(cudaGetLastError()));
-		if (gridding_out == CONVOLUTION)
+		if (griddingOut == CONVOLUTION)
 		{
 			if (DEBUG)
 				printf("stopping output after CONVOLUTION step\n");
 			//get output
-			copyFromDevice<CufftType>(gdata_d,*imdata,gi_host->grid_width_dim);
+			copyFromDevice<CufftType>(gdata_d,imgData.data,gi_host->grid_width_dim);
 			if (DEBUG)
-				printf("test value at point zero: %f\n",(*imdata)[0].x);
+				printf("test value at point zero: %f\n",(imgData.data)[0].x);
 			freeTotalDeviceMemory(data_d,crds_d,imdata_d,gdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop token
 
 			free(gi_host);
@@ -195,12 +173,12 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
 	  	if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
 			 fprintf(stderr,"error at adj thread synchronization 4: %s\n",cudaGetErrorString(cudaGetLastError()));
 	
-		if (gridding_out == FFT)
+		if (griddingOut == FFT)
 		{
 			if (DEBUG)
 				printf("stopping output after FFT step\n");
 			//get output
-			copyFromDevice<CufftType>(gdata_d,*imdata,gi_host->grid_width_dim);
+			copyFromDevice<CufftType>(gdata_d,imgData.data,gi_host->grid_width_dim);
 			
 			//free memory
 			if (cufftDestroy(fft_plan) != CUFFT_SUCCESS)
@@ -234,15 +212,17 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
 			printf("error: at adj  thread synchronization 9: %s\n",cudaGetErrorString(cudaGetLastError()));
 	
 		//get result
-		copyFromDevice<CufftType>(imdata_d,*imdata+im_coil_offset,imdata_count);
+		copyFromDevice<CufftType>(imdata_d,imgData.data+im_coil_offset,imdata_count);
 	}//iterate over coils
 	if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       printf("error: at adj  thread synchronization 10: %s\n",cudaGetErrorString(cudaGetLastError()));
 	// Destroy the cuFFT plan.
 	cufftDestroy(fft_plan);
 	freeTotalDeviceMemory(data_d,crds_d,gdata_d,imdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop
-	if (do_comp == true)
+	
+	if (this->applyDensComp())
 		cudaFree(density_comp_d);
+
 	if (n_coils > 1)
 		cudaFree(deapo_d);
 	

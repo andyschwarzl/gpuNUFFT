@@ -69,7 +69,7 @@ void gridding3D_gpu(CufftType**	data,			// kspace output data array
 					DType		osr,			// oversampling ratio
 					const GriddingOutput gridding_out);
 
-void gridding3D_gpu_adj(DType2*		data,			// kspace input data array
+/*void gridding3D_gpu_adj(DType2*		data,			// kspace input data array
 						int			data_count,		// data count, samples per trajectory
 						int			n_coils,		// number of coils 
 						DType*		crds,			// 
@@ -87,6 +87,6 @@ void gridding3D_gpu_adj(DType2*		data,			// kspace input data array
 						DType		osr,			// oversampling ratio
 						bool    do_comp,
 						DType*  density_comp,
-						const GriddingOutput gridding_out);
+						const GriddingOutput gridding_out);*/
 
 #endif  // GRIDDING_GPU_HPP_*/

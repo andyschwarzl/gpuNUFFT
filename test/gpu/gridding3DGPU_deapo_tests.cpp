@@ -167,6 +167,7 @@ TEST(TestGPUGriddingDeapo,KernelCall1Sector2Coils)
 	GriddingND::Array<DType2> dataArray;
 	dataArray.data = data;
 	dataArray.dim.length = data_entries;
+	dataArray.dim.channels = n_coils;
 
 	GriddingND::Array<CufftType> gdataArray;
 	
@@ -183,12 +184,12 @@ TEST(TestGPUGriddingDeapo,KernelCall1Sector2Coils)
 	int coil_offset = 1 * grid_size;
 	printf("grid_size: %d\n",grid_size);
 	
-   /*for (int j=0; j<im_width; j++)
+   for (int j=0; j<im_width; j++)
 	{
 		for (int i=0; i<im_width; i++)
 			printf("A: %.2f B: %.2f",gdata[get3DC2lin(i,j,16,im_width)].x,gdata[coil_offset+get3DC2lin(i,j,16,im_width)].x);
 		printf("\n");
-	}*/
+	}
 	EXPECT_NEAR(gdata[get3DC2lin(0,0,16,im_width)].x,0.00928f,epsilon);
 	EXPECT_NEAR(gdata[coil_offset + get3DC2lin(0,0,16,im_width)].x,0.00928f,epsilon);
 	EXPECT_NEAR(gdata[get3DC2lin(10,0,16,im_width)].x,gdata[coil_offset + get3DC2lin(10,0,16,im_width)].x,epsilon);

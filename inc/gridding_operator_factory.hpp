@@ -7,6 +7,8 @@
 #include <vector>       // std::vector
 #include <string>
 
+#include "cuda_utils.hpp"
+
 namespace GriddingND
 {
 	// GriddingOperatorFactory
@@ -27,7 +29,7 @@ namespace GriddingND
 
 		~GriddingOperatorFactory()
 		{
-		std::cout << "GOF destruct " << std::endl;
+			std::cout << "GOF destruct " << std::endl;
 		}
 
 		Array<IndType> assignSectors(GriddingOperator* griddingOp, Array<DType>& kSpaceTraj);

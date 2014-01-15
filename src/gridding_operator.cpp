@@ -153,11 +153,15 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
 			copyFromDevice<CufftType>(gdata_d,imgData.data,gi_host->grid_width_dim);
 			if (DEBUG)
 				printf("test value at point zero: %f\n",(imgData.data)[0].x);
-			freeTotalDeviceMemory(data_d,crds_d,imdata_d,gdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop token
-
+			
 			free(gi_host);
 			// Destroy the cuFFT plan.
 			cufftDestroy(fft_plan);
+
+			freeTotalDeviceMemory(data_d,crds_d,imdata_d,gdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop token
+			cudaThreadSynchronize();
+			
+			showMemoryInfo();
 			return;
 		}
 		if ((cudaThreadSynchronize() != cudaSuccess))
@@ -183,9 +187,13 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
 			//free memory
 			if (cufftDestroy(fft_plan) != CUFFT_SUCCESS)
 				printf("error on destroying cufft plan\n");
-			freeTotalDeviceMemory(data_d,crds_d,imdata_d,gdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop token
+						
 			free(gi_host);
 			// Destroy the cuFFT plan.
+			cufftDestroy(fft_plan);
+
+			freeTotalDeviceMemory(data_d,crds_d,imdata_d,gdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop token
+			cudaThreadSynchronize();
 			printf("last cuda error: %s\n", cudaGetErrorString(cudaGetLastError()));
 			return;
 		}

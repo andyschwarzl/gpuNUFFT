@@ -692,7 +692,7 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel5nData)
 }
 
 
-TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel3nDataw128)
+TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel3nDataw120)
 {
 	//oversampling ratio
 	float osr = DEFAULT_OVERSAMPLING_RATIO;
@@ -700,7 +700,7 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel3nDataw128)
 	int kernel_width = 3;
 
 	//Image
-	int im_width = 128;
+	int im_width = 120;
 
 	//Data
 	int data_entries = 5;
@@ -749,7 +749,7 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel3nDataw128)
 	coords[coord_cnt++] = 0;
 
 	//sectors of data, count and start indices
-	int sector_width = 5;
+	int sector_width = 8;
 
 	GriddingND::Array<DType> kSpaceData;
     kSpaceData.data = coords;

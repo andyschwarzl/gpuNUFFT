@@ -243,9 +243,10 @@ GriddingND::Array<CufftType> GriddingND::GriddingOperator::performGriddingAdj(Gr
 {
 	// init result
 	GriddingND::Array<CufftType> imgData;
-	imgData.data = (CufftType*)calloc(imgDims.count(),sizeof(CufftType));
 	imgData.dim = this->getImageDims();
-
+	imgData.dim.channels = kspaceData.dim.channels;
+	imgData.data = (CufftType*)calloc(imgData.count(),sizeof(CufftType));
+	
 	performGriddingAdj(kspaceData,imgData,griddingOut);
 
 	return imgData;

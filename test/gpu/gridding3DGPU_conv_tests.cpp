@@ -103,9 +103,6 @@ TEST(TestGPUGriddingConv,KernelCall1Sector)
 	//Output Grid
 	CufftType* gdata = gdataArray.data;
 
-	//gridding3D_gpu_adj(data,data_entries,1,coords,&gdata,grid_size,dims_g[1],kern,kernel_entries, kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,false,NULL,CONVOLUTION);
-	
-		
 	for (int j=0; j<im_width; j++)
 	{
 		for (int i=0; i<im_width; i++)

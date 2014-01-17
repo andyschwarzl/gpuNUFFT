@@ -62,6 +62,9 @@ SET(GEN_ATOMIC ON CACHE BOOL "Enable atomic kernel generation (Compute Capabilit
 #Enable Google Tests
 SET(GEN_TESTS OFF CACHE BOOL "Enable and generate simple GOOGLE test framework unit tests")
 
+#Build Freiburg Tikreg Solution
+SET(GEN_TIKREG OFF CACHE BOOL "Build Freiburg Tikreg Solution")
+
 #Enable/Disable GPU double precision 
 SET(GPU_DOUBLE_PREC OFF CACHE BOOL "Enable double precision floating point operations on GPU (Compute Capability 1.3 needed)")
 

@@ -99,7 +99,7 @@ TEST(TestGPUGriddingConv,KernelCall1Sector)
 
 	GriddingND::Array<CufftType> gdataArray;
 	
-	gdataArray = griddingOp->performGriddingAdj(dataArray,CONVOLUTION);
+	gdataArray = griddingOp->performGriddingAdj(dataArray,GriddingND::CONVOLUTION);
 	//Output Grid
 	CufftType* gdata = gdataArray.data;
 
@@ -201,7 +201,7 @@ TEST(TestGPUGriddingConv,GPUTest_1SectorKernel5)
 
 	GriddingND::Array<CufftType> gdataArray;
 	
-	gdataArray = griddingOp->performGriddingAdj(dataArray,CONVOLUTION);
+	gdataArray = griddingOp->performGriddingAdj(dataArray,GriddingND::CONVOLUTION);
 	//Output Grid
 	CufftType* gdata = gdataArray.data;
 
@@ -336,7 +336,7 @@ TEST(TestGPUGriddingConv,GPUTest_2SectorsKernel3nData)
 
 	GriddingND::Array<CufftType> gdataArray;
 	
-	gdataArray = griddingOp->performGriddingAdj(dataArray,CONVOLUTION);
+	gdataArray = griddingOp->performGriddingAdj(dataArray,GriddingND::CONVOLUTION);
 	//Output Grid
 	CufftType* gdata = gdataArray.data;
 
@@ -444,7 +444,7 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel3nData)
 
 	GriddingND::Array<CufftType> gdataArray;
 	
-	gdataArray = griddingOp->performGriddingAdj(dataArray,CONVOLUTION);
+	gdataArray = griddingOp->performGriddingAdj(dataArray,GriddingND::CONVOLUTION);
 	//Output Grid
 	CufftType* gdata = gdataArray.data;
 
@@ -549,7 +549,7 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel4nData)
 
 	GriddingND::Array<CufftType> gdataArray;
 	
-	gdataArray = griddingOp->performGriddingAdj(dataArray,CONVOLUTION);
+	gdataArray = griddingOp->performGriddingAdj(dataArray,GriddingND::CONVOLUTION);
 	//Output Grid
 	CufftType* gdata = gdataArray.data;
 
@@ -658,7 +658,7 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel5nData)
 
 	GriddingND::Array<CufftType> gdataArray;
 	
-	gdataArray = griddingOp->performGriddingAdj(dataArray,CONVOLUTION);
+	gdataArray = griddingOp->performGriddingAdj(dataArray,GriddingND::CONVOLUTION);
 	//Output Grid
 	CufftType* gdata = gdataArray.data;
 
@@ -765,7 +765,7 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel3nDataw120)
 
 	GriddingND::Array<CufftType> gdataArray;
 	
-	gdataArray = griddingOp->performGriddingAdj(dataArray,CONVOLUTION);
+	gdataArray = griddingOp->performGriddingAdj(dataArray,GriddingND::CONVOLUTION);
 	//Output Grid
 	CufftType* gdata = gdataArray.data;
 
@@ -855,7 +855,7 @@ TEST(TestGPUGriddingConv,GPUTest_FactorTwoTest)
 
 	GriddingND::Array<CufftType> gdataArray;
 	
-	gdataArray = griddingOp->performGriddingAdj(dataArray,CONVOLUTION);
+	gdataArray = griddingOp->performGriddingAdj(dataArray,GriddingND::CONVOLUTION);
 	//Output Grid
 	CufftType* gdata = gdataArray.data;
 
@@ -948,7 +948,7 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel3nDataw32)
 
 	GriddingND::Array<CufftType> gdataArray;
 	
-	gdataArray = griddingOp->performGriddingAdj(dataArray,CONVOLUTION);
+	gdataArray = griddingOp->performGriddingAdj(dataArray,GriddingND::CONVOLUTION);
 	//Output Grid
 	CufftType* gdata = gdataArray.data;
 
@@ -1062,7 +1062,7 @@ TEST(TestGPUGriddingConv,MatlabTest_8SK3w32)
 
 	GriddingND::Array<CufftType> gdataArray;
 	
-	gdataArray = griddingOp->performGriddingAdj(dataArray,CONVOLUTION);
+	gdataArray = griddingOp->performGriddingAdj(dataArray,GriddingND::CONVOLUTION);
 	//Output Grid
 	CufftType* gdata = gdataArray.data;
 

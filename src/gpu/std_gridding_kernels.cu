@@ -36,7 +36,7 @@ __global__ void fftScaleKernel(CufftType* data, DType scaling, int N)
 	}
 }
 
-void performFFTScaling(CufftType* data,int N, GriddingInfo* gi_host)
+void performFFTScaling(CufftType* data,int N, GriddingND::GriddingInfo* gi_host)
 {
 	dim3 block_dim(THREAD_BLOCK_SIZE);
 	dim3 grid_dim(getOptimalGridDim(N,THREAD_BLOCK_SIZE));
@@ -59,7 +59,7 @@ __global__ void densityCompensationKernel(DType2* data, DType* density_comp, int
 	}
 }
 
-void performDensityCompensation(DType2* data, DType* density_comp, GriddingInfo* gi_host)
+void performDensityCompensation(DType2* data, DType* density_comp, GriddingND::GriddingInfo* gi_host)
 {
 	dim3 block_dim(THREAD_BLOCK_SIZE);
 	dim3 grid_dim(getOptimalGridDim(gi_host->data_count,THREAD_BLOCK_SIZE));
@@ -148,7 +148,7 @@ __global__ void fftShiftKernel(CufftType* gdata, int offset, int N)
 //see BEATTY et al.: RAPID GRIDDING RECONSTRUCTION
 //eq. (4) and (5)
 void performDeapodization(CufftType* imdata_d,
-													GriddingInfo* gi_host)
+													GriddingND::GriddingInfo* gi_host)
 {
 	DType beta = (DType)BETA(gi_host->kernel_width,gi_host->osr);
 
@@ -179,7 +179,7 @@ __global__ void precomputedDeapodizationKernel(CufftType* imdata, DType* deapo, 
 
 void performDeapodization(CufftType* imdata_d,
 													DType* deapo_d,
-													GriddingInfo* gi_host)
+													GriddingND::GriddingInfo* gi_host)
 {
 	if (DEBUG)
 		printf("running deapodization with precomputed values\n");
@@ -190,7 +190,7 @@ void performDeapodization(CufftType* imdata_d,
 }
 
 void precomputeDeapodization(DType* deapo_d,
-														 GriddingInfo* gi_host)
+														 GriddingND::GriddingInfo* gi_host)
 {
 	DType beta = (DType)BETA(gi_host->kernel_width,gi_host->osr);
 
@@ -207,7 +207,7 @@ void precomputeDeapodization(DType* deapo_d,
 
 void performCrop(CufftType* gdata_d,
 				 CufftType* imdata_d,
-				 GriddingInfo* gi_host)
+				 GriddingND::GriddingInfo* gi_host)
 {
 	int ind_off = (int)(gi_host->im_width * ((DType)gi_host->osr - 1.0f)/(DType)2);
 	if (DEBUG)
@@ -220,12 +220,12 @@ void performCrop(CufftType* gdata_d,
 }
 
 void performFFTShift(CufftType* gdata_d,
-					 FFTShiftDir shift_dir,
+					 GriddingND::FFTShiftDir shift_dir,
 					 int width)
 {
 	int offset= 0;
 	int t_width = 0;
-	if (shift_dir == FORWARD)
+	if (shift_dir == GriddingND::FORWARD)
 	{
 		offset = (int)ceil((DType)(width / (DType)2.0));
 		if (width % 2)
@@ -285,7 +285,7 @@ __global__ void paddingKernel(DType2* imdata,CufftType* gdata, int offset,int N)
 //see BEATTY et al.: RAPID GRIDDING RECONSTRUCTION
 //eq. (4) and (5)
 void performForwardDeapodization(DType2* imdata_d,
-						  GriddingInfo* gi_host)
+						  GriddingND::GriddingInfo* gi_host)
 {
 	DType beta = (DType)BETA(gi_host->kernel_width,gi_host->osr);
 
@@ -301,7 +301,7 @@ void performForwardDeapodization(DType2* imdata_d,
 
 void performForwardDeapodization(DType2* imdata_d,
 																DType* deapo_d,
-																GriddingInfo* gi_host)
+																GriddingND::GriddingInfo* gi_host)
 {
 	if (DEBUG)
 		printf("running forward deapodization with precomputed values\n");
@@ -313,7 +313,7 @@ void performForwardDeapodization(DType2* imdata_d,
 
 void performPadding(DType2* imdata_d,
 					CufftType* gdata_d,					
-					GriddingInfo* gi_host)
+					GriddingND::GriddingInfo* gi_host)
 {
 	int ind_off = (int)(gi_host->im_width * ((DType)gi_host->osr -1.0f)/(DType)2);
 	if (DEBUG)

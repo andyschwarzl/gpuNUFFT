@@ -53,7 +53,7 @@ TEST(TestGPUGriddingDeapo,KernelCall1Sector)
 
 	GriddingND::Array<CufftType> gdataArray;
 	
-	gdataArray = griddingOp->performGriddingAdj(dataArray,DEAPODIZATION);
+	gdataArray = griddingOp->performGriddingAdj(dataArray,GriddingND::DEAPODIZATION);
 	//Output Grid
 	CufftType* gdata = gdataArray.data;
 
@@ -125,7 +125,7 @@ TEST(TestGPUGriddingDeapo,KernelCall1Sector2Coils)
 
 	GriddingND::Array<CufftType> gdataArray;
 	
-	gdataArray = griddingOp->performGriddingAdj(dataArray,DEAPODIZATION);
+	gdataArray = griddingOp->performGriddingAdj(dataArray,GriddingND::DEAPODIZATION);
 	//Output Grid
 	CufftType* gdata = gdataArray.data;
 	

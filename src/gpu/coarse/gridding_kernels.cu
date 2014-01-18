@@ -183,7 +183,7 @@ __global__ void composeOutputKernel(DType2* temp_gdata, CufftType* gdata, IndTyp
 }
 
 //very slow way of composing the output, should only be used on compute capabilties lower than 2.0
-void composeOutput(DType2* temp_gdata_d, CufftType* gdata_d, IndType* sector_centers_d, GriddingInfo* gi_host)
+void composeOutput(DType2* temp_gdata_d, CufftType* gdata_d, IndType* sector_centers_d, GriddingND::GriddingInfo* gi_host)
 {
 	dim3 grid_dim(1);
 	dim3 block_dim(gi_host->sector_pad_width,gi_host->sector_pad_width,1);
@@ -197,7 +197,7 @@ void performConvolution( DType2* data_d,
 						 DType* kernel_d, 
 						 IndType* sectors_d, 
 						 IndType* sector_centers_d,
-						 GriddingInfo* gi_host
+						 GriddingND::GriddingInfo* gi_host
 						)
 {
 	DType2* temp_gdata_d;
@@ -357,7 +357,7 @@ void performForwardConvolution( CufftType*		data_d,
 								DType*			kernel_d, 
 								IndType*		sectors_d, 
 								IndType*		sector_centers_d,
-								GriddingInfo*	gi_host
+								GriddingND::GriddingInfo*	gi_host
 								)
 {
 	int thread_size = THREAD_BLOCK_SIZE;

@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include "cufft.h"
 #include "gridding_gpu.hpp"
+#include "gridding_operator.hpp"
 #include <stdarg.h>
 
 #define MIN(X,Y) ((X) < (Y) ? (X) : (Y))
@@ -120,16 +121,19 @@ inline void showMemoryInfo()
 void initConstSymbol(const char* symbol, const void* src, IndType count);
 
 
-inline GriddingInfo* initAndCopyGriddingInfo(int sector_count, 
-									  int sector_width,
-									  int kernel_width,
-									  int kernel_count, 
-									  int grid_width,
-									  int im_width,
-									  DType osr,
-									  int data_count)
+inline GriddingND::GriddingInfo* initAndCopyGriddingInfo(int sector_count, 
+											 int sector_width,
+											 int kernel_width,
+											 int kernel_count, 
+											 int grid_width,
+											 int im_width,
+											 DType osr,
+											 int data_count,
+											 GriddingND::Dimensions imgDims,
+											 GriddingND::Dimensions gridDims)
 {
-	GriddingInfo* gi_host = (GriddingInfo*)malloc(sizeof(GriddingInfo));
+	GriddingND::GriddingInfo* gi_host = (GriddingND::GriddingInfo*)malloc(sizeof(GriddingND::GriddingInfo));
+
     gi_host->data_count = data_count;
 	gi_host->sector_count = sector_count;
 	gi_host->sector_width = sector_width;
@@ -137,6 +141,7 @@ inline GriddingInfo* initAndCopyGriddingInfo(int sector_count,
 	gi_host->kernel_width = kernel_width; 
 	gi_host->kernel_widthSquared = kernel_width * kernel_width;
 	gi_host->kernel_count = kernel_count;
+
 	gi_host->grid_width = grid_width;
 	gi_host->grid_width_dim = grid_width * grid_width * grid_width;
 	gi_host->grid_width_offset= (int)(floor(grid_width / (DType)2.0));
@@ -144,6 +149,12 @@ inline GriddingInfo* initAndCopyGriddingInfo(int sector_count,
 	gi_host->im_width = im_width;
 	gi_host->im_width_dim = im_width * im_width * im_width;
 	gi_host->im_width_offset = (int)(floor(im_width / (DType)2.0));
+
+	gi_host->imgDims = IndType3(imgDims.width,imgDims.height,imgDims.depth);
+	gi_host->imgDims_count = imgDims.width*imgDims.height*imgDims.depth;
+
+	gi_host->gridDims = IndType3(gridDims.width,gridDims.height,gridDims.depth);
+	gi_host->gridDims_count = gridDims.width*gridDims.height*gridDims.depth;
 
 	DType kernel_radius = static_cast<DType>(kernel_width) / (DType)2.0;
 	DType radius = kernel_radius / static_cast<DType>(grid_width);
@@ -173,9 +184,9 @@ inline GriddingInfo* initAndCopyGriddingInfo(int sector_count,
 	gi_host->dist_multiplier = dist_multiplier;
 	
 	if (DEBUG)
-		printf("copy Gridding Info to symbol memory... size = %d \n",sizeof(GriddingInfo));
+		printf("copy Gridding Info to symbol memory... size = %d \n",sizeof(GriddingND::GriddingInfo));
 
-	initConstSymbol("GI",gi_host,sizeof(GriddingInfo));
+	initConstSymbol("GI",gi_host,sizeof(GriddingND::GriddingInfo));
 
 	//free(gi_host);
 	if (DEBUG)

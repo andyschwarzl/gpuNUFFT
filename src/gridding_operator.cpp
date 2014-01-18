@@ -99,7 +99,7 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
 
 	//split and run sectors into blocks
 	//and each data point to one thread inside this block 
-	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,this->sectorWidth,this->kernelWidth,this->kernel.count(),this->getGridWidth(), imgData.dim.width, this->osf,data_count);
+	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,this->sectorWidth,this->kernelWidth,this->kernel.count(),this->getGridWidth(), imgData.dim.width, this->osf,data_count,this->getImageDims(),this->getGridDims());
 	
 	DType2* data_d;
 	DType* crds_d, *density_comp_d, *deapo_d;
@@ -346,7 +346,7 @@ void GriddingND::GriddingOperator::performForwardGridding(GriddingND::Array<DTyp
 	IndType		imdata_count        = this->imgDims.count();
 	int			sector_count        = this->sectorDims.count();
 
-	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,this->sectorWidth,this->kernelWidth,this->kernel.count(),this->getGridWidth(), imgData.dim.width, this->osf,data_count);
+	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,this->sectorWidth,this->kernelWidth,this->kernel.count(),this->getGridWidth(), imgData.dim.width, this->osf,data_count,this->getImageDims(),this->getGridDims());
 
 	//cuda mem allocation
 	DType2 *imdata_d;

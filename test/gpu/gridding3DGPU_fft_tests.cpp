@@ -55,7 +55,7 @@ TEST(TestGPUGriddingFFT,KernelCall1Sector)
 
 	GriddingND::Array<CufftType> gdataArray;
 	
-	gdataArray = griddingOp->performGriddingAdj(dataArray,FFT);
+	gdataArray = griddingOp->performGriddingAdj(dataArray,GriddingND::FFT);
 	//Output Grid
 	CufftType* gdata = gdataArray.data;
 
@@ -131,7 +131,7 @@ TEST(TestGPUGriddingFFT,GPUTest_Kernel5w64)
 
 	GriddingND::Array<CufftType> gdataArray;
 	
-	gdataArray = griddingOp->performGriddingAdj(dataArray,FFT);
+	gdataArray = griddingOp->performGriddingAdj(dataArray,GriddingND::FFT);
 
 	//Output Grid
 	CufftType* gdata = gdataArray.data;
@@ -230,7 +230,7 @@ TEST(TestGPUGriddingFFT,GPUTest_FactorTwoTest)
 
 	GriddingND::Array<CufftType> gdataArray;
 	
-	gdataArray = griddingOp->performGriddingAdj(dataArray,FFT);
+	gdataArray = griddingOp->performGriddingAdj(dataArray,GriddingND::FFT);
 	//Output Grid
 	CufftType* gdata = gdataArray.data;
 

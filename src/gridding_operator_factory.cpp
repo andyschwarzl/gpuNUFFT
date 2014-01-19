@@ -189,7 +189,7 @@ GriddingND::Array<DType> GriddingND::GriddingOperatorFactory::initDensData(Gridd
 
 GriddingND::Array<DType> GriddingND::GriddingOperatorFactory::initCoordsData(GriddingND::GriddingOperator* griddingOp, IndType coordCnt)
 {
-	GriddingND::Array<DType> coordsData = initLinArray<DType>(3*coordCnt);
+	GriddingND::Array<DType> coordsData = initLinArray<DType>(griddingOp->getImageDimensionCount()*coordCnt);
 	coordsData.dim.length = coordCnt;
 	return coordsData;
 }

@@ -115,12 +115,10 @@ namespace GriddingND
 		int kernel_count;
 		DType kernel_radius;
 
-		//int grid_width;		
 		int grid_width_dim;  
 		int grid_width_offset;
 		DType grid_width_inv;
 
-		//int im_width;
 		int im_width_dim;
 		int im_width_offset;
 
@@ -129,6 +127,7 @@ namespace GriddingND
 		int sector_count;
 		int sector_width;
 		int sector_dim;
+
 		int sector_pad_width;
 		int sector_pad_max;
 		int sector_offset;
@@ -138,8 +137,11 @@ namespace GriddingND
 
 		IndType3 imgDims;
 		IndType imgDims_count;
+
 		IndType3 gridDims;
 		IndType gridDims_count;
+
+		bool is2Dprocessing;
 	};
 
 
@@ -203,6 +205,11 @@ namespace GriddingND
 		Array<IndType3> getSectorCenters()	{return this->sectorCenters; }
 
 		Array<IndType>  getDataIndices()		{return this->dataIndices;}
+
+		bool is2DProcessing() {return this->imgDims.depth == 0;}
+		bool is3DProcessing() {return !is2DProcessing();}
+
+		int getImageDimensionCount() {return (is2DProcessing() ? 2 : 3);}
 
 		// OPERATIONS
 

@@ -99,7 +99,7 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
 
 	//split and run sectors into blocks
 	//and each data point to one thread inside this block 
-	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,this->kernelWidth,this->kernel.count(),this->osf,data_count,this->getImageDims(),this->getGridDims(),this->getSectorDims());
+	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,this->kernelWidth,this->kernel.count(),this->osf,data_count,this->getImageDims(),this->getGridDims(),this->getSectorDims(),this->is2DProcessing());
 	
 	DType2* data_d;
 	DType* crds_d, *density_comp_d, *deapo_d;
@@ -119,8 +119,8 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
 	allocateDeviceMem<DType2>(&data_d,data_count);
 
 	if (DEBUG)
-		printf("allocate and copy coords of size %d...\n",3*data_count);
-	allocateAndCopyToDeviceMem<DType>(&crds_d,this->kSpaceTraj.data,3*data_count);
+		printf("allocate and copy coords of size %d...\n",getImageDimensionCount()*data_count);
+	allocateAndCopyToDeviceMem<DType>(&crds_d,this->kSpaceTraj.data,getImageDimensionCount()*data_count);
 	
 	if (DEBUG)
 		printf("allocate and copy kernel in const memory of size %d...\n",this->kernel.count());
@@ -132,8 +132,8 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
 		printf("allocate and copy sectors of size %d...\n",sector_count+1);
 	allocateAndCopyToDeviceMem<IndType>(&sectors_d,this->sectorDataCount.data,sector_count+1);
 	if (DEBUG)
-		printf("allocate and copy sector_centers of size %d...\n",3*sector_count);
-	allocateAndCopyToDeviceMem<IndType>(&sector_centers_d,(IndType*)this->sectorCenters.data,3*sector_count);
+		printf("allocate and copy sector_centers of size %d...\n",getImageDimensionCount()*sector_count);
+	allocateAndCopyToDeviceMem<IndType>(&sector_centers_d,(IndType*)this->sectorCenters.data,getImageDimensionCount()*sector_count);
 	
 	if (this->applyDensComp())	
 	{
@@ -155,8 +155,8 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
 	//Inverse fft plan and execution
 	cufftHandle fft_plan;
 	if (DEBUG)
-		printf("creating cufft plan with %d,%d,%d dimensions\n",gi_host->gridDims.x,gi_host->gridDims.x,gi_host->gridDims.x);
-	cufftResult res = cufftPlan3d(&fft_plan, gi_host->gridDims.x,gi_host->gridDims.x,gi_host->gridDims.x, CufftTransformType) ;
+		printf("creating cufft plan with %d,%d,%d dimensions\n",DEFAULT_VALUE(gi_host->gridDims.z),gi_host->gridDims.y,gi_host->gridDims.x);
+	cufftResult res = cufftPlan3d(&fft_plan, DEFAULT_VALUE(gi_host->gridDims.z),gi_host->gridDims.y,gi_host->gridDims.x, CufftTransformType) ;
 	if (res != CUFFT_SUCCESS) 
 		fprintf(stderr,"error on CUFFT Plan creation!!! %d\n",res);
 	int err;
@@ -341,7 +341,7 @@ void GriddingND::GriddingOperator::performForwardGridding(GriddingND::Array<DTyp
 	IndType		imdata_count        = this->imgDims.count();
 	int			sector_count        = this->gridSectorDims.count();
 
-	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,this->kernelWidth,this->kernel.count(), this->osf,data_count,this->getImageDims(),this->getGridDims(),this->getSectorDims());
+	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,this->kernelWidth,this->kernel.count(), this->osf,data_count,this->getImageDims(),this->getGridDims(),this->getSectorDims(),this->is2DProcessing());
 
 	//cuda mem allocation
 	DType2 *imdata_d;
@@ -362,8 +362,8 @@ void GriddingND::GriddingOperator::performForwardGridding(GriddingND::Array<DTyp
 	allocateDeviceMem<CufftType>(&data_d,data_count);
 
 	if (DEBUG)
-		printf("allocate and copy coords of size %d...\n",3*data_count);
-	allocateAndCopyToDeviceMem<DType>(&crds_d,this->kSpaceTraj.data,3*data_count);
+		printf("allocate and copy coords of size %d...\n",getImageDimensionCount()*data_count);
+	allocateAndCopyToDeviceMem<DType>(&crds_d,this->kSpaceTraj.data,getImageDimensionCount()*data_count);
 	
 
 	if (DEBUG)
@@ -375,8 +375,8 @@ void GriddingND::GriddingOperator::performForwardGridding(GriddingND::Array<DTyp
 		printf("allocate and copy sectors of size %d...\n",sector_count+1);
 	allocateAndCopyToDeviceMem<IndType>(&sectors_d,this->sectorDataCount.data,sector_count+1);
 	if (DEBUG)
-		printf("allocate and copy sector_centers of size %d...\n",3*sector_count);
-	allocateAndCopyToDeviceMem<IndType>(&sector_centers_d,(IndType*)this->sectorCenters.data,3*sector_count);
+		printf("allocate and copy sector_centers of size %d...\n",getImageDimensionCount()*sector_count);
+	allocateAndCopyToDeviceMem<IndType>(&sector_centers_d,(IndType*)this->sectorCenters.data,getImageDimensionCount()*sector_count);
 	if (n_coils > 1)
 	{
 		if (DEBUG)
@@ -391,8 +391,8 @@ void GriddingND::GriddingOperator::performForwardGridding(GriddingND::Array<DTyp
 	//Inverse fft plan and execution
 	cufftHandle fft_plan;
 	if (DEBUG)
-		printf("creating cufft plan with %d,%d,%d dimensions\n",gi_host->gridDims.x,gi_host->gridDims.x,gi_host->gridDims.x);
-	cufftResult res = cufftPlan3d(&fft_plan, gi_host->gridDims.x,gi_host->gridDims.x,gi_host->gridDims.x, CufftTransformType) ;
+		printf("creating cufft plan with %d,%d,%d dimensions\n",DEFAULT_VALUE(gi_host->gridDims.z),gi_host->gridDims.y,gi_host->gridDims.x);
+	cufftResult res = cufftPlan3d(&fft_plan, DEFAULT_VALUE(gi_host->gridDims.z),gi_host->gridDims.y,gi_host->gridDims.x, CufftTransformType) ;
 	if (res != CUFFT_SUCCESS) 
 		printf("error on CUFFT Plan creation!!! %d\n",res);
 	int err;

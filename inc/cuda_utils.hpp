@@ -128,7 +128,8 @@ inline GriddingND::GriddingInfo* initAndCopyGriddingInfo(int sector_count,
 														 int data_count,
 														 GriddingND::Dimensions imgDims,
 														 GriddingND::Dimensions gridDims,
-														 GriddingND::Dimensions sectorDims)
+														 GriddingND::Dimensions sectorDims,
+														 bool is2Dprocessing)
 {
 	GriddingND::GriddingInfo* gi_host = (GriddingND::GriddingInfo*)malloc(sizeof(GriddingND::GriddingInfo));
 
@@ -140,11 +141,9 @@ inline GriddingND::GriddingInfo* initAndCopyGriddingInfo(int sector_count,
 	gi_host->kernel_widthSquared = kernel_width * kernel_width;
 	gi_host->kernel_count = kernel_count;
 
-	//gi_host->grid_width = gridDims.x;
 	gi_host->grid_width_dim = gridDims.count();
 	gi_host->grid_width_offset= (int)(floor(gridDims.width / (DType)2.0));
 
-	//gi_host->im_width = imgDims.width;
 	gi_host->im_width_dim = imgDims.count();
 	gi_host->im_width_offset = (int)(floor(imgDims.width / (DType)2.0));
 
@@ -184,6 +183,8 @@ inline GriddingND::GriddingInfo* initAndCopyGriddingInfo(int sector_count,
 	gi_host->sector_offset = sector_offset;
 	gi_host->radiusSquared = radiusSquared;
 	gi_host->dist_multiplier = dist_multiplier;
+
+	gi_host->is2Dprocessing = is2Dprocessing;
 	
 	if (DEBUG)
 		printf("copy Gridding Info to symbol memory... size = %d \n",sizeof(GriddingND::GriddingInfo));

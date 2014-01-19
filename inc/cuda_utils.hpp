@@ -130,7 +130,8 @@ inline GriddingND::GriddingInfo* initAndCopyGriddingInfo(int sector_count,
 											 DType osr,
 											 int data_count,
 											 GriddingND::Dimensions imgDims,
-											 GriddingND::Dimensions gridDims)
+											 GriddingND::Dimensions gridDims,
+											 GriddingND::Dimensions sectorDims)
 {
 	GriddingND::GriddingInfo* gi_host = (GriddingND::GriddingInfo*)malloc(sizeof(GriddingND::GriddingInfo));
 
@@ -142,12 +143,12 @@ inline GriddingND::GriddingInfo* initAndCopyGriddingInfo(int sector_count,
 	gi_host->kernel_widthSquared = kernel_width * kernel_width;
 	gi_host->kernel_count = kernel_count;
 
-	gi_host->grid_width = grid_width;
-	gi_host->grid_width_dim = grid_width * grid_width * grid_width;
+	gi_host->grid_width = gridDims.width;
+	gi_host->grid_width_dim = gridDims.count();
 	gi_host->grid_width_offset= (int)(floor(grid_width / (DType)2.0));
 
-	gi_host->im_width = im_width;
-	gi_host->im_width_dim = im_width * im_width * im_width;
+	gi_host->im_width = imgDims.width;
+	gi_host->im_width_dim = imgDims.count();
 	gi_host->im_width_offset = (int)(floor(im_width / (DType)2.0));
 
 	gi_host->imgDims = IndType3(imgDims.width,imgDims.height,imgDims.depth);
@@ -165,10 +166,14 @@ inline GriddingND::GriddingInfo* initAndCopyGriddingInfo(int sector_count,
 	DType radiusSquared = radius * radius;
 	DType kernelRadius_invSqr = (DType)1.0 / radiusSquared;
 	DType dist_multiplier = (kernel_count - 1) * kernelRadius_invSqr;
+
 	if (DEBUG)
 		printf("radius rel. to grid width %f\n",radius);
-	int sector_pad_width = sector_width + 2*(int)(floor(kernel_width / (DType)2.0));
-	int sector_dim = sector_pad_width  * sector_pad_width  * sector_pad_width ;
+	
+	GriddingND::Dimensions sectorPadDims = sectorDims + 2*(int)(floor(kernel_width / (DType)2.0));
+	
+	int sector_pad_width = sectorPadDims.width;
+	int sector_dim = sectorPadDims.count();
 	int sector_offset = (int)(floor(sector_pad_width / (DType)2.0));
 
 	gi_host->grid_width_inv = width_inv;

@@ -76,6 +76,19 @@ TEST(PrecomputationTest, ComputeIsotropicSectorDim) {
 	EXPECT_EQ(expected,sectorDims.count());
 }
 
+TEST(PrecomputationTest, testAddScalarToDimension)
+{
+	GriddingND::Dimensions d;
+	d.width = 10;
+	d.height = 10;
+
+	d = d + 3;
+
+	EXPECT_EQ(13,d.width);
+	EXPECT_EQ(13,d.height);
+	EXPECT_EQ(0,d.depth);
+}
+
 TEST(PrecomputationTest, ComputeAnisotropicSectorDim) {
 	IndType imageWidth = 128; 
 	DType osr = 1.5;

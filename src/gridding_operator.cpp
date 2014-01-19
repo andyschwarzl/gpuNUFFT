@@ -91,7 +91,7 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
 	int			data_count          = this->kSpaceTraj.count();
 	int			n_coils             = kspaceData.dim.channels;
 	IndType		imdata_count        = this->imgDims.count();
-	int			sector_count        = this->sectorDims.count();
+	int			sector_count        = this->gridSectorDims.count();
 		
 	DType*  density_comp            = densSorted;
 
@@ -99,7 +99,7 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
 
 	//split and run sectors into blocks
 	//and each data point to one thread inside this block 
-	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,this->sectorWidth,this->kernelWidth,this->kernel.count(),this->getGridWidth(), imgData.dim.width, this->osf,data_count,this->getImageDims(),this->getGridDims());
+	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,this->sectorWidth,this->kernelWidth,this->kernel.count(),this->getGridWidth(), imgData.dim.width, this->osf,data_count,this->getImageDims(),this->getGridDims(),this->getSectorDims());
 	
 	DType2* data_d;
 	DType* crds_d, *density_comp_d, *deapo_d;
@@ -344,9 +344,9 @@ void GriddingND::GriddingOperator::performForwardGridding(GriddingND::Array<DTyp
 	int			data_count          = this->kSpaceTraj.count();
 	int			n_coils             = kspaceData.dim.channels;
 	IndType		imdata_count        = this->imgDims.count();
-	int			sector_count        = this->sectorDims.count();
+	int			sector_count        = this->gridSectorDims.count();
 
-	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,this->sectorWidth,this->kernelWidth,this->kernel.count(),this->getGridWidth(), imgData.dim.width, this->osf,data_count,this->getImageDims(),this->getGridDims());
+	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,this->sectorWidth,this->kernelWidth,this->kernel.count(),this->getGridWidth(), imgData.dim.width, this->osf,data_count,this->getImageDims(),this->getGridDims(),this->getSectorDims());
 
 	//cuda mem allocation
 	DType2 *imdata_d;

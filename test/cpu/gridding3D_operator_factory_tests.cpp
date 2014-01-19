@@ -50,7 +50,7 @@ TEST(OperatorFactoryTest,TestInit)
 		EXPECT_EQ(sectorDataCountExpected[i],sectorDataCount.data[i]);
 	}
 
-	GriddingND::Dimensions sectorDims = griddingOp->getSectorDims();
+	GriddingND::Dimensions sectorDims = griddingOp->getGridSectorDims();
 	IndType expected = 3*3*3;
 	EXPECT_EQ(expected,sectorDims.count());	
 

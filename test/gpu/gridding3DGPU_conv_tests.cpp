@@ -35,7 +35,7 @@ TEST(TestKernel, LoadKernelFromGriddingFactory) {
 	IndType kernelWidth = 3;
 	IndType sectorWidth = 8;
 	DType osf = 1;
-	GriddingND::GriddingOperator *griddingOp = new GriddingND::GriddingOperator(kernelWidth,sectorWidth,osf);
+	GriddingND::GriddingOperator *griddingOp = new GriddingND::GriddingOperator(kernelWidth,sectorWidth,osf,GriddingND::Dimensions(1,1,1));
 
 	assert(griddingOp->getKernel().count() > 0);
 

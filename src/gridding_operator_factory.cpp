@@ -94,7 +94,7 @@ GriddingND::Array<IndType> GriddingND::GriddingOperatorFactory::assignSectors(Gr
 {
 	debug("in assign sectors\n");
 
-	griddingOp->setSectorDims(computeSectorCountPerDimension(griddingOp->getGridDims(),griddingOp->getSectorWidth()));
+	griddingOp->setGridSectorDims(computeSectorCountPerDimension(griddingOp->getGridDims(),griddingOp->getSectorWidth()));
 	
 	IndType coordCnt = kSpaceTraj.count();
 
@@ -110,10 +110,10 @@ GriddingND::Array<IndType> GriddingND::GriddingOperatorFactory::assignSectors(Gr
 		coord.y = kSpaceTraj.data[cCnt + coordCnt];
 		coord.z = kSpaceTraj.data[cCnt + 2*coordCnt];
 		
-		IndType3 mappedSector = computeSectorMapping(coord,griddingOp->getSectorDims());
+		IndType3 mappedSector = computeSectorMapping(coord,griddingOp->getGridSectorDims());
 
 		//linearize mapped sector
-		IndType sector = computeInd32Lin(mappedSector,griddingOp->getSectorDims());
+		IndType sector = computeInd32Lin(mappedSector,griddingOp->getGridSectorDims());
 		assignedSectors.data[cCnt] = sector;
 	}
 	debug("finished assign sectors\n");
@@ -126,7 +126,7 @@ GriddingND::Array<IndType> GriddingND::GriddingOperatorFactory::computeSectorDat
 	std::vector<IndType> dataCount;
 
 	dataCount.push_back(0);
-	for (IndType i=0; i<=griddingOp->getSectorDims().count(); i++)
+	for (IndType i=0; i<=griddingOp->getGridSectorDims().count(); i++)
 	{	
 		while (cnt < assignedSectors.count() && i == assignedSectors.data[cnt])
 			cnt++;
@@ -152,7 +152,7 @@ void GriddingND::GriddingOperatorFactory::debug(const std::string& message)
 GriddingND::Array<IndType3> GriddingND::GriddingOperatorFactory::computeSectorCenters(GriddingND::GriddingOperator *griddingOp)
 {
 	
-	GriddingND::Dimensions sectorDims = griddingOp->getSectorDims();
+	GriddingND::Dimensions sectorDims = griddingOp->getGridSectorDims();
 	IndType sectorWidth = griddingOp->getSectorWidth();
 
 	GriddingND::Array<IndType3> sectorCenters = initSectorCenters(griddingOp,sectorDims.count());

@@ -122,34 +122,31 @@ void initConstSymbol(const char* symbol, const void* src, IndType count);
 
 
 inline GriddingND::GriddingInfo* initAndCopyGriddingInfo(int sector_count, 
-											 int sector_width,
-											 int kernel_width,
-											 int kernel_count, 
-											 int grid_width,
-											 int im_width,
-											 DType osr,
-											 int data_count,
-											 GriddingND::Dimensions imgDims,
-											 GriddingND::Dimensions gridDims,
-											 GriddingND::Dimensions sectorDims)
+														 int kernel_width,
+														 int kernel_count, 
+														 DType osr,
+														 int data_count,
+														 GriddingND::Dimensions imgDims,
+														 GriddingND::Dimensions gridDims,
+														 GriddingND::Dimensions sectorDims)
 {
 	GriddingND::GriddingInfo* gi_host = (GriddingND::GriddingInfo*)malloc(sizeof(GriddingND::GriddingInfo));
 
     gi_host->data_count = data_count;
 	gi_host->sector_count = sector_count;
-	gi_host->sector_width = sector_width;
+	gi_host->sector_width = sectorDims.width;
 	
 	gi_host->kernel_width = kernel_width; 
 	gi_host->kernel_widthSquared = kernel_width * kernel_width;
 	gi_host->kernel_count = kernel_count;
 
-	gi_host->grid_width = gridDims.width;
+	//gi_host->grid_width = gridDims.x;
 	gi_host->grid_width_dim = gridDims.count();
-	gi_host->grid_width_offset= (int)(floor(grid_width / (DType)2.0));
+	gi_host->grid_width_offset= (int)(floor(gridDims.width / (DType)2.0));
 
-	gi_host->im_width = imgDims.width;
+	//gi_host->im_width = imgDims.width;
 	gi_host->im_width_dim = imgDims.count();
-	gi_host->im_width_offset = (int)(floor(im_width / (DType)2.0));
+	gi_host->im_width_offset = (int)(floor(imgDims.width / (DType)2.0));
 
 	gi_host->imgDims = IndType3(imgDims.width,imgDims.height,imgDims.depth);
 	gi_host->imgDims_count = imgDims.width*imgDims.height*imgDims.depth;
@@ -158,8 +155,8 @@ inline GriddingND::GriddingInfo* initAndCopyGriddingInfo(int sector_count,
 	gi_host->gridDims_count = gridDims.width*gridDims.height*gridDims.depth;
 
 	DType kernel_radius = static_cast<DType>(kernel_width) / (DType)2.0;
-	DType radius = kernel_radius / static_cast<DType>(grid_width);
-	DType width_inv = (DType)1.0 / static_cast<DType>(grid_width);
+	DType radius = kernel_radius / static_cast<DType>(gridDims.width);
+	DType width_inv = (DType)1.0 / static_cast<DType>(gridDims.width);
 
 	DType kernel_width_inv = (DType)1.0 / static_cast<DType>(kernel_width);
 

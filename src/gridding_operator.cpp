@@ -99,7 +99,7 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
 
 	//split and run sectors into blocks
 	//and each data point to one thread inside this block 
-	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,this->sectorWidth,this->kernelWidth,this->kernel.count(),this->getGridWidth(), imgData.dim.width, this->osf,data_count,this->getImageDims(),this->getGridDims(),this->getSectorDims());
+	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,this->kernelWidth,this->kernel.count(),this->osf,data_count,this->getImageDims(),this->getGridDims(),this->getSectorDims());
 	
 	DType2* data_d;
 	DType* crds_d, *density_comp_d, *deapo_d;
@@ -155,8 +155,8 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
 	//Inverse fft plan and execution
 	cufftHandle fft_plan;
 	if (DEBUG)
-		printf("creating cufft plan with %d,%d,%d dimensions\n",gi_host->grid_width,gi_host->grid_width,gi_host->grid_width);
-	cufftResult res = cufftPlan3d(&fft_plan, gi_host->grid_width,gi_host->grid_width,gi_host->grid_width, CufftTransformType) ;
+		printf("creating cufft plan with %d,%d,%d dimensions\n",gi_host->gridDims.x,gi_host->gridDims.x,gi_host->gridDims.x);
+	cufftResult res = cufftPlan3d(&fft_plan, gi_host->gridDims.x,gi_host->gridDims.x,gi_host->gridDims.x, CufftTransformType) ;
 	if (res != CUFFT_SUCCESS) 
 		fprintf(stderr,"error on CUFFT Plan creation!!! %d\n",res);
 	int err;
@@ -200,7 +200,7 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
 		}
 		if ((cudaThreadSynchronize() != cudaSuccess))
 			fprintf(stderr,"error at adj thread synchronization 3: %s\n",cudaGetErrorString(cudaGetLastError()));
-		performFFTShift(gdata_d,INVERSE,gi_host->grid_width);
+		performFFTShift(gdata_d,INVERSE,gi_host->gridDims.x);
 		
 		//Inverse FFT
 		if (err=pt2CufftExec(fft_plan, gdata_d, gdata_d, CUFFT_INVERSE) != CUFFT_SUCCESS)
@@ -233,7 +233,7 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
 		}
 		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
 			printf("error at adj thread synchronization 5: %s\n",cudaGetErrorString(cudaGetLastError()));
-		performFFTShift(gdata_d,INVERSE,gi_host->grid_width);
+		performFFTShift(gdata_d,INVERSE,gi_host->gridDims.x);
 			
 		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
 			printf("error at adj thread synchronization 6: %s\n",cudaGetErrorString(cudaGetLastError()));
@@ -334,19 +334,14 @@ void GriddingND::GriddingOperator::performForwardGridding(GriddingND::Array<DTyp
 
 	CufftType* kspaceDataSorted = (CufftType*) calloc(kspaceData.count(),sizeof(CufftType));
 
-	//gridding3D_gpu(&kspaceDataSorted,this->kSpaceTraj.count(),kspaceData.dim.channels,this->kSpaceTraj.data,
-	//	           imgData.data,this->imgDims.count(),this->getGridWidth(),this->kernel.data,this->kernel.count(),
-	//			   this->kernelWidth,this->sectorDataCount.data,this->sectorDims.count(),
-	//			   (IndType*)this->sectorCenters.data,this->sectorWidth, imgData.dim.width,this->osf,griddingOut);
-
-		showMemoryInfo();
+	showMemoryInfo();
 	
 	int			data_count          = this->kSpaceTraj.count();
 	int			n_coils             = kspaceData.dim.channels;
 	IndType		imdata_count        = this->imgDims.count();
 	int			sector_count        = this->gridSectorDims.count();
 
-	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,this->sectorWidth,this->kernelWidth,this->kernel.count(),this->getGridWidth(), imgData.dim.width, this->osf,data_count,this->getImageDims(),this->getGridDims(),this->getSectorDims());
+	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,this->kernelWidth,this->kernel.count(), this->osf,data_count,this->getImageDims(),this->getGridDims(),this->getSectorDims());
 
 	//cuda mem allocation
 	DType2 *imdata_d;
@@ -396,8 +391,8 @@ void GriddingND::GriddingOperator::performForwardGridding(GriddingND::Array<DTyp
 	//Inverse fft plan and execution
 	cufftHandle fft_plan;
 	if (DEBUG)
-		printf("creating cufft plan with %d,%d,%d dimensions\n",gi_host->grid_width,gi_host->grid_width,gi_host->grid_width);
-	cufftResult res = cufftPlan3d(&fft_plan, gi_host->grid_width,gi_host->grid_width,gi_host->grid_width, CufftTransformType) ;
+		printf("creating cufft plan with %d,%d,%d dimensions\n",gi_host->gridDims.x,gi_host->gridDims.x,gi_host->gridDims.x);
+	cufftResult res = cufftPlan3d(&fft_plan, gi_host->gridDims.x,gi_host->gridDims.x,gi_host->gridDims.x, CufftTransformType) ;
 	if (res != CUFFT_SUCCESS) 
 		printf("error on CUFFT Plan creation!!! %d\n",res);
 	int err;
@@ -428,7 +423,7 @@ void GriddingND::GriddingOperator::performForwardGridding(GriddingND::Array<DTyp
 		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
 			printf("error at thread synchronization 3: %s\n",cudaGetErrorString(cudaGetLastError()));
 		// shift image to get correct zero frequency position
-		performFFTShift(gdata_d,INVERSE,gi_host->grid_width);
+		performFFTShift(gdata_d,INVERSE,gi_host->gridDims.x);
 	
 		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
 			printf("error at thread synchronization 4: %s\n",cudaGetErrorString(cudaGetLastError()));
@@ -442,7 +437,7 @@ void GriddingND::GriddingOperator::performForwardGridding(GriddingND::Array<DTyp
 		
 		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
 			printf("error at thread synchronization 5: %s\n",cudaGetErrorString(cudaGetLastError()));
-		performFFTShift(gdata_d,FORWARD,gi_host->grid_width);
+		performFFTShift(gdata_d,FORWARD,gi_host->gridDims.x);
 		
 		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
 			printf("error at thread synchronization 6: %s\n",cudaGetErrorString(cudaGetLastError()));

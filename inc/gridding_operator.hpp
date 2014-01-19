@@ -115,12 +115,12 @@ namespace GriddingND
 		int kernel_count;
 		DType kernel_radius;
 
-		int grid_width;		
+		//int grid_width;		
 		int grid_width_dim;  
 		int grid_width_offset;
 		DType grid_width_inv;
 
-		int im_width;
+		//int im_width;
 		int im_width_dim;
 		int im_width_offset;
 

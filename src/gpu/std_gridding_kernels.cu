@@ -74,7 +74,7 @@ __global__ void deapodizationKernel(CufftType* gdata, DType beta, DType norm_val
 	DType deapo;
 	while (t < N) 
 	{ 
-	   getCoordsFromIndex(t, &x, &y, &z, GI.im_width);
+	   getCoordsFromIndex(t, &x, &y, &z, GI.imgDims.x);
 	   
 	   deapo = calculateDeapodizationAt(x,y,z,GI.im_width_offset,GI.grid_width_inv,GI.kernel_width,beta,norm_val);
 	   //check if deapodization value is valid number
@@ -96,7 +96,7 @@ __global__ void precomputeDeapodizationKernel(DType* deapo_d, DType beta, DType 
 	DType deapo;
 	while (t < N) 
 	{ 
-	   getCoordsFromIndex(t, &x, &y, &z, GI.im_width);
+	   getCoordsFromIndex(t, &x, &y, &z, GI.imgDims.x);
 	   
 	   deapo = calculateDeapodizationAt(x,y,z,GI.im_width_offset,GI.grid_width_inv,GI.kernel_width,beta,norm_val);
 	   //check if deapodization value is valid number
@@ -117,8 +117,8 @@ __global__ void cropKernel(CufftType* gdata,CufftType* imdata, int offset, int N
 	int x, y, z, grid_ind;
 	while (t < N) 
 	{
-		getCoordsFromIndex(t, &x, &y, &z, GI.im_width);
-		grid_ind = getIndex(offset+x,offset+y,offset+z,GI.grid_width);
+		getCoordsFromIndex(t, &x, &y, &z, GI.imgDims.x);
+		grid_ind = getIndex(offset+x,offset+y,offset+z,GI.gridDims.x);
 		imdata[t] = gdata[grid_ind];
 		t = t + blockDim.x*gridDim.x;
 	}
@@ -130,12 +130,12 @@ __global__ void fftShiftKernel(CufftType* gdata, int offset, int N)
 	int x, y, z, x_opp, y_opp, z_opp, ind_opp;
 	while (t < N) 
 	{ 
-		getCoordsFromIndex(t, &x, &y, &z, GI.grid_width);
+		getCoordsFromIndex(t, &x, &y, &z, GI.gridDims.x);
 		//calculate "opposite" coord pair
-		x_opp = (x + offset) % GI.grid_width;
-		y_opp = (y + offset) % GI.grid_width;
-		z_opp = (z + offset) % GI.grid_width;
-		ind_opp = getIndex(x_opp,y_opp,z_opp,GI.grid_width);
+		x_opp = (x + offset) % GI.gridDims.x;
+		y_opp = (y + offset) % GI.gridDims.y;
+		z_opp = (z + offset) % GI.gridDims.z;
+		ind_opp = getIndex(x_opp,y_opp,z_opp,GI.gridDims.x);
 		//swap points
 		CufftType temp = gdata[t];
 		gdata[t] = gdata[ind_opp];
@@ -209,7 +209,7 @@ void performCrop(CufftType* gdata_d,
 				 CufftType* imdata_d,
 				 GriddingND::GriddingInfo* gi_host)
 {
-	int ind_off = (int)(gi_host->im_width * ((DType)gi_host->osr - 1.0f)/(DType)2);
+	int ind_off = (int)(gi_host->imgDims.x * ((DType)gi_host->osr - 1.0f)/(DType)2);
 	if (DEBUG)
 		printf("start cropping image with offset %d\n",ind_off);
 
@@ -253,7 +253,7 @@ __global__ void forwardDeapodizationKernel(DType2* imdata, DType beta, DType nor
 	DType deapo;
 	while (t < N) 
 	{ 
-	   getCoordsFromIndex(t, &x, &y, &z, GI.im_width);
+	   getCoordsFromIndex(t, &x, &y, &z, GI.imgDims.x);
 	   
 	   deapo = calculateDeapodizationAt(x,y,z,GI.im_width_offset,GI.grid_width_inv,GI.kernel_width,beta,norm_val);
 	   //check if deapodization value is valid number
@@ -273,8 +273,8 @@ __global__ void paddingKernel(DType2* imdata,CufftType* gdata, int offset,int N)
 	int x, y, z,grid_ind;
 	while (t < N) 
 	{ 
-		getCoordsFromIndex(t, &x, &y, &z, GI.im_width);
-		grid_ind =  getIndex(offset + x,offset + y,offset +z,GI.grid_width);
+		getCoordsFromIndex(t, &x, &y, &z, GI.imgDims.x);
+		grid_ind =  getIndex(offset + x,offset + y,offset +z,GI.gridDims.x);
 		
 		gdata[grid_ind].x =  imdata[t].x;
 		gdata[grid_ind].y = imdata[t].y;
@@ -315,7 +315,7 @@ void performPadding(DType2* imdata_d,
 					CufftType* gdata_d,					
 					GriddingND::GriddingInfo* gi_host)
 {
-	int ind_off = (int)(gi_host->im_width * ((DType)gi_host->osr -1.0f)/(DType)2);
+	int ind_off = (int)(gi_host->imgDims.x * ((DType)gi_host->osr -1.0f)/(DType)2);
 	if (DEBUG)
 		printf("start padding image with offset %d\n",ind_off);
 

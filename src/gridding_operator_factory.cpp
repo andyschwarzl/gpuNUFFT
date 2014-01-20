@@ -41,9 +41,19 @@ IndType GriddingND::GriddingOperatorFactory::computeXYZ2Lin(IndType x, IndType y
 	return x + dim.height * (y + dim.depth * z);
 }
 
+IndType GriddingND::GriddingOperatorFactory::computeXY2Lin(IndType x, IndType y, GriddingND::Dimensions dim)
+{
+	return x + dim.height * y;
+}
+
 IndType GriddingND::GriddingOperatorFactory::computeInd32Lin(IndType3 sector, GriddingND::Dimensions dim)
 {
 	return sector.x + dim.height * (sector.y + dim.depth * sector.z);
+}
+
+IndType GriddingND::GriddingOperatorFactory::computeInd22Lin(IndType2 sector, GriddingND::Dimensions dim)
+{
+	return sector.x + dim.height * sector.y ;
 }
 
 
@@ -103,17 +113,29 @@ GriddingND::Array<IndType> GriddingND::GriddingOperatorFactory::assignSectors(Gr
     assignedSectors.data = (IndType*)malloc(coordCnt * sizeof(IndType));
     assignedSectors.dim.length = coordCnt;
 	
+	IndType sector;
 	for (IndType cCnt = 0; cCnt < coordCnt; cCnt++)
 	{
-		DType3 coord;
-		coord.x = kSpaceTraj.data[cCnt];
-		coord.y = kSpaceTraj.data[cCnt + coordCnt];
-		coord.z = kSpaceTraj.data[cCnt + 2*coordCnt];
-		
-		IndType3 mappedSector = computeSectorMapping(coord,griddingOp->getGridSectorDims());
+		if (griddingOp->is2DProcessing())
+		{
+			DType2 coord;
+			coord.x = kSpaceTraj.data[cCnt];
+			coord.y = kSpaceTraj.data[cCnt + coordCnt];
+			IndType2 mappedSector = computeSectorMapping(coord,griddingOp->getGridSectorDims());
+			//linearize mapped sector
+			sector = computeInd22Lin(mappedSector,griddingOp->getGridSectorDims());		
+		}
+		else
+		{
+			DType3 coord;
+			coord.x = kSpaceTraj.data[cCnt];
+			coord.y = kSpaceTraj.data[cCnt + coordCnt];
+			coord.z = kSpaceTraj.data[cCnt + 2*coordCnt];
+			IndType3 mappedSector = computeSectorMapping(coord,griddingOp->getGridSectorDims());
+			//linearize mapped sector
+			sector = computeInd32Lin(mappedSector,griddingOp->getGridSectorDims());		
+		}
 
-		//linearize mapped sector
-		IndType sector = computeInd32Lin(mappedSector,griddingOp->getGridSectorDims());
 		assignedSectors.data[cCnt] = sector;
 	}
 	debug("finished assign sectors\n");
@@ -147,6 +169,26 @@ inline IndType GriddingND::GriddingOperatorFactory::computeSectorCenter(IndType 
 void GriddingND::GriddingOperatorFactory::debug(const std::string& message)
 {
 	std::cout << message << std::endl;
+}
+
+GriddingND::Array<IndType2> GriddingND::GriddingOperatorFactory::computeSectorCenters2D(GriddingND::GriddingOperator *griddingOp)
+{
+	
+	GriddingND::Dimensions sectorDims = griddingOp->getGridSectorDims();
+	IndType sectorWidth = griddingOp->getSectorWidth();
+
+	GriddingND::Array<IndType2> sectorCenters = initSectorCenters2D(griddingOp,sectorDims.count());
+	
+	for (IndType y=0;y<sectorDims.height; y++)
+		for (IndType x=0;x<sectorDims.width;x++)
+			{
+				IndType2 center;
+				center.x = computeSectorCenter(x,sectorWidth);
+				center.y = computeSectorCenter(y,sectorWidth);
+				IndType index = computeInd22Lin(center,sectorDims);
+				sectorCenters.data[index] = center;
+			}
+    return sectorCenters;
 }
 
 GriddingND::Array<IndType3> GriddingND::GriddingOperatorFactory::computeSectorCenters(GriddingND::GriddingOperator *griddingOp)
@@ -199,6 +241,11 @@ GriddingND::Array<IndType3> GriddingND::GriddingOperatorFactory::initSectorCente
 	return initLinArray<IndType3>(sectorCnt);
 }
 
+GriddingND::Array<IndType2> GriddingND::GriddingOperatorFactory::initSectorCenters2D(GriddingND::GriddingOperator* griddingOp, IndType sectorCnt)
+{
+	return initLinArray<IndType2>(sectorCnt);
+}
+
 GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddingOperator(GriddingND::Array<DType>& kSpaceTraj, GriddingND::Array<DType>& densCompData,GriddingND::Array<DType2>& sensData, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, GriddingND::Dimensions& imgDims)
 {
     //validate arguments
@@ -229,12 +276,14 @@ GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddin
 
 	if (sensData.data != NULL)
 		griddingOp->setSens(sensData);
+	
 	//sort kspace data coords
 	for (int i=0; i<coordCnt;i++)
 	{
 		trajSorted.data[i] = kSpaceTraj.data[assignedSectorsAndIndicesSorted[i].first];
 		trajSorted.data[i + 1*coordCnt] = kSpaceTraj.data[assignedSectorsAndIndicesSorted[i].first + 1*coordCnt];
-		trajSorted.data[i + 2*coordCnt] = kSpaceTraj.data[assignedSectorsAndIndicesSorted[i].first + 2*coordCnt];
+		if (griddingOp->is3DProcessing())
+			trajSorted.data[i + 2*coordCnt] = kSpaceTraj.data[assignedSectorsAndIndicesSorted[i].first + 2*coordCnt];
 		
 		//todo sort density compensation
 		if (densCompData.data != NULL)

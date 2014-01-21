@@ -177,6 +177,7 @@ namespace GriddingND
 
         void setKSpaceTraj(Array<DType> kSpaceTraj)				{this->kSpaceTraj = kSpaceTraj;}
         void setSectorCenters(Array<IndType3> sectorCenters)	{this->sectorCenters = sectorCenters;}
+		void setSectorCenters2D(Array<IndType2> sectorCenters2D)	{this->sectorCenters2D = sectorCenters2D;}
         void setSectorDataCount(Array<IndType> sectorDataCount)	{this->sectorDataCount = sectorDataCount;}
 		void setDataIndices(Array<IndType> dataIndices)			{this->dataIndices = dataIndices;}
 		void setSens(Array<DType2> sens)						{this->sens = sens;}
@@ -203,6 +204,7 @@ namespace GriddingND
 		Dimensions getSectorDims() {return this->sectorDims;}
 
 		Array<IndType3> getSectorCenters()	{return this->sectorCenters; }
+		Array<IndType2> getSectorCenters2D()	{return this->sectorCenters2D; }
 
 		Array<IndType>  getDataIndices()		{return this->dataIndices;}
 
@@ -251,6 +253,8 @@ namespace GriddingND
 
 		// sector centers
 		Array<IndType3> sectorCenters;
+
+		Array<IndType2> sectorCenters2D;
 
 		// dataCount per sector
 		Array<IndType> sectorDataCount;

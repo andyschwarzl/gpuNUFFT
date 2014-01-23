@@ -133,7 +133,7 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
 	allocateAndCopyToDeviceMem<IndType>(&sectors_d,this->sectorDataCount.data,sector_count+1);
 	if (DEBUG)
 		printf("allocate and copy sector_centers of size %d...\n",getImageDimensionCount()*sector_count);
-	allocateAndCopyToDeviceMem<IndType>(&sector_centers_d,(IndType*)this->sectorCenters.data,getImageDimensionCount()*sector_count);
+	allocateAndCopyToDeviceMem<IndType>(&sector_centers_d,(IndType*)this->getSectorCentersData(),getImageDimensionCount()*sector_count);
 	
 	if (this->applyDensComp())	
 	{
@@ -157,6 +157,7 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
 	if (DEBUG)
 		printf("creating cufft plan with %d,%d,%d dimensions\n",DEFAULT_VALUE(gi_host->gridDims.z),gi_host->gridDims.y,gi_host->gridDims.x);
 	cufftResult res = cufftPlan3d(&fft_plan, DEFAULT_VALUE(gi_host->gridDims.z),gi_host->gridDims.y,gi_host->gridDims.x, CufftTransformType) ;
+	//cufftResult res = cufftPlan2d(&fft_plan,gi_host->gridDims.y,gi_host->gridDims.x, CufftTransformType) ;
 	if (res != CUFFT_SUCCESS) 
 		fprintf(stderr,"error on CUFFT Plan creation!!! %d\n",res);
 	int err;
@@ -376,7 +377,7 @@ void GriddingND::GriddingOperator::performForwardGridding(GriddingND::Array<DTyp
 	allocateAndCopyToDeviceMem<IndType>(&sectors_d,this->sectorDataCount.data,sector_count+1);
 	if (DEBUG)
 		printf("allocate and copy sector_centers of size %d...\n",getImageDimensionCount()*sector_count);
-	allocateAndCopyToDeviceMem<IndType>(&sector_centers_d,(IndType*)this->sectorCenters.data,getImageDimensionCount()*sector_count);
+	allocateAndCopyToDeviceMem<IndType>(&sector_centers_d,(IndType*)this->getSectorCentersData(),getImageDimensionCount()*sector_count);
 	if (n_coils > 1)
 	{
 		if (DEBUG)
@@ -393,6 +394,7 @@ void GriddingND::GriddingOperator::performForwardGridding(GriddingND::Array<DTyp
 	if (DEBUG)
 		printf("creating cufft plan with %d,%d,%d dimensions\n",DEFAULT_VALUE(gi_host->gridDims.z),gi_host->gridDims.y,gi_host->gridDims.x);
 	cufftResult res = cufftPlan3d(&fft_plan, DEFAULT_VALUE(gi_host->gridDims.z),gi_host->gridDims.y,gi_host->gridDims.x, CufftTransformType) ;
+	//cufftResult res = cufftPlan2d(&fft_plan, gi_host->gridDims.y,gi_host->gridDims.x, CufftTransformType) ;
 	if (res != CUFFT_SUCCESS) 
 		printf("error on CUFFT Plan creation!!! %d\n",res);
 	int err;

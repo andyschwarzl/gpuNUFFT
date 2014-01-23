@@ -206,6 +206,12 @@ namespace GriddingND
 		Array<IndType3> getSectorCenters()	{return this->sectorCenters; }
 		Array<IndType2> getSectorCenters2D()	{return this->sectorCenters2D; }
 
+		IndType* getSectorCentersData() {if (this->is2DProcessing())
+											return reinterpret_cast<IndType*>(this->sectorCenters2D.data);
+										 else
+											 return reinterpret_cast<IndType*>(this->sectorCenters.data);
+										}
+
 		Array<IndType>  getDataIndices()		{return this->dataIndices;}
 
 		bool is2DProcessing() {return this->imgDims.depth == 0;}

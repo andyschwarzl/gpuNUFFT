@@ -32,7 +32,8 @@ void performDensityCompensation(DType2* data, DType* density_comp, GriddingND::G
 
 void performFFTShift(CufftType* gdata_d,
 					 GriddingND::FFTShiftDir shift_dir,
-					 int width);
+					 int width,
+					 GriddingND::GriddingInfo* gi_host);
 
 void performCrop(CufftType* gdata_d,
 				 CufftType* imdata_d,
@@ -42,8 +43,8 @@ void performDeapodization(CufftType* imdata_d,
 						 GriddingND::GriddingInfo* gi_host);
 
 void performDeapodization(CufftType* imdata_d,
-													DType* deapo_d,
-													GriddingND::GriddingInfo* gi_host);
+						  DType* deapo_d,
+						  GriddingND::GriddingInfo* gi_host);
 //FORWARD Operations
 
 void performForwardDeapodization(DType2* imdata_d,

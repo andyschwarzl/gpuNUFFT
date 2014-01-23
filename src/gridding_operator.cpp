@@ -200,7 +200,7 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
 		}
 		if ((cudaThreadSynchronize() != cudaSuccess))
 			fprintf(stderr,"error at adj thread synchronization 3: %s\n",cudaGetErrorString(cudaGetLastError()));
-		performFFTShift(gdata_d,INVERSE,gi_host->gridDims.x);
+		performFFTShift(gdata_d,INVERSE,gi_host->gridDims.x,gi_host);
 		
 		//Inverse FFT
 		if (err=pt2CufftExec(fft_plan, gdata_d, gdata_d, CUFFT_INVERSE) != CUFFT_SUCCESS)
@@ -233,7 +233,7 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
 		}
 		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
 			printf("error at adj thread synchronization 5: %s\n",cudaGetErrorString(cudaGetLastError()));
-		performFFTShift(gdata_d,INVERSE,gi_host->gridDims.x);
+		performFFTShift(gdata_d,INVERSE,gi_host->gridDims.x,gi_host);
 			
 		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
 			printf("error at adj thread synchronization 6: %s\n",cudaGetErrorString(cudaGetLastError()));
@@ -423,7 +423,7 @@ void GriddingND::GriddingOperator::performForwardGridding(GriddingND::Array<DTyp
 		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
 			printf("error at thread synchronization 3: %s\n",cudaGetErrorString(cudaGetLastError()));
 		// shift image to get correct zero frequency position
-		performFFTShift(gdata_d,INVERSE,gi_host->gridDims.x);
+		performFFTShift(gdata_d,INVERSE,gi_host->gridDims.x,gi_host);
 	
 		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
 			printf("error at thread synchronization 4: %s\n",cudaGetErrorString(cudaGetLastError()));
@@ -437,7 +437,7 @@ void GriddingND::GriddingOperator::performForwardGridding(GriddingND::Array<DTyp
 		
 		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
 			printf("error at thread synchronization 5: %s\n",cudaGetErrorString(cudaGetLastError()));
-		performFFTShift(gdata_d,FORWARD,gi_host->gridDims.x);
+		performFFTShift(gdata_d,FORWARD,gi_host->gridDims.x,gi_host);
 		
 		if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
 			printf("error at thread synchronization 6: %s\n",cudaGetErrorString(cudaGetLastError()));

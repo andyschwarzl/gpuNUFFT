@@ -148,10 +148,10 @@ inline GriddingND::GriddingInfo* initAndCopyGriddingInfo(int sector_count,
 	gi_host->im_width_offset = (int)(floor(imgDims.width / (DType)2.0));
 
 	gi_host->imgDims = IndType3(imgDims.width,imgDims.height,imgDims.depth);
-	gi_host->imgDims_count = imgDims.width*imgDims.height*imgDims.depth;
+	gi_host->imgDims_count = imgDims.width*imgDims.height*DEFAULT_VALUE(imgDims.depth);//TODO check why not imgDims.count()
 
 	gi_host->gridDims = IndType3(gridDims.width,gridDims.height,gridDims.depth);
-	gi_host->gridDims_count = gridDims.width*gridDims.height*gridDims.depth;
+	gi_host->gridDims_count = gridDims.width*gridDims.height*DEFAULT_VALUE(gridDims.depth);//s.a.
 
 	DType kernel_radius = static_cast<DType>(kernel_width) / (DType)2.0;
 	DType radius = kernel_radius / static_cast<DType>(gridDims.width);

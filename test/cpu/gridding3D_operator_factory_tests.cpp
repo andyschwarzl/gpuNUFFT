@@ -54,10 +54,10 @@ TEST(OperatorFactoryTest,TestInit)
 	IndType expected = 3*3*3;
 	EXPECT_EQ(expected,sectorDims.count());	
 
-	GriddingND::Array<IndType3> sectorCenters = griddingOp->getSectorCenters();
-	EXPECT_EQ(IndType3(4,4,4).x,sectorCenters.data[0].x);
-	EXPECT_EQ(IndType3(4,4,4).y,sectorCenters.data[0].y);
-	EXPECT_EQ(IndType3(4,4,4).z,sectorCenters.data[0].z);
+	GriddingND::Array<IndType> sectorCenters = griddingOp->getSectorCenters();
+	EXPECT_EQ(IndType3(4,4,4).x,sectorCenters.data[0]);
+	EXPECT_EQ(IndType3(4,4,4).y,sectorCenters.data[1]);
+	EXPECT_EQ(IndType3(4,4,4).z,sectorCenters.data[2]);
 
 	GriddingND::Array<IndType> dataIndices = griddingOp->getDataIndices();
 	IndType expectedSecIndexSorted[6] = {0,4,1,2,3,5};
@@ -143,9 +143,9 @@ TEST(OperatorFactoryTest,Test2DInit)
 	IndType expected = 3*3;
 	EXPECT_EQ(expected,sectorDims.count());	
 	
-	GriddingND::Array<IndType2> sectorCenters = griddingOp->getSectorCenters2D();
-	EXPECT_EQ(IndType2(4,4).x,sectorCenters.data[0].x);
-	EXPECT_EQ(IndType2(4,4).y,sectorCenters.data[0].y);
+	GriddingND::Array<IndType> sectorCenters = griddingOp->getSectorCenters();
+	EXPECT_EQ(IndType2(4,4).x,sectorCenters.data[0]);
+	EXPECT_EQ(IndType2(4,4).y,sectorCenters.data[1]);
 	/*
 	GriddingND::Array<IndType> dataIndices = griddingOp->getDataIndices();
 	IndType expectedSecIndexSorted[6] = {0,4,1,2,3,5};

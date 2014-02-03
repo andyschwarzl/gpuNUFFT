@@ -41,8 +41,8 @@ namespace GriddingND
 		virtual Array<IndType> initSectorDataCount(GriddingOperator* griddingOp, IndType coordCnt);
 		virtual Array<DType> initDensData(GriddingOperator* griddingOp, IndType coordCnt);
 		virtual Array<DType> initCoordsData(GriddingOperator* griddingOp, IndType coordCnt);
-		virtual Array<IndType3> initSectorCenters(GriddingOperator* griddingOp, IndType sectorCnt);
-		virtual Array<IndType2> initSectorCenters2D(GriddingOperator* griddingOp, IndType sectorCnt);
+		virtual Array<IndType> initSectorCenters(GriddingOperator* griddingOp, IndType sectorCnt);
+		virtual Array<IndType> initSectorCenters2D(GriddingOperator* griddingOp, IndType sectorCnt);
 		virtual void debug(const std::string& message);
 
 		IndType computeSectorMapping(DType coord, IndType sectorCount);
@@ -70,8 +70,8 @@ namespace GriddingND
 
 		Array<IndType> computeSectorDataCount(GriddingND::GriddingOperator *griddingOp,GriddingND::Array<IndType> assignedSectors);
 
-		Array<IndType3> computeSectorCenters(GriddingOperator *griddingOp);
-		Array<IndType2> computeSectorCenters2D(GriddingOperator *griddingOp);
+		Array<IndType> computeSectorCenters(GriddingOperator *griddingOp);
+		Array<IndType> computeSectorCenters2D(GriddingOperator *griddingOp);
 
 		IndType computeSectorCenter(IndType var, IndType sectorWidth);
 

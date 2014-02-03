@@ -176,8 +176,7 @@ namespace GriddingND
         void setOsf(DType osf)			{this->osf = osf;}
 
         void setKSpaceTraj(Array<DType> kSpaceTraj)				{this->kSpaceTraj = kSpaceTraj;}
-        void setSectorCenters(Array<IndType3> sectorCenters)	{this->sectorCenters = sectorCenters;}
-		void setSectorCenters2D(Array<IndType2> sectorCenters2D)	{this->sectorCenters2D = sectorCenters2D;}
+        void setSectorCenters(Array<IndType> sectorCenters)		{this->sectorCenters = sectorCenters;}
         void setSectorDataCount(Array<IndType> sectorDataCount)	{this->sectorDataCount = sectorDataCount;}
 		void setDataIndices(Array<IndType> dataIndices)			{this->dataIndices = dataIndices;}
 		void setSens(Array<DType2> sens)						{this->sens = sens;}
@@ -203,14 +202,8 @@ namespace GriddingND
 		Dimensions getGridSectorDims() {return this->gridSectorDims;}
 		Dimensions getSectorDims() {return this->sectorDims;}
 
-		Array<IndType3> getSectorCenters()	{return this->sectorCenters; }
-		Array<IndType2> getSectorCenters2D()	{return this->sectorCenters2D; }
-
-		IndType* getSectorCentersData() {if (this->is2DProcessing())
-											return reinterpret_cast<IndType*>(this->sectorCenters2D.data);
-										 else
-											 return reinterpret_cast<IndType*>(this->sectorCenters.data);
-										}
+		Array<IndType> getSectorCenters() {return this->sectorCenters;}
+		IndType* getSectorCentersData() {return reinterpret_cast<IndType*>(this->sectorCenters.data);}
 
 		Array<IndType>  getDataIndices()		{return this->dataIndices;}
 
@@ -258,9 +251,7 @@ namespace GriddingND
 		Array<DType> dens;
 
 		// sector centers
-		Array<IndType3> sectorCenters;
-
-		Array<IndType2> sectorCenters2D;
+		Array<IndType> sectorCenters;
 
 		// dataCount per sector
 		Array<IndType> sectorDataCount;

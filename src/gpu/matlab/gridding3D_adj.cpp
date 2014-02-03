@@ -76,7 +76,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	GriddingND::Array<IndType> sectorDataCountArray = readAndCreateArray<IndType>(prhs,pcount++,0,"sector-data-count");
 
 	// Sector centers
-	GriddingND::Array<IndType3> sectorCentersArray = readAndCreateArray<IndType3>(prhs,pcount++,3,"sector-centers");
+	GriddingND::Array<IndType> sectorCentersArray = readAndCreateArray<IndType>(prhs,pcount++,3,"sector-centers");
 
 	// Density compensation
 	GriddingND::Array<DType> density_compArray = readAndCreateArray<DType>(prhs, pcount++, 0,"density-comp");

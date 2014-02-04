@@ -70,7 +70,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	if (!mxIsStruct (matParams))
          mexErrMsgTxt ("expects struct containing parameters!");
 
-	int im_width = getParamField<int>(matParams,"im_width");
+	GriddingND::Dimensions imgDims = getDimensionsFromParamField(matParams,"img_dims");
 	DType osr = getParamField<DType>(matParams,"osr"); 
 	int kernel_width = getParamField<int>(matParams,"kernel_width");
 	int sector_width = getParamField<int>(matParams,"sector_width");
@@ -78,7 +78,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 		
 	if (MATLAB_DEBUG)
 	{
-		mexPrintf("passed Params, IM_WIDTH: %d, OSR: %f, KERNEL_WIDTH: %d, SECTOR_WIDTH: %d dens_count: %d sens_count: %d traj_len: %d\n",im_width,osr,kernel_width,sector_width,density_compArray.count(),sensArray.count(),traj_length);
+		mexPrintf("passed Params, IM_WIDTH: [%d,%d,%d], OSR: %f, KERNEL_WIDTH: %d, SECTOR_WIDTH: %d dens_count: %d sens_count: %d traj_len: %d\n",imgDims.width,imgDims.height,imgDims.depth,osr,kernel_width,sector_width,density_compArray.count(),sensArray.count(),traj_length);
 		size_t free_mem = 0;
 		size_t total_mem = 0;
 		cudaMemGetInfo(&free_mem, &total_mem);
@@ -94,12 +94,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     GriddingND::Array<DType> kSpaceTraj;
     kSpaceTraj.data = coords;
     kSpaceTraj.dim.length = traj_length;
-
-	GriddingND::Dimensions imgDims;
-	imgDims.width = im_width;
-	imgDims.height = im_width;
-	imgDims.depth = im_width;
-
+	
 	try
 	{
 		GriddingND::GriddingOperatorMatlabFactory factory = GriddingND::GriddingOperatorMatlabFactory::getInstance();

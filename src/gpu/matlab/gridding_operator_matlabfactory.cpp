@@ -40,9 +40,9 @@ mxArray* createCoordsArray(const IndType arrSize)
 	return mxCreateNumericArray(2,coordSize,mxSINGLE_CLASS,mxREAL);
 }
 
-mxArray* createSectorCentersArray(const IndType arrSize)
+mxArray* createSectorCentersArray(const IndType arrSize, const IndType nDim)
 {
-	mwSize secSize[] = {3,arrSize};//IndType3
+	mwSize secSize[] = {nDim,arrSize};//IndType3
 	return mxCreateNumericArray(2,secSize,mxUINT64_CLASS,mxREAL);
 }
 
@@ -80,7 +80,7 @@ GriddingND::Array<IndType> GriddingND::GriddingOperatorMatlabFactory::initSector
 {
 	if (MATLAB_DEBUG)
 		mexPrintf("init Sector Centers Output Array: %d\n",sectorCnt);
-	plhs[4] = createSectorCentersArray(sectorCnt);
+	plhs[4] = createSectorCentersArray(sectorCnt,3);
 
 	GriddingND::Array<IndType> sectorCenters;
 	sectorCenters.data = (IndType*)mxGetData(plhs[4]);
@@ -92,7 +92,7 @@ GriddingND::Array<IndType> GriddingND::GriddingOperatorMatlabFactory::initSector
 {
 	if (MATLAB_DEBUG)
 		mexPrintf("init Sector Centers Output Array: %d\n",sectorCnt);
-	plhs[4] = createSectorCentersArray(sectorCnt);
+	plhs[4] = createSectorCentersArray(sectorCnt,2);
 
 	GriddingND::Array<IndType> sectorCenters;
 	sectorCenters.data = (IndType*)mxGetData(plhs[4]);

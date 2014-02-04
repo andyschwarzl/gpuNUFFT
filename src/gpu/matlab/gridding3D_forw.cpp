@@ -71,7 +71,9 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	GriddingND::Array<IndType> sectorDataCountArray = readAndCreateArray<IndType>(prhs,pcount++,0,"sector-data-count");
 
 	// Sector centers
-	GriddingND::Array<IndType> sectorCentersArray = readAndCreateArray<IndType>(prhs,pcount++,3,"sector-centers");
+	GriddingND::Array<IndType> sectorCentersArray = readAndCreateArray<IndType>(prhs,pcount++,0,"sector-centers");
+
+	mexPrintf("1st sector center: [%d,%d]\n", sectorCentersArray.data[0],sectorCentersArray.data[1]);
 
 	//TODO Sens array	
 	GriddingND::Array<DType2>  sensArray;
@@ -83,7 +85,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	if (!mxIsStruct (matParams))
          mexErrMsgTxt ("expects struct containing parameters!");
 
-	int im_width = getParamField<int>(matParams,"im_width");
+	GriddingND::Dimensions imgDims = getDimensionsFromParamField(matParams,"img_dims");
 	DType osr = getParamField<DType>(matParams,"osr"); 
 	int kernel_width = getParamField<int>(matParams,"kernel_width");
 	int sector_width = getParamField<int>(matParams,"sector_width");
@@ -91,9 +93,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	
 	GriddingND::Array<DType2> imdataArray;
 	imdataArray.data = imdata;
-	imdataArray.dim.width = (IndType)im_width;
-	imdataArray.dim.height = (IndType)im_width;
-	imdataArray.dim.depth = (IndType)im_width;
+	imdataArray.dim = imgDims;
 	imdataArray.dim.channels = n_coils;
 
 	if (MATLAB_DEBUG)
@@ -103,7 +103,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 		mexPrintf("sector data count: %d\n",sectorDataCountArray.count());
 		mexPrintf("centers count: %d\n",sectorCentersArray.count());
 
-		mexPrintf("passed Params, IM_WIDTH: %d, IM_COUNT: %d, OSR: %f, KERNEL_WIDTH: %d, SECTOR_WIDTH: %d, DATA_ENTRIES: %d, n_coils: %d\n",im_width,im_count,osr,kernel_width,sector_width,data_entries,n_coils);
+		mexPrintf("passed Params, IM_WIDTH: [%d,%d,%d], IM_COUNT: %d, OSR: %f, KERNEL_WIDTH: %d, SECTOR_WIDTH: %d, DATA_ENTRIES: %d, n_coils: %d\n",imgDims.width,imgDims.height,imgDims.depth,im_count,osr,kernel_width,sector_width,data_entries,n_coils);
 		size_t free_mem = 0;
 		size_t total_mem = 0;
 		cudaMemGetInfo(&free_mem, &total_mem);
@@ -128,11 +128,6 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	dataArray.data = data;
 	dataArray.dim.length = data_entries;
 	dataArray.dim.channels = n_coils;
-
-	GriddingND::Dimensions imgDims;
-	imgDims.width = imdataArray.dim.width;
-	imgDims.height = imdataArray.dim.height;
-	imgDims.depth = imdataArray.dim.depth;
 
 	try
 	{

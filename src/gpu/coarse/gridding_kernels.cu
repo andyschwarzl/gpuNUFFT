@@ -144,6 +144,7 @@ __global__ void convolutionKernel(DType2* data,
 		__syncthreads();
 		sec = sec + gridDim.x;
 	}//sec < sector_count
+
 }
 
 __global__ void convolutionKernel2D(DType2* data, 
@@ -160,11 +161,11 @@ __global__ void convolutionKernel2D(DType2* data,
 	int sec;
 	sec = blockIdx.x;
 	//init shared memory
-		int y=threadIdx.y;
-		int x=threadIdx.x;
-		int s_ind = getIndex2D(x,y,GI.sector_pad_width) ;
-		sdata[s_ind].x = 0.0f;//Re
-		sdata[s_ind].y = 0.0f;//Im
+	int y=threadIdx.y;
+	int x=threadIdx.x;
+	int s_ind = getIndex2D(x,y,GI.sector_pad_width) ;
+	sdata[s_ind].x = 0.0f;//Re
+	sdata[s_ind].y = 0.0f;//Im
 	__syncthreads();
 	//start convolution
 	while (sec < N)
@@ -230,20 +231,22 @@ __global__ void convolutionKernel2D(DType2* data,
 			data_cnt++;
 		} //grid points per sector
 		__syncthreads();	
-    //write shared data to temporary output grid
+		
+		//write shared data to temporary output grid
 		int sector_ind_offset = sec * GI.sector_dim;
 		
-			i=threadIdx.x;
-			j=threadIdx.y;
+		i=threadIdx.x;
+		j=threadIdx.y;
 			
-			int s_ind = getIndex2D(i,j,GI.sector_pad_width) ;//index in shared grid
-			ind = sector_ind_offset + s_ind;//index in temp output grid
+		int s_ind = getIndex2D(i,j,GI.sector_pad_width) ;//index in shared grid
+		ind = sector_ind_offset + s_ind;//index in temp output grid
 			
-			temp_gdata[ind].x = sdata[s_ind].x;//Re
-			temp_gdata[ind].y = sdata[s_ind].y;//Im
-			__syncthreads();
-			sdata[s_ind].x = (DType)0.0;
-			sdata[s_ind].y = (DType)0.0;
+		temp_gdata[ind].x = sdata[s_ind].x;//Re
+		temp_gdata[ind].y = sdata[s_ind].y;//Im
+
+		__syncthreads();
+		sdata[s_ind].x = (DType)0.0;
+		sdata[s_ind].y = (DType)0.0;
     
 		__syncthreads();
 		sec = sec + gridDim.x;
@@ -301,21 +304,21 @@ __global__ void composeOutputKernel2D(DType2* temp_gdata, CufftType* gdata, IndT
 		__shared__ int sector_grid_offset;
 		sector_grid_offset = sec * GI.sector_dim;
 		//write data from temp grid to overall output grid
-			int x=threadIdx.x;
-			int y=threadIdx.y;
-			int s_ind = (sector_grid_offset + getIndex2D(x,y,GI.sector_pad_width));
+		int x=threadIdx.x;
+		int y=threadIdx.y;
+		int s_ind = (sector_grid_offset + getIndex2D(x,y,GI.sector_pad_width));
 
-			int ind;
-			if (isOutlier2D(x,y,center.x,center.y,GI.gridDims.x,GI.sector_offset))
-				//calculate opposite index
-				ind = getIndex2D(calculateOppositeIndex(x,center.x,GI.gridDims.x,GI.sector_offset),
-													 calculateOppositeIndex(y,center.y,GI.gridDims.x,GI.sector_offset),
-													 GI.gridDims.x);
-			else
-				ind = (sector_ind_offset + getIndex2D(x,y,GI.gridDims.x));
+		int ind;
+		if (isOutlier2D(x,y,center.x,center.y,GI.gridDims.x,GI.sector_offset))
+			//calculate opposite index
+			ind = getIndex2D(calculateOppositeIndex(x,center.x,GI.gridDims.x,GI.sector_offset),
+													calculateOppositeIndex(y,center.y,GI.gridDims.x,GI.sector_offset),
+													GI.gridDims.x);
+		else
+			ind = (sector_ind_offset + getIndex2D(x,y,GI.gridDims.x));
 			
-			gdata[ind].x += temp_gdata[s_ind].x;//Re
-			gdata[ind].y += temp_gdata[s_ind].y;//Im			
+		gdata[ind].x += temp_gdata[s_ind].x;//Re
+		gdata[ind].y += temp_gdata[s_ind].y;//Im			
 	}
 }
 

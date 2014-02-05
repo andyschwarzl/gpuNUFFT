@@ -1,6 +1,8 @@
 
 #include "gridding_operator_factory.hpp"
 #include <iostream>
+#include <cmath>
+#include <stdexcept>
 
 GriddingND::GriddingOperatorFactory GriddingND::GriddingOperatorFactory::instance;
 

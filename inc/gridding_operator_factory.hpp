@@ -6,6 +6,7 @@
 #include <algorithm>    // std::sort
 #include <vector>       // std::vector
 #include <string>
+#include <cmath>
 
 #include "cuda_utils.hpp"
 

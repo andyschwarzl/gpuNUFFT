@@ -10,6 +10,9 @@
 #include <vector>       // std::vector
 #include <map>
 
+#include <cmath>
+#include <stdexcept>
+
 #define EPS 0.0001
 
 TEST(OperatorFactoryTest,TestInit)

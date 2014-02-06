@@ -147,10 +147,14 @@ inline GriddingND::GriddingInfo* initAndCopyGriddingInfo(int sector_count,
 	gi_host->im_width_dim = imgDims.count();
 	gi_host->im_width_offset = (int)(floor(imgDims.width / (DType)2.0));
 
-	gi_host->imgDims = IndType3(imgDims.width,imgDims.height,imgDims.depth);
+	gi_host->imgDims.x = imgDims.width;
+	gi_host->imgDims.y = imgDims.height;
+	gi_host->imgDims.z = imgDims.depth;
 	gi_host->imgDims_count = imgDims.width*imgDims.height*DEFAULT_VALUE(imgDims.depth);//TODO check why not imgDims.count()
 
-	gi_host->gridDims = IndType3(gridDims.width,gridDims.height,gridDims.depth);
+	gi_host->gridDims.x = gridDims.width;
+	gi_host->gridDims.y = gridDims.height;
+	gi_host->gridDims.z = gridDims.depth;
 	gi_host->gridDims_count = gridDims.width*gridDims.height*DEFAULT_VALUE(gridDims.depth);//s.a.
 
 	DType kernel_radius = static_cast<DType>(kernel_width) / (DType)2.0;
@@ -187,7 +191,7 @@ inline GriddingND::GriddingInfo* initAndCopyGriddingInfo(int sector_count,
 	gi_host->is2Dprocessing = is2Dprocessing;
 	
 	if (DEBUG)
-		printf("copy Gridding Info to symbol memory... size = %d \n",sizeof(GriddingND::GriddingInfo));
+		printf("copy Gridding Info to symbol memory... size = %ld \n",sizeof(GriddingND::GriddingInfo));
 
 	initConstSymbol("GI",gi_host,sizeof(GriddingND::GriddingInfo));
 

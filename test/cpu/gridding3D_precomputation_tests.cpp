@@ -629,9 +629,9 @@ TEST(PrecomputationTest, ComputeSectorCenters) {
 		std::cout << " x: " << sectorCenters.data[i].x << " y: " << sectorCenters.data[i].y << " z: " << sectorCenters.data[i].z << std::endl;
 	}
 
-	EXPECT_EQ(IndType3(4,4,4).x,sectorCenters.data[0].x);
-	EXPECT_EQ(IndType3(4,4,4).y,sectorCenters.data[0].y);
-	EXPECT_EQ(IndType3(4,4,4).z,sectorCenters.data[0].z);
+	EXPECT_EQ(4,sectorCenters.data[0].x);
+	EXPECT_EQ(4,sectorCenters.data[0].y);
+	EXPECT_EQ(4,sectorCenters.data[0].z);
 
 	free(sectorCenters.data);
 }

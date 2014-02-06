@@ -43,15 +43,19 @@ w = abs(rho);
 w = repmat(w, [1, numSpokes,1]);
 w_mc = reshape(repmat(w(:),[1 n_chn]),[size(w), n_chn]);
 %%
-FT = GRIDDING3D(k_traj,w,imwidth,osf,wg,sw,[trimmed_size trimmed_size trimmed_size],'false');
-
+disp('init');
+tic
+FT = GRIDDING3D(k_traj,w,imwidth,osf,wg,sw,[trimmed_size trimmed_size trimmed_size],'true');
+toc
 %% generate radial data
+disp('inverse');
 tic
 dataRadial = inversegrid_multicoil_gpu(img_a,FT,2*nPE,numSpokes);
 toc
 %dataRadial = reshape(dataRadial, [2*nPE*numSpokes n_chn]);
 dataRadial_dc = dataRadial;%.*w_mc;%v2
 %% recon
+disp('regrid');
 tic
 imgRegrid_kb_dc = regrid_multicoil_gpu(reshape(dataRadial_dc,[size(k),chn]),FT);
 toc

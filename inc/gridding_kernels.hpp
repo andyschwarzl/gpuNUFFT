@@ -12,7 +12,7 @@ void performConvolution( DType2* data_d,
 						 DType* kernel_d, 
 						 IndType* sectors_d, 
 						 IndType* sector_centers_d,
-						 GriddingInfo* gi_host
+						 GriddingND::GriddingInfo* gi_host
 						);
 																	
 void performForwardConvolution( CufftType*		data_d, 
@@ -21,43 +21,44 @@ void performForwardConvolution( CufftType*		data_d,
 								DType*			kernel_d, 
 								IndType*		sectors_d, 
 								IndType*		sector_centers_d,
-								GriddingInfo*	gi_host
+								GriddingND::GriddingInfo*	gi_host
 								);
 
 void performFFTScaling(CufftType* data,
 	                   int N, 
-					   GriddingInfo* gi_host);
+					   GriddingND::GriddingInfo* gi_host);
 
-void performDensityCompensation(DType2* data, DType* density_comp, GriddingInfo* gi_host);
+void performDensityCompensation(DType2* data, DType* density_comp, GriddingND::GriddingInfo* gi_host);
 
 void performFFTShift(CufftType* gdata_d,
-					 FFTShiftDir shift_dir,
-					 int width);
+					 GriddingND::FFTShiftDir shift_dir,
+					 int width,
+					 GriddingND::GriddingInfo* gi_host);
 
 void performCrop(CufftType* gdata_d,
 				 CufftType* imdata_d,
-				 GriddingInfo* gi_host);
+				 GriddingND::GriddingInfo* gi_host);
 
 void performDeapodization(CufftType* imdata_d,
-						 GriddingInfo* gi_host);
+						 GriddingND::GriddingInfo* gi_host);
 
 void performDeapodization(CufftType* imdata_d,
-													DType* deapo_d,
-													GriddingInfo* gi_host);
+						  DType* deapo_d,
+						  GriddingND::GriddingInfo* gi_host);
 //FORWARD Operations
 
 void performForwardDeapodization(DType2* imdata_d,
-								 GriddingInfo* gi_host);
+								 GriddingND::GriddingInfo* gi_host);
 
 void performForwardDeapodization(DType2* imdata_d,
 								 DType* deapo_d,
-								 GriddingInfo* gi_host);
+								 GriddingND::GriddingInfo* gi_host);
 
 void performPadding(DType2* imdata_d,
 					CufftType* gdata_d,					
-					GriddingInfo* gi_host);
+					GriddingND::GriddingInfo* gi_host);
 
 void precomputeDeapodization(DType* deapo_d,
-							 GriddingInfo* gi_host);
+							 GriddingND::GriddingInfo* gi_host);
 
 #endif

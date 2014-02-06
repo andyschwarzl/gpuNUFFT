@@ -34,7 +34,8 @@ namespace GriddingND
 	  //abstract methods from GriddingOperatorFactory
 	  Array<IndType> initDataIndices(GriddingOperator* griddingOp, IndType coordCnt);
 	  Array<DType> initCoordsData(GriddingOperator* griddingOp, IndType coordCnt);
-	  Array<IndType3> initSectorCenters(GriddingOperator* griddingOp, IndType sectorCnt);
+	  Array<IndType> initSectorCenters(GriddingOperator* griddingOp, IndType sectorCnt);
+	  Array<IndType> initSectorCenters2D(GriddingOperator* griddingOp, IndType sectorCnt);
 	  Array<IndType> initSectorDataCount(GriddingOperator* griddingOp, IndType dataCount);
 	  Array<DType> initDensData(GriddingOperator* griddingOp, IndType coordCnt);
 
@@ -56,8 +57,8 @@ namespace GriddingND
         static GriddingOperatorMatlabFactory& getInstance();
         
 		GriddingOperator* createGriddingOperator(Array<DType>& kSpaceTraj, Array<DType>& densCompData, Array<DType2>& sensData, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, Dimensions& imgDims,mxArray *plhs[]);
-		GriddingOperator* loadPrecomputedGriddingOperator(Array<DType>& kSpaceTraj, Array<IndType>& dataIndices, Array<IndType>& sectorDataCount,Array<IndType3>& sectorCenters, Array<DType>& densCompData, Array<DType2>& sensData, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, Dimensions& imgDims);
-		GriddingOperator* loadPrecomputedGriddingOperator(Array<DType>& kSpaceTraj, Array<IndType>& dataIndices, Array<IndType>& sectorDataCount,Array<IndType3>& sectorCenters, Array<DType2>& sensData, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, Dimensions& imgDims);
+		GriddingOperator* loadPrecomputedGriddingOperator(Array<DType>& kSpaceTraj, Array<IndType>& dataIndices, Array<IndType>& sectorDataCount,Array<IndType>& sectorCenters, Array<DType>& densCompData, Array<DType2>& sensData, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, Dimensions& imgDims);
+		GriddingOperator* loadPrecomputedGriddingOperator(Array<DType>& kSpaceTraj, Array<IndType>& dataIndices, Array<IndType>& sectorDataCount,Array<IndType>& sectorCenters, Array<DType2>& sensData, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, Dimensions& imgDims);
 	private:
 		static GriddingOperatorMatlabFactory instance;
 

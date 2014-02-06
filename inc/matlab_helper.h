@@ -113,4 +113,16 @@ inline TType getParamField(const mxArray* params, const char* fieldname)
 	}
 }
 
+inline GriddingND::Dimensions getDimensionsFromParamField(const mxArray* params, const char* fieldname)
+{
+	const mxArray* data = mxGetField(params, 0, fieldname);
+	GriddingND::Dimensions dim; 
+	int* dims = (int*)mxGetData(data);
+	dim.width = dims[0];
+	dim.height = dims[1];
+	dim.depth = dims[2];
+	return dim;
+}
+
+
 #endif

@@ -30,6 +30,14 @@ namespace GriddingND
             width(0),height(0),depth(0),channels(1),frames(1),length(0)
         {}
 
+		Dimensions(IndType width, IndType height, IndType depth):
+            width(width),height(height),depth(depth),channels(1),frames(1),length(0)
+        {}
+
+		Dimensions(IndType width, IndType height):
+            width(width),height(height),depth(0),channels(1),frames(1),length(0)
+        {}
+
         IndType width  ;
         IndType height ;
         IndType depth  ;
@@ -53,6 +61,20 @@ namespace GriddingND
 			res.length = (IndType)((*this).length * alpha);
 			return res;
 		}
+
+		Dimensions operator+(const IndType alpha)
+		{
+			Dimensions res;
+			if (this->width > 0)
+				res.width = (IndType)((*this).width + alpha);
+			if (this->height > 0)
+				res.height = (IndType)((*this).height + alpha);
+			if (this->depth > 0)
+				res.depth = (IndType)((*this).depth + alpha);
+			if (this->length > 0)
+				res.length = (IndType)((*this).length + alpha);
+			return res;
+		}
     };
 
     template <typename T>
@@ -71,6 +93,58 @@ namespace GriddingND
 
 	};
 
+	enum GriddingOutput
+	{
+		CONVOLUTION,
+		FFT,
+		DEAPODIZATION
+	};
+
+	enum FFTShiftDir
+	{
+		FORWARD,
+		INVERSE
+	};
+
+	struct GriddingInfo 
+	{
+		int data_count;
+		int kernel_width; 
+		int kernel_widthSquared;
+		DType kernel_widthInvSquared;
+		int kernel_count;
+		DType kernel_radius;
+
+		int grid_width_dim;  
+		int grid_width_offset;
+		DType grid_width_inv;
+
+		int im_width_dim;
+		int im_width_offset;
+
+		DType osr;
+	
+		int sector_count;
+		int sector_width;
+		int sector_dim;
+
+		int sector_pad_width;
+		int sector_pad_max;
+		int sector_offset;
+
+		DType radiusSquared;
+		DType dist_multiplier;
+
+		IndType3 imgDims;
+		IndType imgDims_count;
+
+		IndType3 gridDims;
+		IndType gridDims_count;
+
+		bool is2Dprocessing;
+	};
+
+
 	class GriddingOperator 
 	{
 		public:
@@ -79,16 +153,15 @@ namespace GriddingND
 		{
         }
 
-		GriddingOperator(IndType kernelWidth, IndType sectorWidth, DType osf): 
-		osf(osf), kernelWidth(kernelWidth), sectorWidth(sectorWidth)
-		{
-			initKernel();	
-        }
-
 		GriddingOperator(IndType kernelWidth, IndType sectorWidth, DType osf, Dimensions imgDims): 
 		osf(osf), kernelWidth(kernelWidth), sectorWidth(sectorWidth),imgDims(imgDims)
 		{
 			initKernel();	
+			
+			sectorDims.width = sectorWidth;
+			sectorDims.height = sectorWidth;
+			if (imgDims.depth > 0)
+				sectorDims.depth = sectorWidth;
         }
 
 		~GriddingOperator()
@@ -103,14 +176,14 @@ namespace GriddingND
         void setOsf(DType osf)			{this->osf = osf;}
 
         void setKSpaceTraj(Array<DType> kSpaceTraj)				{this->kSpaceTraj = kSpaceTraj;}
-        void setSectorCenters(Array<IndType3> sectorCenters)	{this->sectorCenters = sectorCenters;}
+        void setSectorCenters(Array<IndType> sectorCenters)		{this->sectorCenters = sectorCenters;}
         void setSectorDataCount(Array<IndType> sectorDataCount)	{this->sectorDataCount = sectorDataCount;}
 		void setDataIndices(Array<IndType> dataIndices)			{this->dataIndices = dataIndices;}
 		void setSens(Array<DType2> sens)						{this->sens = sens;}
 		void setDens(Array<DType> dens)							{this->dens = dens;}
 
 		void setImageDims(Dimensions dims)						{this->imgDims = dims;}
-		void setSectorDims(Dimensions dims)						{this->sectorDims = dims;}
+		void setGridSectorDims(Dimensions dims)						{this->gridSectorDims = dims;}
 
 		// GETTER
         Array<DType>  getKSpaceTraj()	{return this->kSpaceTraj;}
@@ -126,11 +199,18 @@ namespace GriddingND
 		Dimensions getImageDims() {return this->imgDims;}
 		Dimensions getGridDims() {return this->imgDims * osf;}
 
+		Dimensions getGridSectorDims() {return this->gridSectorDims;}
 		Dimensions getSectorDims() {return this->sectorDims;}
 
-		Array<IndType3> getSectorCenters()	{return this->sectorCenters; }
+		Array<IndType> getSectorCenters() {return this->sectorCenters;}
+		IndType* getSectorCentersData() {return reinterpret_cast<IndType*>(this->sectorCenters.data);}
 
 		Array<IndType>  getDataIndices()		{return this->dataIndices;}
+
+		bool is2DProcessing() {return this->imgDims.depth == 0;}
+		bool is3DProcessing() {return !is2DProcessing();}
+
+		int getImageDimensionCount() {return (is2DProcessing() ? 2 : 3);}
 
 		// OPERATIONS
 
@@ -171,7 +251,7 @@ namespace GriddingND
 		Array<DType> dens;
 
 		// sector centers
-		Array<IndType3> sectorCenters;
+		Array<IndType> sectorCenters;
 
 		// dataCount per sector
 		Array<IndType> sectorDataCount;
@@ -190,6 +270,10 @@ namespace GriddingND
 
 		Dimensions imgDims;
 
+		// amount of sectors per grid direction
+		Dimensions gridSectorDims;
+
+		// size of one sector in grid
 		Dimensions sectorDims;
 
 		template <typename T>

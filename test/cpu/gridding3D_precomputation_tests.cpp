@@ -10,6 +10,9 @@
 #include <vector>       // std::vector
 #include <map>
 
+#include <cmath>
+#include <stdexcept>
+
 #define EPS 0.0001
 
 IndType computeSectorCountPerDimension(IndType dim, IndType sectorWidth)
@@ -74,6 +77,19 @@ TEST(PrecomputationTest, ComputeIsotropicSectorDim) {
 	GriddingND::Dimensions sectorDims = computeSectorCountPerDimension(gridDim,sectorWidth);
 
 	EXPECT_EQ(expected,sectorDims.count());
+}
+
+TEST(PrecomputationTest, testAddScalarToDimension)
+{
+	GriddingND::Dimensions d;
+	d.width = 10;
+	d.height = 10;
+
+	d = d + 3;
+
+	EXPECT_EQ(13,d.width);
+	EXPECT_EQ(13,d.height);
+	EXPECT_EQ(0,d.depth);
 }
 
 TEST(PrecomputationTest, ComputeAnisotropicSectorDim) {
@@ -613,9 +629,9 @@ TEST(PrecomputationTest, ComputeSectorCenters) {
 		std::cout << " x: " << sectorCenters.data[i].x << " y: " << sectorCenters.data[i].y << " z: " << sectorCenters.data[i].z << std::endl;
 	}
 
-	EXPECT_EQ(IndType3(4,4,4).x,sectorCenters.data[0].x);
-	EXPECT_EQ(IndType3(4,4,4).y,sectorCenters.data[0].y);
-	EXPECT_EQ(IndType3(4,4,4).z,sectorCenters.data[0].z);
+	EXPECT_EQ(4,sectorCenters.data[0].x);
+	EXPECT_EQ(4,sectorCenters.data[0].y);
+	EXPECT_EQ(4,sectorCenters.data[0].z);
 
 	free(sectorCenters.data);
 }

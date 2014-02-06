@@ -27,6 +27,15 @@ elseif nargin > 8
     E = varargin{2};    
 end
 
+%check input size of imageDims
+if (length(imageDim) > 3)
+    error('GRIDDING3D:init:imageDims','Image dimensions too large. Currently supported: 2d, 3d');
+end
+
+if (length(imageDim) < 3) 
+    imageDim(3) = 0;
+end
+
 res.method = method;
 res.adjoint = 0;
 res.imageDim = imageDim;
@@ -47,11 +56,15 @@ if strcmp(method,'gridding')
     
     %res.op = gridding3D_init(k,n,osf,sw,w);
 
-    res.op.params.im_width = uint32(n);
+%     res.op.params.im_width = uint32(imageDim(1));
+%     res.op.params.im_height = uint32(imageDim(2));
+%     res.op.params.im_depth = uint32(imageDim(3));
+    res.op.params.img_dims = uint32(imageDim);
     res.op.params.osr = single(osf);
     res.op.params.kernel_width = uint32(wg);
     res.op.params.sector_width = uint32(sw);
     res.op.params.trajectory_length = uint32(length(k));
+    res.op.params.is2d_processing = imageDim(3) == 0;
     
     [res.op.dataIndices,res.op.sectorDataCount,res.op.densSorted,res.op.coords,res.op.sectorCenters] = mex_griddingND_precomp_f(single(k)',single(w)',[],res.op.params);
     res.op.atomic = atomic;

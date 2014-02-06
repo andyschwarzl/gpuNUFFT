@@ -6,6 +6,9 @@
 #include <algorithm>    // std::sort
 #include <vector>       // std::vector
 #include <string>
+#include <cmath>
+
+#include "cuda_utils.hpp"
 
 namespace GriddingND
 {
@@ -27,7 +30,7 @@ namespace GriddingND
 
 		~GriddingOperatorFactory()
 		{
-		std::cout << "GOF destruct " << std::endl;
+			std::cout << "GOF destruct " << std::endl;
 		}
 
 		Array<IndType> assignSectors(GriddingOperator* griddingOp, Array<DType>& kSpaceTraj);
@@ -39,18 +42,23 @@ namespace GriddingND
 		virtual Array<IndType> initSectorDataCount(GriddingOperator* griddingOp, IndType coordCnt);
 		virtual Array<DType> initDensData(GriddingOperator* griddingOp, IndType coordCnt);
 		virtual Array<DType> initCoordsData(GriddingOperator* griddingOp, IndType coordCnt);
-		virtual Array<IndType3> initSectorCenters(GriddingOperator* griddingOp, IndType sectorCnt);
+		virtual Array<IndType> initSectorCenters(GriddingOperator* griddingOp, IndType sectorCnt);
+		virtual Array<IndType> initSectorCenters2D(GriddingOperator* griddingOp, IndType sectorCnt);
 		virtual void debug(const std::string& message);
 
 		IndType computeSectorMapping(DType coord, IndType sectorCount);
-
+		
 		IndType3 computeSectorMapping(DType3 coord, Dimensions sectorDims);
 
 		IndType2 computeSectorMapping(DType2 coord, Dimensions sectorDims);
 
 		IndType computeXYZ2Lin(IndType x, IndType y, IndType z, Dimensions dim);
+		
+		IndType computeXY2Lin(IndType x, IndType y, Dimensions dim);
 
 		IndType computeInd32Lin(IndType3 sector, Dimensions dim);
+
+		IndType computeInd22Lin(IndType2 sector, Dimensions dim);
 
 		IndType computeSectorCountPerDimension(IndType dim, IndType sectorWidth);
 
@@ -63,7 +71,8 @@ namespace GriddingND
 
 		Array<IndType> computeSectorDataCount(GriddingND::GriddingOperator *griddingOp,GriddingND::Array<IndType> assignedSectors);
 
-		Array<IndType3> computeSectorCenters(GriddingOperator *griddingOp);
+		Array<IndType> computeSectorCenters(GriddingOperator *griddingOp);
+		Array<IndType> computeSectorCenters2D(GriddingOperator *griddingOp);
 
 		IndType computeSectorCenter(IndType var, IndType sectorWidth);
 

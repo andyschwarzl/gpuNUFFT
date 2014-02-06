@@ -100,6 +100,11 @@ __inline__ __device__ __host__ int getIndex(int x, int y, int z, int gwidth)
 	return x + gwidth * (y + gwidth * z);
 }
 
+__inline__ __device__ __host__ int getIndex2D(int x, int y, int gwidth)
+{
+        return x + gwidth * (y);
+}
+
 __inline__ __device__ __host__ void getCoordsFromIndex(int index, int* x, int* y, int* z, int w)
 {
 	*x = index % w;
@@ -116,6 +121,19 @@ __inline__ __device__ __host__ void getCoordsFromIndex(int index, int* x, int* y
 	*y = (int)(r / w_z);	
 }
 
+__inline__ __device__ __host__ void getCoordsFromIndex2D(int index, int* x, int* y, int w)
+{
+        *x = index % w;
+        *y = (int)(index / w);        
+}
+
+__inline__ __device__ __host__ void getCoordsFromIndex2D(int index, int* x, int* y,  int w_x, int w_y)
+{
+        *x = index % w_x;
+        *y = (int)(index / w_y);        
+}
+
+
 __inline__ __device__ __host__ bool isOutlier(int x, int y, int z, int center_x, int center_y, int center_z, int width, int sector_offset)
 {
 		return ((center_x - sector_offset + x) >= width ||
@@ -124,6 +142,14 @@ __inline__ __device__ __host__ bool isOutlier(int x, int y, int z, int center_x,
 						(center_y - sector_offset + y) < 0 ||
 						(center_z - sector_offset + z) >= width ||
 						(center_z - sector_offset + z) < 0);
+}
+
+__inline__ __device__ __host__ bool isOutlier2D(int x, int y, int center_x, int center_y, int width, int sector_offset)
+{
+                return ((center_x - sector_offset + x) >= width ||
+                                                (center_x - sector_offset + x) < 0 ||
+                                                (center_y - sector_offset + y) >= width ||
+                                                (center_y - sector_offset + y) < 0);
 }
 
 __inline__ __device__ __host__ int calculateOppositeIndex(int coord,int center,int width, int offset)
@@ -161,6 +187,17 @@ __inline__ __device__ __host__ DType calculateDeapodizationAt(int x, int y, int 
 	DType val_z = calculateDeapodizationValue(z_shifted,grid_width_inv,kernel_width,beta);
 	
 	return val_x * val_y *  val_z / norm_val;
+}
+
+__inline__ __device__ __host__ DType calculateDeapodizationAt2D(int x, int y,int width_offset, DType grid_width_inv, int kernel_width, DType beta, DType norm_val)
+{
+        int x_shifted = x - width_offset;
+        int y_shifted = y - width_offset;
+        
+        DType val_x = calculateDeapodizationValue(x_shifted,grid_width_inv,kernel_width,beta);
+        DType val_y = calculateDeapodizationValue(y_shifted,grid_width_inv,kernel_width,beta);
+        
+        return val_x * val_y / norm_val;
 }
 
 #endif  // GRIDDING_FUNCTIONS_H_

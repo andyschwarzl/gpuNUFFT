@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include "cufft.h"
 #include "gridding_gpu.hpp"
+#include "gridding_operator.hpp"
 #include <stdarg.h>
 
 #define MIN(X,Y) ((X) < (Y) ? (X) : (Y))
@@ -120,44 +121,59 @@ inline void showMemoryInfo()
 void initConstSymbol(const char* symbol, const void* src, IndType count);
 
 
-inline GriddingInfo* initAndCopyGriddingInfo(int sector_count, 
-									  int sector_width,
-									  int kernel_width,
-									  int kernel_count, 
-									  int grid_width,
-									  int im_width,
-									  DType osr,
-									  int data_count)
+inline GriddingND::GriddingInfo* initAndCopyGriddingInfo(int sector_count, 
+														 int kernel_width,
+														 int kernel_count, 
+														 DType osr,
+														 int data_count,
+														 GriddingND::Dimensions imgDims,
+														 GriddingND::Dimensions gridDims,
+														 GriddingND::Dimensions sectorDims,
+														 bool is2Dprocessing)
 {
-	GriddingInfo* gi_host = (GriddingInfo*)malloc(sizeof(GriddingInfo));
+	GriddingND::GriddingInfo* gi_host = (GriddingND::GriddingInfo*)malloc(sizeof(GriddingND::GriddingInfo));
+
     gi_host->data_count = data_count;
 	gi_host->sector_count = sector_count;
-	gi_host->sector_width = sector_width;
+	gi_host->sector_width = sectorDims.width;
 	
 	gi_host->kernel_width = kernel_width; 
 	gi_host->kernel_widthSquared = kernel_width * kernel_width;
 	gi_host->kernel_count = kernel_count;
-	gi_host->grid_width = grid_width;
-	gi_host->grid_width_dim = grid_width * grid_width * grid_width;
-	gi_host->grid_width_offset= (int)(floor(grid_width / (DType)2.0));
 
-	gi_host->im_width = im_width;
-	gi_host->im_width_dim = im_width * im_width * im_width;
-	gi_host->im_width_offset = (int)(floor(im_width / (DType)2.0));
+	gi_host->grid_width_dim = gridDims.count();
+	gi_host->grid_width_offset= (int)(floor(gridDims.width / (DType)2.0));
+
+	gi_host->im_width_dim = imgDims.count();
+	gi_host->im_width_offset = (int)(floor(imgDims.width / (DType)2.0));
+
+	gi_host->imgDims.x = imgDims.width;
+	gi_host->imgDims.y = imgDims.height;
+	gi_host->imgDims.z = imgDims.depth;
+	gi_host->imgDims_count = imgDims.width*imgDims.height*DEFAULT_VALUE(imgDims.depth);//TODO check why not imgDims.count()
+
+	gi_host->gridDims.x = gridDims.width;
+	gi_host->gridDims.y = gridDims.height;
+	gi_host->gridDims.z = gridDims.depth;
+	gi_host->gridDims_count = gridDims.width*gridDims.height*DEFAULT_VALUE(gridDims.depth);//s.a.
 
 	DType kernel_radius = static_cast<DType>(kernel_width) / (DType)2.0;
-	DType radius = kernel_radius / static_cast<DType>(grid_width);
-	DType width_inv = (DType)1.0 / static_cast<DType>(grid_width);
+	DType radius = kernel_radius / static_cast<DType>(gridDims.width);
+	DType width_inv = (DType)1.0 / static_cast<DType>(gridDims.width);
 
 	DType kernel_width_inv = (DType)1.0 / static_cast<DType>(kernel_width);
 
 	DType radiusSquared = radius * radius;
 	DType kernelRadius_invSqr = (DType)1.0 / radiusSquared;
 	DType dist_multiplier = (kernel_count - 1) * kernelRadius_invSqr;
+
 	if (DEBUG)
 		printf("radius rel. to grid width %f\n",radius);
-	int sector_pad_width = sector_width + 2*(int)(floor(kernel_width / (DType)2.0));
-	int sector_dim = sector_pad_width  * sector_pad_width  * sector_pad_width ;
+	
+	GriddingND::Dimensions sectorPadDims = sectorDims + 2*(int)(floor(kernel_width / (DType)2.0));
+	
+	int sector_pad_width = sectorPadDims.width;
+	int sector_dim = sectorPadDims.count();
 	int sector_offset = (int)(floor(sector_pad_width / (DType)2.0));
 
 	gi_host->grid_width_inv = width_inv;
@@ -171,11 +187,13 @@ inline GriddingInfo* initAndCopyGriddingInfo(int sector_count,
 	gi_host->sector_offset = sector_offset;
 	gi_host->radiusSquared = radiusSquared;
 	gi_host->dist_multiplier = dist_multiplier;
+
+	gi_host->is2Dprocessing = is2Dprocessing;
 	
 	if (DEBUG)
-		printf("copy Gridding Info to symbol memory... size = %d \n",sizeof(GriddingInfo));
+		printf("copy Gridding Info to symbol memory... size = %ld \n",sizeof(GriddingND::GriddingInfo));
 
-	initConstSymbol("GI",gi_host,sizeof(GriddingInfo));
+	initConstSymbol("GI",gi_host,sizeof(GriddingND::GriddingInfo));
 
 	//free(gi_host);
 	if (DEBUG)

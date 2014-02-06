@@ -15,10 +15,6 @@ TEST(TestGPUGriddingForwardConv,KernelCall1Sector)
 	//oversampling ratio
 	float osr = 1.25f;
 
-	long kernel_entries = calculateGrid3KernelSize(osr,kernel_width/2.0f);
-	DType *kern = (DType*) calloc(kernel_entries,sizeof(DType));
-	loadGrid3Kernel(kern,kernel_entries);
-
 	//Image
 	int im_width = 32;
 
@@ -50,23 +46,9 @@ TEST(TestGPUGriddingForwardConv,KernelCall1Sector)
 		im_data[x].y = 1.0f;
 	}
 	
-	long grid_width = (unsigned long)(im_width * osr);
-
 	//sectors of data, count and start indices
 	int sector_width = 8;
 	
-	const int sector_count = 125;
-	int* sectors = (int*) calloc(2*sector_count,sizeof(int));
-	sectors[0]=0;
-	sectors[1]=0;
-	sectors[2]=1;
-
-	/*int* sector_centers = (int*) calloc(3*sector_count,sizeof(int));
-	sector_centers[0] = 5;
-	sector_centers[1] = 5;
-	sector_centers[2] = 5;*/
-	int sector_centers[3 * sector_count] = {4,4,4,4,4,12,4,4,20,4,4,28,4,4,36,4,12,4,4,12,12,4,12,20,4,12,28,4,12,36,4,20,4,4,20,12,4,20,20,4,20,28,4,20,36,4,28,4,4,28,12,4,28,20,4,28,28,4,28,36,4,36,4,4,36,12,4,36,20,4,36,28,4,36,36,12,4,4,12,4,12,12,4,20,12,4,28,12,4,36,12,12,4,12,12,12,12,12,20,12,12,28,12,12,36,12,20,4,12,20,12,12,20,20,12,20,28,12,20,36,12,28,4,12,28,12,12,28,20,12,28,28,12,28,36,12,36,4,12,36,12,12,36,20,12,36,28,12,36,36,20,4,4,20,4,12,20,4,20,20,4,28,20,4,36,20,12,4,20,12,12,20,12,20,20,12,28,20,12,36,20,20,4,20,20,12,20,20,20,20,20,28,20,20,36,20,28,4,20,28,12,20,28,20,20,28,28,20,28,36,20,36,4,20,36,12,20,36,20,20,36,28,20,36,36,28,4,4,28,4,12,28,4,20,28,4,28,28,4,36,28,12,4,28,12,12,28,12,20,28,12,28,28,12,36,28,20,4,28,20,12,28,20,20,28,20,28,28,20,36,28,28,4,28,28,12,28,28,20,28,28,28,28,28,36,28,36,4,28,36,12,28,36,20,28,36,28,28,36,36,36,4,4,36,4,12,36,4,20,36,4,28,36,4,36,36,12,4,36,12,12,36,12,20,36,12,28,36,12,36,36,20,4,36,20,12,36,20,20,36,20,28,36,20,36,36,28,4,36,28,12,36,28,20,36,28,28,36,28,36,36,36,4,36,36,12,36,36,20,36,36,28,36,36,36};
-
     GriddingND::Array<DType> kSpaceData;
     kSpaceData.data = coords;
     kSpaceData.dim.length = data_entries;
@@ -78,12 +60,6 @@ TEST(TestGPUGriddingForwardConv,KernelCall1Sector)
 	im_dataArray.dim.width = im_width;
 	im_dataArray.dim.height = im_width;
 	im_dataArray.dim.depth = im_width;
-
-	GriddingND::Array<IndType> sectorsArray;
-	sectorsArray.data = (IndType*)sectors;
-	sectorsArray.dim.length = sector_count;
-	GriddingND::Array<IndType> sectorCentersArray;
-	sectorCentersArray.data = (IndType*)sector_centers;
 
 	GriddingND::Dimensions imgDims;
 	imgDims.width = im_width;
@@ -105,9 +81,8 @@ TEST(TestGPUGriddingForwardConv,KernelCall1Sector)
 
 	free(coords);
 	free(im_data);
-	free(kern);
-	free(sectors);
-	//free(sector_centers);
+	free(dataArray.data);
+
 	delete griddingOp;
 }
 

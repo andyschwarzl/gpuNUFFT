@@ -14,6 +14,7 @@ MESSAGE("GTESTMAIN_LIB = ${GTESTMAIN_LIB}")
 
 #gpu test sources
 set(GPU_SOURCES gpu/gridding3DGPU_conv_tests.cpp
+				gpu/gridding2DGPU_conv_tests.cpp
 				gpu/gridding3DGPU_fft_tests.cpp
 				gpu/gridding3DGPU_deapo_tests.cpp
 				gpu/forward/gridding3DGPU_forward_tests.cpp)

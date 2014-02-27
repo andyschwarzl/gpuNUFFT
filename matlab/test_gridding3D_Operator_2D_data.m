@@ -52,7 +52,7 @@ w_mc = reshape(repmat(w(:),[1 n_chn]),[size(w), n_chn]);
 %w = ones(1,length(k(:)));%v2
 %w = w_mc(:);
 %%
-FT = GRIDDING3D(k_traj,w,imwidth,osf,wg,sw,[trimmed_size trimmed_size trimmed_size],'true');
+FT = GRIDDING3D(k_traj,w,imwidth,osf,wg,sw,[trimmed_size trimmed_size trimmed_size],'false');
 
 %% generate radial data
 tic
@@ -82,10 +82,7 @@ figure, imshow(imresize(((abs(recon_sos_res(:,:)))),1),[]), title('gridding dc s
 disp('finished');
 out_file = ['../tmp/results/2D_',num2str(trimmed_size),'_',strrep(num2str(osf), '.', '_'),'_',num2str(wg),'_',num2str(slice),'.png'];
 %save(out_file, 'recon_sos_res');
-<<<<<<< HEAD
 %disp(['output written to ',out_file]);
-=======
 imwrite(abs(recon_sos_res)/max(recon_sos_res(:)),out_file,'png');
 disp(['output written to ',out_file]);
->>>>>>> adapted test scripts
 %exit;

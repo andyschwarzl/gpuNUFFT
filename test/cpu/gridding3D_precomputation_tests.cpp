@@ -3,6 +3,7 @@
 
 #include "gtest/gtest.h"
 #include "gridding_operator.hpp"
+#include "precomp_utils.hpp"
 
 // sort algorithm example
 #include <iostream>     // std::cout
@@ -301,41 +302,6 @@ TEST(PrecomputationTest, AssignSectors2D) {
 	}
 
 	free(sectorRange);
-}
-
-IndType computeSectorMapping(DType coord, IndType sectorCount)
-{
-	IndType sector = std::floor(static_cast<DType>(coord + 0.5) * sectorCount);
-	if (sector == sectorCount) 
-		sector--;
-	return sector;
-}
-
-IndType3 computeSectorMapping(DType3 coord, GriddingND::Dimensions sectorDims)
-{
-	IndType3 sector;
-	sector.x = computeSectorMapping(coord.x,sectorDims.width);
-	sector.y  = computeSectorMapping(coord.y,sectorDims.height);
-	sector.z  = computeSectorMapping(coord.z,sectorDims.depth);
-	return sector;
-}
-
-IndType2 computeSectorMapping(DType2 coord, GriddingND::Dimensions sectorDims)
-{
-	IndType2 sector;
-	sector.x = computeSectorMapping(coord.x,sectorDims.width);
-	sector.y  = computeSectorMapping(coord.y,sectorDims.height);
-	return sector;
-}
-
-IndType computeXYZ2Lin(IndType x, IndType y, IndType z, GriddingND::Dimensions dim)
-{
-	return x + dim.height * (y + dim.depth * z);
-}
-
-IndType computeInd32Lin(IndType3 sector, GriddingND::Dimensions dim)
-{
-	return sector.x + dim.height * (sector.y + dim.depth * sector.z);
 }
 
 TEST(PrecomputationTest, AssignSectors3D) {

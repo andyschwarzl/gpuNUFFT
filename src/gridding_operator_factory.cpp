@@ -3,6 +3,7 @@
 #include <iostream>
 #include <cmath>
 #include <stdexcept>
+#include "precomp_kernels.hpp"
 
 GriddingND::GriddingOperatorFactory GriddingND::GriddingOperatorFactory::instance;
 
@@ -10,54 +11,6 @@ GriddingND::GriddingOperatorFactory& GriddingND::GriddingOperatorFactory::getIns
 {
 	return instance;
 }
-
-IndType GriddingND::GriddingOperatorFactory::computeSectorMapping(DType coord, IndType sectorCount)
-{
-	IndType sector = (IndType)std::floor(static_cast<DType>(coord + 0.5) * sectorCount);
-	if (sector >= sectorCount) 
-		sector = sectorCount -1;
-	if (sector < 0)
-		sector = 0;
-	return sector;
-}
-
-IndType3 GriddingND::GriddingOperatorFactory::computeSectorMapping(DType3 coord, GriddingND::Dimensions sectorDims)
-{
-	IndType3 sector;
-	sector.x = computeSectorMapping(coord.x,sectorDims.width);
-	sector.y  = computeSectorMapping(coord.y,sectorDims.height);
-	sector.z  = computeSectorMapping(coord.z,sectorDims.depth);
-	return sector;
-}
-
-IndType2 GriddingND::GriddingOperatorFactory::computeSectorMapping(DType2 coord, GriddingND::Dimensions sectorDims)
-{
-	IndType2 sector;
-	sector.x = computeSectorMapping(coord.x,sectorDims.width);
-	sector.y  = computeSectorMapping(coord.y,sectorDims.height);
-	return sector;
-}
-
-IndType GriddingND::GriddingOperatorFactory::computeXYZ2Lin(IndType x, IndType y, IndType z, GriddingND::Dimensions dim)
-{
-	return x + dim.height * (y + dim.depth * z);
-}
-
-IndType GriddingND::GriddingOperatorFactory::computeXY2Lin(IndType x, IndType y, GriddingND::Dimensions dim)
-{
-	return x + dim.height * y;
-}
-
-IndType GriddingND::GriddingOperatorFactory::computeInd32Lin(IndType3 sector, GriddingND::Dimensions dim)
-{
-	return sector.x + dim.height * (sector.y + dim.depth * sector.z);
-}
-
-IndType GriddingND::GriddingOperatorFactory::computeInd22Lin(IndType2 sector, GriddingND::Dimensions dim)
-{
-	return sector.x + dim.height * sector.y ;
-}
-
 
 IndType GriddingND::GriddingOperatorFactory::computeSectorCountPerDimension(IndType dim, IndType sectorWidth)
 {
@@ -109,37 +62,44 @@ GriddingND::Array<IndType> GriddingND::GriddingOperatorFactory::assignSectors(Gr
 	griddingOp->setGridSectorDims(computeSectorCountPerDimension(griddingOp->getGridDims(),griddingOp->getSectorWidth()));
 	
 	IndType coordCnt = kSpaceTraj.count();
-
+  bool useGpu = true;
 	//create temporary array to store assigned values
 	GriddingND::Array<IndType> assignedSectors;
-    assignedSectors.data = (IndType*)malloc(coordCnt * sizeof(IndType));
-    assignedSectors.dim.length = coordCnt;
-	
-	IndType sector;
-	for (IndType cCnt = 0; cCnt < coordCnt; cCnt++)
-	{
-		if (griddingOp->is2DProcessing())
-		{
-			DType2 coord;
-			coord.x = kSpaceTraj.data[cCnt];
-			coord.y = kSpaceTraj.data[cCnt + coordCnt];
-			IndType2 mappedSector = computeSectorMapping(coord,griddingOp->getGridSectorDims());
-			//linearize mapped sector
-			sector = computeInd22Lin(mappedSector,griddingOp->getGridSectorDims());		
-		}
-		else
-		{
-			DType3 coord;
-			coord.x = kSpaceTraj.data[cCnt];
-			coord.y = kSpaceTraj.data[cCnt + coordCnt];
-			coord.z = kSpaceTraj.data[cCnt + 2*coordCnt];
-			IndType3 mappedSector = computeSectorMapping(coord,griddingOp->getGridSectorDims());
-			//linearize mapped sector
-			sector = computeInd32Lin(mappedSector,griddingOp->getGridSectorDims());		
-		}
+  assignedSectors.data = (IndType*)malloc(coordCnt * sizeof(IndType));
+  assignedSectors.dim.length = coordCnt;
 
-		assignedSectors.data[cCnt] = sector;
-	}
+  if (useGpu)
+  {
+    assignSectorsGPU(griddingOp, kSpaceTraj, assignedSectors.data);
+  }
+  else
+  {
+    IndType sector;
+	  for (IndType cCnt = 0; cCnt < coordCnt; cCnt++)
+	  {
+		  if (griddingOp->is2DProcessing())
+		  {
+			  DType2 coord;
+			  coord.x = kSpaceTraj.data[cCnt];
+			  coord.y = kSpaceTraj.data[cCnt + coordCnt];
+			  IndType2 mappedSector = computeSectorMapping(coord,griddingOp->getGridSectorDims());
+			  //linearize mapped sector
+			  sector = computeInd22Lin(mappedSector,griddingOp->getGridSectorDims());		
+		  }
+		  else
+		  {
+			  DType3 coord;
+			  coord.x = kSpaceTraj.data[cCnt];
+			  coord.y = kSpaceTraj.data[cCnt + coordCnt];
+			  coord.z = kSpaceTraj.data[cCnt + 2*coordCnt];
+			  IndType3 mappedSector = computeSectorMapping(coord,griddingOp->getGridSectorDims());
+			  //linearize mapped sector
+			  sector = computeInd32Lin(mappedSector,griddingOp->getGridSectorDims());		
+		  }
+
+		  assignedSectors.data[cCnt] = sector;
+	  }
+  }
 	debug("finished assign sectors\n");
 	return assignedSectors;
 }

@@ -2,12 +2,12 @@
 #define PRECOMP_KERNELS_H
 
 #include "cuda_utils.hpp"
+#include "gridding_operator.hpp"
+#include "precomp_utils.hpp"
 
 // GPU Kernel for Precomputation
 // Sector Assignment 
 //
-void performPrecomputation( DType2* data_d
-                            DType2* assignedSectors
-						              );
+void assignSectorsGPU(GriddingND::GriddingOperator* griddingOp, GriddingND::Array<DType>& kSpaceTraj, IndType* assignedSectors);
 
 #endif

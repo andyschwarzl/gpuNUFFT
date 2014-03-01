@@ -31,7 +31,7 @@ size(img_a);
 [nPE,nFE,nCh]=size(img_a);
 
 %% Generate 96 radial projections rawdata
-numSpokes = 96;
+numSpokes = 128;%96;
 
 % Trajectory
 theta=linspace(0,pi-pi/numSpokes,numSpokes);

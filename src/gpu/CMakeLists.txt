@@ -1,5 +1,4 @@
 SET (GPU_GRIDDING_SOURCES ${GRIDDING_SOURCES} 
-     ${CMAKE_CURRENT_SOURCE_DIR}/precomp_utils.cu 
 		 ${CMAKE_CURRENT_SOURCE_DIR}/precomp_kernels.cu)
 
 ADD_SUBDIRECTORY(coarse)

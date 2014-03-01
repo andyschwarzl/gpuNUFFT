@@ -18,7 +18,7 @@ size(img);
 [nPE,nFE,nCh]=size(img);
 
 %% Generate 96 radial projections rawdata
-numSpokes = 96;
+numSpokes = 256;
 
 % Trajectory
 theta=linspace(0,pi-pi/numSpokes,numSpokes);
@@ -34,9 +34,9 @@ wg = 3;
 sw = 8;
 % density compensation
 w = repmat(abs(rho), [1, numSpokes]);
-
+tic
 FT = GRIDDING3D(k_traj,w(:),imwidth,osf,wg,sw,[nPE nPE],'false');
-
+toc
 %% generate radial data
 display(['inverse gridding: ']);
 tic

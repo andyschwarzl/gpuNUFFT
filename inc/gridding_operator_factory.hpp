@@ -75,6 +75,8 @@ namespace GriddingND
 
   private:
     static GriddingOperatorFactory instance;
+    
+    static const bool useGpu = true;
   };
 
 }

@@ -44,7 +44,6 @@ __global__ void assignSectorsKernel(DType* kSpaceTraj,
 
 void assignSectorsGPU(GriddingND::GriddingOperator* griddingOp, GriddingND::Array<DType>& kSpaceTraj, IndType* assignedSectors)
 {
-  IndType sector;
   IndType coordCnt = kSpaceTraj.count();
   
   dim3 block_dim(THREAD_BLOCK_SIZE);
@@ -77,6 +76,64 @@ void assignSectorsGPU(GriddingND::GriddingOperator* griddingOp, GriddingND::Arra
       printf("error: at assignSectors thread synchronization 2: %s\n",cudaGetErrorString(cudaGetLastError()));
 	
   freeTotalDeviceMemory(kSpaceTraj_d,assignedSectors_d,NULL);//NULL as stop
+}
+
+
+__global__ void sortArraysKernel(GriddingND::IndPair* assignedSectorsAndIndicesSorted,
+                                IndType* assignedSectors, 
+                                IndType* dataIndices,
+                                DType* kSpaceTraj,
+                                DType* trajSorted,
+                                DType* densCompData,
+                                DType* densData,
+                                bool is3DProcessing,
+                                int coordCnt)
+{
+  int t = threadIdx.x +  blockIdx.x *blockDim.x;
+
+	while (t < coordCnt) 
+	{
+    trajSorted[t] = kSpaceTraj[assignedSectorsAndIndicesSorted[t].first];
+	  trajSorted[t + 1*coordCnt] = kSpaceTraj[assignedSectorsAndIndicesSorted[t].first + 1*coordCnt];
+	  if (is3DProcessing)
+		  trajSorted[t + 2*coordCnt] = kSpaceTraj[assignedSectorsAndIndicesSorted[t].first + 2*coordCnt];
+		
+	  //sort density compensation
+	  if (densCompData != NULL)
+		  densData[t] = densCompData[assignedSectorsAndIndicesSorted[t].first];
+
+	  dataIndices[t] = assignedSectorsAndIndicesSorted[t].first;
+	  assignedSectors[t] = assignedSectorsAndIndicesSorted[t].second;		
+    
+		t = t+ blockDim.x*gridDim.x;
+  }
+}
+
+void sortArrays(GriddingND::GriddingOperator* griddingOp, 
+                      std::vector<GriddingND::IndPair> assignedSectorsAndIndicesSorted,
+                      IndType* assignedSectors, 
+                      IndType* dataIndices,
+                      GriddingND::Array<DType>& kSpaceTraj,
+                      DType* trajSorted,
+                      DType* densCompData,
+                      DType* densData)
+{
+    IndType coordCnt = kSpaceTraj.count();
+    //sort kspace data coords
+    for (int i=0; i<coordCnt;i++)
+    {
+	    trajSorted[i] = kSpaceTraj.data[assignedSectorsAndIndicesSorted[i].first];
+	    trajSorted[i + 1*coordCnt] = kSpaceTraj.data[assignedSectorsAndIndicesSorted[i].first + 1*coordCnt];
+	    if (griddingOp->is3DProcessing())
+		    trajSorted[i + 2*coordCnt] = kSpaceTraj.data[assignedSectorsAndIndicesSorted[i].first + 2*coordCnt];
+		
+	    //sort density compensation
+	    if (densCompData != NULL)
+		    densData[i] = densCompData[assignedSectorsAndIndicesSorted[i].first];
+
+	    dataIndices[i] = assignedSectorsAndIndicesSorted[i].first;
+	    assignedSectors[i] = assignedSectorsAndIndicesSorted[i].second;		
+    }
 }
 
 #endif

@@ -62,7 +62,7 @@ GriddingND::Array<IndType> GriddingND::GriddingOperatorFactory::assignSectors(Gr
 	griddingOp->setGridSectorDims(computeSectorCountPerDimension(griddingOp->getGridDims(),griddingOp->getSectorWidth()));
 	
 	IndType coordCnt = kSpaceTraj.count();
-  bool useGpu = true;
+
 	//create temporary array to store assigned values
 	GriddingND::Array<IndType> assignedSectors;
   assignedSectors.data = (IndType*)malloc(coordCnt * sizeof(IndType));
@@ -223,7 +223,7 @@ GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddin
 	if (DEBUG)
 		std::cout << "create gridding operator..." << std::endl;
 
-    GriddingND::GriddingOperator *griddingOp = new GriddingND::GriddingOperator(kernelWidth,sectorWidth,osf,imgDims);
+  GriddingND::GriddingOperator *griddingOp = new GriddingND::GriddingOperator(kernelWidth,sectorWidth,osf,imgDims);
 	
 	//assign Sectors
 	GriddingND::Array<IndType> assignedSectors = assignSectors(griddingOp, kSpaceTraj);
@@ -242,22 +242,28 @@ GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddin
 	if (sensData.data != NULL)
 		griddingOp->setSens(sensData);
 	
-	//sort kspace data coords
-	for (int i=0; i<coordCnt;i++)
-	{
-		trajSorted.data[i] = kSpaceTraj.data[assignedSectorsAndIndicesSorted[i].first];
-		trajSorted.data[i + 1*coordCnt] = kSpaceTraj.data[assignedSectorsAndIndicesSorted[i].first + 1*coordCnt];
-		if (griddingOp->is3DProcessing())
-			trajSorted.data[i + 2*coordCnt] = kSpaceTraj.data[assignedSectorsAndIndicesSorted[i].first + 2*coordCnt];
+	if (useGpu)
+  {
+
+  }
+  else
+  {
+    //sort kspace data coords
+	  for (int i=0; i<coordCnt;i++)
+	  {
+		  trajSorted.data[i] = kSpaceTraj.data[assignedSectorsAndIndicesSorted[i].first];
+		  trajSorted.data[i + 1*coordCnt] = kSpaceTraj.data[assignedSectorsAndIndicesSorted[i].first + 1*coordCnt];
+		  if (griddingOp->is3DProcessing())
+			  trajSorted.data[i + 2*coordCnt] = kSpaceTraj.data[assignedSectorsAndIndicesSorted[i].first + 2*coordCnt];
 		
-		//todo sort density compensation
-		if (densCompData.data != NULL)
-			densData.data[i] = densCompData.data[assignedSectorsAndIndicesSorted[i].first];
+		  //sort density compensation
+		  if (densCompData.data != NULL)
+			  densData.data[i] = densCompData.data[assignedSectorsAndIndicesSorted[i].first];
 
-		dataIndices.data[i] = assignedSectorsAndIndicesSorted[i].first;
-		assignedSectors.data[i] = assignedSectorsAndIndicesSorted[i].second;		
-	}
-
+		  dataIndices.data[i] = assignedSectorsAndIndicesSorted[i].first;
+		  assignedSectors.data[i] = assignedSectorsAndIndicesSorted[i].second;		
+	  }
+  }
 	griddingOp->setDataIndices(dataIndices);
 
 	griddingOp->setKSpaceTraj(trajSorted);

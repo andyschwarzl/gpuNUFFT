@@ -244,7 +244,8 @@ GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddin
 	
 	if (useGpu)
   {
-
+    sortArrays(griddingOp,assignedSectorsAndIndicesSorted,assignedSectors.data, 
+                      dataIndices.data,kSpaceTraj,trajSorted.data,densCompData.data,densData.data);
   }
   else
   {

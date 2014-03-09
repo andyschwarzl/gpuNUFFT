@@ -52,8 +52,9 @@ w_mc = reshape(repmat(w(:),[1 n_chn]),[size(w), n_chn]);
 %w = ones(1,length(k(:)));%v2
 %w = w_mc(:);
 %%
+tic
 FT = GRIDDING3D(k_traj,w,imwidth,osf,wg,sw,[trimmed_size trimmed_size trimmed_size],'false');
-
+toc
 %% generate radial data
 tic
 dataRadial = inversegrid_multicoil_gpu(img_a,FT,2*nPE,numSpokes);

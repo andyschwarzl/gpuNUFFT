@@ -78,7 +78,6 @@ void assignSectorsGPU(GriddingND::GriddingOperator* griddingOp, GriddingND::Arra
   freeTotalDeviceMemory(kSpaceTraj_d,assignedSectors_d,NULL);//NULL as stop
 }
 
-
 __global__ void sortArraysKernel(GriddingND::IndPair* assignedSectorsAndIndicesSorted,
                                 IndType* assignedSectors, 
                                 IndType* dataIndices,
@@ -119,21 +118,58 @@ void sortArrays(GriddingND::GriddingOperator* griddingOp,
                       DType* densData)
 {
     IndType coordCnt = kSpaceTraj.count();
-    //sort kspace data coords
-    for (int i=0; i<coordCnt;i++)
-    {
-	    trajSorted[i] = kSpaceTraj.data[assignedSectorsAndIndicesSorted[i].first];
-	    trajSorted[i + 1*coordCnt] = kSpaceTraj.data[assignedSectorsAndIndicesSorted[i].first + 1*coordCnt];
-	    if (griddingOp->is3DProcessing())
-		    trajSorted[i + 2*coordCnt] = kSpaceTraj.data[assignedSectorsAndIndicesSorted[i].first + 2*coordCnt];
-		
-	    //sort density compensation
-	    if (densCompData != NULL)
-		    densData[i] = densCompData[assignedSectorsAndIndicesSorted[i].first];
+    dim3 block_dim(THREAD_BLOCK_SIZE);
+	  dim3 grid_dim(getOptimalGridDim(coordCnt,THREAD_BLOCK_SIZE));
+	
+    DType* kSpaceTraj_d;
+    GriddingND::IndPair* assignedSectorsAndIndicesSorted_d;
+    IndType* assignedSectors_d;
+    IndType* dataIndices_d;
+    DType* trajSorted_d;
+    DType* densCompData_d = NULL;
+    DType* densData_d = NULL;
 
-	    dataIndices[i] = assignedSectorsAndIndicesSorted[i].first;
-	    assignedSectors[i] = assignedSectorsAndIndicesSorted[i].second;		
+    //Trajectory and sorted result 
+    allocateAndCopyToDeviceMem<DType>(&kSpaceTraj_d,kSpaceTraj.data,griddingOp->getImageDimensionCount()*coordCnt);
+		allocateDeviceMem<DType>(&trajSorted_d,griddingOp->getImageDimensionCount()*coordCnt);
+
+    //Assigned sorted sectors and data indices and result
+    allocateAndCopyToDeviceMem<GriddingND::IndPair>(&assignedSectorsAndIndicesSorted_d,assignedSectorsAndIndicesSorted.data(),coordCnt);
+   	allocateDeviceMem<IndType>(&assignedSectors_d,coordCnt);	 
+    allocateDeviceMem<IndType>(&dataIndices_d,coordCnt);	 
+
+    //Density compensation data and sorted result
+    if (densCompData != NULL)
+	  {
+      allocateAndCopyToDeviceMem<DType>(&densCompData_d,densCompData,coordCnt);
+	    allocateDeviceMem<DType>(&densData_d,coordCnt);
     }
+    
+    if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
+      printf("error: at sortArrays thread synchronization 0: %s\n",cudaGetErrorString(cudaGetLastError()));
+	
+    sortArraysKernel<<<grid_dim,block_dim>>>( assignedSectorsAndIndicesSorted_d,
+                                              assignedSectors_d, 
+                                              dataIndices_d,
+                                              kSpaceTraj_d,
+                                              trajSorted_d,
+                                              densCompData_d,
+                                              densData_d,
+                                              griddingOp->is3DProcessing(),
+                                              coordCnt);
+    if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
+      printf("error: at sortArrays thread synchronization 1: %s\n",cudaGetErrorString(cudaGetLastError()));
+
+    copyFromDevice<IndType>(assignedSectors_d,assignedSectors,coordCnt);
+    copyFromDevice<IndType>(dataIndices_d,dataIndices,coordCnt);
+    copyFromDevice<DType>(trajSorted_d,trajSorted,griddingOp->getImageDimensionCount()*coordCnt);
+    if (densCompData != NULL)
+      copyFromDevice<DType>(densData_d,densData,coordCnt);
+  
+    if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
+      printf("error: at sortArrays thread synchronization 2: %s\n",cudaGetErrorString(cudaGetLastError()));
+	
+    freeTotalDeviceMemory(kSpaceTraj_d,assignedSectorsAndIndicesSorted_d,assignedSectors_d,dataIndices_d,trajSorted_d,densCompData_d,densData_d,NULL);//NULL as stop
 }
 
 #endif

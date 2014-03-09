@@ -18,7 +18,7 @@ void sortArrays(GriddingND::GriddingOperator* griddingOp,
                       IndType* assignedSectors, 
                       IndType* dataIndices,
                       GriddingND::Array<DType>& kSpaceTraj,
-                      DType* trajectory,
+                      DType* trajSorted,
                       DType* densCompData,
                       DType* densData);
 

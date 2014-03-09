@@ -3,6 +3,7 @@
 
 #include "cuda_utils.hpp"
 #include "gridding_operator.hpp"
+#include <cmath>
 
 // UTIL functions for precomputation
 //

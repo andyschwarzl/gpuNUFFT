@@ -9,86 +9,75 @@
 #include <cmath>
 
 #include "cuda_utils.hpp"
+#include "precomp_utils.hpp"
 
 namespace GriddingND
 {
-	// GriddingOperatorFactory
-	// 
-	// Manages the initialization of the Gridding Operator.
-	// Distinguishes between two cases:
-	//
-	// * new calculation of "data - sector" mapping, sorting etc.
-	//  
-	// * reuse of previously calculated mapping
-	// 
-	class GriddingOperatorFactory
-	{
-    protected:
-		GriddingOperatorFactory()
-		{
-		}
+  // GriddingOperatorFactory
+  // 
+  // Manages the initialization of the Gridding Operator.
+  // Distinguishes between two cases:
+  //
+  // * new calculation of "data - sector" mapping, sorting etc.
+  //  
+  // * reuse of previously calculated mapping
+  // 
+  class GriddingOperatorFactory
+  {
+  protected:
+    GriddingOperatorFactory()
+    {
+    }
 
-		~GriddingOperatorFactory()
-		{
-			std::cout << "GOF destruct " << std::endl;
-		}
+    ~GriddingOperatorFactory()
+    {
+      std::cout << "GOF destruct " << std::endl;
+    }
 
-		Array<IndType> assignSectors(GriddingOperator* griddingOp, Array<DType>& kSpaceTraj);
+    Array<IndType> assignSectors(GriddingOperator* griddingOp, Array<DType>& kSpaceTraj);
 
-		template <typename T> 
-		Array<T> initLinArray(IndType arrCount);
+    template <typename T> 
+    Array<T> initLinArray(IndType arrCount);
 
-		virtual Array<IndType> initDataIndices(GriddingOperator* griddingOp, IndType coordCnt);
-		virtual Array<IndType> initSectorDataCount(GriddingOperator* griddingOp, IndType coordCnt);
-		virtual Array<DType> initDensData(GriddingOperator* griddingOp, IndType coordCnt);
-		virtual Array<DType> initCoordsData(GriddingOperator* griddingOp, IndType coordCnt);
-		virtual Array<IndType> initSectorCenters(GriddingOperator* griddingOp, IndType sectorCnt);
-		virtual Array<IndType> initSectorCenters2D(GriddingOperator* griddingOp, IndType sectorCnt);
-		virtual void debug(const std::string& message);
+    virtual Array<IndType> initDataIndices(GriddingOperator* griddingOp, IndType coordCnt);
+    virtual Array<IndType> initSectorDataCount(GriddingOperator* griddingOp, IndType coordCnt);
+    virtual Array<DType> initDensData(GriddingOperator* griddingOp, IndType coordCnt);
+    virtual Array<DType> initCoordsData(GriddingOperator* griddingOp, IndType coordCnt);
+    virtual Array<IndType> initSectorCenters(GriddingOperator* griddingOp, IndType sectorCnt);
+    virtual Array<IndType> initSectorCenters2D(GriddingOperator* griddingOp, IndType sectorCnt);
+    virtual void debug(const std::string& message);
 
-		IndType computeSectorMapping(DType coord, IndType sectorCount);
-		
-		IndType3 computeSectorMapping(DType3 coord, Dimensions sectorDims);
+    IndType computeSectorCountPerDimension(IndType dim, IndType sectorWidth);
 
-		IndType2 computeSectorMapping(DType2 coord, Dimensions sectorDims);
+    Dimensions computeSectorCountPerDimension(Dimensions dim, IndType sectorWidth);
 
-		IndType computeXYZ2Lin(IndType x, IndType y, IndType z, Dimensions dim);
-		
-		IndType computeXY2Lin(IndType x, IndType y, Dimensions dim);
+    IndType computeTotalSectorCount(Dimensions dim, IndType sectorWidth);
 
-		IndType computeInd32Lin(IndType3 sector, Dimensions dim);
+    template <typename T>
+    std::vector<IndPair> sortVector(Array<T> assignedSectors);
 
-		IndType computeInd22Lin(IndType2 sector, Dimensions dim);
+    Array<IndType> computeSectorDataCount(GriddingND::GriddingOperator *griddingOp,GriddingND::Array<IndType> assignedSectors);
 
-		IndType computeSectorCountPerDimension(IndType dim, IndType sectorWidth);
+    Array<IndType> computeSectorCenters(GriddingOperator *griddingOp);
+    Array<IndType> computeSectorCenters2D(GriddingOperator *griddingOp);
 
-		Dimensions computeSectorCountPerDimension(Dimensions dim, IndType sectorWidth);
+    IndType computeSectorCenter(IndType var, IndType sectorWidth);
 
-		IndType computeTotalSectorCount(Dimensions dim, IndType sectorWidth);
+  public:
 
-		template <typename T>
-		std::vector<IndPair> sortVector(Array<T> assignedSectors);
+    GriddingOperator* createGriddingOperator(Array<DType>& kSpaceTraj, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, Dimensions& imgDims);
 
-		Array<IndType> computeSectorDataCount(GriddingND::GriddingOperator *griddingOp,GriddingND::Array<IndType> assignedSectors);
+    GriddingOperator* createGriddingOperator(Array<DType>& kSpaceTraj, Array<DType>& densCompData, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, Dimensions& imgDims);
 
-		Array<IndType> computeSectorCenters(GriddingOperator *griddingOp);
-		Array<IndType> computeSectorCenters2D(GriddingOperator *griddingOp);
+    GriddingOperator* createGriddingOperator(Array<DType>& kSpaceTraj, Array<DType>& densCompData, Array<DType2>& sensData, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, Dimensions& imgDims);
 
-		IndType computeSectorCenter(IndType var, IndType sectorWidth);
+    static GriddingOperatorFactory& getInstance();
 
-    public:
-
-        GriddingOperator* createGriddingOperator(Array<DType>& kSpaceTraj, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, Dimensions& imgDims);
-
-		GriddingOperator* createGriddingOperator(Array<DType>& kSpaceTraj, Array<DType>& densCompData, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, Dimensions& imgDims);
-
-		GriddingOperator* createGriddingOperator(Array<DType>& kSpaceTraj, Array<DType>& densCompData, Array<DType2>& sensData, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, Dimensions& imgDims);
-
-        static GriddingOperatorFactory& getInstance();
-        
-	private:
-		static GriddingOperatorFactory instance;
-	};
+  private:
+    static GriddingOperatorFactory instance;
+    
+    static const bool useGpu = true;
+  };
 
 }
 

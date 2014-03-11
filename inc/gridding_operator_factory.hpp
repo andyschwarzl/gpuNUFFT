@@ -44,7 +44,6 @@ namespace GriddingND
     virtual Array<DType> initDensData(GriddingOperator* griddingOp, IndType coordCnt);
     virtual Array<DType> initCoordsData(GriddingOperator* griddingOp, IndType coordCnt);
     virtual Array<IndType> initSectorCenters(GriddingOperator* griddingOp, IndType sectorCnt);
-    virtual Array<IndType> initSectorCenters2D(GriddingOperator* griddingOp, IndType sectorCnt);
     virtual void debug(const std::string& message);
 
     IndType computeSectorCountPerDimension(IndType dim, IndType sectorWidth);

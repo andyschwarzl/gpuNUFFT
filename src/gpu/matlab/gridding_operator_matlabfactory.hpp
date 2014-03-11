@@ -35,7 +35,6 @@ namespace GriddingND
 	  Array<IndType> initDataIndices(GriddingOperator* griddingOp, IndType coordCnt);
 	  Array<DType> initCoordsData(GriddingOperator* griddingOp, IndType coordCnt);
 	  Array<IndType> initSectorCenters(GriddingOperator* griddingOp, IndType sectorCnt);
-	  Array<IndType> initSectorCenters2D(GriddingOperator* griddingOp, IndType sectorCnt);
 	  Array<IndType> initSectorDataCount(GriddingOperator* griddingOp, IndType dataCount);
 	  Array<DType> initDensData(GriddingOperator* griddingOp, IndType coordCnt);
 

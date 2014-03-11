@@ -136,11 +136,10 @@ void GriddingND::GriddingOperatorFactory::debug(const std::string& message)
 
 GriddingND::Array<IndType> GriddingND::GriddingOperatorFactory::computeSectorCenters2D(GriddingND::GriddingOperator *griddingOp)
 {
-
   GriddingND::Dimensions sectorDims = griddingOp->getGridSectorDims();
   IndType sectorWidth = griddingOp->getSectorWidth();
 
-  GriddingND::Array<IndType> sectorCenters = initSectorCenters2D(griddingOp,sectorDims.count());
+  GriddingND::Array<IndType> sectorCenters = initSectorCenters(griddingOp,sectorDims.count());
 
   for (IndType y=0;y<sectorDims.height; y++)
     for (IndType x=0;x<sectorDims.width;x++)
@@ -204,12 +203,8 @@ GriddingND::Array<DType> GriddingND::GriddingOperatorFactory::initCoordsData(Gri
 
 GriddingND::Array<IndType> GriddingND::GriddingOperatorFactory::initSectorCenters(GriddingND::GriddingOperator* griddingOp, IndType sectorCnt)
 {
-  return initLinArray<IndType>(3*sectorCnt);
-}
-
-GriddingND::Array<IndType> GriddingND::GriddingOperatorFactory::initSectorCenters2D(GriddingND::GriddingOperator* griddingOp, IndType sectorCnt)
-{
-  return initLinArray<IndType>(2*sectorCnt);
+  //distinguish between 2d and 3d data
+  return initLinArray<IndType>(griddingOp->getImageDimensionCount()*sectorCnt);
 }
 
 GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddingOperator(GriddingND::Array<DType>& kSpaceTraj, GriddingND::Array<DType>& densCompData,GriddingND::Array<DType2>& sensData, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, GriddingND::Dimensions& imgDims)

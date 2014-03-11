@@ -80,26 +80,13 @@ GriddingND::Array<IndType> GriddingND::GriddingOperatorMatlabFactory::initSector
 {
 	if (MATLAB_DEBUG)
 		mexPrintf("init Sector Centers Output Array: %d\n",sectorCnt);
-	plhs[4] = createSectorCentersArray(sectorCnt,3);
+	plhs[4] = createSectorCentersArray(sectorCnt,griddingOp->getImageDimensionCount());
 
 	GriddingND::Array<IndType> sectorCenters;
 	sectorCenters.data = (IndType*)mxGetData(plhs[4]);
 	sectorCenters.dim.length = sectorCnt;
 	return sectorCenters;
 }
-
-GriddingND::Array<IndType> GriddingND::GriddingOperatorMatlabFactory::initSectorCenters2D(GriddingND::GriddingOperator* griddingOp, IndType sectorCnt)
-{
-	if (MATLAB_DEBUG)
-		mexPrintf("init Sector Centers Output Array: %d\n",sectorCnt);
-	plhs[4] = createSectorCentersArray(sectorCnt,2);
-
-	GriddingND::Array<IndType> sectorCenters;
-	sectorCenters.data = (IndType*)mxGetData(plhs[4]);
-	sectorCenters.dim.length = sectorCnt;
-	return sectorCenters;
-}
-
 
 GriddingND::Array<IndType> GriddingND::GriddingOperatorMatlabFactory::initSectorDataCount(GriddingND::GriddingOperator* griddingOp, IndType dataCount)
 {

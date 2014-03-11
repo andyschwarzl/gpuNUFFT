@@ -63,7 +63,7 @@ TEST(TestGridding,CPUTest_1SectorKernel3)
 	gridding3D_cpu(data,coords,gdata,kern,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1]);
 
 	int index = get3DC2lin(5,5,5,im_width);
-	printf("index to test %d\n",index);
+	if (DEBUG) printf("index to test %d\n",index);
 	EXPECT_EQ(index,2*555);
 	EXPECT_NEAR(1.0f,gdata[index],epsilon);
 	EXPECT_NEAR(0.4502,gdata[get3DC2lin(5,4,5,im_width)],epsilon*10.0f);
@@ -146,7 +146,7 @@ TEST(TestGridding,CPUTest_1SectorKernel5)
 	gridding3D_cpu(data,coords,gdata,kern,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1]);
 
 	int index = get3DC2lin(5,5,5,im_width);
-	printf("index to test %d\n",index);
+	if (DEBUG) printf("index to test %d\n",index);
 	//EXPECT_EQ(index,2*555);
 	EXPECT_NEAR(1.0f,gdata[index],epsilon);
 	EXPECT_NEAR(0.0049,gdata[get3DC2lin(3,3,5,im_width)],epsilon*10.0f);
@@ -251,7 +251,7 @@ TEST(TestGridding,CPUTest_1SectorKernel3nData)
 	gridding3D_cpu(data,coords,gdata,kern,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1]);
 
 	int index = get3DC2lin(5,5,5,im_width);
-	printf("index to test %d\n",index);
+	if (DEBUG) printf("index to test %d\n",index);
 	//EXPECT_EQ(index,2*555);
 	EXPECT_NEAR(1.0f,gdata[index],epsilon);
 	EXPECT_NEAR(0.1013,gdata[get3DC2lin(3,3,5,im_width)],epsilon*10.0f);
@@ -371,7 +371,7 @@ TEST(TestGridding,CPUTest_2SectorsKernel3nData)
 	gridding3D_cpu(data,coords,gdata,kern,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1]);
 
 	int index = get3DC2lin(5,5,5,im_width);
-	printf("index to test %d\n",index);
+	if (DEBUG) printf("index to test %d\n",index);
 	//EXPECT_EQ(index,2*555);
 	EXPECT_NEAR(1.3152f,gdata[index],epsilon);
 	EXPECT_NEAR(0.2432,gdata[get3DC2lin(3,6,5,im_width)],epsilon*10.0f);
@@ -522,7 +522,7 @@ TEST(TestGridding,CPUTest_8SectorsKernel3nData)
 	gridding3D_cpu(data,coords,gdata,kern,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1]);
 
 	int index = get3DC2lin(5,5,5,im_width);
-	printf("index to test %d\n",index);
+	if (DEBUG) printf("index to test %d\n",index);
 	//EXPECT_EQ(index,2*555);
 	EXPECT_NEAR(1.3152f,gdata[index],epsilon);
 	EXPECT_NEAR(0.2432,gdata[get3DC2lin(3,6,5,im_width)],epsilon*10.0f);
@@ -674,7 +674,7 @@ TEST(TestGridding,CPUTest_8SectorsKernel4nData)
 	gridding3D_cpu(data,coords,gdata,kern,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1]);
 
 	int index = get3DC2lin(5,5,5,im_width);
-	printf("index to test %d\n",index);
+	if (DEBUG) printf("index to test %d\n",index);
 	//EXPECT_EQ(index,2*555);
 	EXPECT_NEAR(1.3558f,gdata[index],epsilon);
 	EXPECT_NEAR(0.3101f,gdata[get3DC2lin(3,6,5,im_width)],epsilon*10.0f);
@@ -1069,7 +1069,7 @@ TEST(TestGridding,CPUTest_8SectorsKernel5nData)
 	gridding3D_cpu(data,coords,gdata,kern,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1]);
 	
 	int index = get3DC2lin(5,5,5,im_width);
-	printf("index to test %d\n",index);
+	if (DEBUG) printf("index to test %d\n",index);
 	
 	EXPECT_NEAR(1.3970f,gdata[index],epsilon);
 	EXPECT_NEAR(0.4256f,gdata[get3DC2lin(3,6,5,im_width)],epsilon*10.0f);
@@ -1145,7 +1145,7 @@ TEST(TestGridding,CPUTest_Kernel5w64)
 	gridding3D_cpu(data,coords,gdata,kern,sectors,sector_count,sector_centers,sector_width, kernel_width, kernel_entries,dims_g[1]);
 	
 	int index = get3DC2lin(5,5,5,im_width);
-	printf("index to test %d\n",index);
+	if (DEBUG) printf("index to test %d\n",index);
 	//EXPECT_EQ(index,2*555);
 	/*EXPECT_NEAR(1.0f,gdata[index].x,epsilon);
 	EXPECT_NEAR(0.0049,gdata[get3DC2lin(3,3,5,im_width)].x,epsilon*10.0f);
@@ -1155,13 +1155,14 @@ TEST(TestGridding,CPUTest_Kernel5w64)
 	EXPECT_NEAR(0.0697,gdata[get3DC2lin(5,7,5,im_width)].x,epsilon*10.0f);
 	EXPECT_NEAR(0.0697,gdata[get3DC2lin(5,3,5,im_width)].x,epsilon*10.0f);
 	*/
-	for (int j=0; j<im_width; j++)
-	{
-		for (int i=0; i<im_width; i++)
-			if (abs(gdata[get3DC2lin(i,im_width-j,32,im_width)])>0.0f)
-				printf("(%d,%d,%d):%.4f ",i,j,32,gdata[get3DC2lin(i,im_width-j,32,im_width)]);
-		printf("\n");
-	}
+	if (DEBUG)
+    for (int j=0; j<im_width; j++)
+	  {
+		  for (int i=0; i<im_width; i++)
+			  if (abs(gdata[get3DC2lin(i,im_width-j,32,im_width)])>0.0f)
+				  printf("(%d,%d,%d):%.4f ",i,j,32,gdata[get3DC2lin(i,im_width-j,32,im_width)]);
+		  printf("\n");
+	  }
 
 	free(data);
 	free(coords);

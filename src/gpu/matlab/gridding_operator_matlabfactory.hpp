@@ -44,7 +44,8 @@ namespace GriddingND
 	
 		  ~GriddingOperatorMatlabFactory()
 		  {
-			  std::cout << "GOMF destruct " << std::endl;
+        if (DEBUG)
+			    std::cout << "GOMF destruct " << std::endl;
 		  }
 
 		// SETTER 

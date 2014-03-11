@@ -10,7 +10,7 @@
 #define get3DC2lin(_x,_y,_z,_width) ((_x) + (_width) * ( (_y) + (_z) * (_width)))
 
 TEST(TestKernel, LoadKernel) {
-	printf("start creating kernel...\n");
+	if (DEBUG) printf("start creating kernel...\n");
 	long kernel_entries = calculateGrid3KernelSize();
 	
 	assert(kernel_entries > 0);
@@ -31,7 +31,7 @@ TEST(TestKernel, LoadKernel) {
 
 
 TEST(TestKernel, LoadKernelFromGriddingFactory) {
-	printf("start creating kernel...\n");
+	if (DEBUG) printf("start creating kernel...\n");
 	IndType kernelWidth = 3;
 	IndType sectorWidth = 8;
 	DType osf = 1;
@@ -103,16 +103,17 @@ TEST(TestGPUGriddingConv,KernelCall1Sector)
 	//Output Grid
 	CufftType* gdata = gdataArray.data;
 
-	for (int j=0; j<im_width; j++)
-	{
-		for (int i=0; i<im_width; i++)
-			printf("%.4f ",gdata[get3DC2lin(i,j,5,im_width)].x);
-		printf("\n");
-	}
+  if (DEBUG)
+	  for (int j=0; j<im_width; j++)
+	  {
+		  for (int i=0; i<im_width; i++)
+			  printf("%.4f ",gdata[get3DC2lin(i,j,5,im_width)].x);
+		  printf("\n");
+	  }
 
-	printf("test %f \n",gdata[4].x);
+	if (DEBUG) printf("test %f \n",gdata[4].x);
 	int index = get3DC2lin(5,5,5,im_width);
-	printf("index to test %d\n",index);
+	if (DEBUG) printf("index to test %d\n",index);
 	EXPECT_EQ(index,555);
 	EXPECT_NEAR(1.0f,gdata[index].x,epsilon);
 	EXPECT_NEAR(0.4502,gdata[get3DC2lin(5,4,5,im_width)].x,epsilon*10.0f);
@@ -206,7 +207,7 @@ TEST(TestGPUGriddingConv,GPUTest_1SectorKernel5)
 	CufftType* gdata = gdataArray.data;
 
 	int index = get3DC2lin(5,5,5,im_width);
-	printf("index to test %d\n",index);
+	if (DEBUG) printf("index to test %d\n",index);
 	//EXPECT_EQ(index,2*555);
 	EXPECT_NEAR(1.0f,gdata[index].x,epsilon);
 	EXPECT_NEAR(0.0049,gdata[get3DC2lin(3,3,5,im_width)].x,epsilon*10.0f);
@@ -343,7 +344,7 @@ TEST(TestGPUGriddingConv,GPUTest_2SectorsKernel3nData)
 	//gridding3D_gpu_adj(data,data_entries,1,coords,&gdata,grid_size,dims_g[1],kern,kernel_entries, kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,false,NULL,CONVOLUTION);
 
 	int index = get3DC2lin(5,5,5,im_width);
-	printf("index to test %d\n",index);
+	if (DEBUG) printf("index to test %d\n",index);
 	//EXPECT_EQ(index,2*555);
 	EXPECT_NEAR(1.3152f,gdata[index].x,epsilon);
 	EXPECT_NEAR(0.2432,gdata[get3DC2lin(3,6,5,im_width)].x,epsilon*10.0f);
@@ -447,16 +448,17 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel3nData)
 	gdataArray = griddingOp->performGriddingAdj(dataArray,GriddingND::CONVOLUTION);
 	//Output Grid
 	CufftType* gdata = gdataArray.data;
-
-	for (int j=0; j<im_width; j++)
-	{
-		for (int i=0; i<im_width; i++)
-			printf("%.4f ",gdata[get3DC2lin(i,im_width-1-j,5,im_width)].x);
-		printf("\n");
-	}
+  
+  if (DEBUG)
+	  for (int j=0; j<im_width; j++)
+	  {
+		  for (int i=0; i<im_width; i++)
+			  printf("%.4f ",gdata[get3DC2lin(i,im_width-1-j,5,im_width)].x);
+		  printf("\n");
+	  }
 
 	int index = get3DC2lin(5,5,5,im_width);
-	printf("index to test %d\n",index);
+	if (DEBUG) printf("index to test %d\n",index);
 	//EXPECT_EQ(index,2*555);
 	EXPECT_NEAR(1.3152f,gdata[index].x,epsilon);
 	EXPECT_NEAR(0.2432,gdata[get3DC2lin(3,6,5,im_width)].x,epsilon*10.0f);
@@ -557,7 +559,7 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel4nData)
 
 
 	int index = get3DC2lin(5,5,5,im_width);
-	printf("index to test %d\n",index);
+	if (DEBUG) printf("index to test %d\n",index);
 	//EXPECT_EQ(index,2*555);
 	EXPECT_NEAR(1.3558f,gdata[index].x,epsilon);
 	EXPECT_NEAR(0.3101f,gdata[get3DC2lin(3,6,5,im_width)].x,epsilon*10.0f);
@@ -665,7 +667,7 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel5nData)
     //gridding3D_gpu_adj(data,data_entries,1,coords,&gdata,grid_size,dims_g[1],kern,kernel_entries, kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,false,NULL,CONVOLUTION);
 
 	int index = get3DC2lin(5,5,5,im_width);
-	printf("index to test %d\n",index);
+	if (DEBUG) printf("index to test %d\n",index);
 	
 	EXPECT_NEAR(1.3970f,gdata[index].x,epsilon);
 	EXPECT_NEAR(0.4256f,gdata[get3DC2lin(3,6,5,im_width)].x,epsilon*10.0f);
@@ -674,12 +676,13 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel5nData)
 	
 	EXPECT_NEAR(0.1093f,gdata[get3DC2lin(8,6,5,im_width)].x,epsilon*10.0f);
 	
-	for (int j=0; j<im_width; j++)
-	{
-		for (int i=0; i<im_width; i++)
-			printf("%.4f ",gdata[get3DC2lin(i,im_width-1-j,5,im_width)].x);
-		printf("\n");
-	}
+  if (DEBUG)
+	  for (int j=0; j<im_width; j++)
+	  {
+		  for (int i=0; i<im_width; i++)
+			  printf("%.4f ",gdata[get3DC2lin(i,im_width-1-j,5,im_width)].x);
+		  printf("\n");
+	  }
 
 	free(data);
 	free(coords);
@@ -772,7 +775,7 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel3nDataw120)
     //gridding3D_gpu_adj(data,data_entries,1,coords,&gdata,grid_size,dims_g[1],kern,kernel_entries, kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,false,NULL,CONVOLUTION);
 
 	int index = get3DC2lin(5,5,5,im_width);
-	printf("index to test %d\n",index);
+	if (DEBUG) printf("index to test %d\n",index);
 	//EXPECT_EQ(index,2*555);
 	
 	free(data);
@@ -862,7 +865,7 @@ TEST(TestGPUGriddingConv,GPUTest_FactorTwoTest)
     //gridding3D_gpu_adj(data,data_entries,1,coords,&gdata,grid_size,dims_g[1],kern,kernel_entries, kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,false,NULL,CONVOLUTION);
 
 	int index = get3DC2lin(5,5,5,im_width);
-	printf("index to test %d\n",index);
+	if (DEBUG) printf("index to test %d\n",index);
 	
 	EXPECT_NEAR(gdata[get3DC2lin(8,8,8,16)].x,2.0f,epsilon);
 

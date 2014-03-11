@@ -71,13 +71,15 @@ TEST(TestGPUGriddingForwardConv,KernelCall1Sector)
 
 	dataArray = griddingOp->performForwardGridding(im_dataArray);
 
-	for (int j=0; j<dataArray.count(); j++)
-	{
-		printf("%.4f %.4f \n",dataArray.data[j].x,dataArray.data[j].y);
-	}
+  if (DEBUG)
+	  for (int j=0; j<dataArray.count(); j++)
+	  {
+		  printf("%.4f %.4f \n",dataArray.data[j].x,dataArray.data[j].y);
+	  }
 	EXPECT_NEAR(0.158092f, dataArray.data[0].x,epsilon);
 
-	printf("\n");
+
+	if (DEBUG) printf("\n");
 
 	free(coords);
 	free(im_data);
@@ -137,17 +139,21 @@ TEST(TestGPUGriddingForwardConv,KernelCall1Sector2Channels)
 
 	dataArray = griddingOp->performForwardGridding(im_dataArray);
 
-	std::cout << "result count : " << dataArray.count() << std::endl;
+  if (DEBUG)
+  {
+    std::cout << "result count : " << dataArray.count() << std::endl;
 
-	for (int j=0; j<dataArray.count(); j++)
-	{
-		printf("%.4f %.4f \n",dataArray.data[j].x,dataArray.data[j].y);
-	}
+	  for (int j=0; j<dataArray.count(); j++)
+	  {
+		  printf("%.4f %.4f \n",dataArray.data[j].x,dataArray.data[j].y);
+	  }
+  }
 	EXPECT_NEAR(0.158092f, dataArray.data[0].x,epsilon);
 	EXPECT_EQ(dataArray.data[1].x, dataArray.data[0].x);
 	EXPECT_EQ(dataArray.data[1].y, dataArray.data[0].y);
 
-	printf("\n");
+	if (DEBUG)
+    printf("\n");
 
 	free(coords);
 	free(im_dataArray.data);

@@ -54,16 +54,18 @@ TEST(Test2DGPUGriddingConv,KernelCall1Sector)
 	//Output Grid
 	CufftType* gdata = gdataArray.data;
 
-	for (int j=0; j<im_width; j++)
-	{
-		for (int i=0; i<im_width; i++)
-			printf("%.4f ",gdata[get2DC2lin(i,j,im_width)].x);
-		printf("\n");
-	}
-
-	printf("test %f \n",gdata[4].x);
+  if (DEBUG)
+	  for (int j=0; j<im_width; j++)
+	  {
+		  for (int i=0; i<im_width; i++)
+			  printf("%.4f ",gdata[get2DC2lin(i,j,im_width)].x);
+		  printf("\n");
+	  }
+  if (DEBUG)
+	  printf("test %f \n",gdata[4].x);
 	int index = get2DC2lin(5,5,im_width);
-	printf("index to test %d\n",index);
+	if (DEBUG) 
+    printf("index to test %d\n",index);
 	EXPECT_EQ(index,55);
 	EXPECT_NEAR(1.0f,gdata[index].x,epsilon);
 	EXPECT_NEAR(0.4502,gdata[get2DC2lin(5,4,im_width)].x,epsilon*10.0f);
@@ -129,7 +131,7 @@ TEST(Test2DGPUGriddingConv,GPUTest_1SectorKernel5)
 	CufftType* gdata = gdataArray.data;
 
 	int index = get2DC2lin(5,5,im_width);
-	printf("index to test %d\n",index);
+	if (DEBUG) printf("index to test %d\n",index);
 	//EXPECT_EQ(index,2*555);
 	EXPECT_NEAR(1.0f,gdata[index].x,epsilon);
 	EXPECT_NEAR(0.0049,gdata[get2DC2lin(3,3,im_width)].x,epsilon*10.0f);
@@ -226,7 +228,7 @@ TEST(Test2DGPUGriddingConv,GPUTest_2SectorsKernel3nData)
 	//gridding3D_gpu_adj(data,data_entries,1,coords,&gdata,grid_size,dims_g[1],kern,kernel_entries, kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,false,NULL,CONVOLUTION);
 
 	int index = get2DC2lin(5,5,im_width);
-	printf("index to test %d\n",index);
+	if (DEBUG) printf("index to test %d\n",index);
 	//EXPECT_EQ(index,2*555);
 	EXPECT_NEAR(1.3152f,gdata[index].x,epsilon);
 	EXPECT_NEAR(0.2432,gdata[get2DC2lin(3,6,im_width)].x,epsilon*10.0f);
@@ -322,15 +324,16 @@ TEST(Test2DGPUGriddingConv,GPUTest_8SectorsKernel3nData)
 	//Output Grid
 	CufftType* gdata = gdataArray.data;
 
-	for (int j=0; j<im_width; j++)
-	{
-		for (int i=0; i<im_width; i++)
-			printf("%.4f ",gdata[get2DC2lin(i,im_width-1-j,im_width)].x);
-		printf("\n");
-	}
+  if (DEBUG)
+	  for (int j=0; j<im_width; j++)
+	  {
+		  for (int i=0; i<im_width; i++)
+			  printf("%.4f ",gdata[get2DC2lin(i,im_width-1-j,im_width)].x);
+		  printf("\n");
+	  }
 
 	int index = get2DC2lin(5,5,im_width);
-	printf("index to test %d\n",index);
+	if (DEBUG) printf("index to test %d\n",index);
 	//EXPECT_EQ(index,2*555);
 	EXPECT_NEAR(1.3152f,gdata[index].x,epsilon);
 	EXPECT_NEAR(0.2432,gdata[get2DC2lin(3,6,im_width)].x,epsilon*10.0f);
@@ -420,7 +423,7 @@ TEST(Test2DGPUGriddingConv,GPUTest_8SectorsKernel4nData)
 	CufftType* gdata = gdataArray.data;
 
 	int index = get2DC2lin(5,5,im_width);
-	printf("index to test %d\n",index);
+	if (DEBUG) printf("index to test %d\n",index);
 	//EXPECT_EQ(index,2*555);
 	EXPECT_NEAR(1.3558f,gdata[index].x,epsilon);
 	EXPECT_NEAR(0.3101f,gdata[get2DC2lin(3,6,im_width)].x,epsilon*10.0f);
@@ -515,7 +518,7 @@ TEST(Test2DGPUGriddingConv,GPUTest_8SectorsKernel5nData)
 	CufftType* gdata = gdataArray.data;
 
 	int index = get2DC2lin(5,5,im_width);
-	printf("index to test %d\n",index);
+	if (DEBUG) printf("index to test %d\n",index);
 	
 	EXPECT_NEAR(1.3970f,gdata[index].x,epsilon);
 	EXPECT_NEAR(0.4256f,gdata[get2DC2lin(3,6,im_width)].x,epsilon*10.0f);
@@ -524,12 +527,13 @@ TEST(Test2DGPUGriddingConv,GPUTest_8SectorsKernel5nData)
 	
 	EXPECT_NEAR(0.1093f,gdata[get2DC2lin(8,6,im_width)].x,epsilon*10.0f);
 	
-	for (int j=0; j<im_width; j++)
-	{
-		for (int i=0; i<im_width; i++)
-			printf("%.4f ",gdata[get2DC2lin(i,im_width-1-j,im_width)].x);
-		printf("\n");
-	}
+  if (DEBUG)
+	  for (int j=0; j<im_width; j++)
+	  {
+		  for (int i=0; i<im_width; i++)
+			  printf("%.4f ",gdata[get2DC2lin(i,im_width-1-j,im_width)].x);
+		  printf("\n");
+	  }
 
 	free(data);
 	free(coords);
@@ -609,7 +613,7 @@ TEST(Test2DGPUGriddingConv,GPUTest_8SectorsKernel3nDataw120)
 	CufftType* gdata = gdataArray.data;
 
 	int index = get2DC2lin(5,5,im_width);
-	printf("index to test %d\n",index);
+	if (DEBUG) printf("index to test %d\n",index);
 	//EXPECT_EQ(index,2*555);
 	
 	free(data);
@@ -688,7 +692,7 @@ TEST(Test2DGPUGriddingConv,GPUTest_FactorTwoTest)
 	CufftType* gdata = gdataArray.data;
 
 	int index = get2DC2lin(5,5,im_width);
-	printf("index to test %d\n",index);
+	if (DEBUG) printf("index to test %d\n",index);
 	
 	EXPECT_NEAR(gdata[get2DC2lin(8,8,16)].x,2.0f,epsilon);
 

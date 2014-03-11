@@ -55,7 +55,7 @@ TEST(TestGPUGriddingDeapo,KernelCall1Sector)
 	//Output Grid
 	CufftType* gdata = gdataArray.data;
 
-	printf("test %f \n",gdata[4].x);
+	if (DEBUG) printf("test %f \n",gdata[4].x);
 
 	/*for (int y = 0; y < im_width; y++)
 	{
@@ -65,7 +65,7 @@ TEST(TestGPUGriddingDeapo,KernelCall1Sector)
 	}*/
 
 	int index = get3DC2lin(5,5,5,im_width);
-	printf("index to test %d\n",index);
+	if (DEBUG) printf("index to test %d\n",index);
 	EXPECT_NEAR(0.01294,gdata[get3DC2lin(10,0,16,im_width)].x,epsilon);
 	
 	free(data);
@@ -127,12 +127,12 @@ TEST(TestGPUGriddingDeapo,KernelCall1Sector2Coils)
 	//Output Grid
 	CufftType* gdata = gdataArray.data;
 	
-	printf("test %f \n",gdata[4].x);
+	if (DEBUG) printf("test %f \n",gdata[4].x);
 	int index = get3DC2lin(5,5,5,im_width);
-	printf("index to test %d\n",index);
+	if (DEBUG) printf("index to test %d\n",index);
 
 	int coil_offset = 1 * griddingOp->getImageDims().count();
-	printf("grid_size: %d\n",griddingOp->getImageDims().count());
+	if (DEBUG) printf("grid_size: %d\n",griddingOp->getImageDims().count());
 	
 	/*for (int j=0; j<im_width; j++)
 	{

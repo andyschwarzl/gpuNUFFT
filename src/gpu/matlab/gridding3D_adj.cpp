@@ -7,8 +7,6 @@
 #include <vector>
 
 //GRIDDING 3D
-#include "gridding_gpu.hpp"
-
 #include "cufft.h"
 #include "cuda_runtime.h"
 #include <cuda.h> 

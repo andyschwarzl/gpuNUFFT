@@ -1,7 +1,6 @@
 
 #include "gridding_operator.hpp"
 
-#include "gridding_gpu.hpp"
 #include "gridding_kernels.hpp"
 #include "cufft_config.hpp"
 #include "cuda_utils.hpp"

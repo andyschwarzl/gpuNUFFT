@@ -5,7 +5,7 @@
 #include <cuda_runtime.h>
 #include <stdio.h>
 #include "cufft.h"
-#include "gridding_gpu.hpp"
+#include "griddingFunctions.hpp"
 #include "gridding_operator.hpp"
 #include <stdarg.h>
 

@@ -1,6 +1,6 @@
 #ifndef CUDA_UTILS_CUH
 #define CUDA_UTILS_CUH
-#include "gridding_gpu.hpp"
+#include "griddingFunctions.hpp"
 
 __constant__ GriddingND::GriddingInfo GI;
 

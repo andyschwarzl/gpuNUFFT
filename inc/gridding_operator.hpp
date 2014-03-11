@@ -2,7 +2,6 @@
 #define GRIDDING_OPERATOR_H_INCLUDED
 
 #include "config.hpp"
-#include "gridding_gpu.hpp"
 #include <iostream>
 
 #define DEFAULT_VALUE(a) ((a == 0) ? 1 : a)

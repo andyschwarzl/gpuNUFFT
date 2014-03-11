@@ -35,6 +35,84 @@ void GriddingND::GriddingOperator::writeOrdered(GriddingND::Array<T>& destArray,
 	}
 }
 
+void GriddingND::GriddingOperator::initKernel()
+{
+  this->kernel.dim.length = calculateGrid3KernelSize(osf, kernelWidth/2.0f);
+  this->kernel.data = (DType*) calloc(this->kernel.count(),sizeof(DType));
+  loadGrid3Kernel(this->kernel.data,(int)this->kernel.count(),(int)kernelWidth,osf);
+}
+
+GriddingND::GriddingInfo* GriddingND::GriddingOperator::initAndCopyGriddingInfo()
+{
+  GriddingND::GriddingInfo* gi_host = (GriddingND::GriddingInfo*)malloc(sizeof(GriddingND::GriddingInfo));
+
+  gi_host->data_count = this->kSpaceTraj.count();
+  gi_host->sector_count = this->gridSectorDims.count();
+  gi_host->sector_width = sectorDims.width;
+
+  gi_host->kernel_width = this->kernelWidth; 
+  gi_host->kernel_widthSquared = this->kernelWidth * this->kernelWidth;
+  gi_host->kernel_count = this->kernel.count();
+
+  gi_host->grid_width_dim = this->getGridDims().count();
+  gi_host->grid_width_offset= (int)(floor(this->getGridDims().width / (DType)2.0));
+
+  gi_host->im_width_dim = imgDims.count();
+  gi_host->im_width_offset = (int)(floor(imgDims.width / (DType)2.0));
+
+  gi_host->imgDims.x = imgDims.width;
+  gi_host->imgDims.y = imgDims.height;
+  gi_host->imgDims.z = imgDims.depth;
+  gi_host->imgDims_count = imgDims.width*imgDims.height*DEFAULT_VALUE(imgDims.depth);//TODO check why not imgDims.count()
+
+  gi_host->gridDims.x = this->getGridDims().width;
+  gi_host->gridDims.y = this->getGridDims().height;
+  gi_host->gridDims.z = this->getGridDims().depth;
+  gi_host->gridDims_count = this->getGridDims().width*this->getGridDims().height*DEFAULT_VALUE(this->getGridDims().depth);//s.a.
+
+  DType kernel_radius = static_cast<DType>(this->kernelWidth) / (DType)2.0;
+  DType radius = kernel_radius / static_cast<DType>(this->getGridDims().width);
+  DType width_inv = (DType)1.0 / static_cast<DType>(this->getGridDims().width);
+
+  DType kernel_width_inv = (DType)1.0 / static_cast<DType>(this->kernelWidth);
+
+  DType radiusSquared = radius * radius;
+  DType kernelRadius_invSqr = (DType)1.0 / radiusSquared;
+  DType dist_multiplier = (this->kernel.count() - 1) * kernelRadius_invSqr;
+
+  if (DEBUG)
+    printf("radius rel. to grid width %f\n",radius);
+
+  GriddingND::Dimensions sectorPadDims = sectorDims + 2*(int)(floor(this->kernelWidth / (DType)2.0));
+
+  int sector_pad_width = sectorPadDims.width;
+  int sector_dim = sectorPadDims.count();
+  int sector_offset = (int)(floor(sector_pad_width / (DType)2.0));
+
+  gi_host->grid_width_inv = width_inv;
+  gi_host->kernel_widthInvSquared = kernel_width_inv * kernel_width_inv;
+  gi_host->osr = this->osf;
+
+  gi_host->kernel_radius = kernel_radius;
+  gi_host->sector_pad_width = sector_pad_width;
+  gi_host->sector_pad_max = sector_pad_width - 1;
+  gi_host->sector_dim = sector_dim;
+  gi_host->sector_offset = sector_offset;
+  gi_host->radiusSquared = radiusSquared;
+  gi_host->dist_multiplier = dist_multiplier;
+
+  gi_host->is2Dprocessing = this->is2DProcessing();
+
+  if (DEBUG)
+    printf("copy Gridding Info to symbol memory... size = %ld \n",sizeof(GriddingND::GriddingInfo));
+
+  initConstSymbol("GI",gi_host,sizeof(GriddingND::GriddingInfo));
+
+  //free(gi_host);
+  if (DEBUG)
+    printf("...done!\n");
+  return gi_host;
+}
 
 // ----------------------------------------------------------------------------
 // performGriddingAdj: NUFFT^H
@@ -99,7 +177,7 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
 
 	//split and run sectors into blocks
 	//and each data point to one thread inside this block 
-	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,this->kernelWidth,this->kernel.count(),this->osf,data_count,this->getImageDims(),this->getGridDims(),this->getSectorDims(),this->is2DProcessing());
+	GriddingInfo* gi_host = initAndCopyGriddingInfo();//
 	
 	DType2* data_d;
 	DType* crds_d, *density_comp_d, *deapo_d;
@@ -342,7 +420,7 @@ void GriddingND::GriddingOperator::performForwardGridding(GriddingND::Array<DTyp
 	IndType		imdata_count        = this->imgDims.count();
 	int			sector_count        = this->gridSectorDims.count();
 
-	GriddingInfo* gi_host = initAndCopyGriddingInfo(sector_count,this->kernelWidth,this->kernel.count(), this->osf,data_count,this->getImageDims(),this->getGridDims(),this->getSectorDims(),this->is2DProcessing());
+	GriddingInfo* gi_host = initAndCopyGriddingInfo();
 
 	//cuda mem allocation
 	DType2 *imdata_d;

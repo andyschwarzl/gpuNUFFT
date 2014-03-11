@@ -10,16 +10,16 @@
 // Sector Assignment 
 //
 void assignSectorsGPU(GriddingND::GriddingOperator* griddingOp, 
-                      GriddingND::Array<DType>& kSpaceTraj, 
-                      IndType* assignedSectors);
+  GriddingND::Array<DType>& kSpaceTraj, 
+  IndType* assignedSectors);
 
 void sortArrays(GriddingND::GriddingOperator* griddingOp, 
-                      std::vector<GriddingND::IndPair> assignedSectorsAndIndicesSorted,
-                      IndType* assignedSectors, 
-                      IndType* dataIndices,
-                      GriddingND::Array<DType>& kSpaceTraj,
-                      DType* trajSorted,
-                      DType* densCompData,
-                      DType* densData);
+  std::vector<GriddingND::IndPair> assignedSectorsAndIndicesSorted,
+  IndType* assignedSectors, 
+  IndType* dataIndices,
+  GriddingND::Array<DType>& kSpaceTraj,
+  DType* trajSorted,
+  DType* densCompData,
+  DType* densData);
 
 #endif

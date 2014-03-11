@@ -31,7 +31,7 @@ namespace GriddingND
 
     ~GriddingOperatorFactory()
     {
-      std::cout << "GOF destruct " << std::endl;
+
     }
 
     Array<IndType> assignSectors(GriddingOperator* griddingOp, Array<DType>& kSpaceTraj);
@@ -75,7 +75,7 @@ namespace GriddingND
 
   private:
     static GriddingOperatorFactory instance;
-    
+
     static const bool useGpu = true;
   };
 

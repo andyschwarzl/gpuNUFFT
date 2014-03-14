@@ -10,10 +10,6 @@ addpath(genpath('../utils'));
 %% Load data
 load sl2d
 
-nPE=128;
-nFE=128;
-nChn = 1;
-
 %% generate Fourier sampling operator
 osf = 1.25;
 wg = 3;
@@ -25,7 +21,7 @@ FT = GRIDDING3D(k_traj,[],imwidth,osf,wg,sw,[imwidth imwidth],'false');
 toc
 
 %% recon
-imgRecon = FT'*dataRadial;
+imgRecon = FT'*dataRadial(:);
 
 %% show results
 figure, imshow(abs(imgRecon(:,:)),[]), title('Recon');

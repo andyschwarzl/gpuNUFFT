@@ -303,8 +303,8 @@ TEST(PrecomputationTest, AssignSectors3D) {
 	                            -0.33,-0.16666,   0,   0, -0.23, 0.45};//z
 
 	GriddingND::Array<DType> kSpaceData;
-    kSpaceData.data = coords;
-    kSpaceData.dim.length = coordCnt;
+  kSpaceData.data = coords;
+  kSpaceData.dim.length = coordCnt;
 
 	GriddingND::Dimensions gridDim;
 	gridDim.width = (IndType)(imageWidth * osr);

@@ -1,7 +1,10 @@
-function [k_traj,dataRadial,dens] = create_phantom(N, radialTraj, nDim, n3D)  
+function [k_traj,dataRadial,dens] = create_phantom(N, radialTraj, nDim,R, n3D)  
 
-if nargin < 4
+if nargin < 5
     n3D = 1;
+end
+if nargin < 4
+    R = 1;
 end
 
 javaaddpath ../../../../STBB/STBBFolder/JarFile/STBB.jar
@@ -14,6 +17,13 @@ sl3d = SheppLogan3D();
 % from -32 - 32
 %
 pR = 32;
+
+% full res of kspace: 128
+pN = 128;
+
+pSub = pN / N;
+pR = pR / pSub;
+
 rho=linspace(-pR,pR,N)';
 
 if (radialTraj)
@@ -28,24 +38,26 @@ if (radialTraj)
         kx = rho*cos(theta);
         ky = rho*sin(theta);
     
-        k_traj = [kx(:) ky(:)]';
+        k_traj = [kx(:) ky(:)];
     elseif (nDim == 3)
-       kx = col(rho*sin(theta))*col(repmat(cos(phi),[1 nRO]))';
-       ky = col(rho*sin(theta))*col(repmat(sin(phi),[1 nRO]))';
-       kz = repmat(col(rho*cos(theta)),[1 nRO*nRO]);
+       kx = col(rho*sin(theta))*col(repmat(cos(phi),[1 1]))';
+       ky = col(rho*sin(theta))*col(repmat(sin(phi),[1 1]))';
+       kz = repmat(col(rho*cos(theta)),[1 nRO]);
        
-       k_traj = [kx(:) ky(:) kz(:)]';
+       k_traj = [kx(:) ky(:) kz(:)];
     end
-    dens = ones(1,size(k_traj,2));
+    dens = col(repmat(abs(rho)/max(rho),[1 numSpokes*nRO]));
 else
     %uniform sampling
-    [X,Y,Z]=meshgrid(rho,rho,rho);
+    
     if (nDim == 2)
+        [X,Y]=meshgrid(rho,rho);
         k_traj = [X(:), Y(:)];
     elseif (nDim == 3)
+        [X,Y,Z]=meshgrid(rho,rho,rho);
         k_traj = [X(:), Y(:), Z(:)];
     end
-    dens = ones(1,size(k_traj,2));
+    dens = ones(1,size(k_traj,1));
 end
 %% test kspace
 if (nDim ==2)
@@ -57,3 +69,7 @@ dataRadial = dataRadial(:,1)+1i*dataRadial(:,2);
 
 %% scale traj to -0.5 0.5
 k_traj = -0.5 + (k_traj+pR)/(2*pR);
+
+dataRadial = dataRadial(1:R:end);
+k_traj = k_traj(1:R:end,:);
+dens = dens(1:R:end);

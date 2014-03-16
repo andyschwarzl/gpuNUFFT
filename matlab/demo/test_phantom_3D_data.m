@@ -17,11 +17,11 @@ sw = 8;
 imwidth = N;
 %%
 tic
-FT = GRIDDING3D(k_traj,dens,imwidth,osf,wg,sw,[imwidth imwidth imwidth],'false');
+FT = GRIDDING3D(k_traj',dens',imwidth,osf,wg,sw,[imwidth imwidth imwidth],'false');
 toc
 
 %% recon
 imgRecon = FT'*dataRadial(:);
 
 %% show results
-figure, imshow(imrotate(abs(imgRecon(:,:,imwidth/2)),90),[]), title('Recon');
+figure, imshow((abs(imgRecon(:,:,N/2))),[]), title('Recon');

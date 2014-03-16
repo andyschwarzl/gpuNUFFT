@@ -18,15 +18,17 @@ sl3d = SheppLogan3D();
 %
 pR = 32;
 
-% full res of kspace: 128
-pN = 128;
-
-pSub = pN / N;
-pR = pR / pSub;
-
-rho=linspace(-pR,pR,N)';
+% res of image
+% del_x = FOV/N
+%
+% res of kspace
+% FOV = -1 to 1
+% del_kx = 1/FOV = 0.5.
+% |k_max| is given by del_kx * N/2
+pR = N / 4;
 
 if (radialTraj)
+    rho=linspace(-pR,pR,N)';
     numSpokes = N/2;
     nRO = N/2;
 
@@ -39,16 +41,18 @@ if (radialTraj)
         ky = rho*sin(theta);
     
         k_traj = [kx(:) ky(:)];
+        dens = col(repmat(abs(rho),[1 numSpokes]));
     elseif (nDim == 3)
        kx = col(rho*sin(theta))*col(repmat(cos(phi),[1 1]))';
        ky = col(rho*sin(theta))*col(repmat(sin(phi),[1 1]))';
        kz = repmat(col(rho*cos(theta)),[1 nRO]);
        
        k_traj = [kx(:) ky(:) kz(:)];
+       dens = sqrt(kx(:).^2+ky(:).^2+kz(:).^2);
     end
-    dens = col(repmat(abs(rho)/max(rho),[1 numSpokes*nRO]));
 else
     %uniform sampling
+    rho=linspace(-pR,pR,N)';
     
     if (nDim == 2)
         [X,Y]=meshgrid(rho,rho);

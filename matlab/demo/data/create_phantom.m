@@ -25,12 +25,14 @@ pR = 32;
 % FOV = -1 to 1
 % del_kx = 1/FOV = 0.5.
 % |k_max| is given by del_kx * N/2
-pR = N / 4;
+FOV = 2;
+del_kx = 1/FOV;
+pR = del_kx * N / 2;
 
 if (radialTraj)
     rho=linspace(-pR,pR,N)';
-    numSpokes = N/2;
-    nRO = N/2;
+    numSpokes = N;
+    nRO = N;
 
     % Trajectory
     theta=linspace(0,pi-pi/numSpokes,numSpokes);
@@ -41,14 +43,15 @@ if (radialTraj)
         ky = rho*sin(theta);
     
         k_traj = [kx(:) ky(:)];
-        dens = col(repmat(abs(rho),[1 numSpokes]));
+        dens = col(repmat(abs(rho)./max(rho),[1 numSpokes]));
     elseif (nDim == 3)
        kx = col(rho*sin(theta))*col(repmat(cos(phi),[1 1]))';
        ky = col(rho*sin(theta))*col(repmat(sin(phi),[1 1]))';
        kz = repmat(col(rho*cos(theta)),[1 nRO]);
        
        k_traj = [kx(:) ky(:) kz(:)];
-       dens = sqrt(kx(:).^2+ky(:).^2+kz(:).^2);
+       %dens = sqrt(kx(:).^2+ky(:).^2+kz(:).^2);
+       dens = col(repmat((abs(rho)./max(rho)).^2,[1 numSpokes nRO]));
     end
 else
     %uniform sampling

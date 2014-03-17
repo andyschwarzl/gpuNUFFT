@@ -13,7 +13,7 @@ img = flipud(ifftshift(ifftn((dataRadialR))));
 figure, imshow(abs(img),[]);
 
 %% generate 3d phantom kSpace Data
-N = 128;
+N = 64;
 R = 1;
 radial = true;
 [k_traj,dataRadial,dens] = create_phantom(N,radial,3,R);

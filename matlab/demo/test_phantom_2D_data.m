@@ -14,10 +14,10 @@ load sl2d
 osf = 1.25;
 wg = 3;
 sw = 8;
-imwidth = N;
+imwidth = imgDim(1);
 %%
 tic
-FT = GRIDDING3D(k_traj',dens,imwidth,osf,wg,sw,[imwidth imwidth],'false');
+FT = GRIDDING3D(k_traj',dens,imwidth,osf,wg,sw,imgDim,'false');
 toc
 
 %% recon

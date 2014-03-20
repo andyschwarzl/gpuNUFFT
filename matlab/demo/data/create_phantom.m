@@ -1,9 +1,6 @@
-function [k_traj,dataRadial,dens] = create_phantom(N, radialTraj, nDim,R, n3D)  
+function [k_traj,dataRadial,dens] = create_phantom(imgDim, radialTraj,R)  
 
-if nargin < 5
-    n3D = 1;
-end
-if nargin < 4
+if nargin < 3
     R = 1;
 end
 
@@ -14,10 +11,7 @@ sl3d = SheppLogan3D();
 
 %% build kspace trajectory
 % phantom kspace has to be scaled
-% from -32 - 32
 %
-pR = 32;
-
 % res of image
 % del_x = FOV/N
 %
@@ -25,12 +19,26 @@ pR = 32;
 % FOV = -1 to 1
 % del_kx = 1/FOV = 0.5.
 % |k_max| is given by del_kx * N/2
+nDim = size(imgDim,2);
+N = imgDim(1);
+
+N3D =0;
+if (nDim == 3)
+    N3D = imgDim(3);
+end;
+
 FOV = 2;
+FOVz = N3D/N * 2;
 del_kx = 1/FOV;
-pR = del_kx * N / 2;
+del_kz = 1/FOV;
+
+kR = del_kx * N / 2;
+kRz = del_kz * N3D / 2;
 
 if (radialTraj)
-    rho=linspace(-pR,pR,N)';
+    rho=linspace(-kR,kR,N)';
+    rhoZ=linspace(-kRz,kRz,N3D)';
+    
     numSpokes = N;
     nRO = N;
 
@@ -50,18 +58,18 @@ if (radialTraj)
        kz = repmat(col(rho*cos(theta)),[1 nRO]);
        
        k_traj = [kx(:) ky(:) kz(:)];
-       %dens = sqrt(kx(:).^2+ky(:).^2+kz(:).^2);
-       dens = col(repmat((abs(rho)./max(rho)).^2,[1 numSpokes nRO]));
+       dens = sqrt(kx(:).^2+ky(:).^2+kz(:).^2);
+       %dens = col(repmat((abs(rho)./max(rho)).^2,[1 numSpokes nRO]));
     end
 else
     %uniform sampling
-    rho=linspace(-pR,pR,N)';
-    
+    rho=linspace(-kR,kR,N)';
+    rhoz=linspace(-kRz,kRz,N3D)';
     if (nDim == 2)
         [X,Y]=meshgrid(rho,rho);
         k_traj = [X(:), Y(:)];
     elseif (nDim == 3)
-        [X,Y,Z]=meshgrid(rho,rho,rho);
+        [X,Y,Z]=meshgrid(rho,rho,rhoz);
         k_traj = [X(:), Y(:), Z(:)];
     end
     dens = ones(1,size(k_traj,1));
@@ -75,7 +83,14 @@ end
 dataRadial = dataRadial(:,1)+1i*dataRadial(:,2);
 
 %% scale traj to -0.5 0.5
-k_traj = -0.5 + (k_traj+pR)/(2*pR);
+%TODO depend scaling on zDimensions!
+k_traj(:,1:2) = -0.5 + (k_traj(:,1:2)+kR)/(2*kR);
+if (nDim == 3)
+    rZ = N3D/(2*N); 
+    k_traj(:,3) = -rZ + rZ*(k_traj(:,3)+kRz)/(kRz);
+    min(k_traj(:,3))
+    max(k_traj(:,3))
+end
 
 dataRadial = dataRadial(1:R:end);
 k_traj = k_traj(1:R:end,:);

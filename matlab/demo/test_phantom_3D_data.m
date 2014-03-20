@@ -11,8 +11,9 @@ addpath(genpath('../../../fessler/NUFFT'));
 addpath(genpath('../utils'));
 %% Load data
 load sl3d64
-
-useGPU = true;
+N = imgDim(1);
+N3D = imgDim(3);
+useGPU = false;
 %% generate Fourier sampling operator
 osf = 1.25;
 wg = 3;
@@ -21,9 +22,9 @@ imwidth = N;
 %%
 tic
 if useGPU
-    FT = GRIDDING3D(k_traj',dens',imwidth,osf,wg,sw,[imwidth imwidth imwidth],'false');
+    FT = GRIDDING3D(k_traj',dens',imwidth,osf,wg,sw,imgDim,'false');
 else
-    FT = NUFFT3D(k_traj, dens, 1, 0, [imwidth imwidth imwidth], 2,1);
+    FT = NUFFT3D(k_traj, dens, 1, 0, imgDim, 2,1);
 end
 toc
 
@@ -34,4 +35,4 @@ toc
 %% show results
 figure, imshow((abs(imgRecon(:,:,N/2))),[]), title('Recon');
 %%
-show3DImage([6,6],imgRecon(:,:,N/2-18:N/2+18),'test','slice');
+show3DImage([4,8],abs(imgRecon(:,:,N3D/2-15:N3D/2+16)),'test','slice');

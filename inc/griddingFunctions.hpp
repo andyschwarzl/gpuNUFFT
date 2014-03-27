@@ -144,6 +144,17 @@ __inline__ __device__ __host__ bool isOutlier(int x, int y, int z, int center_x,
     (center_z - sector_offset + z) < 0);
 }
 
+__inline__ __device__ __host__ bool isOutlier(int x, int y, int z, int center_x, int center_y, int center_z, IndType3 dim, int sector_offset)
+{
+  return ((center_x - sector_offset + x) >= dim.x ||
+    (center_x - sector_offset + x) < 0 ||
+    (center_y - sector_offset + y) >= dim.y ||
+    (center_y - sector_offset + y) < 0 ||
+    (center_z - sector_offset + z) >= dim.z ||
+    (center_z - sector_offset + z) < 0);
+}
+
+
 __inline__ __device__ __host__ bool isOutlier2D(int x, int y, int center_x, int center_y, int width, int sector_offset)
 {
   return ((center_x - sector_offset + x) >= width ||

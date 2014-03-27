@@ -33,7 +33,7 @@ TEST(TestGPUGriddingFFT,KernelCall1Sector)
 	float osr = DEFAULT_OVERSAMPLING_RATIO;
 
 	//sectors of data, count and start indices
-	int sector_width = 10;
+	int sector_width = 5;
 	
 	GriddingND::Array<DType> kSpaceData;
     kSpaceData.data = coords;

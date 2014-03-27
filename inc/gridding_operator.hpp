@@ -120,7 +120,7 @@ namespace GriddingND
     DType grid_width_inv;
 
     int im_width_dim;
-    int im_width_offset;
+    int im_width_offset;//used in deapodization
 
     DType osr;
 
@@ -131,6 +131,7 @@ namespace GriddingND
     int sector_pad_width;
     int sector_pad_max;
     int sector_offset;
+    int aniso_z_shift;
 
     DType radiusSquared;
     DType dist_multiplier;

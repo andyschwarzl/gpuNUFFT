@@ -49,6 +49,11 @@ __inline__ __device__ __host__ IndType computeXY2Lin(IndType x, IndType y, Gridd
   return x + dim.height * y;
 }
 
+__inline__ __device__ __host__ IndType computeXY2Lin(IndType x, IndType y, IndType3 dim)
+{
+  return x + dim.y * y;
+}
+
 __inline__ __device__ __host__ IndType computeInd32Lin(IndType3 sector, GriddingND::Dimensions dim)
 {
   return sector.x + dim.height * (sector.y + dim.width * sector.z);

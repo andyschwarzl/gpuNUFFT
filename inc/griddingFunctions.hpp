@@ -163,6 +163,14 @@ __inline__ __device__ __host__ bool isOutlier2D(int x, int y, int center_x, int 
     (center_y - sector_offset + y) < 0);
 }
 
+__inline__ __device__ __host__ bool isOutlier2D(int x, int y, int center_x, int center_y, IndType3 dim, int sector_offset)
+{
+  return ((center_x - sector_offset + x) >= dim.x ||
+    (center_x - sector_offset + x) < 0 ||
+    (center_y - sector_offset + y) >= dim.y ||
+    (center_y - sector_offset + y) < 0);
+}
+
 __inline__ __device__ __host__ int calculateOppositeIndex(int coord,int center,int width, int offset)
 {
   //return (center - offset + coord) % width;

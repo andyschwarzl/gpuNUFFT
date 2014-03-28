@@ -74,7 +74,7 @@ __global__ void deapodizationKernel(CufftType* gdata, DType beta, DType norm_val
   DType deapo;
   while (t < N) 
   { 
-    getCoordsFromIndex(t, &x, &y, &z, GI.imgDims.x);
+    getCoordsFromIndex(t, &x, &y, &z, GI.imgDims.x,GI.imgDims.y,GI.imgDims.z);
 
     deapo = calculateDeapodizationAt(x,y,z,GI.im_width_offset,GI.grid_width_inv,GI.kernel_width,beta,norm_val);
     //check if deapodization value is valid number
@@ -97,7 +97,7 @@ __global__ void deapodizationKernel2D(CufftType* gdata, DType beta, DType norm_v
   DType deapo;
   while (t < N) 
   { 
-    getCoordsFromIndex2D(t, &x, &y, GI.imgDims.x);
+    getCoordsFromIndex2D(t, &x, &y, GI.imgDims.x,GI.imgDims.y);
 
     deapo = calculateDeapodizationAt2D(x,y,GI.im_width_offset,GI.grid_width_inv,GI.kernel_width,beta,norm_val);
     //check if deapodization value is valid number
@@ -119,7 +119,7 @@ __global__ void precomputeDeapodizationKernel(DType* deapo_d, DType beta, DType 
   DType deapo;
   while (t < N) 
   { 
-    getCoordsFromIndex(t, &x, &y, &z, GI.imgDims.x);
+    getCoordsFromIndex(t, &x, &y, &z, GI.imgDims.x,GI.imgDims.y,GI.imgDims.z);
 
     deapo = calculateDeapodizationAt(x,y,z,GI.im_width_offset,GI.grid_width_inv,GI.kernel_width,beta,norm_val);
     //check if deapodization value is valid number
@@ -141,7 +141,7 @@ __global__ void precomputeDeapodizationKernel2D(DType* deapo_d, DType beta, DTyp
   DType deapo;
   while (t < N) 
   { 
-    getCoordsFromIndex2D(t, &x, &y, GI.imgDims.x);
+    getCoordsFromIndex2D(t, &x, &y, GI.imgDims.x,GI.imgDims.y);
 
     deapo = calculateDeapodizationAt2D(x,y,GI.im_width_offset,GI.grid_width_inv,GI.kernel_width,beta,norm_val);
     //check if deapodization value is valid number
@@ -358,7 +358,7 @@ void performFFTShift(CufftType* gdata_d,
   if (gi_host->is2Dprocessing)
     fftShiftKernel2D<<<grid_dim,block_dim>>>(gdata_d,offset,gridDims.width*t_width);
   else
-    fftShiftKernel<<<grid_dim,block_dim>>>(gdata_d,offset,gridDims.width*gridDims.width*t_width);
+    fftShiftKernel<<<grid_dim,block_dim>>>(gdata_d,offset,gridDims.count()/2);
 }
 
 __global__ void forwardDeapodizationKernel(DType2* imdata, DType beta, DType norm_val, int N)

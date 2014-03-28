@@ -57,7 +57,9 @@ GriddingND::GriddingInfo* GriddingND::GriddingOperator::initAndCopyGriddingInfo(
   gi_host->grid_width_offset= (int)(floor(this->getGridDims().width / (DType)2.0));
 
   gi_host->im_width_dim = imgDims.count();
-  gi_host->im_width_offset = (int)(floor(imgDims.width / (DType)2.0));
+  gi_host->im_width_offset.x = (int)(floor(imgDims.width / (DType)2.0));
+  gi_host->im_width_offset.y = (int)(floor(imgDims.height / (DType)2.0));
+  gi_host->im_width_offset.z = (int)(floor(imgDims.depth / (DType)2.0));
 
   gi_host->imgDims.x = imgDims.width;
   gi_host->imgDims.y = imgDims.height;
@@ -235,7 +237,6 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
   if (DEBUG)
     printf("creating cufft plan with %d,%d,%d dimensions\n",DEFAULT_VALUE(gi_host->gridDims.z),gi_host->gridDims.y,gi_host->gridDims.x);
   cufftResult res = cufftPlan3d(&fft_plan, DEFAULT_VALUE(gi_host->gridDims.z),gi_host->gridDims.y,gi_host->gridDims.x, CufftTransformType) ;
-  //cufftResult res = cufftPlan2d(&fft_plan,gi_host->gridDims.y,gi_host->gridDims.x, CufftTransformType) ;
   if (res != CUFFT_SUCCESS) 
     fprintf(stderr,"error on CUFFT Plan creation!!! %d\n",res);
   int err;

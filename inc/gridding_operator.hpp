@@ -120,7 +120,7 @@ namespace GriddingND
     DType grid_width_inv;
 
     int im_width_dim;
-    int im_width_offset;//used in deapodization
+    IndType3 im_width_offset;//used in deapodization
 
     DType osr;
 

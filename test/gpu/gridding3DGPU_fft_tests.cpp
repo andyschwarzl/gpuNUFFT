@@ -8,6 +8,137 @@
 
 #define get3DC2lin(_x,_y,_z,_width) ((_x) + (_width) * ( (_y) + (_z) * (_width)))
 
+void fftShift(int* data,int N,IndType3 gridDims,IndType3 offset)
+{
+  int t = 0;
+  int x, y, z, x_opp, y_opp, z_opp, ind_opp;
+  while (t < N/2) 
+  { 
+    getCoordsFromIndex(t, &x, &y, &z, gridDims.x,gridDims.y,gridDims.z);
+    //calculate "opposite" coord pair
+    x_opp = (x + offset.x) % gridDims.x;
+    y_opp = (y + offset.y) % gridDims.y;
+    z_opp = (z + offset.z) % gridDims.z;
+    ind_opp = computeXYZ2Lin(x_opp,y_opp,z_opp,gridDims);
+    //swap points
+    int temp = data[t];
+    data[t] = data[ind_opp];
+    data[ind_opp] = temp;
+
+    t++;
+  }
+}
+
+void debugGrid(int* data,IndType3 gridDims)
+{
+  if (DEBUG) 
+  {
+    for (int k=0; k<gridDims.z; k++)
+    {
+      for (int j=0; j<gridDims.y; j++)
+	    {
+		    for (int i=0; i<gridDims.x; i++)
+			    printf("%d ",data[computeXYZ2Lin(i,gridDims.x-1-j,k,gridDims)]);
+		    printf("\n");
+	    }
+     printf("-------------------------------------------------------------\n");
+    }
+  }
+}
+
+TEST(TestFFTShift,Shift_2x2x2)
+{
+  int N = 8;
+  int data[8];
+  for (int i = 0; i<N; i++)
+    data[i] = i;
+  
+  IndType3 gridDims;
+  gridDims.x = 2;
+  gridDims.y = 2;
+  gridDims.z = 2;
+
+  IndType3 offset;
+  offset.x = 1;
+  offset.y = 1;
+  offset.z = 1;
+  
+  int expected[] = {7,6,5,4,3,2,1,0};
+
+  debugGrid(data,gridDims);
+
+  fftShift(&data[0],N,gridDims,offset);
+    
+  for (int i=0; i<N;i++)
+    EXPECT_EQ(expected[i],data[i]);
+
+
+  printf("shifted: \n");
+  debugGrid(data,gridDims);
+}
+
+
+TEST(TestFFTShift,Shift_2x2x1)
+{
+  const int N = 4;
+  int data[N];
+  for (int i = 0; i<N; i++)
+    data[i] = i;
+  
+  IndType3 gridDims;
+  gridDims.x = 2;
+  gridDims.y = 2;
+  gridDims.z = 1;
+
+  IndType3 offset;
+  offset.x = 1;
+  offset.y = 1;
+  offset.z = 1;
+
+  int expected[] = {3,2,1,0};
+
+  debugGrid(data,gridDims);
+
+  fftShift(&data[0],N,gridDims,offset);
+  
+  for (int i=0; i<N;i++)
+    EXPECT_EQ(expected[i],data[i]);
+
+  printf("shifted: \n");
+  debugGrid(data,gridDims);
+}
+
+TEST(TestFFTShift,Shift_4x4x2)
+{
+  const int N = 32;
+  int data[N];
+  for (int i = 0; i<N; i++)
+    data[i] = i;
+  
+  IndType3 gridDims;
+  gridDims.x = 4;
+  gridDims.y = 4;
+  gridDims.z = 2;
+
+  IndType3 offset;
+  offset.x = 2;
+  offset.y = 2;
+  offset.z = 1;
+
+  int expected[] = {26,27,24,25,30,31,28,29,18,19,16,17,22,23,20,21,10,11,8,9,14,15,12,13,2,3,0,1,6,7,4,5};
+
+  debugGrid(data,gridDims);
+
+  fftShift(&data[0],N,gridDims,offset);
+  
+  for (int i=0; i<N;i++)
+    EXPECT_EQ(expected[i],data[i]);
+
+  printf("shifted: \n");
+  debugGrid(data,gridDims);
+}
+
+
 TEST(TestGPUGriddingFFT,KernelCall1Sector)
 {
 	int kernel_width = 3;

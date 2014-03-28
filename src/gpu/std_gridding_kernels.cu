@@ -1,11 +1,11 @@
 #ifndef STD_GRIDDING_KERNELS_CU
 #define STD_GRIDDING_KERNELS_CU
 
-#include "gridding_kernels.hpp"
-#include "cuda_utils.hpp"
-
 #include <string>
 
+#include "gridding_kernels.hpp"
+#include "cuda_utils.hpp"
+#include "precomp_utils.hpp"
 #include "cuda_utils.cuh"
 
 // Method to initialize CONSTANT memory symbols. Needs to reside in *.cu file 
@@ -183,18 +183,18 @@ __global__ void cropKernel2D(CufftType* gdata,CufftType* imdata, int offset, int
 	}
 }
 
-__global__ void fftShiftKernel(CufftType* gdata, int offset, int N)
+__global__ void fftShiftKernel(CufftType* gdata, IndType3 offset, int N)
 {
 	int t = threadIdx.x +  blockIdx.x *blockDim.x;
 	int x, y, z, x_opp, y_opp, z_opp, ind_opp;
 	while (t < N) 
 	{ 
-		getCoordsFromIndex(t, &x, &y, &z, GI.gridDims.x);
+		getCoordsFromIndex(t, &x, &y, &z, GI.gridDims.x,GI.gridDims.y,GI.gridDims.z);
 		//calculate "opposite" coord pair
-		x_opp = (x + offset) % GI.gridDims.x;
-		y_opp = (y + offset) % GI.gridDims.y;
-		z_opp = (z + offset) % GI.gridDims.z;
-		ind_opp = getIndex(x_opp,y_opp,z_opp,GI.gridDims.x);
+		x_opp = (x + offset.x) % GI.gridDims.x;
+		y_opp = (y + offset.y) % GI.gridDims.y;
+		z_opp = (z + offset.z) % GI.gridDims.z;
+		ind_opp = computeXYZ2Lin(x_opp,y_opp,z_opp,GI.gridDims);
 		//swap points
 		CufftType temp = gdata[t];
 		gdata[t] = gdata[ind_opp];
@@ -204,17 +204,17 @@ __global__ void fftShiftKernel(CufftType* gdata, int offset, int N)
 	}
 }
 
-__global__ void fftShiftKernel2D(CufftType* gdata, int offset, int N)
+__global__ void fftShiftKernel2D(CufftType* gdata, IndType3 offset, int N)
 {
 	int t = threadIdx.x +  blockIdx.x *blockDim.x;
 	int x, y, x_opp, y_opp, ind_opp;
 	while (t < N) 
 	{ 
-		getCoordsFromIndex2D(t, &x, &y, GI.gridDims.x);
+		getCoordsFromIndex2D(t, &x, &y, GI.gridDims.x,GI.gridDims.y);
 		//calculate "opposite" coord pair
-		x_opp = (x + offset) % GI.gridDims.x;
-		y_opp = (y + offset) % GI.gridDims.y;
-		ind_opp = getIndex2D(x_opp,y_opp,GI.gridDims.x);
+		x_opp = (x + offset.x) % GI.gridDims.x;
+		y_opp = (y + offset.y) % GI.gridDims.y;
+		ind_opp = computeXY2Lin(x_opp,y_opp,GI.gridDims);
 		//swap points
 		CufftType temp = gdata[t];
 		gdata[t] = gdata[ind_opp];
@@ -320,36 +320,42 @@ void performCrop(CufftType* gdata_d,
 
 void performFFTShift(CufftType* gdata_d,
 					 GriddingND::FFTShiftDir shift_dir,
-					 int width,
+					 GriddingND::Dimensions gridDims,
 					 GriddingND::GriddingInfo* gi_host)
 {
-	int offset= 0;
+	IndType3 offset;
 	int t_width = 0;
 	if (shift_dir == GriddingND::FORWARD)
 	{
-		offset = (int)ceil((DType)(width / (DType)2.0));
-		if (width % 2)
-			t_width = offset - 1;
+		offset.x = (int)ceil((DType)(gridDims.width / (DType)2.0));
+    offset.y = (int)ceil((DType)(gridDims.height / (DType)2.0));
+    offset.z = (int)ceil((DType)(gridDims.depth / (DType)2.0));
+		if (gridDims.width % 2)
+		{
+      t_width = offset.x - 1;
+    }
 		else 
-			t_width = offset;
+			t_width = offset.x;
 	}
 	else
 	{
-		offset = (int)floor((DType)(width / (DType)2.0));
-		t_width = offset;
+		offset.x = (int)floor((DType)(gridDims.width / (DType)2.0));
+    offset.y = (int)floor((DType)(gridDims.height / (DType)2.0));
+    offset.z = (int)floor((DType)(gridDims.depth / (DType)2.0));
+		t_width = offset.x;
 	}
 	dim3 grid_dim;
 	if (gi_host->is2Dprocessing)
-		grid_dim = dim3(getOptimalGridDim(width*t_width,THREAD_BLOCK_SIZE));
+		grid_dim = dim3(getOptimalGridDim(gridDims.width*t_width,THREAD_BLOCK_SIZE));
 	else
-		grid_dim = dim3(getOptimalGridDim(width*width,THREAD_BLOCK_SIZE));
+		grid_dim = dim3(getOptimalGridDim(gridDims.width*gridDims.width,THREAD_BLOCK_SIZE));
 
 	dim3 block_dim(THREAD_BLOCK_SIZE);
 
 	if (gi_host->is2Dprocessing)
-		fftShiftKernel2D<<<grid_dim,block_dim>>>(gdata_d,offset,width*t_width);
+		fftShiftKernel2D<<<grid_dim,block_dim>>>(gdata_d,offset,gridDims.width*t_width);
 	else
-		fftShiftKernel<<<grid_dim,block_dim>>>(gdata_d,offset,width*width*t_width);
+		fftShiftKernel<<<grid_dim,block_dim>>>(gdata_d,offset,gridDims.width*gridDims.width*t_width);
 }
 
 __global__ void forwardDeapodizationKernel(DType2* imdata, DType beta, DType norm_val, int N)

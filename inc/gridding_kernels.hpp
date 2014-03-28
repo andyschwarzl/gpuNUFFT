@@ -32,7 +32,7 @@ void performDensityCompensation(DType2* data, DType* density_comp, GriddingND::G
 
 void performFFTShift(CufftType* gdata_d,
   GriddingND::FFTShiftDir shift_dir,
-  int width,
+  GriddingND::Dimensions gridDims,
   GriddingND::GriddingInfo* gi_host);
 
 void performCrop(CufftType* gdata_d,

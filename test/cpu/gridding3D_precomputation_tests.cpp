@@ -678,3 +678,94 @@ TEST(PrecomputationTest, AnisotropicComputeSectorCenters) {
 
 	free(sectorCenters.data);
 }
+
+TEST(IndexComputationTest, TestGetCoordsFromIndex_2x2x2) 
+{
+  const int N = 8;
+  int data[N];
+  for (int i = 0; i<N; i++)
+    data[i] = i;
+  
+  IndType3 gridDims;
+  gridDims.x = 2;
+  gridDims.y = 2;
+  gridDims.z = 2;
+
+  int x, y, z;
+  int expected[] = {0,0,0,
+                     1,0,0,
+                     0,1,0,
+                     1,1,0,
+                     0,0,1,
+                     1,0,1,
+                     0,1,1,
+                     1,1,1};
+
+  for (int i=0; i<N; i++)
+  {
+    getCoordsFromIndex(i, &x, &y, &z, gridDims.x,gridDims.y,gridDims.z);
+    EXPECT_EQ(expected[3*i],x);
+    EXPECT_EQ(expected[3*i+1],y);
+    EXPECT_EQ(expected[3*i+2],z);
+  }
+}
+
+TEST(IndexComputationTest, TestGetCoordsFromIndex_2x2x1) 
+{
+  int N = 4;
+  int data[4];
+  for (int i = 0; i<N; i++)
+    data[i] = i;
+  
+  IndType3 gridDims;
+  gridDims.x = 2;
+  gridDims.y = 2;
+  gridDims.z = 1;
+
+  int x, y, z;
+  int expected[] = {0,0,0,
+                    1,0,0,
+                    0,1,0,
+                    1,1,0};
+  for (int i=0; i<N; i++)
+  {
+    getCoordsFromIndex(i, &x, &y, &z, gridDims.x,gridDims.y,gridDims.z);
+    EXPECT_EQ(expected[3*i],x);
+    EXPECT_EQ(expected[3*i+1],y);
+    EXPECT_EQ(expected[3*i+2],z);
+  }
+}
+
+TEST(IndexComputationTest, TestGetCoordsFromIndex_4x4x2) 
+{
+  const int N = 32;
+  int data[N];
+  for (int i = 0; i<N; i++)
+    data[i] = i;
+  
+  IndType3 gridDims;
+  gridDims.x = 4;
+  gridDims.y = 4;
+  gridDims.z = 2;
+
+  int x, y, z;
+  int expected[N*3];
+  int cnt =0;
+  for (int z=0;z<gridDims.z;z++)
+    for (int y=0;y<gridDims.y;y++)
+      for (int x=0;x<gridDims.x;x++)
+      {
+        expected[cnt*3]=x;
+        expected[cnt*3+1]=y;
+        expected[cnt*3+2]=z;
+        cnt++;
+      }
+
+  for (int i=0; i<N; i++)
+  {
+    getCoordsFromIndex(i, &x, &y, &z, gridDims.x,gridDims.y,gridDims.z);
+    EXPECT_EQ(expected[3*i],x);
+    EXPECT_EQ(expected[3*i+1],y);
+    EXPECT_EQ(expected[3*i+2],z);
+  }
+}

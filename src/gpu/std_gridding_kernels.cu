@@ -404,15 +404,15 @@ __global__ void forwardDeapodizationKernel2D(DType2* imdata, DType beta, DType n
 }
 
 
-__global__ void paddingKernel(DType2* imdata,CufftType* gdata, int offset,int N)
+__global__ void paddingKernel(DType2* imdata,CufftType* gdata, IndType3 offset,int N)
 {	
   int t = threadIdx.x +  blockIdx.x *blockDim.x;
 
   int x, y, z,grid_ind;
   while (t < N) 
   { 
-    getCoordsFromIndex(t, &x, &y, &z, GI.imgDims.x);
-    grid_ind =  getIndex(offset + x,offset + y,offset +z,GI.gridDims.x);
+    getCoordsFromIndex(t, &x, &y, &z, GI.imgDims.x,GI.imgDims.y,GI.imgDims.z);
+    grid_ind =  computeXYZ2Lin(offset.x + x,offset.y + y,offset.z +z,GI.gridDims);
 
     gdata[grid_ind].x =  imdata[t].x;
     gdata[grid_ind].y = imdata[t].y;
@@ -420,15 +420,15 @@ __global__ void paddingKernel(DType2* imdata,CufftType* gdata, int offset,int N)
   }
 }
 
-__global__ void paddingKernel2D(DType2* imdata,CufftType* gdata, int offset,int N)
+__global__ void paddingKernel2D(DType2* imdata,CufftType* gdata, IndType3 offset,int N)
 {	
   int t = threadIdx.x +  blockIdx.x *blockDim.x;
 
   int x, y,grid_ind;
   while (t < N) 
   { 
-    getCoordsFromIndex2D(t, &x, &y,GI.imgDims.x);
-    grid_ind =  getIndex2D(offset + x,offset + y,GI.gridDims.x);
+    getCoordsFromIndex2D(t, &x, &y,GI.imgDims.x,GI.imgDims.y);
+    grid_ind =  computeXY2Lin(offset.x + x,offset.y + y,GI.gridDims);
 
     gdata[grid_ind].x =  imdata[t].x;
     gdata[grid_ind].y = imdata[t].y;
@@ -478,7 +478,10 @@ void performPadding(DType2* imdata_d,
   CufftType* gdata_d,					
   GriddingND::GriddingInfo* gi_host)
 {
-  int ind_off = (int)(gi_host->imgDims.x * ((DType)gi_host->osr -1.0f)/(DType)2);
+  IndType3 ind_off;
+  ind_off.x = (IndType)(gi_host->imgDims.x * ((DType)gi_host->osr -1.0f)/(DType)2);
+  ind_off.y = (IndType)(gi_host->imgDims.y * ((DType)gi_host->osr -1.0f)/(DType)2);
+  ind_off.z = (IndType)(gi_host->imgDims.z * ((DType)gi_host->osr -1.0f)/(DType)2);
   if (DEBUG)
     printf("start padding image with offset %d\n",ind_off);
 

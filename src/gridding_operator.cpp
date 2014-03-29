@@ -99,7 +99,7 @@ GriddingND::GriddingInfo* GriddingND::GriddingOperator::initAndCopyGriddingInfo(
   gi_host->sector_pad_max = sector_pad_width - 1;
   gi_host->sector_dim = sector_dim;
   gi_host->sector_offset = sector_offset;
-  gi_host->aniso_z_shift = ceil((imgDims.width-imgDims.depth)/2.0);
+  gi_host->aniso_z_shift = ceil((this->getGridDims().width-this->getGridDims().depth)/2.0);
   gi_host->radiusSquared = radiusSquared;
   gi_host->dist_multiplier = dist_multiplier;
 

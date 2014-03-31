@@ -369,7 +369,10 @@ void performConvolution( DType2* data_d,
     printf("error at adj thread synchronization 2: %s\n",cudaGetErrorString(cudaGetLastError()));
   //compose total output from local blocks 
   composeOutput(temp_gdata_d,gdata_d,sector_centers_d,gi_host);
-
+  
+  if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
+    printf("error at adj thread synchronization 3: %s\n",cudaGetErrorString(cudaGetLastError()));
+  
   freeDeviceMem((void*)temp_gdata_d);
 }
 

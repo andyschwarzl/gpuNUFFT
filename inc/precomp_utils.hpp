@@ -10,9 +10,9 @@
 //
 __inline__ __device__ __host__ IndType computeSectorMapping(DType coord, IndType sectorCount)
 {
-  IndType sector = (IndType)std::floor(static_cast<DType>(coord + 0.5) * sectorCount);
+  int sector = (int)std::floor(static_cast<DType>(coord + 0.5) * sectorCount);
   if (sector >= static_cast<int>(sectorCount)) 
-    sector = sectorCount -1;
+    sector = (int)(sectorCount -1);
   if (sector < 0)
     sector = 0;
   return sector;
@@ -24,9 +24,9 @@ __inline__ __device__ __host__ IndType computeSectorMapping(DType coord, IndType
 //
 __inline__ __device__ __host__ IndType computeSectorMapping(DType coord, IndType sectorCount, IndType resolutionSectorCount)
 {
-  int offset = (IndType)std::ceil((resolutionSectorCount - sectorCount)/2.0);
+  int offset = (int)std::ceil((resolutionSectorCount - sectorCount)/2.0);
 
-  int sector = std::floor(static_cast<DType>(coord + 0.5) * resolutionSectorCount)-offset;
+  int sector = (int)std::floor(static_cast<DType>(coord + 0.5) * resolutionSectorCount)-offset;
   if (sector >= static_cast<int>(sectorCount)) 
     sector = sectorCount-1;
   if (sector < 0)

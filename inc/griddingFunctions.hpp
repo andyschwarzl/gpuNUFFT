@@ -105,7 +105,7 @@ __inline__ __device__ __host__ int getIndex2D(int x, int y, int gwidth)
   return x + gwidth * (y);
 }
 
-__inline__ __device__ __host__ void getCoordsFromIndex(int index, int* x, int* y, int* z, int w)
+__inline__ __device__ __host__ void getCoordsFromIndex(int index, int* x, int* y, int* z, IndType w)
 {
   *x = index % w;
   *z = (int)(index / (w*w)) ;
@@ -113,7 +113,7 @@ __inline__ __device__ __host__ void getCoordsFromIndex(int index, int* x, int* y
   *y = (int)(r / w);	
 }
 
-__inline__ __device__ __host__ void getCoordsFromIndex(int index, int* x, int* y, int* z, int w_x, int w_y, int w_z)
+__inline__ __device__ __host__ void getCoordsFromIndex(int index, int* x, int* y, int* z, IndType w_x, IndType w_y, IndType w_z)
 {
   *x = index % w_x;
   *z = (int)(index / (w_x*w_y)) ;
@@ -121,65 +121,65 @@ __inline__ __device__ __host__ void getCoordsFromIndex(int index, int* x, int* y
   *y = (int)(r / w_x);	
 }
 
-__inline__ __device__ __host__ void getCoordsFromIndex2D(int index, int* x, int* y, int w)
+__inline__ __device__ __host__ void getCoordsFromIndex2D(int index, int* x, int* y, IndType w)
 {
   *x = index % w;
   *y = (int)(index / w);        
 }
 
-__inline__ __device__ __host__ void getCoordsFromIndex2D(int index, int* x, int* y,  int w_x, int w_y)
+__inline__ __device__ __host__ void getCoordsFromIndex2D(int index, int* x, int* y,  IndType w_x, IndType w_y)
 {
   *x = index % w_x;
   *y = (int)(index / w_y);        
 }
 
 
-__inline__ __device__ __host__ bool isOutlier(int x, int y, int z, int center_x, int center_y, int center_z, int width, int sector_offset)
+__inline__ __device__ __host__ bool isOutlier(int x, int y, int z, IndType center_x, IndType center_y, IndType center_z, IndType width, int sector_offset)
 {
-  return ((center_x - sector_offset + x) >= width ||
-    (center_x - sector_offset + x) < 0 ||
-    (center_y - sector_offset + y) >= width ||
-    (center_y - sector_offset + y) < 0 ||
-    (center_z - sector_offset + z) >= width ||
-    (center_z - sector_offset + z) < 0);
+  return (static_cast<int>(center_x - sector_offset + x) >= width ||
+    static_cast<int>(center_x - sector_offset + x) < 0 ||
+    static_cast<int>(center_y - sector_offset + y) >= width ||
+    static_cast<int>(center_y - sector_offset + y) < 0 ||
+    static_cast<int>(center_z - sector_offset + z) >= width ||
+    static_cast<int>(center_z - sector_offset + z) < 0);
 }
 
-__inline__ __device__ __host__ bool isOutlier(int x, int y, int z, int center_x, int center_y, int center_z, IndType3 dim, int sector_offset)
+__inline__ __device__ __host__ bool isOutlier(int x, int y, int z, IndType center_x, IndType center_y, IndType center_z, IndType3 dim, int sector_offset)
 {
-  return ((center_x - sector_offset + x) >= dim.x ||
-    (center_x - sector_offset + x) < 0 ||
-    (center_y - sector_offset + y) >= dim.y ||
-    (center_y - sector_offset + y) < 0 ||
-    (center_z - sector_offset + z) >= dim.z ||
-    (center_z - sector_offset + z) < 0);
+  return (static_cast<int>(center_x - sector_offset + x) >= dim.x ||
+    static_cast<int>(center_x - sector_offset + x) < 0 ||
+    static_cast<int>(center_y - sector_offset + y) >= dim.y ||
+    static_cast<int>(center_y - sector_offset + y) < 0 ||
+    static_cast<int>(center_z - sector_offset + z) >= dim.z ||
+    static_cast<int>(center_z - sector_offset + z) < 0);
 }
 
 
-__inline__ __device__ __host__ bool isOutlier2D(int x, int y, int center_x, int center_y, int width, int sector_offset)
+__inline__ __device__ __host__ bool isOutlier2D(int x, int y, IndType center_x, IndType center_y, IndType width, int sector_offset)
 {
-  return ((center_x - sector_offset + x) >= width ||
-    (center_x - sector_offset + x) < 0 ||
-    (center_y - sector_offset + y) >= width ||
-    (center_y - sector_offset + y) < 0);
+  return (static_cast<int>(center_x - sector_offset + x) >= width ||
+    static_cast<int>(center_x - sector_offset + x) < 0 ||
+    static_cast<int>(center_y - sector_offset + y) >= width ||
+    static_cast<int>(center_y - sector_offset + y) < 0);
 }
 
-__inline__ __device__ __host__ bool isOutlier2D(int x, int y, int center_x, int center_y, IndType3 dim, int sector_offset)
+__inline__ __device__ __host__ bool isOutlier2D(int x, int y, IndType center_x, IndType center_y, IndType3 dim, int sector_offset)
 {
-  return ((center_x - sector_offset + x) >= dim.x ||
-    (center_x - sector_offset + x) < 0 ||
-    (center_y - sector_offset + y) >= dim.y ||
-    (center_y - sector_offset + y) < 0);
+  return (static_cast<int>(center_x - sector_offset + x) >= dim.x ||
+    static_cast<int>(center_x - sector_offset + x) < 0 ||
+    static_cast<int>(center_y - sector_offset + y) >= dim.y ||
+    static_cast<int>(center_y - sector_offset + y) < 0);
 }
 
-__inline__ __device__ __host__ int calculateOppositeIndex(int coord,int center,int width, int offset)
+__inline__ __device__ __host__ int calculateOppositeIndex(int coord,IndType center,IndType width, int offset)
 {
   //return (center - offset + coord) % width;
-  if ((center - offset + coord) >= width)
-    return (center - offset + coord) - width;
-  else if ((center - offset + coord) < 0)
-    return (center - offset + coord + width);
+  if (static_cast<int>(center - offset + coord) >= width)
+    return static_cast<int>((center - offset + coord) - width);
+  else if (static_cast<int>(center - offset + coord) < 0)
+    return static_cast<int>(center - offset + coord + width);
   else
-    return center - offset + coord;
+    return static_cast<int>(center - offset + coord);
 }
 
 __inline__ __device__ __host__ DType calculateDeapodizationValue(int coord, DType grid_width_inv, int kernel_width, DType beta)
@@ -197,9 +197,9 @@ __inline__ __device__ __host__ DType calculateDeapodizationValue(int coord, DTyp
 
 __inline__ __device__ __host__ DType calculateDeapodizationAt(int x, int y, int z, IndType3 width_offset, DType grid_width_inv, int kernel_width, DType beta, DType norm_val)
 {
-  int x_shifted = x - width_offset.x;
-  int y_shifted = y - width_offset.y;
-  int z_shifted = z - width_offset.z;
+  int x_shifted = (int)(x - width_offset.x);
+  int y_shifted = (int)(y - width_offset.y);
+  int z_shifted = (int)(z - width_offset.z);
 
   DType val_x = calculateDeapodizationValue(x_shifted,grid_width_inv,kernel_width,beta);
   DType val_y = calculateDeapodizationValue(y_shifted,grid_width_inv,kernel_width,beta);
@@ -210,8 +210,8 @@ __inline__ __device__ __host__ DType calculateDeapodizationAt(int x, int y, int 
 
 __inline__ __device__ __host__ DType calculateDeapodizationAt2D(int x, int y,IndType3 width_offset, DType grid_width_inv, int kernel_width, DType beta, DType norm_val)
 {
-  int x_shifted = x - width_offset.x;
-  int y_shifted = y - width_offset.y;
+  int x_shifted = (int)(x - width_offset.x);
+  int y_shifted = (int)(y - width_offset.y);
 
   DType val_x = calculateDeapodizationValue(x_shifted,grid_width_inv,kernel_width,beta);
   DType val_y = calculateDeapodizationValue(y_shifted,grid_width_inv,kernel_width,beta);

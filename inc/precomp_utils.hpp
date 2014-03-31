@@ -6,23 +6,41 @@
 #include <cmath>
 
 // UTIL functions for precomputation
+// 
 //
 __inline__ __device__ __host__ IndType computeSectorMapping(DType coord, IndType sectorCount)
 {
   IndType sector = (IndType)std::floor(static_cast<DType>(coord + 0.5) * sectorCount);
-  if (sector >= sectorCount) 
+  if (sector >= static_cast<int>(sectorCount)) 
     sector = sectorCount -1;
   if (sector < 0)
     sector = 0;
   return sector;
 }
 
+// Compute Sector Mapping with the same resolution as in resolutionSectorCount
+// but limit it to dimension in sectorCount
+// Used when z dimension is not the same as in x and y
+//
+__inline__ __device__ __host__ IndType computeSectorMapping(DType coord, IndType sectorCount, IndType resolutionSectorCount)
+{
+  int offset = (IndType)std::ceil((resolutionSectorCount - sectorCount)/2.0);
+
+  int sector = std::floor(static_cast<DType>(coord + 0.5) * resolutionSectorCount)-offset;
+  if (sector >= static_cast<int>(sectorCount)) 
+    sector = sectorCount-1;
+  if (sector < 0)
+    sector = 0;
+  return sector;
+}
+
+
 __inline__ __device__ __host__ IndType3 computeSectorMapping(DType3 coord, GriddingND::Dimensions sectorDims)
 {
   IndType3 sector;
   sector.x = computeSectorMapping(coord.x,sectorDims.width);
   sector.y  = computeSectorMapping(coord.y,sectorDims.height);
-  sector.z  = computeSectorMapping(coord.z,sectorDims.depth);
+  sector.z  = computeSectorMapping(coord.z,sectorDims.depth,sectorDims.width);
   return sector;
 }
 

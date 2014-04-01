@@ -11,7 +11,7 @@
 __inline__ __device__ __host__ IndType computeSectorMapping(DType coord, IndType sectorCount)
 {
   int sector = (int)std::floor(static_cast<DType>(coord + 0.5) * sectorCount);
-  if (sector >= static_cast<int>(sectorCount)) 
+  if (sector >= (int)(sectorCount)) 
     sector = (int)(sectorCount -1);
   if (sector < 0)
     sector = 0;
@@ -27,8 +27,8 @@ __inline__ __device__ __host__ IndType computeSectorMapping(DType coord, IndType
   int offset = (int)std::ceil((resolutionSectorCount - sectorCount)/2.0);
 
   int sector = (int)std::floor(static_cast<DType>(coord + 0.5) * resolutionSectorCount)-offset;
-  if (sector >= static_cast<int>(sectorCount)) 
-    sector = sectorCount-1;
+  if (sector >= (int)(sectorCount)) 
+    sector = (int)(sectorCount-1);
   if (sector < 0)
     sector = 0;
   return sector;
@@ -41,6 +41,7 @@ __inline__ __device__ __host__ IndType3 computeSectorMapping(DType3 coord, Gridd
   sector.x = computeSectorMapping(coord.x,sectorDims.width);
   sector.y  = computeSectorMapping(coord.y,sectorDims.height);
   sector.z  = computeSectorMapping(coord.z,sectorDims.depth,sectorDims.width);
+  //sector.z  = computeSectorMapping(coord.z,sectorDims.depth);
   return sector;
 }
 

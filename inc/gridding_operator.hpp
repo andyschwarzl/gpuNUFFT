@@ -131,7 +131,7 @@ namespace GriddingND
     int sector_pad_width;
     int sector_pad_max;
     int sector_offset;
-    int aniso_z_shift;
+    DType aniso_z_shift;
 
     DType radiusSquared;
     DType dist_multiplier;

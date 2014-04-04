@@ -81,7 +81,7 @@ __global__ void convolutionKernel(DType2* data,
       {
         if (k<=kmax && k>=kmin)
         {
-          kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.gridDims.x)) - 0.5f+GI.aniso_z_shift;
+          kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.gridDims.x)) - 0.5f + GI.aniso_z_shift;
           dz_sqr = kz - data_point.z;
           dz_sqr *= dz_sqr;
           if (dz_sqr < GI.radiusSquared)
@@ -290,8 +290,8 @@ __global__ void composeOutputKernel(DType2* temp_gdata, CufftType* gdata, IndTyp
       else
         ind = (sector_ind_offset + computeXYZ2Lin(x,y,z,GI.gridDims));
 
-      gdata[ind].x +=temp_gdata[s_ind].x;//Re
-      gdata[ind].y +=temp_gdata[s_ind].y;//Im			
+      gdata[ind].x += temp_gdata[s_ind].x;//Re
+      gdata[ind].y += temp_gdata[s_ind].y;//Im			
     }
   }
 }

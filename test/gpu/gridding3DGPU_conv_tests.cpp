@@ -1168,19 +1168,7 @@ TEST(TestGPUGriddingConvAnisotropic,GPUTest_4SectorsKernel4nData)
 
   //Output Grid
   CufftType* gdata = gdataArray.data;
-
-  int index = computeXYZ2Lin(5,5,2,imgDims);
-  if (DEBUG) printf("index to test %d\n",index);
-  //EXPECT_EQ(index,2*555);
-  EXPECT_NEAR(1.3558f,gdata[index].x,epsilon);
-  EXPECT_NEAR(0.3101f,gdata[computeXYZ2Lin(3,6,2,imgDims)].x,epsilon*10.0f);
-
-  EXPECT_NEAR(0.2542f,gdata[computeXYZ2Lin(1,7,2,imgDims)].x,epsilon*10.0f);
-  EXPECT_NEAR(0.5084f,gdata[computeXYZ2Lin(6,5,2,imgDims)].x,epsilon*10.0f);
-
-  EXPECT_NEAR(1.0f,gdata[computeXYZ2Lin(8,8,2,imgDims)].x,epsilon*10.0f);
-  EXPECT_NEAR(0.2585f,gdata[computeXYZ2Lin(9,9,2,imgDims)].x,epsilon*10.0f);
-
+  
   if (DEBUG) 
   {
     for (int k=0; k<imgDims.depth; k++)
@@ -1194,6 +1182,18 @@ TEST(TestGPUGriddingConvAnisotropic,GPUTest_4SectorsKernel4nData)
       printf("-------------------------------------------------------------\n");
     }
   }
+
+  int index = computeXYZ2Lin(5,5,2,imgDims);
+  if (DEBUG) printf("index to test %d\n",index);
+  //EXPECT_EQ(index,2*555);
+  EXPECT_NEAR(1.3558f,gdata[index].x,epsilon);
+  EXPECT_NEAR(0.3101f,gdata[computeXYZ2Lin(3,6,2,imgDims)].x,epsilon*10.0f);
+
+  EXPECT_NEAR(0.2542f,gdata[computeXYZ2Lin(1,7,2,imgDims)].x,epsilon*10.0f);
+  EXPECT_NEAR(0.5084f,gdata[computeXYZ2Lin(6,5,2,imgDims)].x,epsilon*10.0f);
+
+  EXPECT_NEAR(1.0f,gdata[computeXYZ2Lin(8,8,2,imgDims)].x,epsilon*10.0f);
+  EXPECT_NEAR(0.2585f,gdata[computeXYZ2Lin(9,9,2,imgDims)].x,epsilon*10.0f);
 
   free(data);
   free(coords);
@@ -1312,26 +1312,26 @@ TEST(TestGPUGriddingConvAnisotropic,GPUTest_32SectorsKernel4nData)
 
 TEST(TestGPUGriddingConvAnisotropic,GPUTest_20x20x10_osf_15)
 {
-  float osr = 2.0f;
+  float osr = 1.5f;
   int kernel_width = 4;
 
   //Data
   int data_entries = 5;
   DType2* data = (DType2*) calloc(data_entries,sizeof(DType2)); //2* re + im
   int data_cnt = 0;
-  data[data_cnt].x = 0.5f;
+  data[data_cnt].x = 1.0f;
   data[data_cnt++].y = 0.5f;
 
-  data[data_cnt].x = 0.7f;
+  data[data_cnt].x = 3.0f;
   data[data_cnt++].y = 1;
 
-  data[data_cnt].x = 1;
+  data[data_cnt].x = 3.0f;
   data[data_cnt++].y = 1;
 
-  data[data_cnt].x = 1;
+  data[data_cnt].x = 4.0f;
   data[data_cnt++].y = 1;
 
-  data[data_cnt].x = 1;
+  data[data_cnt].x = 5.0f;
   data[data_cnt++].y = 1;
 
   //Coords
@@ -1341,22 +1341,22 @@ TEST(TestGPUGriddingConvAnisotropic,GPUTest_20x20x10_osf_15)
   int coord_cnt = 0;
   //7.Sektor
   coords[coord_cnt++] = -0.3f; //X
-  coords[coord_cnt++] = -0.1f;
-  coords[coord_cnt++] = 0; 
+  coords[coord_cnt++] = 0.3f;
+  coords[coord_cnt++] = 0.0f; 
   coords[coord_cnt++] = 0.5f;
   coords[coord_cnt++] = 0.3f;
 
   coords[coord_cnt++] = 0.2f;//Y
-  coords[coord_cnt++] = 0;
-  coords[coord_cnt++] = 0;
-  coords[coord_cnt++] = 0;
+  coords[coord_cnt++] = 0.0f;
+  coords[coord_cnt++] = 0.0f;
+  coords[coord_cnt++] = 0.0f;
   coords[coord_cnt++] = 0.3f;
 
-  coords[coord_cnt++] = 0; //Z
-  coords[coord_cnt++] = 0;
-  coords[coord_cnt++] = 0;
-  coords[coord_cnt++] = 0;
-  coords[coord_cnt++] = 0;
+  coords[coord_cnt++] = -0.25f; //Z
+  coords[coord_cnt++] = -0.005f;
+  coords[coord_cnt++] = 0.0f;
+  coords[coord_cnt++] = 0.1f;
+  coords[coord_cnt++] = 0.22f;
 
   //sectors of data, count and start indices
   int sector_width = 5;
@@ -1380,13 +1380,30 @@ TEST(TestGPUGriddingConvAnisotropic,GPUTest_20x20x10_osf_15)
 
   gdataArray = griddingOp->performGriddingAdj(dataArray,GriddingND::CONVOLUTION);
 
+  GriddingND::Dimensions gridDims=griddingOp->getGridDims();
+  
   //Output Grid
   CufftType* gdata = gdataArray.data;
 
-  int index = computeXYZ2Lin(20,20,10,gdataArray.dim);
-  if (DEBUG) printf("index to test %d\n",index);
+  	if (DEBUG) 
+    {
+      for (int k=0; k<(gridDims.depth); k++)
+      {
+        for (int j=0; j<(gridDims.height); j++)
+  	    {
+  		    for (int i=0; i<(gridDims.width); i++)
+  			    printf("%.1f ",gdata[computeXYZ2Lin(i,gridDims.width-1-j,k,gridDims)].x);
+  		    printf("\n");
+  	    }
+       printf("-------------------------------------------------------------\n");
+    }
+    }
+
+
+  //int index = computeXYZ2Lin(20,20,10,gdataArray.dim);
+  //if (DEBUG) printf("index to test %d\n",index);
   //EXPECT_EQ(index,2*555);
-  EXPECT_NEAR(1.0f,gdata[index].x,epsilon);
+  //EXPECT_NEAR(1.0f,gdata[index].x,epsilon);
 
   free(data);
   free(coords);

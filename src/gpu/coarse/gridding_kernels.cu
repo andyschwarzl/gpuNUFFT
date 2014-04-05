@@ -61,6 +61,7 @@ __global__ void convolutionKernel(DType2* data,
     data_cnt = sectors[sec];
 
     max_dim =  GI.sector_pad_max;		
+    
     while (data_cnt < sectors[sec+1])
     {
       __shared__ DType3 data_point; //datapoint shared in every thread
@@ -73,16 +74,19 @@ __global__ void convolutionKernel(DType2* data,
       jy = static_cast<DType>((data_point.y + 0.5) * (GI.gridDims.y) - center.y + GI.sector_offset);
       set_minmax(&jy, &jmin, &jmax, max_dim, GI.kernel_radius);
       // take resolution in x(y) direction to keep isotropic voxel size
-      kz = static_cast<DType>((data_point.z + 0.5 - GI.aniso_z_shift) * (GI.gridDims.x) - center.z + GI.sector_offset);
+      //kz = static_cast<DType>((data_point.z + 0.5 - GI.aniso_z_shift) * (GI.gridDims.x) - center.z + GI.sector_offset);
+      kz = static_cast<DType>((data_point.z + 0.5) * (GI.gridDims.z) - center.z + GI.sector_offset);
       set_minmax(&kz, &kmin, &kmax, max_dim, GI.kernel_radius);
-
+      
       // grid this point onto the neighboring cartesian points
       for (k=threadIdx.z;k<=kmax; k += blockDim.z)
       {
         if (k<=kmax && k>=kmin)
         {
-          kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.gridDims.x)) - 0.5f + GI.aniso_z_shift;
-          dz_sqr = kz - data_point.z;
+          //kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.gridDims.x)) - 0.5f + GI.aniso_z_shift;
+          kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.gridDims.z)) - 0.5f;
+          // scale distance in z direction with x,y dimension
+          dz_sqr = (kz - data_point.z)*((DType)GI.gridDims.z/(DType)GI.gridDims.x);
           dz_sqr *= dz_sqr;
           if (dz_sqr < GI.radiusSquared)
           {
@@ -109,14 +113,15 @@ __global__ void convolutionKernel(DType2* data,
                       KERNEL[(int) round(dy_sqr * GI.dist_multiplier)] *
                       KERNEL[(int) round(dx_sqr * GI.dist_multiplier)];
                     ind = getIndex(i,j,k,GI.sector_pad_width);
-
+                    
                     // multiply data by current kernel val 
                     // grid complex or scalar 
                     sdata[ind].x += val * data[data_cnt].x;
                     sdata[ind].y += val * data[data_cnt].y;
-                  } // kernel bounds check x, spherical support 
+                    
+                  }  // kernel bounds check x, spherical support 
                 } // x 	 
-              } // kernel bounds check y, spherical support 
+              }// kernel bounds check y, spherical support 
             } // y 
           } //kernel bounds check z 
         } // z
@@ -127,7 +132,7 @@ __global__ void convolutionKernel(DType2* data,
     __syncthreads();	
     //write shared data to temporary output grid
     int sector_ind_offset = sec * GI.sector_dim;
-
+    
     for (k=threadIdx.z;k<GI.sector_pad_width; k += blockDim.z)
     {
       i=threadIdx.x;
@@ -141,12 +146,12 @@ __global__ void convolutionKernel(DType2* data,
       __syncthreads();
       sdata[s_ind].x = (DType)0.0;
       sdata[s_ind].y = (DType)0.0;
-      __syncthreads();	
+      __syncthreads();
     }
     __syncthreads();
     sec = sec + gridDim.x;
   }//sec < sector_count
-
+  
 }
 
 __global__ void convolutionKernel2D(DType2* data, 

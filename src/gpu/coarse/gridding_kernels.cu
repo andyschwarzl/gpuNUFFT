@@ -86,7 +86,7 @@ __global__ void convolutionKernel(DType2* data,
           //kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.gridDims.x)) - 0.5f + GI.aniso_z_shift;
           kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.gridDims.z)) - 0.5f;
           // scale distance in z direction with x,y dimension
-          dz_sqr = (kz - data_point.z)*((DType)GI.gridDims.z/(DType)GI.gridDims.x);
+          dz_sqr = (kz - data_point.z)*GI.aniso_z_scale;
           dz_sqr *= dz_sqr;
           if (dz_sqr < GI.radiusSquared)
           {

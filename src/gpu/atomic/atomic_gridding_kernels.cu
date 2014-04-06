@@ -50,7 +50,7 @@ __global__ void convolutionKernel3( DType2* data,
     __syncthreads();
 
     __shared__ int sector_ind_offset;
-    sector_ind_offset = getIndex(center.x - GI.sector_offset,center.y - GI.sector_offset,center.z - GI.sector_offset,GI.gridDims.x);
+    sector_ind_offset = computeXYZ2Lin(center.x - GI.sector_offset,center.y - GI.sector_offset,center.z - GI.sector_offset,GI.gridDims);
 
     c_ind = 0;
     __shared__ int reload_count;
@@ -79,9 +79,9 @@ __global__ void convolutionKernel3( DType2* data,
       // set the boundaries of final dataset for gridding this point
       ix = (data_point.x + 0.5f) * (GI.gridDims.x) - center.x + GI.sector_offset;
       set_minmax(&ix, &imin, &imax, GI.sector_pad_max, GI.kernel_radius);
-      jy = (data_point.y + 0.5f) * (GI.gridDims.x) - center.y + GI.sector_offset;
+      jy = (data_point.y + 0.5f) * (GI.gridDims.y) - center.y + GI.sector_offset;
       set_minmax(&jy, &jmin, &jmax, GI.sector_pad_max, GI.kernel_radius);
-      kz = (data_point.z + 0.5f) * (GI.gridDims.x) - center.z + GI.sector_offset;
+      kz = (data_point.z + 0.5f) * (GI.gridDims.z) - center.z + GI.sector_offset;
       set_minmax(&kz, &kmin, &kmax, GI.sector_pad_max, GI.kernel_radius);
 
       // grid this point onto the neighboring cartesian points
@@ -93,12 +93,12 @@ __global__ void convolutionKernel3( DType2* data,
           && (j<=jmax && j>=jmin)
           && (i<=imax && i>=imin))
         {
-          kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.gridDims.x)) - 0.5f;//(k - center_z) *width_inv;
-          dz_sqr = kz - data_point.z;
+          kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.gridDims.z)) - 0.5f;//(k - center_z) *width_inv;
+          dz_sqr = (kz - data_point.z)*GI.aniso_z_scale;
           dz_sqr *= dz_sqr;
           if (dz_sqr < GI.radiusSquared)
           {
-            jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;   //(j - center_y) *width_inv;
+            jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.y)) - 0.5f;   //(j - center_y) *width_inv;
             dy_sqr = jy - data_point.y;
             dy_sqr *= dy_sqr;
             if (dy_sqr < GI.radiusSquared)	
@@ -113,14 +113,14 @@ __global__ void convolutionKernel3( DType2* data,
                 val = KERNEL[(int) round(dz_sqr * GI.dist_multiplier)] *
                   KERNEL[(int) round(dy_sqr * GI.dist_multiplier)] *
                   KERNEL[(int) round(dx_sqr * GI.dist_multiplier)];
-                if (isOutlier(i,j,k,center.x,center.y,center.z,GI.gridDims.x,GI.sector_offset))
+                if (isOutlier(i,j,k,center.x,center.y,center.z,GI.gridDims,GI.sector_offset))
                   //calculate opposite index
-                  ind = getIndex(calculateOppositeIndex(i,center.x,GI.gridDims.x,GI.sector_offset),
-                  calculateOppositeIndex(j,center.y,GI.gridDims.x,GI.sector_offset),
-                  calculateOppositeIndex(k,center.z,GI.gridDims.x,GI.sector_offset),
-                  GI.gridDims.x);
+                  ind = computeXYZ2Lin(calculateOppositeIndex(i,center.x,GI.gridDims.x,GI.sector_offset),
+                  calculateOppositeIndex(j,center.y,GI.gridDims.y,GI.sector_offset),
+                  calculateOppositeIndex(k,center.z,GI.gridDims.z,GI.sector_offset),
+                  GI.gridDims);
                 else
-                  ind = sector_ind_offset + getIndex(i,j,k,GI.gridDims.x);//index in output grid
+                  ind = sector_ind_offset + computeXYZ2Lin(i,j,k,GI.gridDims);//index in output grid
 
                 atomicAdd(&(gdata[ind].x),val * data_cache[c_ind-reload_count*CACHE_SIZE].x);//Re
                 atomicAdd(&(gdata[ind].y),val * data_cache[c_ind-reload_count*CACHE_SIZE].y);//Im
@@ -199,24 +199,24 @@ __global__ void convolutionKernel2(DType2* data,
       // set the boundaries of final dataset for gridding this point
       ix = (data_point.x + 0.5f) * (GI.gridDims.x) - center.x + GI.sector_offset;
       set_minmax(&ix, &imin, &imax, GI.sector_pad_max, GI.kernel_radius);
-      jy = (data_point.y + 0.5f) * (GI.gridDims.x) - center.y + GI.sector_offset;
+      jy = (data_point.y + 0.5f) * (GI.gridDims.y) - center.y + GI.sector_offset;
       set_minmax(&jy, &jmin, &jmax, GI.sector_pad_max, GI.kernel_radius);
-      kz = (data_point.z + 0.5f) * (GI.gridDims.x) - center.z + GI.sector_offset;
+      kz = (data_point.z + 0.5f) * (GI.gridDims.z) - center.z + GI.sector_offset;
       set_minmax(&kz, &kmin, &kmax, GI.sector_pad_max, GI.kernel_radius);
 
       // grid this point onto its cartesian points neighbors
       k =kmin;
       while (k<=kmax && k>=kmin)
       {
-        kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.gridDims.x)) - 0.5f;//(k - center_z) *width_inv;
-        dz_sqr = kz - data_point.z;
+        kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.gridDims.z)) - 0.5f;//(k - center_z) *width_inv;
+        dz_sqr = (kz - data_point.z)*GI.aniso_z_scale;
         dz_sqr *= dz_sqr;
         if (dz_sqr < GI.radiusSquared)
         {
           j=jmin;
           while (j<=jmax && j>=jmin)
           {
-            jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;   //(j - center_y) *width_inv;
+            jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.y)) - 0.5f;   //(j - center_y) *width_inv;
             dy_sqr = jy - data_point.y;
             dy_sqr *= dy_sqr;
             if (dy_sqr < GI.radiusSquared)	
@@ -256,7 +256,7 @@ __global__ void convolutionKernel2(DType2* data,
     __syncthreads();
     //int sector_ind_offset = sec * GI.sector_dim;
     __shared__ int sector_ind_offset;
-    sector_ind_offset  = getIndex(center.x - GI.sector_offset,center.y - GI.sector_offset,center.z - GI.sector_offset,GI.gridDims.x);
+    sector_ind_offset  = computeXYZ2Lin(center.x - GI.sector_offset,center.y - GI.sector_offset,center.z - GI.sector_offset,GI.gridDims);
 
     //each thread writes one position from shared mem to global mem
     for (int s_ind=threadIdx.x;s_ind<GI.sector_dim; s_ind += blockDim.x)
@@ -266,14 +266,14 @@ __global__ void convolutionKernel2(DType2* data,
       r = s_ind - z * GI.sector_pad_width * GI.sector_pad_width;
       y = (int)(r / GI.sector_pad_width);
 
-      if (isOutlier(x,y,z,center.x,center.y,center.z,GI.gridDims.x,GI.sector_offset))
+      if (isOutlier(x,y,z,center.x,center.y,center.z,GI.gridDims,GI.sector_offset))
         //calculate opposite index
-        ind = getIndex(calculateOppositeIndex(x,center.x,GI.gridDims.x,GI.sector_offset),
-        calculateOppositeIndex(y,center.y,GI.gridDims.x,GI.sector_offset),
-        calculateOppositeIndex(z,center.z,GI.gridDims.x,GI.sector_offset),
-        GI.gridDims.x);
+        ind = computeXYZ2Lin(calculateOppositeIndex(x,center.x,GI.gridDims.x,GI.sector_offset),
+        calculateOppositeIndex(y,center.y,GI.gridDims.y,GI.sector_offset),
+        calculateOppositeIndex(z,center.z,GI.gridDims.z,GI.sector_offset),
+        GI.gridDims);
       else
-        ind = sector_ind_offset + getIndex(x,y,z,GI.gridDims.x);//index in output grid
+        ind = sector_ind_offset + computeXYZ2Lin(x,y,z,GI.gridDims);//index in output grid
 
       atomicAdd(&(gdata[ind].x),sdata[s_ind].x);//Re
       atomicAdd(&(gdata[ind].y),sdata[s_ind].y);//Im
@@ -344,14 +344,14 @@ __global__ void convolutionKernel2D(DType2* data,
       // set the boundaries of final dataset for gridding this point
       ix = (data_point.x + 0.5f) * (GI.gridDims.x) - center.x + GI.sector_offset;
       set_minmax(&ix, &imin, &imax, GI.sector_pad_max, GI.kernel_radius);
-      jy = (data_point.y + 0.5f) * (GI.gridDims.x) - center.y + GI.sector_offset;
+      jy = (data_point.y + 0.5f) * (GI.gridDims.y) - center.y + GI.sector_offset;
       set_minmax(&jy, &jmin, &jmax, GI.sector_pad_max, GI.kernel_radius);
 
       // grid this point onto its cartesian points neighbors
       j=jmin;
       while (j<=jmax && j>=jmin)
       {
-        jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;   //(j - center_y) *width_inv;
+        jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.y)) - 0.5f;   //(j - center_y) *width_inv;
         dy_sqr = jy - data_point.y;
         dy_sqr *= dy_sqr;
         if (dy_sqr < GI.radiusSquared)	
@@ -387,7 +387,7 @@ __global__ void convolutionKernel2D(DType2* data,
     __syncthreads();
     //int sector_ind_offset = sec * GI.sector_dim;
     __shared__ int sector_ind_offset;
-    sector_ind_offset  = getIndex2D(center.x - GI.sector_offset,center.y - GI.sector_offset,GI.gridDims.x);
+    sector_ind_offset  = computeXY2Lin(center.x - GI.sector_offset,center.y - GI.sector_offset,GI.gridDims);
 
     //each thread writes one position from shared mem to global mem
     for (int s_ind=threadIdx.x;s_ind<GI.sector_dim; s_ind += blockDim.x)
@@ -395,13 +395,13 @@ __global__ void convolutionKernel2D(DType2* data,
       x = s_ind % GI.sector_pad_width;
       y = (int)(s_ind / GI.sector_pad_width);
 
-      if (isOutlier2D(x,y,center.x,center.y,GI.gridDims.x,GI.sector_offset))
+      if (isOutlier2D(x,y,center.x,center.y,GI.gridDims,GI.sector_offset))
         //calculate opposite index
-        ind = getIndex2D(calculateOppositeIndex(x,center.x,GI.gridDims.x,GI.sector_offset),
-        calculateOppositeIndex(y,center.y,GI.gridDims.x,GI.sector_offset),
-        GI.gridDims.x);
+        ind = computeXY2Lin(calculateOppositeIndex(x,center.x,GI.gridDims.x,GI.sector_offset),
+        calculateOppositeIndex(y,center.y,GI.gridDims.y,GI.sector_offset),
+        GI.gridDims);
       else
-        ind = sector_ind_offset + getIndex2D(x,y,GI.gridDims.x);//index in output grid
+        ind = sector_ind_offset + computeXY2Lin(x,y,GI.gridDims);//index in output grid
 
       atomicAdd(&(gdata[ind].x),sdata[s_ind].x);//Re
       atomicAdd(&(gdata[ind].y),sdata[s_ind].y);//Im
@@ -451,7 +451,7 @@ __global__ void convolutionKernel( DType2* data,
     int data_cnt = sectors[sec] + threadIdx.x;
     int data_max = sectors[sec+1];
     __shared__ int sector_ind_offset;
-    sector_ind_offset = getIndex(center.x - GI.sector_offset,center.y - GI.sector_offset,center.z - GI.sector_offset,GI.gridDims.x);
+    sector_ind_offset = computeXYZ2Lin(center.x - GI.sector_offset,center.y - GI.sector_offset,center.z - GI.sector_offset,GI.gridDims);
 
     while (data_cnt < data_max)
     {
@@ -463,17 +463,17 @@ __global__ void convolutionKernel( DType2* data,
       // set the boundaries of final dataset for gridding this point
       ix = (data_point.x + 0.5f) * (GI.gridDims.x) - center.x + GI.sector_offset;
       set_minmax(&ix, &imin, &imax, GI.sector_pad_max, GI.kernel_radius);
-      jy = (data_point.y + 0.5f) * (GI.gridDims.x) - center.y + GI.sector_offset;
+      jy = (data_point.y + 0.5f) * (GI.gridDims.y) - center.y + GI.sector_offset;
       set_minmax(&jy, &jmin, &jmax, GI.sector_pad_max, GI.kernel_radius);
-      kz = (data_point.z + 0.5f) * (GI.gridDims.x) - center.z + GI.sector_offset;
+      kz = (data_point.z + 0.5f) * (GI.gridDims.z) - center.z + GI.sector_offset;
       set_minmax(&kz, &kmin, &kmax, GI.sector_pad_max, GI.kernel_radius);
 
       // convolve neighboring cartesian points to this data point
       k = kmin;
       while (k<=kmax && k>=kmin)
       {
-        kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.gridDims.x)) - 0.5f;//(k - center_z) *width_inv;
-        dz_sqr = kz - data_point.z;
+        kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.gridDims.z)) - 0.5f;//(k - center_z) *width_inv;
+        dz_sqr = (kz - data_point.z)*GI.aniso_z_scale;
         dz_sqr *= dz_sqr;
 
         if (dz_sqr < GI.radiusSquared)
@@ -481,7 +481,7 @@ __global__ void convolutionKernel( DType2* data,
           j=jmin;
           while (j<=jmax && j>=jmin)
           {
-            jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;   //(j - center_y) *width_inv;
+            jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.y)) - 0.5f;   //(j - center_y) *width_inv;
             dy_sqr = jy - data_point.y;
             dy_sqr *= dy_sqr;
             if (dy_sqr < GI.radiusSquared)	
@@ -500,14 +500,14 @@ __global__ void convolutionKernel( DType2* data,
                     KERNEL[(int) round(dy_sqr * GI.dist_multiplier)] *
                     KERNEL[(int) round(dx_sqr * GI.dist_multiplier)];
 
-                  if (isOutlier(i,j,k,center.x,center.y,center.z,GI.gridDims.x,GI.sector_offset))
+                  if (isOutlier(i,j,k,center.x,center.y,center.z,GI.gridDims,GI.sector_offset))
                     //calculate opposite index
-                    ind = getIndex(calculateOppositeIndex(i,center.x,GI.gridDims.x,GI.sector_offset),
-                    calculateOppositeIndex(j,center.y,GI.gridDims.x,GI.sector_offset),
-                    calculateOppositeIndex(k,center.z,GI.gridDims.x,GI.sector_offset),
-                    GI.gridDims.x);
+                    ind = computeXYZ2Lin(calculateOppositeIndex(i,center.x,GI.gridDims.x,GI.sector_offset),
+                    calculateOppositeIndex(j,center.y,GI.gridDims.y,GI.sector_offset),
+                    calculateOppositeIndex(k,center.z,GI.gridDims.z,GI.sector_offset),
+                    GI.gridDims);
                   else
-                    ind = sector_ind_offset + getIndex(i,j,k,GI.gridDims.x);//index in output grid
+                    ind = sector_ind_offset + computeXYZ2Lin(i,j,k,GI.gridDims);//index in output grid
 
                   atomicAdd(&(gdata[ind].x),val * data[data_cnt].x);//Re
                   atomicAdd(&(gdata[ind].y),val * data[data_cnt].y);//Im
@@ -613,7 +613,7 @@ __global__ void forwardConvolutionKernel( CufftType* data,
     __shared__ int data_max;
     data_max = sectors[sec[threadIdx.x]+1];	
     __shared__ int sector_ind_offset; 
-    sector_ind_offset = getIndex(center.x - GI.sector_offset,center.y - GI.sector_offset,center.z - GI.sector_offset,GI.gridDims.x);
+    sector_ind_offset = computeXYZ2Lin(center.x - GI.sector_offset,center.y - GI.sector_offset,center.z - GI.sector_offset,GI.gridDims);
 
     while (data_cnt < data_max)
     {
@@ -625,17 +625,17 @@ __global__ void forwardConvolutionKernel( CufftType* data,
       // set the boundaries of final dataset for gridding this point
       ix = (data_point.x + 0.5f) * (GI.gridDims.x) - center.x + GI.sector_offset;
       set_minmax(&ix, &imin, &imax, GI.sector_pad_max, GI.kernel_radius);
-      jy = (data_point.y + 0.5f) * (GI.gridDims.x) - center.y + GI.sector_offset;
+      jy = (data_point.y + 0.5f) * (GI.gridDims.y) - center.y + GI.sector_offset;
       set_minmax(&jy, &jmin, &jmax, GI.sector_pad_max, GI.kernel_radius);
-      kz = (data_point.z + 0.5f) * (GI.gridDims.x) - center.z + GI.sector_offset;
+      kz = (data_point.z + 0.5f) * (GI.gridDims.z) - center.z + GI.sector_offset;
       set_minmax(&kz, &kmin, &kmax, GI.sector_pad_max, GI.kernel_radius);
 
       // convolve neighboring cartesian points to this data point
       k = kmin;			
       while (k<=kmax && k>=kmin)
       {
-        kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.gridDims.x)) - 0.5f;
-        dz_sqr = kz - data_point.z;
+        kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.gridDims.z)) - 0.5f;
+        dz_sqr = (kz - data_point.z)*GI.aniso_z_scale;
         dz_sqr *= dz_sqr;
 
         if (dz_sqr < GI.radiusSquared)
@@ -643,7 +643,7 @@ __global__ void forwardConvolutionKernel( CufftType* data,
           j=jmin;
           while (j<=jmax && j>=jmin)
           {
-            jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;
+            jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.y)) - 0.5f;
             dy_sqr = jy - data_point.y;
             dy_sqr *= dy_sqr;
             if (dy_sqr < GI.radiusSquared)	
@@ -664,14 +664,14 @@ __global__ void forwardConvolutionKernel( CufftType* data,
 
                   // multiply data by current kernel val 
                   // grid complex or scalar 
-                  if (isOutlier(i,j,k,center.x,center.y,center.z,GI.gridDims.x,GI.sector_offset))
+                  if (isOutlier(i,j,k,center.x,center.y,center.z,GI.gridDims,GI.sector_offset))
                     //calculate opposite index
-                    ind = getIndex(calculateOppositeIndex(i,center.x,GI.gridDims.x,GI.sector_offset),
-                    calculateOppositeIndex(j,center.y,GI.gridDims.x,GI.sector_offset),
-                    calculateOppositeIndex(k,center.z,GI.gridDims.x,GI.sector_offset),
-                    GI.gridDims.x);
+                    ind = computeXYZ2Lin(calculateOppositeIndex(i,center.x,GI.gridDims.x,GI.sector_offset),
+                    calculateOppositeIndex(j,center.y,GI.gridDims.y,GI.sector_offset),
+                    calculateOppositeIndex(k,center.z,GI.gridDims.z,GI.sector_offset),
+                    GI.gridDims);
                   else
-                    ind = (sector_ind_offset + getIndex(i,j,k,GI.gridDims.x));
+                    ind = (sector_ind_offset + computeXYZ2Lin(i,j,k,GI.gridDims));
 
                   shared_out_data[threadIdx.x].x += gdata[ind].x * val; 
                   shared_out_data[threadIdx.x].y += gdata[ind].y * val;
@@ -726,7 +726,7 @@ __global__ void forwardConvolutionKernel2D( CufftType* data,
     __shared__ int data_max;
     data_max = sectors[sec[threadIdx.x]+1];	
     __shared__ int sector_ind_offset; 
-    sector_ind_offset = getIndex2D(center.x - GI.sector_offset,center.y - GI.sector_offset,GI.gridDims.x);
+    sector_ind_offset = computeXY2Lin(center.x - GI.sector_offset,center.y - GI.sector_offset,GI.gridDims);
 
     while (data_cnt < data_max)
     {
@@ -744,7 +744,7 @@ __global__ void forwardConvolutionKernel2D( CufftType* data,
       j=jmin;
       while (j<=jmax && j>=jmin)
       {
-        jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;
+        jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.y)) - 0.5f;
         dy_sqr = jy - data_point.y;
         dy_sqr *= dy_sqr;
         if (dy_sqr < GI.radiusSquared)	
@@ -764,13 +764,13 @@ __global__ void forwardConvolutionKernel2D( CufftType* data,
 
               // multiply data by current kernel val 
               // grid complex or scalar 
-              if (isOutlier2D(i,j,center.x,center.y,GI.gridDims.x,GI.sector_offset))
+              if (isOutlier2D(i,j,center.x,center.y,GI.gridDims,GI.sector_offset))
                 //calculate opposite index
-                ind = getIndex2D(calculateOppositeIndex(i,center.x,GI.gridDims.x,GI.sector_offset),
-                calculateOppositeIndex(j,center.y,GI.gridDims.x,GI.sector_offset),
-                GI.gridDims.x);
+                ind = computeXY2Lin(calculateOppositeIndex(i,center.x,GI.gridDims.x,GI.sector_offset),
+                calculateOppositeIndex(j,center.y,GI.gridDims.y,GI.sector_offset),
+                GI.gridDims);
               else
-                ind = (sector_ind_offset + getIndex2D(i,j,GI.gridDims.x));
+                ind = (sector_ind_offset + computeXY2Lin(i,j,GI.gridDims));
 
               shared_out_data[threadIdx.x].x += gdata[ind].x * val; 
               shared_out_data[threadIdx.x].y += gdata[ind].y * val;

@@ -448,7 +448,7 @@ TEST(PrecomputationTest, AssignSectors3D_20x20x10_15) {
 		EXPECT_NEAR(sectorRange[i],expected[i],EPS);
 	}
 	
-	IndType expectedSec[6] = {0,1,20,57,70,107};
+	IndType expectedSec[6] = {0,37,56,57,70,107};
 
 	for (int cCnt = 0; cCnt < coordCnt; cCnt++)
 	{
@@ -462,7 +462,7 @@ TEST(PrecomputationTest, AssignSectors3D_20x20x10_15) {
 
 		IndType x_sector = computeSectorMapping(coord.x,sectorDims.width);
 		IndType y_sector = computeSectorMapping(coord.y,sectorDims.height);
-    IndType z_sector = computeSectorMapping(coord.z,sectorDims.depth,sectorDims.width);
+    IndType z_sector = computeSectorMapping(coord.z,sectorDims.depth);
 
     if (DEBUG)
 		  std::cout << "into sector x: " << x_sector << " y: " << y_sector << " z: " << z_sector << std::endl;

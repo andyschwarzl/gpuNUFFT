@@ -55,7 +55,13 @@ show3DImage([2,8],abs(imgReconCPU(:,:,N3D/2-7:N3D/2+8)),'CPU','slice');
 %% central 32
 show3DImage([4,8],abs(imgRecon(:,:,N3D/2-15:N3D/2+16)),'GPU','slice');
 show3DImage([4,8],abs(imgReconCPU(:,:,N3D/2-15:N3D/2+16)),'CPU','slice');
-%%
-show3DImage([8,8],abs(imgRecon(:,:,N3D/2-31:N3D/2+32)),'GPU','slice');
-show3DImage([8,8],abs(imgReconCPU(:,:,N3D/2-31:N3D/2+32)),'CPU','slice');
 
+%% apply forward operation
+data_reconCPU = FTCPU*imgReconCPU;
+imgRecon2CPU = FTCPU'*data_reconCPU;
+
+data_recon = FT*imgRecon;
+imgRecon2 = FT'*data_recon;
+
+show3DImage([2,8],abs(imgRecon2CPU(:,:,N3D/2-7:N3D/2+8)),'CPU result of generated data','slice');
+show3DImage([2,8],abs(imgRecon2(:,:,N3D/2-7:N3D/2+8)),'GPU result of generated data','slice');

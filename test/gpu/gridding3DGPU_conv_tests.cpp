@@ -1168,7 +1168,7 @@ TEST(TestGPUGriddingConvAnisotropic,GPUTest_4SectorsKernel4nData)
 
   //Output Grid
   CufftType* gdata = gdataArray.data;
-  
+
   if (DEBUG) 
   {
     for (int k=0; k<imgDims.depth; k++)
@@ -1364,7 +1364,7 @@ TEST(TestGPUGriddingConvAnisotropic,GPUTest_20x20x10_osf_15)
   GriddingND::Array<DType> kSpaceData;
   kSpaceData.data = coords;
   kSpaceData.dim.length = data_entries;
-    
+
   GriddingND::Dimensions imgDims;
   imgDims.width = 20;
   imgDims.height = 20;
@@ -1381,23 +1381,23 @@ TEST(TestGPUGriddingConvAnisotropic,GPUTest_20x20x10_osf_15)
   gdataArray = griddingOp->performGriddingAdj(dataArray,GriddingND::CONVOLUTION);
 
   GriddingND::Dimensions gridDims=griddingOp->getGridDims();
-  
+
   //Output Grid
   CufftType* gdata = gdataArray.data;
 
-  	if (DEBUG) 
-    {
-      for (int k=0; k<(gridDims.depth); k++)
-      {
-        for (int j=0; j<(gridDims.height); j++)
-  	    {
-  		    for (int i=0; i<(gridDims.width); i++)
-  			    printf("%.1f ",gdata[computeXYZ2Lin(i,gridDims.width-1-j,k,gridDims)].x);
-  		    printf("\n");
-  	    }
-       printf("-------------------------------------------------------------\n");
-    }
-    }
+  /*	if (DEBUG) 
+  {
+  for (int k=0; k<(gridDims.depth); k++)
+  {
+  for (int j=0; j<(gridDims.height); j++)
+  {
+  for (int i=0; i<(gridDims.width); i++)
+  printf("%.1f ",gdata[computeXYZ2Lin(i,gridDims.width-1-j,k,gridDims)].x);
+  printf("\n");
+  }
+  printf("-------------------------------------------------------------\n");
+  }
+  }*/
 
 
   //int index = computeXYZ2Lin(20,20,10,gdataArray.dim);

@@ -232,13 +232,15 @@ void performDeapodization(CufftType* imdata_d,
   DType beta = (DType)BETA(gi_host->kernel_width,gi_host->osr);
 
   //Calculate normalization value (should be at position 0 in interval [-N/2,N/2]) 
-  DType norm_val = calculateDeapodizationValue(0,gi_host->grid_width_inv,gi_host->kernel_width,beta);
+  DType norm_val_x = calculateDeapodizationValue(0,gi_host->grid_width_inv.x,gi_host->kernel_width,beta);
+  DType norm_val_y = calculateDeapodizationValue(0,gi_host->grid_width_inv.y,gi_host->kernel_width,beta);
+  DType norm_val_z = calculateDeapodizationValue(0,gi_host->grid_width_inv.z,gi_host->kernel_width,beta);
+  DType norm_val;
 
   if (gi_host->is2Dprocessing)
-    norm_val = norm_val * norm_val;
+    norm_val = norm_val_x * norm_val_y;
   else
-    norm_val = norm_val * norm_val * norm_val;
-
+    norm_val = norm_val_x * norm_val_y * norm_val_z;
 
   if (DEBUG)
     printf("running deapodization with norm_val %.2f\n",norm_val);
@@ -283,12 +285,14 @@ void precomputeDeapodization(DType* deapo_d,
   DType beta = (DType)BETA(gi_host->kernel_width,gi_host->osr);
 
   //Calculate normalization value (should be at position 0 in interval [-N/2,N/2]) 
-  DType norm_val = calculateDeapodizationValue(0,gi_host->grid_width_inv,gi_host->kernel_width,beta);
-
+  DType norm_val_x = calculateDeapodizationValue(0,gi_host->grid_width_inv.x,gi_host->kernel_width,beta);
+  DType norm_val_y = calculateDeapodizationValue(0,gi_host->grid_width_inv.y,gi_host->kernel_width,beta);
+  DType norm_val_z = calculateDeapodizationValue(0,gi_host->grid_width_inv.z,gi_host->kernel_width,beta);
+  DType norm_val;
   if (gi_host->is2Dprocessing)
-    norm_val = norm_val * norm_val;
+    norm_val = norm_val_x * norm_val_y;
   else
-    norm_val = norm_val * norm_val * norm_val;
+    norm_val = norm_val_x * norm_val_y * norm_val_z;
 
   if (DEBUG)
     printf("running deapodization precomputation with norm_val %.2f\n",norm_val);
@@ -448,12 +452,14 @@ void performForwardDeapodization(DType2* imdata_d,
   dim3 block_dim(THREAD_BLOCK_SIZE);
 
   //Calculate normalization value (should be at position 0 in interval [-N/2,N/2]) 
-  DType norm_val = calculateDeapodizationValue(0,gi_host->grid_width_inv,gi_host->kernel_width,beta);
-
+  DType norm_val_x = calculateDeapodizationValue(0,gi_host->grid_width_inv.x,gi_host->kernel_width,beta);
+  DType norm_val_y = calculateDeapodizationValue(0,gi_host->grid_width_inv.y,gi_host->kernel_width,beta);
+  DType norm_val_z = calculateDeapodizationValue(0,gi_host->grid_width_inv.z,gi_host->kernel_width,beta);
+  DType norm_val;
   if (gi_host->is2Dprocessing)
-    norm_val = norm_val * norm_val;
+    norm_val = norm_val_x * norm_val_y;
   else
-    norm_val = norm_val * norm_val * norm_val;
+    norm_val = norm_val_x * norm_val_y * norm_val_z;
 
   if (gi_host->is2Dprocessing)
     forwardDeapodizationKernel2D<<<grid_dim,block_dim>>>(imdata_d,beta,norm_val,gi_host->im_width_dim);

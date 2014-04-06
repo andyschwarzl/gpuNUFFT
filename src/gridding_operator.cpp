@@ -73,7 +73,6 @@ GriddingND::GriddingInfo* GriddingND::GriddingOperator::initAndCopyGriddingInfo(
 
   DType kernel_radius = static_cast<DType>(this->kernelWidth) / (DType)2.0;
   DType radius = kernel_radius / static_cast<DType>(this->getGridDims().width);
-  DType width_inv = (DType)1.0 / static_cast<DType>(this->getGridDims().width);
 
   DType kernel_width_inv = (DType)1.0 / static_cast<DType>(this->kernelWidth);
 
@@ -90,7 +89,9 @@ GriddingND::GriddingInfo* GriddingND::GriddingOperator::initAndCopyGriddingInfo(
   int sector_dim = sectorPadDims.count();
   int sector_offset = (int)(floor(sector_pad_width / (DType)2.0));
 
-  gi_host->grid_width_inv = width_inv;
+  gi_host->grid_width_inv.x = (DType)1.0 / static_cast<DType>(this->getGridDims().width);
+  gi_host->grid_width_inv.y = (DType)1.0 / static_cast<DType>(this->getGridDims().height);
+  gi_host->grid_width_inv.z = (DType)1.0 / static_cast<DType>(this->getGridDims().depth);
   gi_host->kernel_widthInvSquared = kernel_width_inv * kernel_width_inv;
   gi_host->osr = this->osf;
 

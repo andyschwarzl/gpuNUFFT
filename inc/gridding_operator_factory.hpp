@@ -31,7 +31,7 @@ namespace GriddingND
 
     ~GriddingOperatorFactory()
     {
-      std::cout << "GOF destruct " << std::endl;
+
     }
 
     Array<IndType> assignSectors(GriddingOperator* griddingOp, Array<DType>& kSpaceTraj);
@@ -44,7 +44,6 @@ namespace GriddingND
     virtual Array<DType> initDensData(GriddingOperator* griddingOp, IndType coordCnt);
     virtual Array<DType> initCoordsData(GriddingOperator* griddingOp, IndType coordCnt);
     virtual Array<IndType> initSectorCenters(GriddingOperator* griddingOp, IndType sectorCnt);
-    virtual Array<IndType> initSectorCenters2D(GriddingOperator* griddingOp, IndType sectorCnt);
     virtual void debug(const std::string& message);
 
     IndType computeSectorCountPerDimension(IndType dim, IndType sectorWidth);
@@ -75,7 +74,7 @@ namespace GriddingND
 
   private:
     static GriddingOperatorFactory instance;
-    
+
     static const bool useGpu = true;
   };
 

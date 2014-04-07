@@ -93,30 +93,6 @@ TEST(PrecomputationTest, testAddScalarToDimension)
 	EXPECT_EQ(0,d.depth);
 }
 
-TEST(PrecomputationTest, ComputeAnisotropicSectorDim) {
-	IndType imageWidth = 128; 
-	DType osr = 1.5;
-	IndType sectorWidth = 8;
-
-    GriddingND::Dimensions gridDim;
-	gridDim.width = (IndType)(imageWidth);
-	gridDim.height = (IndType)(imageWidth);
-	gridDim.depth = (IndType)((imageWidth-16));
-	
-	std::cout << " dimensions before: w: " << gridDim.width << " h: " << gridDim.height << " d: " << gridDim.depth << std::endl;
-	gridDim = gridDim * osr;
-	std::cout << " dimensions scaled: w: " << gridDim.width << " h: " << gridDim.height << " d: " << gridDim.depth << std::endl;
-
-	IndType sectorDim = computeTotalSectorCount(gridDim,sectorWidth);
-	 
-	IndType expected = 16*16*14*osr*osr*osr;
-	EXPECT_EQ(expected,sectorDim);	
-
-	GriddingND::Dimensions sectorDims = computeSectorCountPerDimension(gridDim,sectorWidth);
-
-	EXPECT_EQ(expected,sectorDims.count());
-}
-
 TEST(PrecomputationTest, ComputeSectorRanges) {
 	IndType imageWidth = 128; 
 	DType osr = 1.0;
@@ -136,10 +112,12 @@ TEST(PrecomputationTest, ComputeSectorRanges) {
 	for (int i=0; i <= sectorDims.width; i++)
 	{
 		sectorRange[i] = -0.5 + i*(static_cast<DType>(1.0) / (sectorDims.width));
-		printf("%5.4f ",sectorRange[i]);
+    if (DEBUG)
+		  printf("%5.4f ",sectorRange[i]);
 		EXPECT_NEAR(sectorRange[i],expected[i],EPS);
 	}
-	std::cout << std::endl;
+  if (DEBUG)
+	  std::cout << std::endl;
 
 	free(sectorRange);
 }
@@ -173,21 +151,24 @@ TEST(PrecomputationTest, AssignSectors1D) {
 	for (int i=0; i <= sectorDims.width; i++)
 	{
 		sectorRange[i] = -0.5 + i*(static_cast<DType>(1.0) / (sectorDims.width));
-		printf("%5.4f ",sectorRange[i]);
+		if (DEBUG)
+      printf("%5.4f ",sectorRange[i]);
 		EXPECT_NEAR(sectorRange[i],expected[i],EPS);
 	}
-	std::cout << std::endl;
+	if (DEBUG) std::cout << std::endl;
 	
 	IndType expectedSec[6] = {0,0,1,1,2,2};
 
 	for (int cCnt = 0; cCnt < coordCnt; cCnt++)
 	{
 		DType x = kSpaceData.data[cCnt];
-		std::cout << "processing x var: " << x << std::endl;
+    if (DEBUG)
+		  std::cout << "processing x var: " << x << std::endl;
 		IndType sector = std::floor(static_cast<float>(x + 0.5) * sectorDims.width);
 		if (sector == sectorDims.width) 
 			sector--;
-		std::cout << "into sector : " << sector << std::endl;
+    if (DEBUG)
+		  std::cout << "into sector : " << sector << std::endl;
 		EXPECT_EQ(expectedSec[cCnt],sector);
 	}
 
@@ -223,21 +204,24 @@ TEST(PrecomputationTest, AssignSectors1DOnBorders) {
 	for (int i=0; i <= sectorDims.width; i++)
 	{
 		sectorRange[i] = -0.5 + i*(static_cast<DType>(1.0) / (sectorDims.width));
-		printf("%5.4f ",sectorRange[i]);
+		if (DEBUG)
+      printf("%5.4f ",sectorRange[i]);
 		EXPECT_NEAR(sectorRange[i],expected[i],EPS);
 	}
-	std::cout << std::endl;
+	if (DEBUG) std::cout << std::endl;
 	
 	IndType expectedSec[4] = {0,1,2,2};
 
 	for (int cCnt = 0; cCnt < coordCnt; cCnt++)
 	{
 		DType x = kSpaceData.data[cCnt];
-		std::cout << "processing x var: " << x << std::endl;
+    if (DEBUG)
+		  std::cout << "processing x var: " << x << std::endl;
 		IndType sector = std::round(static_cast<float>(x + 0.5) * sectorDims.width);
 		if (sector == sectorDims.width) 
 			sector--;
-		std::cout << "into sector : " << sector << std::endl;
+		if (DEBUG)
+      std::cout << "into sector : " << sector << std::endl;
 		EXPECT_EQ(expectedSec[cCnt],sector);
 	}
 
@@ -277,7 +261,7 @@ TEST(PrecomputationTest, AssignSectors2D) {
 		sectorRange[i] = -0.5 + i*(static_cast<DType>(1.0) / (sectorDims.width));
 		EXPECT_NEAR(sectorRange[i],expected[i],EPS);
 	}
-	std::cout << std::endl;
+	if (DEBUG) std::cout << std::endl;
 	
 	IndType expectedSec[6] = {0,0,4,4,8,8};
 
@@ -287,7 +271,8 @@ TEST(PrecomputationTest, AssignSectors2D) {
 		coord.x = kSpaceData.data[cCnt];
 		coord.y = kSpaceData.data[cCnt + kSpaceData.count()];
 		
-		std::cout << "processing x var: " << coord.x << " y: " << coord.y << std::endl;
+    if (DEBUG)
+		  std::cout << "processing x var: " << coord.x << " y: " << coord.y << std::endl;
 
 		IndType x_sector = std::floor(static_cast<float>(coord.x + 0.5) * sectorDims.width);
 		if (x_sector == sectorDims.width) 
@@ -296,15 +281,15 @@ TEST(PrecomputationTest, AssignSectors2D) {
 		IndType y_sector = std::floor(static_cast<float>(coord.y + 0.5) * sectorDims.height);
 		if (y_sector == sectorDims.height) 
 			y_sector--;
-
-		std::cout << "into sector x: " << x_sector << " y: " << y_sector << std::endl;
+    if (DEBUG)
+		  std::cout << "into sector x: " << x_sector << " y: " << y_sector << std::endl;
 		EXPECT_EQ(expectedSec[cCnt],x_sector + y_sector * sectorDims.height);
 	}
 
 	free(sectorRange);
 }
 
-TEST(PrecomputationTest, AssignSectors3D) {
+TEST(PrecomputationTest, AssignSectors3D_16x16x16_15) {
 	IndType imageWidth = 16; 
 	DType osr = 1.5;
 	IndType sectorWidth = 8;
@@ -318,8 +303,8 @@ TEST(PrecomputationTest, AssignSectors3D) {
 	                            -0.33,-0.16666,   0,   0, -0.23, 0.45};//z
 
 	GriddingND::Array<DType> kSpaceData;
-    kSpaceData.data = coords;
-    kSpaceData.dim.length = coordCnt;
+  kSpaceData.data = coords;
+  kSpaceData.dim.length = coordCnt;
 
 	GriddingND::Dimensions gridDim;
 	gridDim.width = (IndType)(imageWidth * osr);
@@ -337,7 +322,7 @@ TEST(PrecomputationTest, AssignSectors3D) {
 		sectorRange[i] = -0.5 + i*(static_cast<DType>(1.0) / (sectorDims.width));
 		EXPECT_NEAR(sectorRange[i],expected[i],EPS);
 	}
-	std::cout << std::endl;
+	if (DEBUG) std::cout << std::endl;
 	
 	IndType expectedSec[6] = {0,9,13,13,8,26};
 
@@ -348,13 +333,15 @@ TEST(PrecomputationTest, AssignSectors3D) {
 		coord.y = kSpaceData.data[cCnt + kSpaceData.count()];
 		coord.z = kSpaceData.data[cCnt + 2*kSpaceData.count()];
 		
-		std::cout << "processing x var: " << coord.x << " y: " << coord.y << " z: " << coord.z  << std::endl;
+    if (DEBUG)
+		  std::cout << "processing x var: " << coord.x << " y: " << coord.y << " z: " << coord.z  << std::endl;
 
 		IndType x_sector = computeSectorMapping(coord.x,sectorDims.width);
 		IndType y_sector = computeSectorMapping(coord.y,sectorDims.height);
 		IndType z_sector = computeSectorMapping(coord.z,sectorDims.depth);
-
-		std::cout << "into sector x: " << x_sector << " y: " << y_sector << " z: " << z_sector << std::endl;
+    
+    if (DEBUG)
+		  std::cout << "into sector x: " << x_sector << " y: " << y_sector << " z: " << z_sector << std::endl;
 		EXPECT_EQ(expectedSec[cCnt],computeXYZ2Lin(x_sector,y_sector,z_sector,sectorDims));
 
 		IndType3 mappedSectors = computeSectorMapping(coord,sectorDims);
@@ -363,6 +350,131 @@ TEST(PrecomputationTest, AssignSectors3D) {
 
 	free(sectorRange);
 }
+
+TEST(PrecomputationTest, AssignSectors3D_20x20x10) {
+	
+  GriddingND::Dimensions imgDim;
+  imgDim.width = 20;
+  imgDim.height = 20;
+  imgDim.depth = 10;
+  DType osr = 1.0f;
+	IndType sectorWidth = 5;
+
+	GriddingND::Dimensions gridDim = imgDim * osr;
+
+	const IndType coordCnt = 6;
+	
+	// Coords as StructureOfArrays
+	// i.e. first x-vals, then y-vals and z-vals
+	DType coords[coordCnt*3] = {-0.5,-0.3,-0.1, 0.1, 0.3, 0.5,//x
+	                            -0.5,-0.5,   0,   0, 0.5, 0.45,//y
+	                            -0.33,-0.16666,-0.08,0,0.08, 0.45};//z
+
+	GriddingND::Array<DType> kSpaceData;
+  kSpaceData.data = coords;
+  kSpaceData.dim.length = coordCnt;
+
+	GriddingND::Dimensions sectorDims= computeSectorCountPerDimension(gridDim,sectorWidth);
+
+  DType expected[5] = {-0.5f,-0.25f,0.0f,0.25f,0.5f};
+
+	DType* sectorRange = (DType*)malloc((sectorDims.width +1) * sizeof(DType));
+	//linspace in range from -0.5 to 0.5
+	for (int i=0; i <= sectorDims.width; i++)
+	{
+		sectorRange[i] = -0.5 + i*(static_cast<DType>(1.0) / (sectorDims.width));
+		EXPECT_NEAR(sectorRange[i],expected[i],EPS);
+	}
+	
+	IndType expectedSec[6] = {0,0,9,26,31,31};
+
+	for (int cCnt = 0; cCnt < coordCnt; cCnt++)
+	{
+		DType3 coord;
+		coord.x = kSpaceData.data[cCnt];
+		coord.y = kSpaceData.data[cCnt + kSpaceData.count()];
+		coord.z = kSpaceData.data[cCnt + 2*kSpaceData.count()];
+		
+    if (DEBUG)
+		  std::cout << "processing x var: " << coord.x << " y: " << coord.y << " z: " << coord.z  << std::endl;
+
+		IndType x_sector = computeSectorMapping(coord.x,sectorDims.width);
+		IndType y_sector = computeSectorMapping(coord.y,sectorDims.height);
+    IndType z_sector = computeSectorMapping(coord.z,sectorDims.depth,sectorDims.width);
+
+    if (DEBUG)
+		  std::cout << "into sector x: " << x_sector << " y: " << y_sector << " z: " << z_sector << std::endl;
+		EXPECT_EQ(expectedSec[cCnt],computeXYZ2Lin(x_sector,y_sector,z_sector,sectorDims));
+
+		IndType3 mappedSectors = computeSectorMapping(coord,sectorDims);
+		EXPECT_EQ(expectedSec[cCnt],computeInd32Lin(mappedSectors,sectorDims));
+	}
+
+	free(sectorRange);
+}
+
+TEST(PrecomputationTest, AssignSectors3D_20x20x10_15) {
+	
+  GriddingND::Dimensions imgDim;
+  imgDim.width = 20;
+  imgDim.height = 20;
+  imgDim.depth = 10;
+  DType osr = 1.5;
+	IndType sectorWidth = 5;
+
+	GriddingND::Dimensions gridDim = imgDim * osr;
+
+	const IndType coordCnt = 6;
+	
+	// Coords as StructureOfArrays
+	// i.e. first x-vals, then y-vals and z-vals
+	DType coords[coordCnt*3] = {-0.5,-0.3,-0.1, 0.1, 0.3, 0.5,//x
+	                            -0.5,-0.5,   0,   0, 0.5, 0.45,//y
+	                            -0.33,-0.16666,-0.08,0,0.08, 0.45};//z
+
+	GriddingND::Array<DType> kSpaceData;
+  kSpaceData.data = coords;
+  kSpaceData.dim.length = coordCnt;
+
+	GriddingND::Dimensions sectorDims= computeSectorCountPerDimension(gridDim,sectorWidth);
+
+  DType expected[7] = {-0.5000,-0.3333,-0.1666,0,0.1666,0.3333,0.5000};
+
+	DType* sectorRange = (DType*)malloc((sectorDims.width +1) * sizeof(DType));
+	//linspace in range from -0.5 to 0.5
+	for (int i=0; i <= sectorDims.width; i++)
+	{
+		sectorRange[i] = -0.5 + i*(static_cast<DType>(1.0) / (sectorDims.width));
+		EXPECT_NEAR(sectorRange[i],expected[i],EPS);
+	}
+	
+	IndType expectedSec[6] = {0,37,56,57,70,107};
+
+	for (int cCnt = 0; cCnt < coordCnt; cCnt++)
+	{
+		DType3 coord;
+		coord.x = kSpaceData.data[cCnt];
+		coord.y = kSpaceData.data[cCnt + kSpaceData.count()];
+		coord.z = kSpaceData.data[cCnt + 2*kSpaceData.count()];
+		
+    if (DEBUG)
+		  std::cout << "processing x var: " << coord.x << " y: " << coord.y << " z: " << coord.z  << std::endl;
+
+		IndType x_sector = computeSectorMapping(coord.x,sectorDims.width);
+		IndType y_sector = computeSectorMapping(coord.y,sectorDims.height);
+    IndType z_sector = computeSectorMapping(coord.z,sectorDims.depth);
+
+    if (DEBUG)
+		  std::cout << "into sector x: " << x_sector << " y: " << y_sector << " z: " << z_sector << std::endl;
+		EXPECT_EQ(expectedSec[cCnt],computeXYZ2Lin(x_sector,y_sector,z_sector,sectorDims));
+
+		IndType3 mappedSectors = computeSectorMapping(coord,sectorDims);
+		EXPECT_EQ(expectedSec[cCnt],computeInd32Lin(mappedSectors,sectorDims));
+	}
+
+	free(sectorRange);
+}
+
 
 bool pairComp (std::pair<IndType,IndType> i,std::pair<IndType,IndType> j) 
 { 
@@ -394,20 +506,24 @@ TEST(PrecomputationTest, TestIndexSorting)
   std::vector<GriddingND::IndPair> secVector = sortVector(assignedSectors);
 
   // print out content:
-  std::cout << "vector contains:";
-  for (std::vector<GriddingND::IndPair>::iterator it=secVector.begin(); it!=secVector.end(); ++it)
-    std::cout << " " << it->second << " (" << it->first << ") ";
-  std::cout << '\n';
-
+  if (DEBUG)
+  {
+    std::cout << "vector contains:";
+    for (std::vector<GriddingND::IndPair>::iterator it=secVector.begin(); it!=secVector.end(); ++it)
+      std::cout << " " << it->second << " (" << it->first << ") ";
+    std::cout << '\n';
+  }
   GriddingND::IndPair* sortedArray = &secVector[0];
 
   //print indices for reselect
   for (IndType i=0; i<6;i++)
   {
-	  std::cout << sortedArray[i].first ;
+    if (DEBUG)
+	    std::cout << sortedArray[i].first ;
 	  EXPECT_EQ(sortedArray[i].second, expectedSectors[i]);
   }
-  std::cout << std::endl;
+  if (DEBUG)
+    std::cout << std::endl;
 }
 
 TEST(PrecomputationTest, AssignSectors3DSorted) {
@@ -471,10 +587,11 @@ TEST(PrecomputationTest, AssignSectors3DSorted) {
 		coords_sorted[i + 2*coordCnt] = kSpaceData.data[secVector[i].first + 2*coordCnt];
 	}
 
-	for (int i=0;i<kSpaceData.count();i++)
-	{
-		std::cout << " x: "  << coords_sorted[i] << " y: " << coords_sorted[i+ 1*coordCnt] << " z:" << coords_sorted[i+ 2*coordCnt] << std::endl;
-	}
+  if (DEBUG)
+	  for (int i=0;i<kSpaceData.count();i++)
+	  {
+		  std::cout << " x: "  << coords_sorted[i] << " y: " << coords_sorted[i+ 1*coordCnt] << " z:" << coords_sorted[i+ 2*coordCnt] << std::endl;
+	  }
 
 	free(assignedSectors.data);
 }
@@ -555,11 +672,14 @@ TEST(PrecomputationTest, ComputeDataIndices) {
 		EXPECT_EQ(sectorDataCount[i+1],cnt);
 	}
 
-	for (int i=0; i<dataIndices.size(); i++)
-	{
-		std::cout << dataIndices.at(i) << " " ;
-	}
-	std::cout << std::endl;
+  if (DEBUG)
+  {
+	  for (int i=0; i<dataIndices.size(); i++)
+	  {
+		  std::cout << dataIndices.at(i) << " " ;
+	  }
+	  std::cout << std::endl;
+  }
 	free(assignedSectors.data);
 }
 
@@ -574,6 +694,8 @@ TEST(PrecomputationTest, ComputeSectorCenters) {
 	gridDim.depth = (IndType)(imageWidth * osr);
 	
 	GriddingND::Dimensions sectorDims= computeSectorCountPerDimension(gridDim,sectorWidth);
+
+  EXPECT_EQ(27,sectorDims.count());
 
 	GriddingND::Array<IndType3> sectorCenters; 
 	sectorCenters.data = (IndType3*)malloc(sectorDims.count() * sizeof(IndType3));
@@ -590,14 +712,185 @@ TEST(PrecomputationTest, ComputeSectorCenters) {
 				sectorCenters.data[computeXYZ2Lin(x,y,z,sectorDims)] = center;
 			}
 
-	for (int i=0; i<sectorDims.count(); i++)
-	{
-		std::cout << " x: " << sectorCenters.data[i].x << " y: " << sectorCenters.data[i].y << " z: " << sectorCenters.data[i].z << std::endl;
-	}
+  if (DEBUG)
+	  for (int i=0; i<sectorDims.count(); i++)
+	  {
+		  std::cout << " x: " << sectorCenters.data[i].x << " y: " << sectorCenters.data[i].y << " z: " << sectorCenters.data[i].z << std::endl;
+	  }
 
 	EXPECT_EQ(4,sectorCenters.data[0].x);
 	EXPECT_EQ(4,sectorCenters.data[0].y);
 	EXPECT_EQ(4,sectorCenters.data[0].z);
 
 	free(sectorCenters.data);
+}
+
+TEST(PrecomputationTest, AnisotropicComputeSectorDim) {
+	IndType imageWidth = 128; 
+	DType osr = 1.5;
+	IndType sectorWidth = 8;
+
+  GriddingND::Dimensions gridDim;
+	gridDim.width = (IndType)(imageWidth);
+	gridDim.height = (IndType)(imageWidth);
+	gridDim.depth = (IndType)((imageWidth-16));
+	
+  if (DEBUG)
+	  std::cout << " dimensions before: w: " << gridDim.width << " h: " << gridDim.height << " d: " << gridDim.depth << std::endl;
+	gridDim = gridDim * osr;
+	
+  if (DEBUG)
+    std::cout << " dimensions scaled: w: " << gridDim.width << " h: " << gridDim.height << " d: " << gridDim.depth << std::endl;
+
+	IndType sectorDim = computeTotalSectorCount(gridDim,sectorWidth);
+	 
+	IndType expected = 16*16*14*osr*osr*osr;
+	EXPECT_EQ(expected,sectorDim);	
+
+	GriddingND::Dimensions sectorDims = computeSectorCountPerDimension(gridDim,sectorWidth);
+
+	EXPECT_EQ(expected,sectorDims.count());
+}
+
+TEST(PrecomputationTest, AnisotropicComputeSectorCenters) {
+	GriddingND::Dimensions imgDim;
+  imgDim.width = 16;
+  imgDim.height = 16;
+  imgDim.depth = 8;
+
+	DType osr = 1.5;
+	IndType sectorWidth = 8;
+
+	GriddingND::Dimensions gridDim = imgDim*osr;
+	
+	GriddingND::Dimensions sectorDims= computeSectorCountPerDimension(gridDim,sectorWidth);
+
+  EXPECT_EQ(18,sectorDims.count());
+  EXPECT_EQ(2,sectorDims.depth);
+
+	GriddingND::Array<IndType3> sectorCenters; 
+	sectorCenters.data = (IndType3*)malloc(sectorDims.count() * sizeof(IndType3));
+	sectorCenters.dim.length = sectorDims.count();
+  
+  for (IndType z=0;z<sectorDims.depth; z++)
+    for (IndType y=0;y<sectorDims.height;y++)
+      for (IndType x=0;x<sectorDims.width;x++)
+			{
+				IndType3 center;
+				center.x = x*sectorWidth +  std::floor(static_cast<DType>(sectorWidth) / (DType)2.0);
+				center.y = y*sectorWidth +  std::floor(static_cast<DType>(sectorWidth) / (DType)2.0);
+				center.z = z*sectorWidth +  std::floor(static_cast<DType>(sectorWidth) / (DType)2.0);
+        sectorCenters.data[computeXYZ2Lin(x,y,z,sectorDims)] = center;
+			}
+
+  if (DEBUG)
+	  for (int i=0; i<sectorDims.count(); i++)
+	  {
+		  std::cout << " x: " << sectorCenters.data[i].x << " y: " << sectorCenters.data[i].y << " z: " << sectorCenters.data[i].z << std::endl;
+	  }
+
+	EXPECT_EQ(4,sectorCenters.data[0].x);
+	EXPECT_EQ(4,sectorCenters.data[0].y);
+	EXPECT_EQ(4,sectorCenters.data[0].z);
+
+  EXPECT_EQ(4,sectorCenters.data[9].x);
+	EXPECT_EQ(4,sectorCenters.data[9].y);
+	EXPECT_EQ(12,sectorCenters.data[9].z);
+
+  EXPECT_EQ(20,sectorCenters.data[17].x);
+	EXPECT_EQ(20,sectorCenters.data[17].y);
+	EXPECT_EQ(12,sectorCenters.data[17].z);
+
+	free(sectorCenters.data);
+}
+
+TEST(IndexComputationTest, TestGetCoordsFromIndex_2x2x2) 
+{
+  const int N = 8;
+  int data[N];
+  for (int i = 0; i<N; i++)
+    data[i] = i;
+  
+  IndType3 gridDims;
+  gridDims.x = 2;
+  gridDims.y = 2;
+  gridDims.z = 2;
+
+  int x, y, z;
+  int expected[] = {0,0,0,
+                     1,0,0,
+                     0,1,0,
+                     1,1,0,
+                     0,0,1,
+                     1,0,1,
+                     0,1,1,
+                     1,1,1};
+
+  for (int i=0; i<N; i++)
+  {
+    getCoordsFromIndex(i, &x, &y, &z, gridDims.x,gridDims.y,gridDims.z);
+    EXPECT_EQ(expected[3*i],x);
+    EXPECT_EQ(expected[3*i+1],y);
+    EXPECT_EQ(expected[3*i+2],z);
+  }
+}
+
+TEST(IndexComputationTest, TestGetCoordsFromIndex_2x2x1) 
+{
+  int N = 4;
+  int data[4];
+  for (int i = 0; i<N; i++)
+    data[i] = i;
+  
+  IndType3 gridDims;
+  gridDims.x = 2;
+  gridDims.y = 2;
+  gridDims.z = 1;
+
+  int x, y, z;
+  int expected[] = {0,0,0,
+                    1,0,0,
+                    0,1,0,
+                    1,1,0};
+  for (int i=0; i<N; i++)
+  {
+    getCoordsFromIndex(i, &x, &y, &z, gridDims.x,gridDims.y,gridDims.z);
+    EXPECT_EQ(expected[3*i],x);
+    EXPECT_EQ(expected[3*i+1],y);
+    EXPECT_EQ(expected[3*i+2],z);
+  }
+}
+
+TEST(IndexComputationTest, TestGetCoordsFromIndex_4x4x2) 
+{
+  const int N = 32;
+  int data[N];
+  for (int i = 0; i<N; i++)
+    data[i] = i;
+  
+  IndType3 gridDims;
+  gridDims.x = 4;
+  gridDims.y = 4;
+  gridDims.z = 2;
+
+  int x, y, z;
+  int expected[N*3];
+  int cnt =0;
+  for (int z=0;z<gridDims.z;z++)
+    for (int y=0;y<gridDims.y;y++)
+      for (int x=0;x<gridDims.x;x++)
+      {
+        expected[cnt*3]=x;
+        expected[cnt*3+1]=y;
+        expected[cnt*3+2]=z;
+        cnt++;
+      }
+
+  for (int i=0; i<N; i++)
+  {
+    getCoordsFromIndex(i, &x, &y, &z, gridDims.x,gridDims.y,gridDims.z);
+    EXPECT_EQ(expected[3*i],x);
+    EXPECT_EQ(expected[3*i+1],y);
+    EXPECT_EQ(expected[3*i+2],z);
+  }
 }

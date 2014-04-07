@@ -43,3 +43,5 @@ inc/*config.hpp
 *.mat
 tmp/
 *.swp
+
+matlab/demo/results/

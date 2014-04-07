@@ -34,15 +34,15 @@ mxArray* createDensArray(const IndType arrSize)
 	return mxCreateNumericArray(2,densSize,mxSINGLE_CLASS,mxREAL);
 }
 
-mxArray* createCoordsArray(const IndType arrSize)
+mxArray* createCoordsArray(const IndType arrSize, const IndType nDim)
 {
-	mwSize coordSize[] = {3,arrSize};//row major in matlab, SoA (DType3)
+	mwSize coordSize[] = {nDim,arrSize};//row major in matlab, SoA (DType3 or DType2)
 	return mxCreateNumericArray(2,coordSize,mxSINGLE_CLASS,mxREAL);
 }
 
 mxArray* createSectorCentersArray(const IndType arrSize, const IndType nDim)
 {
-	mwSize secSize[] = {nDim,arrSize};//IndType3
+	mwSize secSize[] = {nDim,arrSize};//IndType3 or IndType2
 	return mxCreateNumericArray(2,secSize,mxUINT64_CLASS,mxREAL);
 }
 
@@ -68,7 +68,7 @@ GriddingND::Array<DType> GriddingND::GriddingOperatorMatlabFactory::initCoordsDa
 	if (MATLAB_DEBUG)
 		mexPrintf("init Coords Output Array: %d\n",coordCnt);
 
-	plhs[3] = createCoordsArray(coordCnt);
+	plhs[3] = createCoordsArray(coordCnt,griddingOp->getImageDimensionCount());
 
 	GriddingND::Array<DType> coordsData;
 	coordsData.data = (DType*)mxGetData(plhs[3]);
@@ -80,26 +80,13 @@ GriddingND::Array<IndType> GriddingND::GriddingOperatorMatlabFactory::initSector
 {
 	if (MATLAB_DEBUG)
 		mexPrintf("init Sector Centers Output Array: %d\n",sectorCnt);
-	plhs[4] = createSectorCentersArray(sectorCnt,3);
+	plhs[4] = createSectorCentersArray(sectorCnt,griddingOp->getImageDimensionCount());
 
 	GriddingND::Array<IndType> sectorCenters;
 	sectorCenters.data = (IndType*)mxGetData(plhs[4]);
 	sectorCenters.dim.length = sectorCnt;
 	return sectorCenters;
 }
-
-GriddingND::Array<IndType> GriddingND::GriddingOperatorMatlabFactory::initSectorCenters2D(GriddingND::GriddingOperator* griddingOp, IndType sectorCnt)
-{
-	if (MATLAB_DEBUG)
-		mexPrintf("init Sector Centers Output Array: %d\n",sectorCnt);
-	plhs[4] = createSectorCentersArray(sectorCnt,2);
-
-	GriddingND::Array<IndType> sectorCenters;
-	sectorCenters.data = (IndType*)mxGetData(plhs[4]);
-	sectorCenters.dim.length = sectorCnt;
-	return sectorCenters;
-}
-
 
 GriddingND::Array<IndType> GriddingND::GriddingOperatorMatlabFactory::initSectorDataCount(GriddingND::GriddingOperator* griddingOp, IndType dataCount)
 {

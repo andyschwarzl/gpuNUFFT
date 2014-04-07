@@ -1,7 +1,5 @@
 #include <limits.h>
 
-#include "gridding_gpu.hpp"
-
 #include "gtest/gtest.h"
 
 #include "gridding_operator_factory.hpp"
@@ -12,7 +10,7 @@
 
 TEST(TestGPUGriddingDeapo,KernelCall1Sector)
 {
-	int kernel_width = 5;
+	int kernel_width = 3;
 	//oversampling ratio
 	float osr = 1.75;//DEFAULT_OVERSAMPLING_RATIO;
 
@@ -57,7 +55,7 @@ TEST(TestGPUGriddingDeapo,KernelCall1Sector)
 	//Output Grid
 	CufftType* gdata = gdataArray.data;
 
-	printf("test %f \n",gdata[4].x);
+	if (DEBUG) printf("test %f \n",gdata[4].x);
 
 	/*for (int y = 0; y < im_width; y++)
 	{
@@ -67,8 +65,8 @@ TEST(TestGPUGriddingDeapo,KernelCall1Sector)
 	}*/
 
 	int index = get3DC2lin(5,5,5,im_width);
-	printf("index to test %d\n",index);
-	EXPECT_NEAR(0.01294,gdata[get3DC2lin(10,0,16,im_width)].x,epsilon);
+	if (DEBUG) printf("index to test %d\n",index);
+	EXPECT_NEAR(0.00637,gdata[get3DC2lin(10,0,16,im_width)].x,epsilon);
 	
 	free(data);
 	free(coords);
@@ -79,7 +77,7 @@ TEST(TestGPUGriddingDeapo,KernelCall1Sector)
 
 TEST(TestGPUGriddingDeapo,KernelCall1Sector2Coils)
 {
-	int kernel_width = 5;
+	int kernel_width = 3;
 	//oversampling ratio
 	float osr = 2.0f;//DEFAULT_OVERSAMPLING_RATIO;
 
@@ -129,12 +127,12 @@ TEST(TestGPUGriddingDeapo,KernelCall1Sector2Coils)
 	//Output Grid
 	CufftType* gdata = gdataArray.data;
 	
-	printf("test %f \n",gdata[4].x);
+	if (DEBUG) printf("test %f \n",gdata[4].x);
 	int index = get3DC2lin(5,5,5,im_width);
-	printf("index to test %d\n",index);
+	if (DEBUG) printf("index to test %d\n",index);
 
 	int coil_offset = 1 * griddingOp->getImageDims().count();
-	printf("grid_size: %d\n",griddingOp->getImageDims().count());
+	if (DEBUG) printf("grid_size: %d\n",griddingOp->getImageDims().count());
 	
 	/*for (int j=0; j<im_width; j++)
 	{
@@ -142,7 +140,7 @@ TEST(TestGPUGriddingDeapo,KernelCall1Sector2Coils)
 			printf("A: %.2f B: %.2f",gdata[get3DC2lin(i,j,16,im_width)].x,gdata[coil_offset+get3DC2lin(i,j,16,im_width)].x);
 		printf("\n");
 	}*/
-	EXPECT_NEAR(gdata[get3DC2lin(0,0,16,im_width)].x,0.033939f,epsilon);
+	EXPECT_NEAR(gdata[get3DC2lin(0,0,16,im_width)].x,0.016846,epsilon);
 	//EXPECT_NEAR(gdata[coil_offset + get3DC2lin(0,0,16,im_width)].x,0.00928f,epsilon);
 	EXPECT_NEAR(gdata[get3DC2lin(10,0,16,im_width)].x,gdata[coil_offset + get3DC2lin(10,0,16,im_width)].x,epsilon);
 	EXPECT_NEAR(gdata[get3DC2lin(0,5,16,im_width)].x,gdata[coil_offset + get3DC2lin(0,5,16,im_width)].x,epsilon);

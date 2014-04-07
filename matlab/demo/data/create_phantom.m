@@ -5,7 +5,9 @@ if nargin < 3
 end
 
 javaaddpath ../../../../STBB/STBBFolder/JarFile/STBB.jar
+
 import STBB.*
+
 sl2d = SheppLogan2D(); 
 sl3d = SheppLogan3D(); 
 
@@ -39,8 +41,8 @@ if (radialTraj)
     rho=linspace(-kR,kR,N)';
     rhoZ=linspace(-kRz,kRz,N3D)';
     
-    numSpokes = N;
-    nRO = N;
+    numSpokes = N / 2;
+    nRO = N / 2;
 
     % Trajectory
     theta=linspace(0,pi-pi/numSpokes,numSpokes);
@@ -75,6 +77,7 @@ else
     dens = ones(1,size(k_traj,1));
 end
 %% test kspace
+size(k_traj)
 if (nDim ==2)
     dataRadial = sl2d.FourierDomainSignal([k_traj(:,1),k_traj(:,2)]);
 elseif (nDim ==3)

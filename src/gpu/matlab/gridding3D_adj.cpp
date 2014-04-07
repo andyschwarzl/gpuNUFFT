@@ -131,9 +131,11 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	imdataArray.dim = imgDims;
 	imdataArray.dim.channels = n_coils;
 
-	mexPrintf(" imdataArray dims %d,%d,%d,%d\n",imdataArray.dim.width,imdataArray.dim.height,imdataArray.dim.depth,imdataArray.dim.channels);
-
-	mexPrintf(" data count: %d \n",data_count);
+	if (MATLAB_DEBUG)
+  {
+    mexPrintf(" imdataArray dims %d,%d,%d,%d\n",imdataArray.dim.width,imdataArray.dim.height,imdataArray.dim.depth,imdataArray.dim.channels);
+	  mexPrintf(" data count: %d \n",data_count);
+  }
 
 	try
 	{

@@ -71,7 +71,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	// Sector centers
 	GriddingND::Array<IndType> sectorCentersArray = readAndCreateArray<IndType>(prhs,pcount++,0,"sector-centers");
 
-	mexPrintf("1st sector center: [%d,%d]\n", sectorCentersArray.data[0],sectorCentersArray.data[1]);
+	if (MATLAB_DEBUG)
+    mexPrintf("1st sector center: [%d,%d]\n", sectorCentersArray.data[0],sectorCentersArray.data[1]);
 
 	//TODO Sens array	
 	GriddingND::Array<DType2>  sensArray;

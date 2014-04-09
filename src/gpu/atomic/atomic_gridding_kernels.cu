@@ -1,3 +1,5 @@
+#ifndef ATOMIC_GRIDDING_KERNELS_H
+#define ATOMIC_GRIDDING_KERNELS_H
 #include "gridding_kernels.hpp"
 #include "../std_gridding_kernels.cu"
 #include "cuda_utils.cuh"
@@ -817,3 +819,5 @@ void performForwardConvolution( CufftType*		data_d,
   else
     forwardConvolutionKernel<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
 }
+
+#endif

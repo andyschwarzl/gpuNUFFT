@@ -15,7 +15,25 @@ void performConvolution( DType2* data_d,
   GriddingND::GriddingInfo* gi_host
   );
 
+void performTextureConvolution( DType2* data_d, 
+  DType* crds_d, 
+  CufftType* gdata_d,
+  DType*			kernel_d, 
+  IndType* sectors_d, 
+  IndType* sector_centers_d,
+  GriddingND::GriddingInfo* gi_host
+  );
+
 void performForwardConvolution( CufftType*		data_d, 
+  DType*			crds_d, 
+  CufftType*		gdata_d,
+  DType*			kernel_d, 
+  IndType*		sectors_d, 
+  IndType*		sector_centers_d,
+  GriddingND::GriddingInfo*	gi_host
+  );
+
+void performTextureConvolution( CufftType*		data_d, 
   DType*			crds_d, 
   CufftType*		gdata_d,
   DType*			kernel_d, 

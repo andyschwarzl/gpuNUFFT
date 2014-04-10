@@ -19,7 +19,7 @@
 //  * sector_centers : coordinates (x,y,z) of sector centers
 //  * temp_gdata     : temporary grid data
 //  * N              : number of threads
-__global__ void convolutionKernel(DType2* data, 
+__global__ void textureConvolutionKernel(DType2* data, 
   DType* crds, 
   CufftType* gdata,
   IndType* sectors, 
@@ -166,7 +166,7 @@ __global__ void convolutionKernel(DType2* data,
 //  * sector_centers : coordinates (x,y,z) of sector centers
 //  * temp_gdata     : temporary grid data
 //  * N              : number of threads
-__global__ void convolutionKernel2D(DType2* data, 
+__global__ void textureConvolutionKernel2D(DType2* data, 
   DType* crds, 
   CufftType* gdata,
   IndType* sectors, 
@@ -320,7 +320,7 @@ void performTextureConvolution( DType2* data_d,
 //  * sectors        : mapping of sample indices according to each sector
 //  * sector_centers : coordinates (x,y,z) of sector centers
 //  * N              : number of threads
-__global__ void forwardConvolutionKernel( CufftType* data, 
+__global__ void textureForwardConvolutionKernel( CufftType* data, 
   DType* crds, 
   CufftType* gdata,
   IndType* sectors, 
@@ -434,7 +434,7 @@ __global__ void forwardConvolutionKernel( CufftType* data,
   } //sector check
 }
 
-__global__ void forwardConvolutionKernel2D( CufftType* data, 
+__global__ void textureForwardConvolutionKernel2D( CufftType* data, 
   DType* crds, 
   CufftType* gdata,
   IndType* sectors, 

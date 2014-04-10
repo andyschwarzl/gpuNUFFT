@@ -1,5 +1,5 @@
-#ifndef GRIDDING_KERNELS_CU
-#define GRIDDING_KERNELS_CU
+#ifndef TEXTURE_GRIDDING_KERNELS_CU
+#define TEXTURE_GRIDDING_KERNELS_CU
 
 #include "gridding_kernels.hpp"
 #include "../std_gridding_kernels.cu"
@@ -548,4 +548,4 @@ void performTextureForwardConvolution( CufftType*		data_d,
     forwardConvolutionKernel<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
 }
 
-#endif //GRIDDING_KERNELS_CU
+#endif //TEXTURE_GRIDDING_KERNELS_CU

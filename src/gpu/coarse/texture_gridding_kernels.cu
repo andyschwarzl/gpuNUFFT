@@ -109,9 +109,13 @@ __global__ void textureConvolutionKernel(DType2* data,
                   {
                     //get kernel value
                     //Calculate Separable Filters 
-                    val = KERNEL[(int) round(dz_sqr * GI.dist_multiplier)] *
-                      KERNEL[(int) round(dy_sqr * GI.dist_multiplier)] *
-                      KERNEL[(int) round(dx_sqr * GI.dist_multiplier)];
+                    //val = KERNEL[(int) round(dz_sqr * GI.dist_multiplier)] *
+                    //  KERNEL[(int) round(dy_sqr * GI.dist_multiplier)] *
+                    //  KERNEL[(int) round(dx_sqr * GI.dist_multiplier)];
+                    val = tex1Dfetch(texKERNEL,(int) round(dz_sqr*GI.dist_multiplier));
+                    val = val * tex1Dfetch(texKERNEL,(int) round(dy_sqr*GI.dist_multiplier));
+                    val = val * tex1Dfetch(texKERNEL,(int) round(dx_sqr*GI.dist_multiplier));
+
                     ind = getIndex(i,j,k,GI.sector_pad_width);
                     
                     // multiply data by current kernel val 
@@ -283,9 +287,9 @@ void performTextureConvolution( DType2* data_d,
     printf("convolution requires %d bytes of shared memory!\n",shared_mem_size);
 
   if (gi_host->is2Dprocessing)
-    convolutionKernel2D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,temp_gdata_d,gi_host->sector_count);
+    textureConvolutionKernel2D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,temp_gdata_d,gi_host->sector_count);
   else
-    convolutionKernel<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,temp_gdata_d,gi_host->sector_count);
+    textureConvolutionKernel<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,temp_gdata_d,gi_host->sector_count);
 
   if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
     printf("error at adj thread synchronization 2: %s\n",cudaGetErrorString(cudaGetLastError()));

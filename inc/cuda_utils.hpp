@@ -116,8 +116,10 @@ inline void showMemoryInfo()
   showMemoryInfo(false);
 }
 
-// prototype
-// implementation in cu file
+// prototypes
+// for function
+// implementations that have to reside in cu file
 void initConstSymbol(const char* symbol, const void* src, IndType count);
+void initTexture(const char* symbol, const void* devicePtr, IndType size);
 
 #endif

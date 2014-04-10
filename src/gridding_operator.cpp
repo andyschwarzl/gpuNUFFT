@@ -213,6 +213,10 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
 
   initConstSymbol("KERNEL",(void*)this->kernel.data,this->kernel.count()*sizeof(DType));
 
+  DType* kernel_d;
+  allocateAndCopyToDeviceMem<DType>(&kernel_d,this->kernel.data,this->kernel.count());
+  initTexture("texKERNEL",kernel_d,this->kernel.count()*sizeof(DType));
+
   //allocateAndCopyToDeviceMem<DType>(&kernel_d,kernel,kernel_count);
   if (DEBUG)
     printf("allocate and copy sectors of size %d...\n",sector_count+1);
@@ -261,7 +265,7 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
 
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       printf("error at adj thread synchronization 1: %s\n",cudaGetErrorString(cudaGetLastError()));
-    performConvolution(data_d,crds_d,gdata_d,NULL,sectors_d,sector_centers_d,gi_host);
+    performTextureConvolution(data_d,crds_d,gdata_d,NULL,sectors_d,sector_centers_d,gi_host);
 
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       fprintf(stderr,"error at adj  thread synchronization 2: %s\n",cudaGetErrorString(cudaGetLastError()));

@@ -299,9 +299,9 @@ void performTextureConvolution( DType2* data_d,
     printf("grid dim %d, block dim %d \n",grid_dim.x, block_dim.x); 
   }
   if (gi_host->is2Dprocessing)
-    convolutionKernel2D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
+    textureConvolutionKernel2D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
   else
-    convolutionKernel<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
+    textureConvolutionKernel<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
 
   if (DEBUG)
     printf("...finished with: %s\n", cudaGetErrorString(cudaGetLastError()));

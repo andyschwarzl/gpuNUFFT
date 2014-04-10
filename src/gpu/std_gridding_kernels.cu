@@ -11,7 +11,6 @@
 // Method to initialize CONSTANT memory symbols. Needs to reside in *.cu file 
 // to work properly
 //
-// TODO find better solution
 //
 void initConstSymbol(const char* symbol, const void* src, IndType size)
 {
@@ -20,6 +19,12 @@ void initConstSymbol(const char* symbol, const void* src, IndType size)
 
   if (std::string("KERNEL").compare(symbol)==0)
     HANDLE_ERROR(cudaMemcpyToSymbol(KERNEL, src,size));
+}
+
+void initTexture(const char* symbol, const void* devicePtr, IndType size)
+{
+  if (std::string("texKERNEL").compare(symbol)==0)
+    HANDLE_ERROR(cudaBindTexture(NULL,texKERNEL,devicePtr,size));
 }
 
 __global__ void fftScaleKernel(CufftType* data, DType scaling, int N)

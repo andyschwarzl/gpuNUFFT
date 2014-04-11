@@ -33,7 +33,7 @@ void performForwardConvolution( CufftType*		data_d,
   GriddingND::GriddingInfo*	gi_host
   );
 
-void performTextureConvolution( CufftType*		data_d, 
+void performTextureForwardConvolution( CufftType*		data_d, 
   DType*			crds_d, 
   CufftType*		gdata_d,
   DType*			kernel_d, 

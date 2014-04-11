@@ -214,9 +214,8 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
 
   initConstSymbol("KERNEL",(void*)this->kernel.data,this->kernel.count()*sizeof(DType));
 
-  DType* kernel_d;
-  allocateAndCopyToDeviceMem<DType>(&kernel_d,this->kernel.data,this->kernel.count());
-  initTexture("texKERNEL",this->kernel);
+  cudaArray* kernel_d = NULL;
+  initTexture("texKERNEL",kernel_d,this->kernel);
 
   //allocateAndCopyToDeviceMem<DType>(&kernel_d,kernel,kernel_count);
   if (DEBUG)
@@ -352,6 +351,8 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
     printf("error: at adj  thread synchronization 10: %s\n",cudaGetErrorString(cudaGetLastError()));
   // Destroy the cuFFT plan.
   cufftDestroy(fft_plan);
+
+  freeTexture("texKERNEL",kernel_d);
   freeTotalDeviceMemory(data_d,crds_d,gdata_d,imdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop
 
   if (this->applyDensComp())
@@ -471,6 +472,9 @@ void GriddingND::GriddingOperator::performForwardGridding(GriddingND::Array<DTyp
     printf("allocate and copy kernel in const memory of size %d...\n",this->kernel.count());
 
   initConstSymbol("KERNEL",(void*)this->kernel.data,this->kernel.count()*sizeof(DType));
+  
+  cudaArray* kernel_d = NULL;
+  initTexture("texKERNEL",kernel_d,this->kernel);
 
   if (DEBUG)
     printf("allocate and copy sectors of size %d...\n",sector_count+1);
@@ -544,7 +548,7 @@ void GriddingND::GriddingOperator::performForwardGridding(GriddingND::Array<DTyp
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       printf("error at thread synchronization 6: %s\n",cudaGetErrorString(cudaGetLastError()));
     // convolution and resampling to non-standard trajectory
-    performForwardConvolution(data_d,crds_d,gdata_d,NULL,sectors_d,sector_centers_d,gi_host);
+    performTextureForwardConvolution(data_d,crds_d,gdata_d,NULL,sectors_d,sector_centers_d,gi_host);
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       printf("error at thread synchronization 7: %s\n",cudaGetErrorString(cudaGetLastError()));
 
@@ -559,6 +563,7 @@ void GriddingND::GriddingOperator::performForwardGridding(GriddingND::Array<DTyp
   // Destroy the cuFFT plan.
   if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
     printf("error at thread synchronization 9: %s\n",cudaGetErrorString(cudaGetLastError()));
+  freeTexture("texKERNEL",kernel_d);
   freeTotalDeviceMemory(data_d,crds_d,gdata_d,imdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop
   if (n_coils > 1 && deapo_d != NULL)
     cudaFree(deapo_d);

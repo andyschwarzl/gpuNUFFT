@@ -120,6 +120,8 @@ inline void showMemoryInfo()
 // for function
 // implementations that have to reside in cu file
 void initConstSymbol(const char* symbol, const void* src, IndType count);
-void initTexture(const char* symbol, GriddingND::Array<DType> hostTexture);
 
+void initTexture(const char* symbol, cudaArray* devicePtr, GriddingND::Array<DType> hostTexture);
+
+void freeTexture(const char* symbol,cudaArray* devicePtr);
 #endif

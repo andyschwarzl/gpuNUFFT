@@ -135,6 +135,7 @@ namespace GriddingND
     DType aniso_z_scale;
 
     DType radiusSquared;
+    DType radiusSquared_inv;
     DType dist_multiplier;
 
     IndType3 imgDims;

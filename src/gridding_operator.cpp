@@ -71,13 +71,13 @@ GriddingND::GriddingInfo* GriddingND::GriddingOperator::initAndCopyGriddingInfo(
   gi_host->gridDims.z = this->getGridDims().depth;
   gi_host->gridDims_count = this->getGridDims().width*this->getGridDims().height*DEFAULT_VALUE(this->getGridDims().depth);//s.a.
 
-  DType kernel_radius = static_cast<DType>(this->kernelWidth) / (DType)2.0;
-  DType radius = kernel_radius / static_cast<DType>(this->getGridDims().width);
+  double kernel_radius = static_cast<double>(this->kernelWidth) / 2.0;
+  double radius = kernel_radius / static_cast<double>(this->getGridDims().width);
 
   DType kernel_width_inv = (DType)1.0 / static_cast<DType>(this->kernelWidth);
 
-  DType radiusSquared = radius * radius;
-  DType kernelRadius_invSqr = (DType)1.0 / radiusSquared;
+  double radiusSquared = radius * radius;
+  double kernelRadius_invSqr = 1.0 / radiusSquared;
   DType dist_multiplier = (this->kernel.count() - 1) * kernelRadius_invSqr;
 
   if (DEBUG)
@@ -107,6 +107,7 @@ GriddingND::GriddingInfo* GriddingND::GriddingOperator::initAndCopyGriddingInfo(
   gi_host->aniso_z_shift = ((gridSectorDims.width-gridSectorDims.depth)/2.0)*sectorKdim;
 
   gi_host->radiusSquared = radiusSquared;
+  gi_host->radiusSquared_inv = kernelRadius_invSqr;
   gi_host->dist_multiplier = dist_multiplier;
 
   gi_host->is2Dprocessing = this->is2DProcessing();
@@ -266,6 +267,7 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       printf("error at adj thread synchronization 1: %s\n",cudaGetErrorString(cudaGetLastError()));
     performTextureConvolution(data_d,crds_d,gdata_d,NULL,sectors_d,sector_centers_d,gi_host);
+    //performConvolution(data_d,crds_d,gdata_d,NULL,sectors_d,sector_centers_d,gi_host);
 
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       fprintf(stderr,"error at adj  thread synchronization 2: %s\n",cudaGetErrorString(cudaGetLastError()));

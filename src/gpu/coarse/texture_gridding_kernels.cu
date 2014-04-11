@@ -104,9 +104,9 @@ __global__ void textureConvolutionKernel(DType2* data,
               dx_sqr *= dx_sqr;
               //get kernel value
               //Calculate Separable Filters 
-              val = tex1D(texKERNEL,dz_sqr*GI.dist_multiplier+0.5f);
-              val = val * tex1D(texKERNEL,dy_sqr*GI.dist_multiplier+0.5f);
-              val = val * tex1D(texKERNEL,dx_sqr*GI.dist_multiplier+0.5f);
+              val = tex1D(texKERNEL,dz_sqr*GI.radiusSquared_inv);
+              val = val * tex1D(texKERNEL,dy_sqr*GI.radiusSquared_inv);
+              val = val * tex1D(texKERNEL,dx_sqr*GI.radiusSquared_inv);
 
               ind = getIndex(i,j,k,GI.sector_pad_width);
 
@@ -211,8 +211,8 @@ __global__ void textureConvolutionKernel2D(DType2* data,
           dx_sqr *= dx_sqr;
           //get kernel value
           //Calculate Separable Filters 
-          val = tex1D(texKERNEL,dy_sqr*GI.dist_multiplier+0.5f);
-          val = val * tex1D(texKERNEL,dx_sqr*GI.dist_multiplier+0.5f);
+          val = tex1D(texKERNEL,dy_sqr*GI.radiusSquared_inv);
+          val = val * tex1D(texKERNEL,dx_sqr*GI.radiusSquared_inv);
           ind = getIndex2D(i,j,GI.sector_pad_width);
 
           // multiply data by current kernel val 
@@ -370,9 +370,9 @@ __global__ void textureForwardConvolutionKernel(CufftType* data,
             dx_sqr *= dx_sqr;
             // get kernel value
             // calc as separable filter
-            val = tex1D(texKERNEL,dz_sqr*GI.dist_multiplier+0.5f);
-            val = val * tex1D(texKERNEL,dy_sqr*GI.dist_multiplier+0.5f);
-            val = val * tex1D(texKERNEL,dx_sqr*GI.dist_multiplier+0.5f);
+            val = tex1D(texKERNEL,dz_sqr*GI.radiusSquared_inv);
+            val = val * tex1D(texKERNEL,dy_sqr*GI.radiusSquared_inv);
+            val = val * tex1D(texKERNEL,dx_sqr*GI.radiusSquared_inv);
 
             // multiply data by current kernel val 
             // grid complex or scalar 
@@ -465,8 +465,8 @@ __global__ void textureForwardConvolutionKernel2D(CufftType* data,
           dx_sqr *= dx_sqr;
           // get kernel value
           // calc as separable filter
-          val = tex1D(texKERNEL,dy_sqr*GI.dist_multiplier+0.5f);
-          val = val * tex1D(texKERNEL,dx_sqr*GI.dist_multiplier+0.5f);
+          val = tex1D(texKERNEL,dy_sqr*GI.radiusSquared_inv);
+          val = val * tex1D(texKERNEL,dx_sqr*GI.radiusSquared_inv);
           // multiply data by current kernel val 
           // grid complex or scalar 
           if (isOutlier2D(i,j,center.x,center.y,GI.gridDims.x,GI.sector_offset))

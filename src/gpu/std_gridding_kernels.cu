@@ -32,7 +32,7 @@ void initTexture(const char* symbol, GriddingND::Array<DType> hostTexture)
     HANDLE_ERROR(cudaMemcpyToArray(cuArray, 0, 0, hostTexture.data, sizeof(DType)*hostTexture.count(), cudaMemcpyHostToDevice));
     //texKERNEL.filterMode = cudaFilterModeLinear;
     texKERNEL.filterMode = cudaFilterModePoint;
-    texKERNEL.normalized = false;
+    texKERNEL.normalized = true;
     texKERNEL.addressMode[0] = cudaAddressModeClamp;
   }
 }

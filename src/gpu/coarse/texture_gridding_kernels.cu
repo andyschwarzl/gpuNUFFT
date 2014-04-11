@@ -61,7 +61,7 @@ __global__ void textureConvolutionKernel(DType2* data,
     data_cnt = sectors[sec];
 
     max_dim =  GI.sector_pad_max;		
-    
+
     while (data_cnt < sectors[sec+1])
     {
       __shared__ DType3 data_point; //datapoint shared in every thread
@@ -77,7 +77,7 @@ __global__ void textureConvolutionKernel(DType2* data,
       //kz = static_cast<DType>((data_point.z + 0.5 - GI.aniso_z_shift) * (GI.gridDims.x) - center.z + GI.sector_offset);
       kz = static_cast<DType>((data_point.z + 0.5) * (GI.gridDims.z) - center.z + GI.sector_offset);
       set_minmax(&kz, &kmin, &kmax, max_dim, GI.kernel_radius);
-      
+
       // grid this point onto the neighboring cartesian points
       for (k=threadIdx.z;k<=kmax; k += blockDim.z)
       {
@@ -88,50 +88,34 @@ __global__ void textureConvolutionKernel(DType2* data,
           // scale distance in z direction with x,y dimension
           dz_sqr = (kz - data_point.z)*GI.aniso_z_scale;
           dz_sqr *= dz_sqr;
-          if (dz_sqr < GI.radiusSquared)
+
+          j=threadIdx.y;
+          if (j<=jmax && j>=jmin)
           {
-            j=threadIdx.y;
-            if (j<=jmax && j>=jmin)
+            jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.y)) - 0.5f;
+            dy_sqr = jy - data_point.y;
+            dy_sqr *= dy_sqr;
+            i=threadIdx.x;
+
+            if (i<=imax && i>=imin)
             {
-              jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.y)) - 0.5f;
-              dy_sqr = jy - data_point.y;
-              dy_sqr *= dy_sqr;
-              if (dy_sqr < GI.radiusSquared)	
-              {
-                i=threadIdx.x;
+              ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;
+              dx_sqr = ix - data_point.x;
+              dx_sqr *= dx_sqr;
+              //get kernel value
+              //Calculate Separable Filters 
+              val = tex1D(texKERNEL,dz_sqr*GI.dist_multiplier+0.5f);
+              val = val * tex1D(texKERNEL,dy_sqr*GI.dist_multiplier+0.5f);
+              val = val * tex1D(texKERNEL,dx_sqr*GI.dist_multiplier+0.5f);
 
-                if (i<=imax && i>=imin)
-                {
-                  ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;
-                  dx_sqr = ix - data_point.x;
-                  dx_sqr *= dx_sqr;
-                  if (dx_sqr < GI.radiusSquared)	
-                  {
-                    //get kernel value
-                    //Calculate Separable Filters 
-                    //val = KERNEL[(int) round(dz_sqr * GI.dist_multiplier)] *
-                    //  KERNEL[(int) round(dy_sqr * GI.dist_multiplier)] *
-                    //  KERNEL[(int) round(dx_sqr * GI.dist_multiplier)];
-                    val = tex1D(texKERNEL,dz_sqr*GI.dist_multiplier+0.5f);
-                    val = val * tex1D(texKERNEL,dy_sqr*GI.dist_multiplier+0.5f);
-                    val = val * tex1D(texKERNEL,dx_sqr*GI.dist_multiplier+0.5f);
+              ind = getIndex(i,j,k,GI.sector_pad_width);
 
-                    //val = tex1D(texKERNEL,dz_sqr/GI.radiusSquared+0.5f);
-                    //val = val * tex1D(texKERNEL,dy_sqr/GI.radiusSquared+0.5f);
-                    //val = val * tex1D(texKERNEL,dx_sqr/GI.radiusSquared+0.5f);
-
-                    ind = getIndex(i,j,k,GI.sector_pad_width);
-                    
-                    // multiply data by current kernel val 
-                    // grid complex or scalar 
-                    sdata[ind].x += val * data[data_cnt].x;
-                    sdata[ind].y += val * data[data_cnt].y;
-                    
-                  }  // kernel bounds check x, spherical support 
-                } // x 	 
-              }// kernel bounds check y, spherical support 
-            } // y 
-          } //kernel bounds check z 
+              // multiply data by current kernel val 
+              // grid complex or scalar 
+              sdata[ind].x += val * data[data_cnt].x;
+              sdata[ind].y += val * data[data_cnt].y;
+            } // x
+          } // y
         } // z
       }//for loop over z entries
       __syncthreads();	
@@ -140,7 +124,7 @@ __global__ void textureConvolutionKernel(DType2* data,
     __syncthreads();	
     //write shared data to temporary output grid
     int sector_ind_offset = sec * GI.sector_dim;
-    
+
     for (k=threadIdx.z;k<GI.sector_pad_width; k += blockDim.z)
     {
       i=threadIdx.x;
@@ -159,7 +143,7 @@ __global__ void textureConvolutionKernel(DType2* data,
     __syncthreads();
     sec = sec + gridDim.x;
   }//sec < sector_count
-  
+
 }
 
 __global__ void textureConvolutionKernel2D(DType2* data, 
@@ -217,30 +201,25 @@ __global__ void textureConvolutionKernel2D(DType2* data,
         jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.y)) - 0.5f;   
         dy_sqr = jy - data_point.y;
         dy_sqr *= dy_sqr;
-        if (dy_sqr < GI.radiusSquared)	
+
+        i=threadIdx.x;
+
+        if (i<=imax && i>=imin)
         {
-          i=threadIdx.x;
+          ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;
+          dx_sqr = ix - data_point.x;
+          dx_sqr *= dx_sqr;
+          //get kernel value
+          //Calculate Separable Filters 
+          val = tex1D(texKERNEL,dy_sqr*GI.dist_multiplier+0.5f);
+          val = val * tex1D(texKERNEL,dx_sqr*GI.dist_multiplier+0.5f);
+          ind = getIndex2D(i,j,GI.sector_pad_width);
 
-          if (i<=imax && i>=imin)
-          {
-            ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;
-            dx_sqr = ix - data_point.x;
-            dx_sqr *= dx_sqr;
-            if (dx_sqr < GI.radiusSquared)	
-            {
-              //get kernel value
-              //Calculate Separable Filters 
-              val = KERNEL[(int) round(dy_sqr * GI.dist_multiplier)] *
-                KERNEL[(int) round(dx_sqr * GI.dist_multiplier)];
-              ind = getIndex2D(i,j,GI.sector_pad_width);
-
-              // multiply data by current kernel val 
-              // grid complex or scalar 
-              sdata[ind].x += val * data[data_cnt].x;
-              sdata[ind].y += val * data[data_cnt].y;
-            } // kernel bounds check x, spherical support 
-          } // x 	 
-        } // kernel bounds check y, spherical support 
+          // multiply data by current kernel val 
+          // grid complex or scalar 
+          sdata[ind].x += val * data[data_cnt].x;
+          sdata[ind].y += val * data[data_cnt].y;
+        } // x 	 
       } // y 
       __syncthreads();	
       data_cnt++;
@@ -299,10 +278,10 @@ void performTextureConvolution( DType2* data_d,
     printf("error at adj thread synchronization 2: %s\n",cudaGetErrorString(cudaGetLastError()));
   //compose total output from local blocks 
   composeOutput(temp_gdata_d,gdata_d,sector_centers_d,gi_host);
-  
+
   if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
     printf("error at adj thread synchronization 3: %s\n",cudaGetErrorString(cudaGetLastError()));
-  
+
   freeDeviceMem((void*)temp_gdata_d);
 }
 
@@ -376,50 +355,42 @@ __global__ void textureForwardConvolutionKernel(CufftType* data,
         dz_sqr = (kz - data_point.z)*GI.aniso_z_scale;
         dz_sqr *= dz_sqr;
 
-        if (dz_sqr < GI.radiusSquared)
+        j=jmin;
+        while (j<=jmax && j>=jmin)
         {
-          j=jmin;
-          while (j<=jmax && j>=jmin)
+          jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;   //(j - center_y) *width_inv;
+          dy_sqr = jy - data_point.y;
+          dy_sqr *= dy_sqr;
+
+          i=imin;								
+          while (i<=imax && i>=imin)
           {
-            jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;   //(j - center_y) *width_inv;
-            dy_sqr = jy - data_point.y;
-            dy_sqr *= dy_sqr;
-            if (dy_sqr < GI.radiusSquared)	
-            {
-              i=imin;								
-              while (i<=imax && i>=imin)
-              {
-                ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;// (i - center_x) *width_inv;
-                dx_sqr = ix - data_point.x;
-                dx_sqr *= dx_sqr;
-                if (dx_sqr < GI.radiusSquared)	
-                {
-                  // get kernel value
-                  // calc as separable filter
-                  val = KERNEL[(int) round(dz_sqr * GI.dist_multiplier)] *
-                    KERNEL[(int) round(dy_sqr * GI.dist_multiplier)] *
-                    KERNEL[(int) round(dx_sqr * GI.dist_multiplier)];
+            ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;// (i - center_x) *width_inv;
+            dx_sqr = ix - data_point.x;
+            dx_sqr *= dx_sqr;
+            // get kernel value
+            // calc as separable filter
+            val = tex1D(texKERNEL,dz_sqr*GI.dist_multiplier+0.5f);
+            val = val * tex1D(texKERNEL,dy_sqr*GI.dist_multiplier+0.5f);
+            val = val * tex1D(texKERNEL,dx_sqr*GI.dist_multiplier+0.5f);
 
-                  // multiply data by current kernel val 
-                  // grid complex or scalar 
-                  if (isOutlier(i,j,k,center.x,center.y,center.z,GI.gridDims,GI.sector_offset))
-                    //calculate opposite index
-                    ind = computeXYZ2Lin(calculateOppositeIndex(i,center.x,GI.gridDims.x,GI.sector_offset),
-                    calculateOppositeIndex(j,center.y,GI.gridDims.y,GI.sector_offset),
-                    calculateOppositeIndex(k,center.z,GI.gridDims.z,GI.sector_offset),
-                    GI.gridDims);
-                  else
-                    ind = (sector_ind_offset + computeXYZ2Lin(i,j,k,GI.gridDims));
+            // multiply data by current kernel val 
+            // grid complex or scalar 
+            if (isOutlier(i,j,k,center.x,center.y,center.z,GI.gridDims,GI.sector_offset))
+              //calculate opposite index
+              ind = computeXYZ2Lin(calculateOppositeIndex(i,center.x,GI.gridDims.x,GI.sector_offset),
+              calculateOppositeIndex(j,center.y,GI.gridDims.y,GI.sector_offset),
+              calculateOppositeIndex(k,center.z,GI.gridDims.z,GI.sector_offset),
+              GI.gridDims);
+            else
+              ind = (sector_ind_offset + computeXYZ2Lin(i,j,k,GI.gridDims));
 
-                  shared_out_data[threadIdx.x].x += gdata[ind].x * val; 
-                  shared_out_data[threadIdx.x].y += gdata[ind].y * val;									
-                }// kernel bounds check x, spherical support 
-                i++;
-              } // x loop
-            } // kernel bounds check y, spherical support  
-            j++;
-          } // y loop
-        } //kernel bounds check z 
+            shared_out_data[threadIdx.x].x += gdata[ind].x * val; 
+            shared_out_data[threadIdx.x].y += gdata[ind].y * val;									
+            i++;
+          } // x loop
+          j++;
+        } // y loop
         k++;
       } // z loop
       data[data_cnt].x = shared_out_data[threadIdx.x].x;
@@ -486,37 +457,30 @@ __global__ void textureForwardConvolutionKernel2D(CufftType* data,
         jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;   //(j - center_y) *width_inv;
         dy_sqr = jy - data_point.y;
         dy_sqr *= dy_sqr;
-        if (dy_sqr < GI.radiusSquared)	
+        i=imin;								
+        while (i<=imax && i>=imin)
         {
-          i=imin;								
-          while (i<=imax && i>=imin)
-          {
-            ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;// (i - center_x) *width_inv;
-            dx_sqr = ix - data_point.x;
-            dx_sqr *= dx_sqr;
-            if (dx_sqr < GI.radiusSquared)	
-            {
-              // get kernel value
-              // calc as separable filter
-              val = KERNEL[(int) round(dy_sqr * GI.dist_multiplier)] *
-                KERNEL[(int) round(dx_sqr * GI.dist_multiplier)];
+          ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;// (i - center_x) *width_inv;
+          dx_sqr = ix - data_point.x;
+          dx_sqr *= dx_sqr;
+          // get kernel value
+          // calc as separable filter
+          val = tex1D(texKERNEL,dy_sqr*GI.dist_multiplier+0.5f);
+          val = val * tex1D(texKERNEL,dx_sqr*GI.dist_multiplier+0.5f);
+          // multiply data by current kernel val 
+          // grid complex or scalar 
+          if (isOutlier2D(i,j,center.x,center.y,GI.gridDims.x,GI.sector_offset))
+            //calculate opposite index
+            ind = getIndex2D(calculateOppositeIndex(i,center.x,GI.gridDims.x,GI.sector_offset),
+            calculateOppositeIndex(j,center.y,GI.gridDims.y,GI.sector_offset),
+            GI.gridDims.x);
+          else
+            ind = (sector_ind_offset + getIndex2D(i,j,GI.gridDims.x));
 
-              // multiply data by current kernel val 
-              // grid complex or scalar 
-              if (isOutlier2D(i,j,center.x,center.y,GI.gridDims.x,GI.sector_offset))
-                //calculate opposite index
-                ind = getIndex2D(calculateOppositeIndex(i,center.x,GI.gridDims.x,GI.sector_offset),
-                calculateOppositeIndex(j,center.y,GI.gridDims.y,GI.sector_offset),
-                GI.gridDims.x);
-              else
-                ind = (sector_ind_offset + getIndex2D(i,j,GI.gridDims.x));
-
-              shared_out_data[threadIdx.x].x += gdata[ind].x * val; 
-              shared_out_data[threadIdx.x].y += gdata[ind].y * val;									
-            }// kernel bounds check x, spherical support 
-            i++;
-          } // x loop
-        } // kernel bounds check y, spherical support  
+          shared_out_data[threadIdx.x].x += gdata[ind].x * val; 
+          shared_out_data[threadIdx.x].y += gdata[ind].y * val;									
+          i++;
+        } // x loop
         j++;
       } // y loop
       data[data_cnt].x = shared_out_data[threadIdx.x].x;
@@ -531,7 +495,6 @@ __global__ void textureForwardConvolutionKernel2D(CufftType* data,
     sec = sec + gridDim.x;
   } //sector check
 }
-
 
 void performTextureForwardConvolution( CufftType*		data_d, 
   DType*			crds_d, 

@@ -112,9 +112,13 @@ __global__ void textureConvolutionKernel(DType2* data,
                     //val = KERNEL[(int) round(dz_sqr * GI.dist_multiplier)] *
                     //  KERNEL[(int) round(dy_sqr * GI.dist_multiplier)] *
                     //  KERNEL[(int) round(dx_sqr * GI.dist_multiplier)];
-                    val = tex1Dfetch(texKERNEL,(int) round(dz_sqr*GI.dist_multiplier));
-                    val = val * tex1Dfetch(texKERNEL,(int) round(dy_sqr*GI.dist_multiplier));
-                    val = val * tex1Dfetch(texKERNEL,(int) round(dx_sqr*GI.dist_multiplier));
+                    val = tex1D(texKERNEL,dz_sqr*GI.dist_multiplier+0.5f);
+                    val = val * tex1D(texKERNEL,dy_sqr*GI.dist_multiplier+0.5f);
+                    val = val * tex1D(texKERNEL,dx_sqr*GI.dist_multiplier+0.5f);
+
+                    //val = tex1D(texKERNEL,dz_sqr/GI.radiusSquared+0.5f);
+                    //val = val * tex1D(texKERNEL,dy_sqr/GI.radiusSquared+0.5f);
+                    //val = val * tex1D(texKERNEL,dx_sqr/GI.radiusSquared+0.5f);
 
                     ind = getIndex(i,j,k,GI.sector_pad_width);
                     

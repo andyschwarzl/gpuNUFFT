@@ -21,10 +21,20 @@ void initConstSymbol(const char* symbol, const void* src, IndType size)
     HANDLE_ERROR(cudaMemcpyToSymbol(KERNEL, src,size));
 }
 
-void initTexture(const char* symbol, const void* devicePtr, IndType size)
+void initTexture(const char* symbol, GriddingND::Array<DType> hostTexture)
 {
+  cudaArray* cuArray;
   if (std::string("texKERNEL").compare(symbol)==0)
-    HANDLE_ERROR(cudaBindTexture(NULL,texKERNEL,devicePtr,size));
+  {
+    HANDLE_ERROR (cudaMallocArray (&cuArray, &texKERNEL.channelDesc, hostTexture.count(), 1));
+    HANDLE_ERROR (cudaBindTextureToArray (texKERNEL, cuArray));
+    //HANDLE_ERROR(cudaBindTexture(NULL,texKERNEL,devicePtr,size));
+    HANDLE_ERROR(cudaMemcpyToArray(cuArray, 0, 0, hostTexture.data, sizeof(DType)*hostTexture.count(), cudaMemcpyHostToDevice));
+    //texKERNEL.filterMode = cudaFilterModeLinear;
+    texKERNEL.filterMode = cudaFilterModePoint;
+    texKERNEL.normalized = false;
+    texKERNEL.addressMode[0] = cudaAddressModeClamp;
+  }
 }
 
 __global__ void fftScaleKernel(CufftType* data, DType scaling, int N)

@@ -6,8 +6,8 @@ __constant__ GriddingND::GriddingInfo GI;
 
 __constant__ DType KERNEL[5000];
 
-//texture<DType,1,cudaReadModeNormalizedFloat> texKERNEL;
-texture<DType> texKERNEL;
+texture<DType,1,cudaReadModeElementType> texKERNEL;
+//texture<DType> texKERNEL;
 
 #if __CUDA_ARCH__ < 200
 	#define THREAD_BLOCK_SIZE 128 

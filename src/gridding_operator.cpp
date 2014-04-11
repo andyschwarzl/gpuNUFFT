@@ -215,7 +215,7 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
 
   DType* kernel_d;
   allocateAndCopyToDeviceMem<DType>(&kernel_d,this->kernel.data,this->kernel.count());
-  initTexture("texKERNEL",kernel_d,this->kernel.count()*sizeof(DType));
+  initTexture("texKERNEL",this->kernel);
 
   //allocateAndCopyToDeviceMem<DType>(&kernel_d,kernel,kernel_count);
   if (DEBUG)

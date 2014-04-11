@@ -520,8 +520,8 @@ TEST(Test2DGPUGriddingConv,GPUTest_8SectorsKernel5nData)
 	int index = get2DC2lin(5,5,im_width);
 	if (DEBUG) printf("index to test %d\n",index);
 	
-	EXPECT_NEAR(1.3970f,gdata[index].x,epsilon);
-	EXPECT_NEAR(0.4256f,gdata[get2DC2lin(3,6,im_width)].x,epsilon*10.0f);
+	EXPECT_NEAR(1.3976f,gdata[index].x,epsilon);
+	EXPECT_NEAR(0.4268f,gdata[get2DC2lin(3,6,im_width)].x,epsilon*10.0f);
 	
 	EXPECT_NEAR(0.0430,gdata[get2DC2lin(6,3,im_width)].x,epsilon*10.0f);
 	

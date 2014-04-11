@@ -663,8 +663,8 @@ TEST(TestGPUGriddingConv,GPUTest_8SectorsKernel5nData)
   int index = get3DC2lin(5,5,5,im_width);
   if (DEBUG) printf("index to test %d\n",index);
 
-  EXPECT_NEAR(1.3970f,gdata[index].x,epsilon);
-  EXPECT_NEAR(0.4256f,gdata[get3DC2lin(3,6,5,im_width)].x,epsilon*10.0f);
+  EXPECT_NEAR(1.3976f,gdata[index].x,epsilon);
+  EXPECT_NEAR(0.4268f,gdata[get3DC2lin(3,6,5,im_width)].x,epsilon*10.0f);
 
   EXPECT_NEAR(0.0430,gdata[get3DC2lin(6,3,5,im_width)].x,epsilon*10.0f);
 
@@ -1186,13 +1186,13 @@ TEST(TestGPUGriddingConvAnisotropic,GPUTest_4SectorsKernel4nData)
   int index = computeXYZ2Lin(5,5,2,imgDims);
   if (DEBUG) printf("index to test %d\n",index);
   //EXPECT_EQ(index,2*555);
-  EXPECT_NEAR(1.1531f,gdata[index].x,epsilon);
+  EXPECT_NEAR(1.1548f,gdata[index].x,epsilon);
   EXPECT_NEAR(0.2636f,gdata[computeXYZ2Lin(3,6,2,imgDims)].x,epsilon*10.0f);
 
   EXPECT_NEAR(0.2161f,gdata[computeXYZ2Lin(1,7,2,imgDims)].x,epsilon*10.0f);
-  EXPECT_NEAR(0.4322,gdata[computeXYZ2Lin(6,5,2,imgDims)].x,epsilon*10.0f);
+  EXPECT_NEAR(0.4335,gdata[computeXYZ2Lin(6,5,2,imgDims)].x,epsilon*10.0f);
 
-  EXPECT_NEAR(0.8506,gdata[computeXYZ2Lin(8,8,2,imgDims)].x,epsilon*10.0f);
+  EXPECT_NEAR(0.8518,gdata[computeXYZ2Lin(8,8,2,imgDims)].x,epsilon*10.0f);
   EXPECT_NEAR(0.2197f,gdata[computeXYZ2Lin(9,9,2,imgDims)].x,epsilon*10.0f);
 
   free(data);
@@ -1403,7 +1403,7 @@ TEST(TestGPUGriddingConvAnisotropic,GPUTest_20x20x10_osf_15)
   //int index = computeXYZ2Lin(20,20,10,gdataArray.dim);
   //if (DEBUG) printf("index to test %d\n",index);
   //EXPECT_EQ(index,2*555);
-  EXPECT_NEAR(0.5841f,gdata[computeXYZ2Lin(6,21,3,gdataArray.dim)].x,epsilon);
+  EXPECT_NEAR(0.5853f,gdata[computeXYZ2Lin(6,21,3,gdataArray.dim)].x,epsilon);
   EXPECT_NEAR(0.9445f,gdata[computeXYZ2Lin(6,21,4,gdataArray.dim)].x,epsilon);
   EXPECT_NEAR(4.8202f,gdata[computeXYZ2Lin(24,24,11,gdataArray.dim)].x,epsilon);
 

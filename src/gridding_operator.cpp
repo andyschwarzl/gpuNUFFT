@@ -36,9 +36,11 @@ void GriddingND::GriddingOperator::writeOrdered(GriddingND::Array<T>& destArray,
 
 void GriddingND::GriddingOperator::initKernel()
 {
-  this->kernel.dim.length = calculateGrid3KernelSize(osf, kernelWidth/2.0f);
+  IndType kernelSize = calculateGrid3KernelSize(osf, kernelWidth/2.0f);
+  this->kernel.dim.width = kernelSize;
+  this->kernel.dim.height = kernelSize;
   this->kernel.data = (DType*) calloc(this->kernel.count(),sizeof(DType));
-  loadGrid3Kernel(this->kernel.data,(int)this->kernel.count(),(int)kernelWidth,osf);
+  loadGrid3Kernel2D(this->kernel.data,(int)kernelSize,(int)kernelWidth,osf);
 }
 
 GriddingND::GriddingInfo* GriddingND::GriddingOperator::initAndCopyGriddingInfo()
@@ -212,10 +214,10 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
   if (DEBUG)
     printf("allocate and copy kernel in const memory of size %d...\n",this->kernel.count());
 
-  initConstSymbol("KERNEL",(void*)this->kernel.data,this->kernel.count()*sizeof(DType));
+  //initConstSymbol("KERNEL",(void*)this->kernel.data,this->kernel.count()*sizeof(DType));
 
   cudaArray* kernel_d = NULL;
-  initTexture("texKERNEL",kernel_d,this->kernel);
+  initTexture("texKERNEL",&kernel_d,this->kernel);
 
   //allocateAndCopyToDeviceMem<DType>(&kernel_d,kernel,kernel_count);
   if (DEBUG)
@@ -282,7 +284,8 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
       free(gi_host);
       // Destroy the cuFFT plan.
       cufftDestroy(fft_plan);
-
+      freeTexture("texKERNEL",kernel_d);
+      cudaThreadSynchronize();
       freeTotalDeviceMemory(data_d,crds_d,imdata_d,gdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop token
       cudaThreadSynchronize();
 
@@ -316,7 +319,8 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
       free(gi_host);
       // Destroy the cuFFT plan.
       cufftDestroy(fft_plan);
-
+      freeTexture("texKERNEL",kernel_d);
+      cudaThreadSynchronize();
       freeTotalDeviceMemory(data_d,crds_d,imdata_d,gdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop token
       cudaThreadSynchronize();
       printf("last cuda error: %s\n", cudaGetErrorString(cudaGetLastError()));
@@ -471,10 +475,10 @@ void GriddingND::GriddingOperator::performForwardGridding(GriddingND::Array<DTyp
   if (DEBUG)
     printf("allocate and copy kernel in const memory of size %d...\n",this->kernel.count());
 
-  initConstSymbol("KERNEL",(void*)this->kernel.data,this->kernel.count()*sizeof(DType));
+  //initConstSymbol("KERNEL",(void*)this->kernel.data,this->kernel.count()*sizeof(DType));
   
   cudaArray* kernel_d = NULL;
-  initTexture("texKERNEL",kernel_d,this->kernel);
+  initTexture("texKERNEL",&kernel_d,this->kernel);
 
   if (DEBUG)
     printf("allocate and copy sectors of size %d...\n",sector_count+1);

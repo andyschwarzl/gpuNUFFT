@@ -21,17 +21,18 @@ void initConstSymbol(const char* symbol, const void* src, IndType size)
     HANDLE_ERROR(cudaMemcpyToSymbol(KERNEL, src,size));
 }
 
-void initTexture(const char* symbol, cudaArray* devicePtr, GriddingND::Array<DType> hostTexture)
+void initTexture(const char* symbol, cudaArray** devicePtr, GriddingND::Array<DType> hostTexture)
 {
   if (std::string("texKERNEL").compare(symbol)==0)
   {
-    HANDLE_ERROR (cudaMallocArray (&devicePtr, &texKERNEL.channelDesc, hostTexture.count(), 1));
-    HANDLE_ERROR (cudaBindTextureToArray (texKERNEL, devicePtr));
-    HANDLE_ERROR(cudaMemcpyToArray(devicePtr, 0, 0, hostTexture.data, sizeof(DType)*hostTexture.count(), cudaMemcpyHostToDevice));
+    HANDLE_ERROR (cudaMallocArray (devicePtr, &texKERNEL.channelDesc, hostTexture.dim.width, hostTexture.dim.height));
+    HANDLE_ERROR (cudaBindTextureToArray (texKERNEL, *devicePtr));
+    HANDLE_ERROR(cudaMemcpyToArray(*devicePtr, 0, 0, hostTexture.data, sizeof(DType)*hostTexture.count(), cudaMemcpyHostToDevice));
 
     texKERNEL.filterMode = cudaFilterModePoint; //cudaFilterModeLinear
     texKERNEL.normalized = true;
     texKERNEL.addressMode[0] = cudaAddressModeClamp;
+    texKERNEL.addressMode[1] = cudaAddressModeClamp;
   }
 }
 
@@ -39,8 +40,8 @@ void freeTexture(const char* symbol,cudaArray* devicePtr)
 {
   if (std::string("texKERNEL").compare(symbol)==0)
   {
-    HANDLE_ERROR(cudaUnbindTexture(texKERNEL));
-    cudaFreeArray(devicePtr);
+    HANDLE_ERROR(cudaFreeArray(devicePtr));
+    HANDLE_ERROR(cudaUnbindTexture(texKERNEL));    
   }
 }
 

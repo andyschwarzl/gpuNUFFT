@@ -104,9 +104,9 @@ __global__ void textureConvolutionKernel(DType2* data,
               dx_sqr *= dx_sqr;
               //get kernel value
               //Calculate Separable Filters 
-              val = tex1D(texKERNEL,dz_sqr*GI.radiusSquared_inv);
-              val = val * tex1D(texKERNEL,dy_sqr*GI.radiusSquared_inv);
-              val = val * tex1D(texKERNEL,dx_sqr*GI.radiusSquared_inv);
+              val = tex2D(texKERNEL,dz_sqr*GI.radiusSquared_inv,0);
+              val = val * tex2D(texKERNEL,dy_sqr*GI.radiusSquared_inv,dx_sqr*GI.radiusSquared_inv);
+              //val = val * tex1D(texKERNEL,dx_sqr*GI.radiusSquared_inv);
 
               ind = getIndex(i,j,k,GI.sector_pad_width);
 
@@ -211,8 +211,8 @@ __global__ void textureConvolutionKernel2D(DType2* data,
           dx_sqr *= dx_sqr;
           //get kernel value
           //Calculate Separable Filters 
-          val = tex1D(texKERNEL,dy_sqr*GI.radiusSquared_inv);
-          val = val * tex1D(texKERNEL,dx_sqr*GI.radiusSquared_inv);
+          val = tex2D(texKERNEL,dy_sqr*GI.radiusSquared_inv,dx_sqr*GI.radiusSquared_inv);
+          //val = val * tex1D(texKERNEL,dx_sqr*GI.radiusSquared_inv);
           ind = getIndex2D(i,j,GI.sector_pad_width);
 
           // multiply data by current kernel val 
@@ -358,7 +358,7 @@ __global__ void textureForwardConvolutionKernel(CufftType* data,
         j=jmin;
         while (j<=jmax && j>=jmin)
         {
-          jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;   //(j - center_y) *width_inv;
+          jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.y)) - 0.5f;   //(j - center_y) *width_inv;
           dy_sqr = jy - data_point.y;
           dy_sqr *= dy_sqr;
 
@@ -370,9 +370,9 @@ __global__ void textureForwardConvolutionKernel(CufftType* data,
             dx_sqr *= dx_sqr;
             // get kernel value
             // calc as separable filter
-            val = tex1D(texKERNEL,dz_sqr*GI.radiusSquared_inv);
-            val = val * tex1D(texKERNEL,dy_sqr*GI.radiusSquared_inv);
-            val = val * tex1D(texKERNEL,dx_sqr*GI.radiusSquared_inv);
+            val = tex2D(texKERNEL,dz_sqr*GI.radiusSquared_inv,0);
+            val = val * tex2D(texKERNEL,dy_sqr*GI.radiusSquared_inv,dx_sqr*GI.radiusSquared_inv);
+            //val = val * tex1D(texKERNEL,dx_sqr*GI.radiusSquared_inv);
 
             // multiply data by current kernel val 
             // grid complex or scalar 
@@ -460,13 +460,13 @@ __global__ void textureForwardConvolutionKernel2D(CufftType* data,
         i=imin;								
         while (i<=imax && i>=imin)
         {
-          ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;// (i - center_x) *width_inv;
+          ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.gridDims.y)) - 0.5f;// (i - center_x) *width_inv;
           dx_sqr = ix - data_point.x;
           dx_sqr *= dx_sqr;
           // get kernel value
           // calc as separable filter
-          val = tex1D(texKERNEL,dy_sqr*GI.radiusSquared_inv);
-          val = val * tex1D(texKERNEL,dx_sqr*GI.radiusSquared_inv);
+          val = tex2D(texKERNEL,dy_sqr*GI.radiusSquared_inv,dx_sqr*GI.radiusSquared_inv);
+          //val = val * tex1D(texKERNEL,dx_sqr*GI.radiusSquared_inv);
           // multiply data by current kernel val 
           // grid complex or scalar 
           if (isOutlier2D(i,j,center.x,center.y,GI.gridDims.x,GI.sector_offset))

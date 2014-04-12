@@ -53,6 +53,29 @@ TEST(TestKernel, LoadKernelFromGriddingFactory) {
   delete griddingOp;
 }
 
+TEST(TestKernel, Load2DKernel) {
+  if (DEBUG) printf("start creating kernel...\n");
+  long kernel_entries = 4;
+
+  assert(kernel_entries > 0);
+
+  DType *kern = (DType*) calloc(kernel_entries*kernel_entries,sizeof(DType));
+  EXPECT_TRUE(kern != NULL);
+  loadGrid3Kernel2D(kern,kernel_entries,3,1.0);
+  if (DEBUG)
+  {
+    for (int i=0; i<kernel_entries;i++)
+    {
+      for (int j=0;j<kernel_entries;j++)
+        printf("%.3f ",kern[j+i*kernel_entries]);
+      printf("\n");
+    }
+  }
+  EXPECT_EQ(1.0f,kern[0]);
+  EXPECT_EQ(0.0f,kern[kernel_entries-1]);
+  free(kern);
+  EXPECT_EQ(1, 1);
+}
 
 TEST(TestGPUGriddingConv,KernelCall1Sector)
 {

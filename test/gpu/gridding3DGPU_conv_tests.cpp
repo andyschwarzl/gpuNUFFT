@@ -55,7 +55,7 @@ TEST(TestKernel, LoadKernelFromGriddingFactory) {
 
 TEST(TestKernel, Load2DKernel) {
   if (DEBUG) printf("start creating kernel...\n");
-  long kernel_entries = 4;
+  long kernel_entries = 8;
 
   assert(kernel_entries > 0);
 

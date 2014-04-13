@@ -76,7 +76,7 @@ TEST(TestGPUGriddingForwardConv,KernelCall1Sector)
 	  {
 		  printf("%.4f %.4f \n",dataArray.data[j].x,dataArray.data[j].y);
 	  }
-	EXPECT_NEAR(0.158092f, dataArray.data[0].x,epsilon);
+	EXPECT_NEAR(0.1561f, dataArray.data[0].x,epsilon);
 
 
 	if (DEBUG) printf("\n");
@@ -148,7 +148,7 @@ TEST(TestGPUGriddingForwardConv,KernelCall1Sector2Channels)
 		  printf("%.4f %.4f \n",dataArray.data[j].x,dataArray.data[j].y);
 	  }
   }
-	EXPECT_NEAR(0.158092f, dataArray.data[0].x,epsilon);
+	EXPECT_NEAR(0.1561f, dataArray.data[0].x,epsilon);
 	EXPECT_EQ(dataArray.data[1].x, dataArray.data[0].x);
 	EXPECT_EQ(dataArray.data[1].y, dataArray.data[0].y);
 

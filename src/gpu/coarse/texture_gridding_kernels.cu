@@ -104,8 +104,8 @@ __global__ void textureConvolutionKernel(DType2* data,
               dx_sqr *= dx_sqr;
               //get kernel value
               //Calculate Separable Filters 
-              val = tex2D(texKERNEL,dz_sqr*GI.radiusSquared_inv,0);
-              val = val * tex2D(texKERNEL,dy_sqr*GI.radiusSquared_inv,dx_sqr*GI.radiusSquared_inv);
+              //val = tex2D(texKERNEL,dz_sqr*GI.radiusSquared_inv,0);
+              val = tex3D(texKERNEL,dx_sqr*GI.radiusSquared_inv,dy_sqr*GI.radiusSquared_inv,dz_sqr*GI.radiusSquared_inv);
               //val = val * tex1D(texKERNEL,dx_sqr*GI.radiusSquared_inv);
 
               ind = getIndex(i,j,k,GI.sector_pad_width);
@@ -211,7 +211,7 @@ __global__ void textureConvolutionKernel2D(DType2* data,
           dx_sqr *= dx_sqr;
           //get kernel value
           //Calculate Separable Filters 
-          val = tex2D(texKERNEL,dy_sqr*GI.radiusSquared_inv,dx_sqr*GI.radiusSquared_inv);
+          val = tex3D(texKERNEL,dy_sqr*GI.radiusSquared_inv,dx_sqr*GI.radiusSquared_inv,0.0f);
           //val = val * tex1D(texKERNEL,dx_sqr*GI.radiusSquared_inv);
           ind = getIndex2D(i,j,GI.sector_pad_width);
 
@@ -370,8 +370,8 @@ __global__ void textureForwardConvolutionKernel(CufftType* data,
             dx_sqr *= dx_sqr;
             // get kernel value
             // calc as separable filter
-            val = tex2D(texKERNEL,dz_sqr*GI.radiusSquared_inv,0);
-            val = val * tex2D(texKERNEL,dy_sqr*GI.radiusSquared_inv,dx_sqr*GI.radiusSquared_inv);
+            //val = tex2D(texKERNEL,dz_sqr*GI.radiusSquared_inv,0);
+            val = tex3D(texKERNEL,dx_sqr*GI.radiusSquared_inv,dy_sqr*GI.radiusSquared_inv,dz_sqr*GI.radiusSquared_inv);
             //val = val * tex1D(texKERNEL,dx_sqr*GI.radiusSquared_inv);
 
             // multiply data by current kernel val 
@@ -465,7 +465,7 @@ __global__ void textureForwardConvolutionKernel2D(CufftType* data,
           dx_sqr *= dx_sqr;
           // get kernel value
           // calc as separable filter
-          val = tex2D(texKERNEL,dy_sqr*GI.radiusSquared_inv,dx_sqr*GI.radiusSquared_inv);
+          val = tex3D(texKERNEL,dy_sqr*GI.radiusSquared_inv,dx_sqr*GI.radiusSquared_inv,0.0f);
           //val = val * tex1D(texKERNEL,dx_sqr*GI.radiusSquared_inv);
           // multiply data by current kernel val 
           // grid complex or scalar 

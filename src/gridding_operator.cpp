@@ -39,8 +39,9 @@ void GriddingND::GriddingOperator::initKernel()
   IndType kernelSize = calculateGrid3KernelSize(osf, kernelWidth/2.0f);
   this->kernel.dim.width = kernelSize;
   this->kernel.dim.height = kernelSize;
+  this->kernel.dim.depth = kernelSize;
   this->kernel.data = (DType*) calloc(this->kernel.count(),sizeof(DType));
-  load2DKernel(this->kernel.data,(int)kernelSize,(int)kernelWidth,osf);
+  load3DKernel(this->kernel.data,(int)kernelSize,(int)kernelWidth,osf);
 }
 
 GriddingND::GriddingInfo* GriddingND::GriddingOperator::initAndCopyGriddingInfo()
@@ -217,7 +218,7 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
   //initConstSymbol("KERNEL",(void*)this->kernel.data,this->kernel.count()*sizeof(DType));
 
   cudaArray* kernel_d = NULL;
-  initTexture("texKERNEL",&kernel_d,this->kernel);
+  initTexture("texKERNEL3D",&kernel_d,this->kernel);
 
   //allocateAndCopyToDeviceMem<DType>(&kernel_d,kernel,kernel_count);
   if (DEBUG)
@@ -478,7 +479,7 @@ void GriddingND::GriddingOperator::performForwardGridding(GriddingND::Array<DTyp
   //initConstSymbol("KERNEL",(void*)this->kernel.data,this->kernel.count()*sizeof(DType));
   
   cudaArray* kernel_d = NULL;
-  initTexture("texKERNEL",&kernel_d,this->kernel);
+  initTexture("texKERNEL3D",&kernel_d,this->kernel);
 
   if (DEBUG)
     printf("allocate and copy sectors of size %d...\n",sector_count+1);

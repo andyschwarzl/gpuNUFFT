@@ -22,6 +22,7 @@
 #define DEFAULT_WINDOW_LENGTH			1.0f
 
 #define MAXIMUM_ALIASING_ERROR			0.001f
+#define MAXIMUM_ALIASING_ERROR_LIN_INT			0.0001f
 
 #define round(x) floor((x) + 0.5)
 
@@ -88,6 +89,7 @@ __inline__ __device__ __host__ void set_minmax (DType *x, int *min, int *max, in
 
 long calculateGrid3KernelSize();
 long calculateGrid3KernelSize(DType osr, DType kernel_radius);
+long calculateKernelSizeLinInt(double osr, double kernel_radius);
 
 void loadGrid3Kernel(DType *kernTab,long kernel_entries, int kernel_width, DType osr);
 void loadGrid3Kernel(DType *kernTab,long kernel_entries);

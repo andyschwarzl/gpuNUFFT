@@ -19,6 +19,15 @@ long calculateGrid3KernelSize(DType osr, DType kernel_radius)
   return (long)(kernel_osf * kernel_radius_osr);
 }
 
+long calculateKernelSizeLinInt(double osr, double kernel_radius)
+{
+  long kernel_osf = (long)(floor(sqrt(0.37/(sqr(osr) * MAXIMUM_ALIASING_ERROR_LIN_INT))));
+
+  DType kernel_radius_osr = static_cast<DType>(osr * kernel_radius);
+
+  return (long)(kernel_osf * kernel_radius_osr);
+}
+
 void loadGrid3Kernel(DType *kernTab)
 {
   loadGrid3Kernel(kernTab,calculateGrid3KernelSize(),DEFAULT_KERNEL_WIDTH,DEFAULT_OVERSAMPLING_RATIO);

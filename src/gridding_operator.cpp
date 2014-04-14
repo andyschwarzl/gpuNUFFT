@@ -36,7 +36,7 @@ void GriddingND::GriddingOperator::writeOrdered(GriddingND::Array<T>& destArray,
 
 void GriddingND::GriddingOperator::initKernel()
 {
-  IndType kernelSize = calculateGrid3KernelSize(osf, kernelWidth/2.0f);
+  IndType kernelSize = calculateKernelSizeLinInt(osf, kernelWidth/2.0f);
   this->kernel.dim.width = kernelSize;
   this->kernel.dim.height = kernelSize;
   this->kernel.dim.depth = kernelSize;

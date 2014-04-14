@@ -25,29 +25,45 @@ void initTexture(const char* symbol, cudaArray** devicePtr, GriddingND::Array<DT
 {
   if (std::string("texKERNEL").compare(symbol)==0)
   {
-    HANDLE_ERROR (cudaMallocArray (devicePtr, &texKERNEL.channelDesc, hostTexture.dim.width, hostTexture.dim.height));
+    HANDLE_ERROR (cudaMallocArray (devicePtr, &texKERNEL.channelDesc, hostTexture.dim.width, 1));
     HANDLE_ERROR (cudaBindTextureToArray (texKERNEL, *devicePtr));
     HANDLE_ERROR(cudaMemcpyToArray(*devicePtr, 0, 0, hostTexture.data, sizeof(DType)*hostTexture.count(), cudaMemcpyHostToDevice));
+    
+    texKERNEL.filterMode = cudaFilterModePoint;
+    texKERNEL.normalized = true;
+    texKERNEL.addressMode[0] = cudaAddressModeClamp;
+  }
+  if (std::string("texKERNEL2D").compare(symbol)==0)
+  {
+    HANDLE_ERROR (cudaMallocArray (devicePtr, &texKERNEL2D.channelDesc, hostTexture.dim.width, hostTexture.dim.height));
+    HANDLE_ERROR (cudaBindTextureToArray (texKERNEL2D, *devicePtr));
+    HANDLE_ERROR(cudaMemcpyToArray(*devicePtr, 0, 0, hostTexture.data, sizeof(DType)*hostTexture.count(), cudaMemcpyHostToDevice));
+    
+    texKERNEL2D.filterMode = cudaFilterModePoint;
+    texKERNEL2D.normalized = true;
+    texKERNEL2D.addressMode[0] = cudaAddressModeClamp;
+    texKERNEL2D.addressMode[1] = cudaAddressModeClamp;    
   }
   else if (std::string("texKERNEL3D").compare(symbol)==0)
   {
     cudaExtent volumesize=make_cudaExtent(hostTexture.dim.width, hostTexture.dim.height, hostTexture.dim.depth); 
-    cudaMalloc3DArray(devicePtr,&texKERNEL.channelDesc,volumesize); 
-    //set cuda array copy parameters 
-    cudaMemcpy3DParms copyparams = {0};
+    cudaMalloc3DArray(devicePtr,&texKERNEL3D.channelDesc,volumesize); 
 
+    cudaMemcpy3DParms copyparams = {0};
     copyparams.extent=volumesize; 
     copyparams.dstArray=*devicePtr; 
     copyparams.kind=cudaMemcpyHostToDevice; 
     copyparams.srcPtr= make_cudaPitchedPtr((void*)hostTexture.data,sizeof(DType)*hostTexture.dim.width,hostTexture.dim.height,hostTexture.dim.depth); 
+
     HANDLE_ERROR(cudaMemcpy3D(&copyparams)); 
-    HANDLE_ERROR (cudaBindTextureToArray (texKERNEL, *devicePtr));
+    HANDLE_ERROR (cudaBindTextureToArray (texKERNEL3D, *devicePtr));
+  
+    texKERNEL3D.filterMode = cudaFilterModeLinear;//cudaFilterModePoint; //cudaFilterModeLinear
+    texKERNEL3D.normalized = true;
+    texKERNEL3D.addressMode[0] = cudaAddressModeClamp;
+    texKERNEL3D.addressMode[1] = cudaAddressModeClamp;
+    texKERNEL3D.addressMode[2] = cudaAddressModeClamp;
   }
-  texKERNEL.filterMode = cudaFilterModeLinear;//cudaFilterModePoint; //cudaFilterModeLinear
-  texKERNEL.normalized = true;
-  texKERNEL.addressMode[0] = cudaAddressModeClamp;
-  texKERNEL.addressMode[1] = cudaAddressModeClamp;
-  texKERNEL.addressMode[2] = cudaAddressModeClamp;
 }
 
 void freeTexture(const char* symbol,cudaArray* devicePtr)

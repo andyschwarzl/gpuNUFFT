@@ -4,7 +4,7 @@
 
 #include "gridding_operator_factory.hpp"
 
-#define epsilon 0.0001f
+#define epsilon 0.01f
 
 #define get3DC2lin(_x,_y,_z,_width) ((_x) + (_width) * ( (_y) + (_z) * (_width)))
 

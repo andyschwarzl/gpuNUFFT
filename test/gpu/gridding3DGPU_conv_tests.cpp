@@ -5,7 +5,7 @@
 #include "gridding_operator_factory.hpp"
 
 
-#define epsilon 0.0001f
+#define epsilon 0.02f
 
 #define get3DC2lin(_x,_y,_z,_width) ((_x) + (_width) * ( (_y) + (_z) * (_width)))
 
@@ -1456,7 +1456,7 @@ TEST(TestGPUGriddingConvAnisotropic,GPUTest_20x20x10_osf_15)
   //EXPECT_EQ(index,2*555);
   EXPECT_NEAR(0.5853f,gdata[computeXYZ2Lin(6,21,3,gdataArray.dim)].x,epsilon);
   EXPECT_NEAR(0.9445f,gdata[computeXYZ2Lin(6,21,4,gdataArray.dim)].x,epsilon);
-  EXPECT_NEAR(4.8202f,gdata[computeXYZ2Lin(24,24,11,gdataArray.dim)].x,epsilon);
+  EXPECT_NEAR(4.8931f,gdata[computeXYZ2Lin(24,24,11,gdataArray.dim)].x,epsilon);
 
   free(data);
   free(coords);

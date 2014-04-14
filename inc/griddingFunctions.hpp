@@ -74,8 +74,6 @@ static DType i0( DType x )
 * respect to the kernel radius squared.
 */
 
-/*END Zwart*/
-
 __inline__ __device__ __host__ void set_minmax (DType *x, int *min, int *max, int maximum, DType radius)
 {
   *min = (int) ceil (*x - radius);
@@ -92,9 +90,11 @@ long calculateGrid3KernelSize();
 long calculateGrid3KernelSize(DType osr, DType kernel_radius);
 
 void loadGrid3Kernel(DType *kernTab,long kernel_entries, int kernel_width, DType osr);
-void loadGrid3Kernel2D(DType *kernTab,long kernel_entries, int kernel_width, DType osr);
 void loadGrid3Kernel(DType *kernTab,long kernel_entries);
 void loadGrid3Kernel(DType *kernTab);
+/*END Zwart*/
+
+void load2DKernel(DType *kernTab,long kernel_entries, int kernel_width, DType osr);
 void load3DKernel(DType *kernTab,long kernel_entries, int kernel_width, DType osr);
 
 

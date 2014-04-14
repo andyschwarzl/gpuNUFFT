@@ -61,7 +61,7 @@ TEST(TestKernel, Load2DKernel) {
 
   DType *kern = (DType*) calloc(kernel_entries*kernel_entries,sizeof(DType));
   EXPECT_TRUE(kern != NULL);
-  loadGrid3Kernel2D(kern,kernel_entries,3,1.0);
+  load2DKernel(kern,kernel_entries,3,1.0);
   if (DEBUG)
   {
     for (int i=0; i<kernel_entries;i++)

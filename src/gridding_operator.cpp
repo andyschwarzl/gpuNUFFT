@@ -40,7 +40,7 @@ void GriddingND::GriddingOperator::initKernel()
   this->kernel.dim.width = kernelSize;
   this->kernel.dim.height = kernelSize;
   this->kernel.data = (DType*) calloc(this->kernel.count(),sizeof(DType));
-  loadGrid3Kernel2D(this->kernel.data,(int)kernelSize,(int)kernelWidth,osf);
+  load2DKernel(this->kernel.data,(int)kernelSize,(int)kernelWidth,osf);
 }
 
 GriddingND::GriddingInfo* GriddingND::GriddingOperator::initAndCopyGriddingInfo()

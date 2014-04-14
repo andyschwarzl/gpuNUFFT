@@ -51,21 +51,21 @@ void loadGrid3Kernel(DType *kernTab,long kernel_entries, int kernel_width, DType
   kernTab[kernel_entries-1] = (DType)0.0f;
 } /* end loadGrid3Kernel() */
 
-void loadGrid3Kernel2D(DType *kernTab,long kernel_entries, int kernel_width, DType osr)	
+void load2DKernel(DType *kernTab,long kernel_entries, int kernel_width, DType osr)	
 {
   /* check input data */
   assert( kernTab != NULL );
   loadGrid3Kernel(kernTab,kernel_entries,kernel_width,osr);
 
   /* load table */
-  for (long j=1; j<kernel_entries; j++)	
+  for (long j=0; j<kernel_entries; j++)	
   { 
     for (long i=0; i<kernel_entries; i++)	
     {
       kernTab[i+j*kernel_entries] = kernTab[j]*kernTab[i];
     }
   }
-} // end loadGrid3Kernel2D()
+} // end load2DKernel()
 
 void load3DKernel(DType *kernTab,long kernel_entries, int kernel_width, DType osr)	
 {
@@ -82,5 +82,5 @@ void load3DKernel(DType *kernTab,long kernel_entries, int kernel_width, DType os
         kernTab[i+kernel_entries*(j + k*kernel_entries)] = kernTab[j]*kernTab[i]*kernTab[k];
       }
     }
-} // end loadGrid3Kernel3D()
+} // end load3DKernel()
 

@@ -95,6 +95,8 @@ void loadGrid3Kernel(DType *kernTab,long kernel_entries, int kernel_width, DType
 void loadGrid3Kernel2D(DType *kernTab,long kernel_entries, int kernel_width, DType osr);
 void loadGrid3Kernel(DType *kernTab,long kernel_entries);
 void loadGrid3Kernel(DType *kernTab);
+void load3DKernel(DType *kernTab,long kernel_entries, int kernel_width, DType osr);
+
 
 __inline__ __device__ __host__ int getIndex(int x, int y, int z, int gwidth)
 {

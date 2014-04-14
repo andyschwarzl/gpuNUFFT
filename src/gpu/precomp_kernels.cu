@@ -7,7 +7,7 @@
 
 __global__ void assignSectorsKernel(DType* kSpaceTraj,
   IndType* assignedSectors,
-  int coordCnt,
+  long coordCnt,
   bool is2DProcessing,
   GriddingND::Dimensions gridSectorDims)
 {
@@ -47,7 +47,7 @@ void assignSectorsGPU(GriddingND::GriddingOperator* griddingOp, GriddingND::Arra
   IndType coordCnt = kSpaceTraj.count();
 
   dim3 block_dim(THREAD_BLOCK_SIZE);
-  dim3 grid_dim(getOptimalGridDim(coordCnt,THREAD_BLOCK_SIZE));
+  dim3 grid_dim(getOptimalGridDim((long)coordCnt,THREAD_BLOCK_SIZE));
 
   DType* kSpaceTraj_d;
   IndType* assignedSectors_d;
@@ -62,7 +62,7 @@ void assignSectorsGPU(GriddingND::GriddingOperator* griddingOp, GriddingND::Arra
 
   assignSectorsKernel<<<grid_dim,block_dim>>>(kSpaceTraj_d,
     assignedSectors_d,
-    coordCnt,
+    (long)coordCnt,
     griddingOp->is2DProcessing(),
     griddingOp->getGridSectorDims());
 
@@ -86,7 +86,7 @@ __global__ void sortArraysKernel(GriddingND::IndPair* assignedSectorsAndIndicesS
   DType* densCompData,
   DType* densData,
   bool is3DProcessing,
-  int coordCnt)
+  long coordCnt)
 {
   int t = threadIdx.x +  blockIdx.x *blockDim.x;
 
@@ -119,7 +119,7 @@ void sortArrays(GriddingND::GriddingOperator* griddingOp,
 {
   IndType coordCnt = kSpaceTraj.count();
   dim3 block_dim(THREAD_BLOCK_SIZE);
-  dim3 grid_dim(getOptimalGridDim(coordCnt,THREAD_BLOCK_SIZE));
+  dim3 grid_dim(getOptimalGridDim((long)coordCnt,THREAD_BLOCK_SIZE));
 
   DType* kSpaceTraj_d;
   GriddingND::IndPair* assignedSectorsAndIndicesSorted_d;
@@ -156,7 +156,7 @@ void sortArrays(GriddingND::GriddingOperator* griddingOp,
     densCompData_d,
     densData_d,
     griddingOp->is3DProcessing(),
-    coordCnt);
+    (long)coordCnt);
   if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
     printf("error: at sortArrays thread synchronization 1: %s\n",cudaGetErrorString(cudaGetLastError()));
 

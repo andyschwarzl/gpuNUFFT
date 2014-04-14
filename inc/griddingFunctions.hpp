@@ -200,9 +200,9 @@ __inline__ __device__ __host__ DType calculateDeapodizationValue(int coord, DTyp
 
 __inline__ __device__ __host__ DType calculateDeapodizationAt(int x, int y, int z, IndType3 width_offset, DType3 grid_width_inv, int kernel_width, DType beta, DType norm_val)
 {
-  int x_shifted = x - width_offset.x;
-  int y_shifted = y - width_offset.y;
-  int z_shifted = z - width_offset.z;
+  int x_shifted = x - (int)width_offset.x;
+  int y_shifted = y - (int)width_offset.y;
+  int z_shifted = z - (int)width_offset.z;
 
   DType val_x = calculateDeapodizationValue(x_shifted,grid_width_inv.x,kernel_width,beta);
   DType val_y = calculateDeapodizationValue(y_shifted,grid_width_inv.y,kernel_width,beta);
@@ -213,8 +213,8 @@ __inline__ __device__ __host__ DType calculateDeapodizationAt(int x, int y, int 
 
 __inline__ __device__ __host__ DType calculateDeapodizationAt2D(int x, int y,IndType3 width_offset, DType3 grid_width_inv, int kernel_width, DType beta, DType norm_val)
 {
-  int x_shifted = x - width_offset.x;
-  int y_shifted = y - width_offset.y;
+  int x_shifted = x - (int)width_offset.x;
+  int y_shifted = y - (int)width_offset.y;
 
   DType val_x = calculateDeapodizationValue(x_shifted,grid_width_inv.x,kernel_width,beta);
   DType val_y = calculateDeapodizationValue(y_shifted,grid_width_inv.y,kernel_width,beta);

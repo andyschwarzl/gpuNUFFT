@@ -362,30 +362,30 @@ void performFFTShift(CufftType* gdata_d,
     offset.z = (int)ceil((DType)(gridDims.depth / (DType)2.0));
     if (gridDims.width % 2)
     {
-      t_width = offset.x - 1;
+      t_width = (int)offset.x - 1;
     }
     else 
-      t_width = offset.x;
+      t_width = (int)offset.x;
   }
   else
   {
     offset.x = (int)floor((DType)(gridDims.width / (DType)2.0));
     offset.y = (int)floor((DType)(gridDims.height / (DType)2.0));
     offset.z = (int)floor((DType)(gridDims.depth / (DType)2.0));
-    t_width = offset.x;
+    t_width = (int)offset.x;
   }
   dim3 grid_dim;
   if (gi_host->is2Dprocessing)
-    grid_dim = dim3(getOptimalGridDim(gridDims.width*t_width,THREAD_BLOCK_SIZE));
+    grid_dim = dim3(getOptimalGridDim((long)(gridDims.width*t_width),THREAD_BLOCK_SIZE));
   else
-    grid_dim = dim3(getOptimalGridDim(gridDims.width*gridDims.width,THREAD_BLOCK_SIZE));
+    grid_dim = dim3(getOptimalGridDim((long)(gridDims.width*gridDims.width),THREAD_BLOCK_SIZE));
 
   dim3 block_dim(THREAD_BLOCK_SIZE);
 
   if (gi_host->is2Dprocessing)
-    fftShiftKernel2D<<<grid_dim,block_dim>>>(gdata_d,offset,gridDims.width*t_width);
+    fftShiftKernel2D<<<grid_dim,block_dim>>>(gdata_d,offset,(int)gridDims.width*t_width);
   else
-    fftShiftKernel<<<grid_dim,block_dim>>>(gdata_d,offset,gridDims.count()/2);
+    fftShiftKernel<<<grid_dim,block_dim>>>(gdata_d,offset,(int)gridDims.count()/2);
 }
 
 __global__ void forwardDeapodizationKernel(DType2* imdata, DType beta, DType norm_val, int N)

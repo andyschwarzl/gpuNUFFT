@@ -118,7 +118,7 @@ GriddingND::Array<IndType> GriddingND::GriddingOperatorFactory::computeSectorDat
     dataCount.push_back(cnt);
   }
   Array<IndType> sectorDataCount = initSectorDataCount(griddingOp,(IndType)dataCount.size());
-  std::copy( dataCount.begin(), dataCount.end(), sectorDataCount.data );
+   std::copy( dataCount.begin(), dataCount.end(), sectorDataCount.data );
 
   return sectorDataCount;
 }
@@ -147,7 +147,7 @@ GriddingND::Array<IndType> GriddingND::GriddingOperatorFactory::computeSectorCen
       IndType2 center;
       center.x = computeSectorCenter(x,sectorWidth);
       center.y = computeSectorCenter(y,sectorWidth);
-      IndType index = computeXY2Lin(x,y,sectorDims);
+      int index = computeXY2Lin((int)x,(int)y,sectorDims);
       sectorCenters.data[2*index] = center.x;
       sectorCenters.data[2*index+1] = center.y;
     }
@@ -169,7 +169,7 @@ GriddingND::Array<IndType> GriddingND::GriddingOperatorFactory::computeSectorCen
         center.x = computeSectorCenter(x,sectorWidth);
         center.y = computeSectorCenter(y,sectorWidth);
         center.z = computeSectorCenter(z,sectorWidth);
-        IndType index = computeXYZ2Lin(x,y,z,sectorDims);
+        int index = computeXYZ2Lin((int)x,(int)y,(int)z,sectorDims);
         //necessary in order to avoid 2d or 3d typed array
         sectorCenters.data[3*index] = center.x;
         sectorCenters.data[3*index+1] = center.y;

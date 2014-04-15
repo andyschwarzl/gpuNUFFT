@@ -1,6 +1,6 @@
 #ifndef GRIDDING_KERNELS_H
 #define GRIDDING_KERNELS_H
-#include "griddingFunctions.hpp"
+#include "gridding_utils.hpp"
 #include "cuda_utils.hpp"
 
 //INVERSE Operations

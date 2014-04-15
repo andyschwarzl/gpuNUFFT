@@ -1,4 +1,4 @@
-#include "griddingFunctions.hpp"
+#include "gridding_utils.hpp"
 
 long calculateGrid3KernelSize()
 {

@@ -1,7 +1,7 @@
 MESSAGE("------start creating libraries-------")
 
 SET(GRIDDING_SRC_DIR ${CMAKE_SOURCE_DIR}/src)
-SET(GRIDDING_SOURCES ${GRIDDING_SRC_DIR}/griddingFunctions.cpp
+SET(GRIDDING_SOURCES ${GRIDDING_SRC_DIR}/gridding_utils.cpp
                      ${GRIDDING_SRC_DIR}/gridding_operator_factory.cpp
                      ${GRIDDING_SRC_DIR}/gridding_operator.cpp)
 

@@ -106,7 +106,7 @@ SET(GRIDDING_INC_DIR ${CMAKE_SOURCE_DIR}/inc)
 SET(GRIDDING_INCLUDE ${GRIDDING_INC_DIR}/cuda_utils.hpp 
 										 ${GRIDDING_INC_DIR}/cuda_utils.cuh
 										 ${GRIDDING_INC_DIR}/config.hpp
-										 ${GRIDDING_INC_DIR}/griddingFunctions.hpp
+										 ${GRIDDING_INC_DIR}/gridding_utils.hpp
 										 ${GRIDDING_INC_DIR}/gridding_types.hpp
 										 ${GRIDDING_INC_DIR}/gridding_kernels.hpp
 										 ${GRIDDING_INC_DIR}/precomp_kernels.hpp

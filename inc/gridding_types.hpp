@@ -145,6 +145,7 @@ namespace GriddingND
     IndType gridDims_count;
 
     bool is2Dprocessing;
+    int interpolationType;
   };
 
 }

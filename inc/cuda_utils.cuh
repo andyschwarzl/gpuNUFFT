@@ -43,12 +43,22 @@ __inline__ __device__ DType compute3DTextureLookup(DType x, DType y, DType z)
 
 __inline__ __device__ DType computeTextureLookup(DType x, DType y)
 {
-  return compute3DTextureLookup(x,y);
+  switch(GI.interpolationType)
+  {
+    case 1: return compute1DTextureLookup(x,y);
+    case 2: return compute2DTextureLookup(x,y);
+    case 3: return compute3DTextureLookup(x,y);
+  }
 }
 
 __inline__ __device__ DType computeTextureLookup(DType x, DType y, DType z)
 {
-  return compute3DTextureLookup(x,y,z);
+  switch(GI.interpolationType)
+  {
+    case 1: return compute1DTextureLookup(x,y,z);
+    case 2: return compute2DTextureLookup(x,y,z);
+    case 3: return compute3DTextureLookup(x,y,z);
+  }
 }
 
 #if __CUDA_ARCH__ < 200

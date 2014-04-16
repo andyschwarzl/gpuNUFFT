@@ -36,12 +36,30 @@ void GriddingND::GriddingOperator::writeOrdered(GriddingND::Array<T>& destArray,
 
 void GriddingND::GriddingOperator::initKernel()
 {
-  IndType kernelSize = calculateKernelSizeLinInt(osf, kernelWidth/2.0f);
+  IndType kernelSize = (interpolationType > 1) ? calculateKernelSizeLinInt(osf, kernelWidth/2.0f) : calculateGrid3KernelSize(osf, kernelWidth/2.0f);
   this->kernel.dim.width = kernelSize;
-  this->kernel.dim.height = kernelSize;
-  this->kernel.dim.depth = kernelSize;
+  this->kernel.dim.height = interpolationType > 1 ? kernelSize : 1;
+  this->kernel.dim.depth = interpolationType > 2 ? kernelSize : 1;
   this->kernel.data = (DType*) calloc(this->kernel.count(),sizeof(DType));
-  load3DKernel(this->kernel.data,(int)kernelSize,(int)kernelWidth,osf);
+
+  switch (interpolationType)
+  {
+  case 1:   load1DKernel(this->kernel.data,(int)kernelSize,(int)kernelWidth,osf);break;
+  case 2:   load2DKernel(this->kernel.data,(int)kernelSize,(int)kernelWidth,osf);break;
+  case 3:   load3DKernel(this->kernel.data,(int)kernelSize,(int)kernelWidth,osf);break;
+  }
+
+}
+
+const char* GriddingND::GriddingOperator::getInterpolationTypeName()
+{
+  switch (interpolationType)
+  {
+  case 1:   return "texKERNEL";
+  case 2:   return "texKERNEL2D";
+  case 3:   return "texKERNEL3D";
+  }
+
 }
 
 GriddingND::GriddingInfo* GriddingND::GriddingOperator::initAndCopyGriddingInfo()
@@ -114,6 +132,7 @@ GriddingND::GriddingInfo* GriddingND::GriddingOperator::initAndCopyGriddingInfo(
   gi_host->dist_multiplier = dist_multiplier;
 
   gi_host->is2Dprocessing = this->is2DProcessing();
+  gi_host->interpolationType = interpolationType;
 
   if (DEBUG)
     printf("copy Gridding Info to symbol memory... size = %ld \n",sizeof(GriddingND::GriddingInfo));
@@ -218,7 +237,7 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
   //initConstSymbol("KERNEL",(void*)this->kernel.data,this->kernel.count()*sizeof(DType));
 
   cudaArray* kernel_d = NULL;
-  initTexture("texKERNEL3D",&kernel_d,this->kernel);
+  initTexture(getInterpolationTypeName(),&kernel_d,this->kernel);
 
   //allocateAndCopyToDeviceMem<DType>(&kernel_d,kernel,kernel_count);
   if (DEBUG)
@@ -348,7 +367,7 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
     performFFTScaling(imdata_d,gi_host->im_width_dim,gi_host);
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       printf("error: at adj  thread synchronization 9: %s\n",cudaGetErrorString(cudaGetLastError()));
-      
+
     //get result
     copyFromDevice<CufftType>(imdata_d,imgData.data+im_coil_offset,imdata_count);
   }//iterate over coils
@@ -472,14 +491,13 @@ void GriddingND::GriddingOperator::performForwardGridding(GriddingND::Array<DTyp
     printf("allocate and copy coords of size %d...\n",getImageDimensionCount()*data_count);
   allocateAndCopyToDeviceMem<DType>(&crds_d,this->kSpaceTraj.data,getImageDimensionCount()*data_count);
 
-
   if (DEBUG)
     printf("allocate and copy kernel in const memory of size %d...\n",this->kernel.count());
 
   //initConstSymbol("KERNEL",(void*)this->kernel.data,this->kernel.count()*sizeof(DType));
-  
+
   cudaArray* kernel_d = NULL;
-  initTexture("texKERNEL3D",&kernel_d,this->kernel);
+  initTexture(getInterpolationTypeName(),&kernel_d,this->kernel);
 
   if (DEBUG)
     printf("allocate and copy sectors of size %d...\n",sector_count+1);

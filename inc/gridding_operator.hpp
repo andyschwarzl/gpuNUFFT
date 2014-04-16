@@ -12,12 +12,13 @@ namespace GriddingND
   {
   public:
 
-    GriddingOperator()
+    GriddingOperator():
+        interpolationType(1)
     {
     }
 
     GriddingOperator(IndType kernelWidth, IndType sectorWidth, DType osf, Dimensions imgDims): 
-    osf(osf), kernelWidth(kernelWidth), sectorWidth(sectorWidth),imgDims(imgDims)
+    osf(osf), kernelWidth(kernelWidth), sectorWidth(sectorWidth),imgDims(imgDims),interpolationType(1)
     {
       initKernel();	
 
@@ -140,6 +141,10 @@ namespace GriddingND
     void initKernel();
 
     GriddingInfo* initAndCopyGriddingInfo();
+
+    int interpolationType;
+
+    const char* getInterpolationTypeName();
   };
 }
 

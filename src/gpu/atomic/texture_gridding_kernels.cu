@@ -98,10 +98,8 @@ __global__ void textureConvolutionKernel(DType2* data,
                 if (dx_sqr < GI.radiusSquared)	
                 {
                   //get kernel value
-                  //Calculate Separable Filters 
-                  val = KERNEL[(int) round(dz_sqr * GI.dist_multiplier)] *
-                    KERNEL[(int) round(dy_sqr * GI.dist_multiplier)] *
-                    KERNEL[(int) round(dx_sqr * GI.dist_multiplier)];
+                  val = computeTextureLookup(dx_sqr*GI.radiusSquared_inv,dy_sqr*GI.radiusSquared_inv,dz_sqr*GI.radiusSquared_inv);
+
                   ind = getIndex(i,j,k,GI.sector_pad_width);
 
                   // multiply data by current kernel val 
@@ -234,8 +232,8 @@ __global__ void textureConvolutionKernel2D(DType2* data,
             {
               //get kernel value
               //Calculate Separable Filters 
-              val = KERNEL[(int) round(dy_sqr * GI.dist_multiplier)] *
-                KERNEL[(int) round(dx_sqr * GI.dist_multiplier)];
+              val = computeTextureLookup(dx_sqr*GI.radiusSquared_inv,dy_sqr*GI.radiusSquared_inv);
+
               ind = getIndex2D(i,j,GI.sector_pad_width);
 
               // multiply data by current kernel val 
@@ -394,10 +392,7 @@ __global__ void textureForwardConvolutionKernel( CufftType* data,
                 if (dx_sqr < GI.radiusSquared)	
                 {
                   // get kernel value
-                  // calc as separable filter
-                  val = KERNEL[(int) round(dz_sqr * GI.dist_multiplier)] *
-                    KERNEL[(int) round(dy_sqr * GI.dist_multiplier)] *
-                    KERNEL[(int) round(dx_sqr * GI.dist_multiplier)];
+                  val = computeTextureLookup(dx_sqr*GI.radiusSquared_inv,dy_sqr*GI.radiusSquared_inv,dz_sqr*GI.radiusSquared_inv);
 
                   // multiply data by current kernel val 
                   // grid complex or scalar 
@@ -496,8 +491,8 @@ __global__ void textureForwardConvolutionKernel2D( CufftType* data,
             {
               // get kernel value
               // calc as separable filter
-              val = KERNEL[(int) round(dy_sqr * GI.dist_multiplier)] *
-                KERNEL[(int) round(dx_sqr * GI.dist_multiplier)];
+              val = computeTextureLookup(dx_sqr*GI.radiusSquared_inv,dy_sqr*GI.radiusSquared_inv);
+
 
               // multiply data by current kernel val 
               // grid complex or scalar 

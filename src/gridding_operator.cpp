@@ -103,9 +103,9 @@ GriddingND::GriddingInfo* GriddingND::GriddingOperator::initAndCopyGriddingInfo(
   gi_host->sector_pad_max = sector_pad_width - 1;
   gi_host->sector_dim = sector_dim;
   gi_host->sector_offset = sector_offset;
-  
+
   gi_host->aniso_z_scale = ((DType)this->getGridDims().depth/(DType)this->getGridDims().width);
-  
+
   double sectorKdim = 1.0 / gridSectorDims.width;
   gi_host->aniso_z_shift = (DType)(((gridSectorDims.width-gridSectorDims.depth)/2.0)*sectorKdim);
 

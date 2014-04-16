@@ -90,11 +90,11 @@ long calculateGrid3KernelSize();
 long calculateGrid3KernelSize(DType osr, DType kernel_radius);
 long calculateKernelSizeLinInt(double osr, double kernel_radius);
 
-void loadGrid3Kernel(DType *kernTab,long kernel_entries, int kernel_width, DType osr);
 void loadGrid3Kernel(DType *kernTab,long kernel_entries);
 void loadGrid3Kernel(DType *kernTab);
 /*END Zwart*/
 
+void load1DKernel(DType *kernTab,long kernel_entries, int kernel_width, DType osr);
 void load2DKernel(DType *kernTab,long kernel_entries, int kernel_width, DType osr);
 void load3DKernel(DType *kernTab,long kernel_entries, int kernel_width, DType osr);
 

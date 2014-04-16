@@ -819,7 +819,7 @@ TEST(Test2DGPUGriddingConv,MatlabTest_8SK3w32)
 	long kernel_entries = calculateGrid3KernelSize(osr, kernel_width/2.0f);
 
 	DType *kern = (DType*) calloc(kernel_entries,sizeof(DType));
-	loadGrid3Kernel(kern,kernel_entries,kernel_width,osr);
+	load1DKernel(kern,kernel_entries,kernel_width,osr);
 
 	//Image
 	int im_width = 32;

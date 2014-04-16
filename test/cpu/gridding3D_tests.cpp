@@ -99,7 +99,7 @@ TEST(TestGridding,CPUTest_1SectorKernel5)
 	long kernel_entries = calculateGrid3KernelSize(osr, kernel_width/2.0f);
 
 	DType *kern = (DType*) calloc(kernel_entries,sizeof(DType));
-	loadGrid3Kernel(kern,kernel_entries,kernel_width,osr);
+	load1DKernel(kern,kernel_entries,kernel_width,osr);
 
 	//Image
 	int im_width = 10;
@@ -183,7 +183,7 @@ TEST(TestGridding,CPUTest_1SectorKernel3nData)
 	long kernel_entries = calculateGrid3KernelSize(osr, kernel_width/2.0f);
 
 	DType *kern = (DType*) calloc(kernel_entries,sizeof(DType));
-	loadGrid3Kernel(kern,kernel_entries,kernel_width,osr);
+	load1DKernel(kern,kernel_entries,kernel_width,osr);
 
 	//Image
 	int im_width = 10;
@@ -287,7 +287,7 @@ TEST(TestGridding,CPUTest_2SectorsKernel3nData)
 	long kernel_entries = calculateGrid3KernelSize(osr, kernel_width/2.0f);
 
 	DType *kern = (DType*) calloc(kernel_entries,sizeof(DType));
-	loadGrid3Kernel(kern,kernel_entries,kernel_width,osr);
+	load1DKernel(kern,kernel_entries,kernel_width,osr);
 
 	//Image
 	int im_width = 10;
@@ -407,7 +407,7 @@ TEST(TestGridding,CPUTest_8SectorsKernel3nData)
 	long kernel_entries = calculateGrid3KernelSize(osr, kernel_width/2.0f);
 
 	DType *kern = (DType*) calloc(kernel_entries,sizeof(DType));
-	loadGrid3Kernel(kern,kernel_entries,kernel_width,osr);
+	load1DKernel(kern,kernel_entries,kernel_width,osr);
 
 	//Image
 	int im_width = 10;
@@ -559,7 +559,7 @@ TEST(TestGridding,CPUTest_8SectorsKernel4nData)
 	long kernel_entries = calculateGrid3KernelSize(osr, kernel_width/2.0f);
 
 	DType *kern = (DType*) calloc(kernel_entries,sizeof(DType));
-	loadGrid3Kernel(kern,kernel_entries,kernel_width,osr);
+	load1DKernel(kern,kernel_entries,kernel_width,osr);
 
 	//Image
 	int im_width = 10;
@@ -710,7 +710,7 @@ TEST(TestGridding,CPUTest_8SectorsKernel3nDataw32)
 	long kernel_entries = calculateGrid3KernelSize(osr, kernel_width/2.0f);
 
 	DType *kern = (DType*) calloc(kernel_entries,sizeof(DType));
-	loadGrid3Kernel(kern,kernel_entries,kernel_width,osr);
+	load1DKernel(kern,kernel_entries,kernel_width,osr);
 
 	//Image
 	int im_width = 32;
@@ -831,7 +831,7 @@ TEST(TestGridding,MatlabTest_8SK3w32)
 	long kernel_entries = calculateGrid3KernelSize(osr, kernel_width/2.0f);
 
 	DType *kern = (DType*) calloc(kernel_entries,sizeof(DType));
-	loadGrid3Kernel(kern,kernel_entries,kernel_width,osr);
+	load1DKernel(kern,kernel_entries,kernel_width,osr);
 
 	//Image
 	int im_width = 32;
@@ -954,7 +954,7 @@ TEST(TestGridding,CPUTest_8SectorsKernel5nData)
 	long kernel_entries = calculateGrid3KernelSize(osr, kernel_width/2.0f);
 
 	DType *kern = (DType*) calloc(kernel_entries,sizeof(DType));
-	loadGrid3Kernel(kern,kernel_entries,kernel_width,osr);
+	load1DKernel(kern,kernel_entries,kernel_width,osr);
 
 	//Image
 	int im_width = 10;
@@ -1103,7 +1103,7 @@ TEST(TestGridding,CPUTest_Kernel5w64)
 	int kernel_width = 5;
 	long kernel_entries = calculateGrid3KernelSize(osr, kernel_width/2.0f);
 	DType *kern = (DType*) calloc(kernel_entries,sizeof(DType));
-	loadGrid3Kernel(kern,kernel_entries,kernel_width,osr);
+	load1DKernel(kern,kernel_entries,kernel_width,osr);
 
 	//Image
 	int im_width = 64;

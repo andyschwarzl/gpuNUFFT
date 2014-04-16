@@ -30,15 +30,15 @@ long calculateKernelSizeLinInt(double osr, double kernel_radius)
 
 void loadGrid3Kernel(DType *kernTab)
 {
-  loadGrid3Kernel(kernTab,calculateGrid3KernelSize(),DEFAULT_KERNEL_WIDTH,DEFAULT_OVERSAMPLING_RATIO);
+  load1DKernel(kernTab,calculateGrid3KernelSize(),DEFAULT_KERNEL_WIDTH,DEFAULT_OVERSAMPLING_RATIO);
 }
 
 void loadGrid3Kernel(DType *kernTab,long kernel_entries)
 {
-  loadGrid3Kernel(kernTab,kernel_entries,DEFAULT_KERNEL_WIDTH,DEFAULT_OVERSAMPLING_RATIO);
+  load1DKernel(kernTab,kernel_entries,DEFAULT_KERNEL_WIDTH,DEFAULT_OVERSAMPLING_RATIO);
 }
 
-void loadGrid3Kernel(DType *kernTab,long kernel_entries, int kernel_width, DType osr)	
+void load1DKernel(DType *kernTab,long kernel_entries, int kernel_width, DType osr)	
 {
   /* check input data */
   assert( kernTab != NULL );
@@ -64,7 +64,7 @@ void load2DKernel(DType *kernTab,long kernel_entries, int kernel_width, DType os
 {
   /* check input data */
   assert( kernTab != NULL );
-  loadGrid3Kernel(kernTab,kernel_entries,kernel_width,osr);
+  load1DKernel(kernTab,kernel_entries,kernel_width,osr);
 
   /* load table */
   for (long j=0; j<kernel_entries; j++)	
@@ -80,7 +80,7 @@ void load3DKernel(DType *kernTab,long kernel_entries, int kernel_width, DType os
 {
   /* check input data */
   assert( kernTab != NULL );
-  loadGrid3Kernel(kernTab,kernel_entries,kernel_width,osr);
+  load1DKernel(kernTab,kernel_entries,kernel_width,osr);
 
   /* load table */
   for (long k=0; k<kernel_entries; k++)	

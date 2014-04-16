@@ -295,7 +295,7 @@ TEST(TestGPUGriddingConv,GPUTest_2SectorsKernel3nData)
   long kernel_entries = calculateGrid3KernelSize(osr, kernel_width/2.0f);
 
   DType *kern = (DType*) calloc(kernel_entries,sizeof(DType));
-  loadGrid3Kernel(kern,kernel_entries,kernel_width,osr);
+  load1DKernel(kern,kernel_entries,kernel_width,osr);
 
   //Image
   int im_width = 10;
@@ -1046,7 +1046,7 @@ TEST(TestGPUGriddingConv,MatlabTest_8SK3w32)
   long kernel_entries = calculateGrid3KernelSize(osr, kernel_width/2.0f);
 
   DType *kern = (DType*) calloc(kernel_entries,sizeof(DType));
-  loadGrid3Kernel(kern,kernel_entries,kernel_width,osr);
+  load1DKernel(kern,kernel_entries,kernel_width,osr);
 
   //Image
   int im_width = 32;
@@ -1456,7 +1456,7 @@ TEST(TestGPUGriddingConvAnisotropic,GPUTest_20x20x10_osf_15)
   //EXPECT_EQ(index,2*555);
   EXPECT_NEAR(0.5853f,gdata[computeXYZ2Lin(6,21,3,gdataArray.dim)].x,epsilon);
   EXPECT_NEAR(0.9445f,gdata[computeXYZ2Lin(6,21,4,gdataArray.dim)].x,epsilon);
-  EXPECT_NEAR(4.8931f,gdata[computeXYZ2Lin(24,24,11,gdataArray.dim)].x,epsilon);
+  EXPECT_NEAR(4.8931f,gdata[computeXYZ2Lin(24,24,11,gdataArray.dim)].x,10*epsilon);
 
   free(data);
   free(coords);

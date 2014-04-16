@@ -1,7 +1,7 @@
 #ifndef GRIDDING_CPU_H_
 #define GRIDDING_CPU_H_
 
-#include "griddingFunctions.hpp"
+#include "gridding_utils.hpp"
 
 void gridding3D_cpu(DType* data, 
 				DType* crds, 

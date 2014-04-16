@@ -22,10 +22,10 @@ set(GPU_SOURCES gpu/gridding3DGPU_conv_tests.cpp
 #add CPU Tests
 add_subdirectory(cpu)
 
-cuda_add_executable(runGPUUnitTests ${GPU_SOURCES} ${GRIDDING_SOURCES}  ../inc/griddingFunctions.hpp ../inc/gridding_operator_factory.hpp ../inc/gridding_operator.hpp ../inc/gridding_kernels.hpp)
+cuda_add_executable(runGPUUnitTests ${GPU_SOURCES} ${GRIDDING_SOURCES}  ../inc/gridding_utils.hpp ../inc/gridding_operator_factory.hpp ../inc/gridding_operator.hpp ../inc/gridding_kernels.hpp)
 target_link_libraries(runGPUUnitTests ${GRID_LIB_NAME} ${GTEST_LIB} ${GTESTMAIN_LIB})
 
 if(GEN_ATOMIC)
-    cuda_add_executable(runGPUATMUnitTests ${GPU_SOURCES} ${GRIDDING_SOURCES} ../inc/griddingFunctions.hpp ../inc/gridding_operator_factory.hpp ../inc/gridding_operator.hpp ../inc/gridding_kernels.hpp)
+    cuda_add_executable(runGPUATMUnitTests ${GPU_SOURCES} ${GRIDDING_SOURCES} ../inc/gridding_utils.hpp ../inc/gridding_operator_factory.hpp ../inc/gridding_operator.hpp ../inc/gridding_kernels.hpp)
 	target_link_libraries(runGPUATMUnitTests ${GRID_LIB_ATM_NAME} ${GTEST_LIB} ${GTESTMAIN_LIB})
 endif()

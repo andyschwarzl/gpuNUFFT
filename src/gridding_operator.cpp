@@ -1,6 +1,5 @@
 
 #include "gridding_operator.hpp"
-
 #include "gridding_kernels.hpp"
 #include "cufft_config.hpp"
 #include "cuda_utils.hpp"
@@ -36,30 +35,10 @@ void GriddingND::GriddingOperator::writeOrdered(GriddingND::Array<T>& destArray,
 
 void GriddingND::GriddingOperator::initKernel()
 {
-  IndType kernelSize = (interpolationType > 1) ? calculateKernelSizeLinInt(osf, kernelWidth/2.0f) : calculateGrid3KernelSize(osf, kernelWidth/2.0f);
-  this->kernel.dim.width = kernelSize;
-  this->kernel.dim.height = interpolationType > 1 ? kernelSize : 1;
-  this->kernel.dim.depth = interpolationType > 2 ? kernelSize : 1;
+  IndType kernelSize = calculateGrid3KernelSize(osf, kernelWidth/2.0f);
+  this->kernel.dim.length = kernelSize;
   this->kernel.data = (DType*) calloc(this->kernel.count(),sizeof(DType));
-
-  switch (interpolationType)
-  {
-  case 1:   load1DKernel(this->kernel.data,(int)kernelSize,(int)kernelWidth,osf);break;
-  case 2:   load2DKernel(this->kernel.data,(int)kernelSize,(int)kernelWidth,osf);break;
-  case 3:   load3DKernel(this->kernel.data,(int)kernelSize,(int)kernelWidth,osf);break;
-  }
-
-}
-
-const char* GriddingND::GriddingOperator::getInterpolationTypeName()
-{
-  switch (interpolationType)
-  {
-  case 1:   return "texKERNEL";
-  case 2:   return "texKERNEL2D";
-  case 3:   return "texKERNEL3D";
-  }
-
+  load1DKernel(this->kernel.data,(int)kernelSize,(int)kernelWidth,osf);
 }
 
 GriddingND::GriddingInfo* GriddingND::GriddingOperator::initAndCopyGriddingInfo()
@@ -132,7 +111,6 @@ GriddingND::GriddingInfo* GriddingND::GriddingOperator::initAndCopyGriddingInfo(
   gi_host->dist_multiplier = dist_multiplier;
 
   gi_host->is2Dprocessing = this->is2DProcessing();
-  gi_host->interpolationType = interpolationType;
 
   if (DEBUG)
     printf("copy Gridding Info to symbol memory... size = %ld \n",sizeof(GriddingND::GriddingInfo));
@@ -144,6 +122,38 @@ GriddingND::GriddingInfo* GriddingND::GriddingOperator::initAndCopyGriddingInfo(
     printf("...done!\n");
   return gi_host;
 }
+
+void GriddingND::GriddingOperator::adjConvolution(DType2* data_d, 
+      DType* crds_d, 
+      CufftType* gdata_d,
+      DType* kernel_d, 
+      IndType* sectors_d, 
+      IndType* sector_centers_d,
+  GriddingND::GriddingInfo* gi_host)
+{
+  performConvolution(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,gi_host);
+}
+
+void GriddingND::GriddingOperator::forwardConvolution(CufftType*		data_d, 
+  DType*			crds_d, 
+  CufftType*		gdata_d,
+  DType*			kernel_d, 
+  IndType*		sectors_d, 
+  IndType*		sector_centers_d,
+  GriddingND::GriddingInfo* gi_host)
+{
+  performForwardConvolution(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,gi_host);
+}
+
+  void GriddingND::GriddingOperator::initLookupTable()
+  {
+    initConstSymbol("KERNEL",(void*)this->kernel.data,this->kernel.count()*sizeof(DType));
+  }
+  
+  void GriddingND::GriddingOperator::freeLookupTable()
+  {
+    
+  }
 
 // ----------------------------------------------------------------------------
 // performGriddingAdj: NUFFT^H
@@ -234,10 +244,7 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
   if (DEBUG)
     printf("allocate and copy kernel in const memory of size %d...\n",this->kernel.count());
 
-  //initConstSymbol("KERNEL",(void*)this->kernel.data,this->kernel.count()*sizeof(DType));
-
-  cudaArray* kernel_d = NULL;
-  initTexture(getInterpolationTypeName(),&kernel_d,this->kernel);
+  initLookupTable();
 
   //allocateAndCopyToDeviceMem<DType>(&kernel_d,kernel,kernel_count);
   if (DEBUG)
@@ -287,8 +294,7 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
 
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       printf("error at adj thread synchronization 1: %s\n",cudaGetErrorString(cudaGetLastError()));
-    performTextureConvolution(data_d,crds_d,gdata_d,NULL,sectors_d,sector_centers_d,gi_host);
-    //performConvolution(data_d,crds_d,gdata_d,NULL,sectors_d,sector_centers_d,gi_host);
+    adjConvolution(data_d,crds_d,gdata_d,NULL,sectors_d,sector_centers_d,gi_host);
 
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       fprintf(stderr,"error at adj  thread synchronization 2: %s\n",cudaGetErrorString(cudaGetLastError()));
@@ -304,7 +310,7 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
       free(gi_host);
       // Destroy the cuFFT plan.
       cufftDestroy(fft_plan);
-      freeTexture("texKERNEL",kernel_d);
+      freeLookupTable();
       cudaThreadSynchronize();
       freeTotalDeviceMemory(data_d,crds_d,imdata_d,gdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop token
       cudaThreadSynchronize();
@@ -339,7 +345,7 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
       free(gi_host);
       // Destroy the cuFFT plan.
       cufftDestroy(fft_plan);
-      freeTexture("texKERNEL",kernel_d);
+      freeLookupTable();
       cudaThreadSynchronize();
       freeTotalDeviceMemory(data_d,crds_d,imdata_d,gdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop token
       cudaThreadSynchronize();
@@ -376,7 +382,7 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
   // Destroy the cuFFT plan.
   cufftDestroy(fft_plan);
 
-  freeTexture("texKERNEL",kernel_d);
+  freeLookupTable();
   freeTotalDeviceMemory(data_d,crds_d,gdata_d,imdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop
 
   if (this->applyDensComp())
@@ -494,10 +500,7 @@ void GriddingND::GriddingOperator::performForwardGridding(GriddingND::Array<DTyp
   if (DEBUG)
     printf("allocate and copy kernel in const memory of size %d...\n",this->kernel.count());
 
-  //initConstSymbol("KERNEL",(void*)this->kernel.data,this->kernel.count()*sizeof(DType));
-
-  cudaArray* kernel_d = NULL;
-  initTexture(getInterpolationTypeName(),&kernel_d,this->kernel);
+  initLookupTable();
 
   if (DEBUG)
     printf("allocate and copy sectors of size %d...\n",sector_count+1);
@@ -521,7 +524,7 @@ void GriddingND::GriddingOperator::performForwardGridding(GriddingND::Array<DTyp
   if (DEBUG)
     printf("creating cufft plan with %d,%d,%d dimensions\n",DEFAULT_VALUE(gi_host->gridDims.z),gi_host->gridDims.y,gi_host->gridDims.x);
   cufftResult res = cufftPlan3d(&fft_plan, (int)DEFAULT_VALUE(gi_host->gridDims.z),(int)gi_host->gridDims.y,(int)gi_host->gridDims.x, CufftTransformType) ;
-  //cufftResult res = cufftPlan2d(&fft_plan, gi_host->gridDims.y,gi_host->gridDims.x, CufftTransformType) ;
+
   if (res != CUFFT_SUCCESS) 
     printf("error on CUFFT Plan creation!!! %d\n",res);
   int err;
@@ -571,7 +574,7 @@ void GriddingND::GriddingOperator::performForwardGridding(GriddingND::Array<DTyp
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       printf("error at thread synchronization 6: %s\n",cudaGetErrorString(cudaGetLastError()));
     // convolution and resampling to non-standard trajectory
-    performTextureForwardConvolution(data_d,crds_d,gdata_d,NULL,sectors_d,sector_centers_d,gi_host);
+    forwardConvolution(data_d,crds_d,gdata_d,NULL,sectors_d,sector_centers_d,gi_host);
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       printf("error at thread synchronization 7: %s\n",cudaGetErrorString(cudaGetLastError()));
 
@@ -586,7 +589,7 @@ void GriddingND::GriddingOperator::performForwardGridding(GriddingND::Array<DTyp
   // Destroy the cuFFT plan.
   if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
     printf("error at thread synchronization 9: %s\n",cudaGetErrorString(cudaGetLastError()));
-  freeTexture("texKERNEL",kernel_d);
+  freeLookupTable();
   freeTotalDeviceMemory(data_d,crds_d,gdata_d,imdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop
   if (n_coils > 1 && deapo_d != NULL)
     cudaFree(deapo_d);

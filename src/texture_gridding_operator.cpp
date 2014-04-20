@@ -11,9 +11,9 @@ void GriddingND::TextureGriddingOperator::initKernel()
 
   switch (interpolationType)
   {
-  case 1:   load1DKernel(this->kernel.data,(int)kernelSize,(int)kernelWidth,osf);break;
-  case 2:   load2DKernel(this->kernel.data,(int)kernelSize,(int)kernelWidth,osf);break;
-  case 3:   load3DKernel(this->kernel.data,(int)kernelSize,(int)kernelWidth,osf);break;
+  case TEXTURE_LOOKUP:   load1DKernel(this->kernel.data,(int)kernelSize,(int)kernelWidth,osf);break;
+  case TEXTURE2D_LOOKUP:   load2DKernel(this->kernel.data,(int)kernelSize,(int)kernelWidth,osf);break;
+  case TEXTURE3D_LOOKUP:   load3DKernel(this->kernel.data,(int)kernelSize,(int)kernelWidth,osf);break;
   }
 
 }
@@ -22,9 +22,9 @@ const char* GriddingND::TextureGriddingOperator::getInterpolationTypeName()
 {
   switch (interpolationType)
   {
-  case 1:   return "texKERNEL";
-  case 2:   return "texKERNEL2D";
-  case 3:   return "texKERNEL3D";
+  case TEXTURE_LOOKUP:   return "texKERNEL";
+  case TEXTURE2D_LOOKUP:   return "texKERNEL2D";
+  case TEXTURE3D_LOOKUP:   return "texKERNEL3D";
   }
 
 }

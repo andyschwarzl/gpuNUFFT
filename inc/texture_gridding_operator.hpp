@@ -11,12 +11,12 @@ namespace GriddingND
   public:
 
     TextureGriddingOperator():
-        interpolationType(1)
+        interpolationType(InterpolationType::TEXTURE_LOOKUP)
     {
     }
 
     TextureGriddingOperator(IndType kernelWidth, IndType sectorWidth, DType osf, Dimensions imgDims): 
-    GriddingOperator(kernelWidth,sectorWidth,osf,imgDims),interpolationType(1)
+    GriddingOperator(kernelWidth,sectorWidth,osf,imgDims),interpolationType(InterpolationType::TEXTURE_LOOKUP)
     {
     }
 
@@ -50,7 +50,7 @@ namespace GriddingND
     void freeLookupTable();
 
 		cudaArray* kernel_d;
-    int interpolationType;
+    InterpolationType interpolationType;
     const char* getInterpolationTypeName();
   };
 }

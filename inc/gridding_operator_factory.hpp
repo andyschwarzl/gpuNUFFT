@@ -25,7 +25,8 @@ namespace GriddingND
   class GriddingOperatorFactory
   {
   protected:
-    GriddingOperatorFactory()
+    GriddingOperatorFactory():
+           interpolationType(InterpolationType::CONST_LOOKUP)
     {
     }
 
@@ -79,6 +80,8 @@ namespace GriddingND
     static GriddingOperatorFactory& getInstance();
 
   private:
+    InterpolationType interpolationType;
+
     static GriddingOperatorFactory instance;
 
     static const bool useGpu = true;

@@ -93,6 +93,14 @@ namespace GriddingND
 
   };
 
+  enum InterpolationType
+  {
+    CONST_LOOKUP,
+    TEXTURE_LOOKUP,
+    TEXTURE2D_LOOKUP,
+    TEXTURE3D_LOOKUP
+  };
+
   enum GriddingOutput
   {
     CONVOLUTION,

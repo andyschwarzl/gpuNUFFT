@@ -207,6 +207,11 @@ GriddingND::Array<IndType> GriddingND::GriddingOperatorFactory::initSectorCenter
   return initLinArray<IndType>(griddingOp->getImageDimensionCount()*sectorCnt);
 }
 
+GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createNewGriddingOperator(IndType kernelWidth, IndType sectorWidth, DType osf, Dimensions imgDims)
+{
+  return new GriddingND::GriddingOperator(kernelWidth,sectorWidth,osf,imgDims);
+}
+
 GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddingOperator(GriddingND::Array<DType>& kSpaceTraj, GriddingND::Array<DType>& densCompData,GriddingND::Array<DType2>& sensData, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, GriddingND::Dimensions& imgDims)
 {
   //validate arguments
@@ -218,7 +223,7 @@ GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddin
 
   debug("create gridding operator...");
 
-  GriddingND::GriddingOperator *griddingOp = new GriddingND::GriddingOperator(kernelWidth,sectorWidth,osf,imgDims);
+  GriddingND::GriddingOperator *griddingOp = createNewGriddingOperator(kernelWidth,sectorWidth,osf,imgDims);
 
   //assign Sectors
   GriddingND::Array<IndType> assignedSectors = assignSectors(griddingOp, kSpaceTraj);
@@ -294,7 +299,7 @@ GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddin
 
 GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::loadPrecomputedGriddingOperator(GriddingND::Array<DType>& kSpaceTraj, GriddingND::Array<IndType>& dataIndices, GriddingND::Array<IndType>& sectorDataCount,GriddingND::Array<IndType>& sectorCenters, GriddingND::Array<DType2>& sensData, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, GriddingND::Dimensions& imgDims)
 {
-  GriddingOperator* griddingOp = new GriddingOperator(kernelWidth,sectorWidth,osf,imgDims);
+  GriddingOperator* griddingOp = createNewGriddingOperator(kernelWidth,sectorWidth,osf,imgDims);
 	griddingOp->setGridSectorDims(GriddingOperatorFactory::computeSectorCountPerDimension(griddingOp->getGridDims(),griddingOp->getSectorWidth()));
 	
 	griddingOp->setKSpaceTraj(kSpaceTraj);

@@ -62,6 +62,8 @@ namespace GriddingND
 
     IndType computeSectorCenter(IndType var, IndType sectorWidth);
 
+    GriddingOperator* createNewGriddingOperator(IndType kernelWidth, IndType sectorWidth, DType osf, Dimensions imgDims);
+
   public:
 
     GriddingOperator* createGriddingOperator(Array<DType>& kSpaceTraj, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, Dimensions& imgDims);

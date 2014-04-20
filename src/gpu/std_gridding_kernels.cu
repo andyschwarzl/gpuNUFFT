@@ -68,10 +68,19 @@ void initTexture(const char* symbol, cudaArray** devicePtr, GriddingND::Array<DT
 
 void freeTexture(const char* symbol,cudaArray* devicePtr)
 {
+  HANDLE_ERROR(cudaFreeArray(devicePtr));
+
   if (std::string("texKERNEL").compare(symbol)==0)
   {
-    HANDLE_ERROR(cudaFreeArray(devicePtr));
     HANDLE_ERROR(cudaUnbindTexture(texKERNEL));    
+  }
+  else if (std::string("texKERNEL2D").compare(symbol)==0)
+  {
+    HANDLE_ERROR(cudaUnbindTexture(texKERNEL2D));    
+  }
+  else if (std::string("texKERNEL3D").compare(symbol)==0)
+  {
+    HANDLE_ERROR(cudaUnbindTexture(texKERNEL3D));    
   }
 }
 

@@ -74,5 +74,5 @@ void GriddingND::TextureGriddingOperator::initLookupTable()
 
 void GriddingND::TextureGriddingOperator::freeLookupTable()
 {
-	freeTexture("texKERNEL",kernel_d);
+	freeTexture(getInterpolationTypeName(),kernel_d);
 }

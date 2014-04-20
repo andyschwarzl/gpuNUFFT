@@ -12,6 +12,11 @@ GriddingND::GriddingOperatorFactory& GriddingND::GriddingOperatorFactory::getIns
   return instance;
 }
 
+void GriddingND::GriddingOperatorFactory::setInterpolationType(InterpolationType interpolationType)
+{
+  this->interpolationType = interpolationType;
+}
+
 IndType GriddingND::GriddingOperatorFactory::computeSectorCountPerDimension(IndType dim, IndType sectorWidth)
 {
   return (IndType)std::ceil(static_cast<DType>(dim) / sectorWidth);
@@ -118,7 +123,7 @@ GriddingND::Array<IndType> GriddingND::GriddingOperatorFactory::computeSectorDat
     dataCount.push_back(cnt);
   }
   Array<IndType> sectorDataCount = initSectorDataCount(griddingOp,(IndType)dataCount.size());
-   std::copy( dataCount.begin(), dataCount.end(), sectorDataCount.data );
+  std::copy( dataCount.begin(), dataCount.end(), sectorDataCount.data );
 
   return sectorDataCount;
 }
@@ -209,7 +214,14 @@ GriddingND::Array<IndType> GriddingND::GriddingOperatorFactory::initSectorCenter
 
 GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createNewGriddingOperator(IndType kernelWidth, IndType sectorWidth, DType osf, Dimensions imgDims)
 {
-  return new GriddingND::GriddingOperator(kernelWidth,sectorWidth,osf,imgDims);
+  switch(interpolationType)
+  {
+  case TEXTURE_LOOKUP : return new GriddingND::TextureGriddingOperator(kernelWidth,sectorWidth,osf,imgDims,TEXTURE_LOOKUP);
+  case TEXTURE2D_LOOKUP : return new GriddingND::TextureGriddingOperator(kernelWidth,sectorWidth,osf,imgDims,TEXTURE2D_LOOKUP);
+  case TEXTURE3D_LOOKUP : return new GriddingND::TextureGriddingOperator(kernelWidth,sectorWidth,osf,imgDims,TEXTURE3D_LOOKUP);
+  default: return new GriddingND::GriddingOperator(kernelWidth,sectorWidth,osf,imgDims);
+  }
+
 }
 
 GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddingOperator(GriddingND::Array<DType>& kSpaceTraj, GriddingND::Array<DType>& densCompData,GriddingND::Array<DType2>& sensData, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, GriddingND::Dimensions& imgDims)
@@ -300,20 +312,20 @@ GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddin
 GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::loadPrecomputedGriddingOperator(GriddingND::Array<DType>& kSpaceTraj, GriddingND::Array<IndType>& dataIndices, GriddingND::Array<IndType>& sectorDataCount,GriddingND::Array<IndType>& sectorCenters, GriddingND::Array<DType2>& sensData, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, GriddingND::Dimensions& imgDims)
 {
   GriddingOperator* griddingOp = createNewGriddingOperator(kernelWidth,sectorWidth,osf,imgDims);
-	griddingOp->setGridSectorDims(GriddingOperatorFactory::computeSectorCountPerDimension(griddingOp->getGridDims(),griddingOp->getSectorWidth()));
-	
-	griddingOp->setKSpaceTraj(kSpaceTraj);
-	griddingOp->setDataIndices(dataIndices);
-	griddingOp->setSectorDataCount(sectorDataCount);
-	griddingOp->setSectorCenters(sectorCenters);
-	griddingOp->setSens(sensData);
-	return griddingOp;
+  griddingOp->setGridSectorDims(GriddingOperatorFactory::computeSectorCountPerDimension(griddingOp->getGridDims(),griddingOp->getSectorWidth()));
+
+  griddingOp->setKSpaceTraj(kSpaceTraj);
+  griddingOp->setDataIndices(dataIndices);
+  griddingOp->setSectorDataCount(sectorDataCount);
+  griddingOp->setSectorCenters(sectorCenters);
+  griddingOp->setSens(sensData);
+  return griddingOp;
 }
 
 GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::loadPrecomputedGriddingOperator(GriddingND::Array<DType>& kSpaceTraj, GriddingND::Array<IndType>& dataIndices, GriddingND::Array<IndType>& sectorDataCount,GriddingND::Array<IndType>& sectorCenters, GriddingND::Array<DType>& densCompData, GriddingND::Array<DType2>& sensData, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, GriddingND::Dimensions& imgDims)
 {
-	GriddingOperator* griddingOp = loadPrecomputedGriddingOperator(kSpaceTraj,dataIndices,sectorDataCount,sectorCenters,sensData,kernelWidth,sectorWidth,osf,imgDims);
+  GriddingOperator* griddingOp = loadPrecomputedGriddingOperator(kSpaceTraj,dataIndices,sectorDataCount,sectorCenters,sensData,kernelWidth,sectorWidth,osf,imgDims);
   griddingOp->setDens(densCompData);
 
-	return griddingOp;
+  return griddingOp;
 }

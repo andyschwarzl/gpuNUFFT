@@ -20,6 +20,11 @@ namespace GriddingND
     {
     }
 
+    TextureGriddingOperator(IndType kernelWidth, IndType sectorWidth, DType osf, Dimensions imgDims,InterpolationType interpolationType): 
+    GriddingOperator(kernelWidth,sectorWidth,osf,imgDims),interpolationType(interpolationType)
+    {
+    }
+
     ~TextureGriddingOperator()
     {
     }

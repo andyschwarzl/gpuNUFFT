@@ -3,6 +3,7 @@
 
 #include "config.hpp"
 #include "gridding_operator.hpp"
+#include "texture_gridding_operator.hpp"
 #include <algorithm>    // std::sort
 #include <vector>       // std::vector
 #include <string>
@@ -78,6 +79,8 @@ namespace GriddingND
     GriddingOperator* loadPrecomputedGriddingOperator(Array<DType>& kSpaceTraj, Array<IndType>& dataIndices, Array<IndType>& sectorDataCount,Array<IndType>& sectorCenters, Array<DType2>& sensData, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, Dimensions& imgDims);
 
     static GriddingOperatorFactory& getInstance();
+
+    void setInterpolationType(InterpolationType interpolationType);
 
   private:
     InterpolationType interpolationType;

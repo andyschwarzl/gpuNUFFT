@@ -41,7 +41,7 @@ void GriddingND::GriddingOperator::initKernel()
   load1DKernel(this->kernel.data,(int)kernelSize,(int)kernelWidth,osf);
 }
 
-GriddingND::GriddingInfo* GriddingND::GriddingOperator::initAndCopyGriddingInfo()
+GriddingND::GriddingInfo* GriddingND::GriddingOperator::initGriddingInfo()
 {
   GriddingND::GriddingInfo* gi_host = (GriddingND::GriddingInfo*)malloc(sizeof(GriddingND::GriddingInfo));
 
@@ -111,8 +111,13 @@ GriddingND::GriddingInfo* GriddingND::GriddingOperator::initAndCopyGriddingInfo(
   gi_host->dist_multiplier = dist_multiplier;
 
   gi_host->is2Dprocessing = this->is2DProcessing();
+  return gi_host;
+}
 
-  if (DEBUG)
+GriddingND::GriddingInfo* GriddingND::GriddingOperator::initAndCopyGriddingInfo()
+{
+  GriddingInfo* gi_host = initGriddingInfo();
+    if (DEBUG)
     printf("copy Gridding Info to symbol memory... size = %ld \n",sizeof(GriddingND::GriddingInfo));
 
   initConstSymbol("GI",gi_host,sizeof(GriddingND::GriddingInfo));

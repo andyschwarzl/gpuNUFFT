@@ -140,6 +140,7 @@ namespace GriddingND
 
     virtual void initKernel();
 
+    GriddingInfo* initGriddingInfo();
     GriddingInfo* initAndCopyGriddingInfo();
 
     virtual void adjConvolution(DType2* data_d, 

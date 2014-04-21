@@ -89,6 +89,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	int kernel_width = getParamField<int>(matParams,"kernel_width");
 	int sector_width = getParamField<int>(matParams,"sector_width");
 	int data_entries = getParamField<int>(matParams,"trajectory_length");
+  int interpolation_type = getParamField<int>(matParams,"interpolation_type");
 	
 	GriddingND::Array<DType2> imdataArray;
 	imdataArray.data = imdata;
@@ -102,7 +103,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 		mexPrintf("sector data count: %d\n",sectorDataCountArray.count());
 		mexPrintf("centers count: %d\n",sectorCentersArray.count());
 
-		mexPrintf("passed Params, IM_WIDTH: [%d,%d,%d], IM_COUNT: %d, OSR: %f, KERNEL_WIDTH: %d, SECTOR_WIDTH: %d, DATA_ENTRIES: %d, n_coils: %d\n",imgDims.width,imgDims.height,imgDims.depth,im_count,osr,kernel_width,sector_width,data_entries,n_coils);
+		mexPrintf("passed Params, IM_WIDTH: [%d,%d,%d], IM_COUNT: %d, OSR: %f, KERNEL_WIDTH: %d, SECTOR_WIDTH: %d, DATA_ENTRIES: %d, n_coils: %d, interpolation type: %d\n",imgDims.width,imgDims.height,imgDims.depth,im_count,osr,kernel_width,sector_width,data_entries,n_coils,interpolation_type);
 		size_t free_mem = 0;
 		size_t total_mem = 0;
 		cudaMemGetInfo(&free_mem, &total_mem);
@@ -130,7 +131,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
 	try
 	{
-    GriddingND::GriddingOperatorMatlabFactory griddingFactory(GriddingND::InterpolationType::TEXTURE_LOOKUP);
+    GriddingND::GriddingOperatorMatlabFactory griddingFactory(getInterpolationTypeOf(interpolation_type));
 		GriddingND::GriddingOperator *griddingOp = griddingFactory.loadPrecomputedGriddingOperator(kSpaceTraj,dataIndicesArray,sectorDataCountArray,sectorCentersArray,sensArray,kernel_width,sector_width,osr,imgDims);
 
 		griddingOp->performForwardGridding(imdataArray,dataArray);

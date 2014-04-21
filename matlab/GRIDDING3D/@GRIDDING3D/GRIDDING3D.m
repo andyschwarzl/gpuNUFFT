@@ -14,15 +14,27 @@ function [res] = gridding3D(k,w,n,osf,wg,sw,imageDim,varargin)
 %     varargin 
 %        opt  -- 'sparse' + E operator or
 %             -- 'true'/'false' for atomic operation
-%     res -- gridding operator
+%             -- interpolationType  0,1,2,3 for interpolation type
+%                        0 ... const kernel
+%                        1 ... 1d texture lookup
+%                        2 ... 2d texture lookup
+%                        3 ... 3d texture lookup
+%
+%  res -- gridding operator
 %
 %  A. Schwarzl, Graz University of Technology
 
+interpolation_type = 0;
 if nargin <= 8,
     method = 'gridding';
     E = 0;
     atomic = eval(varargin{1});
-elseif nargin > 8
+elseif nargin > 8 && strcmp(varargin{1},'sparse') == 0
+    method = 'gridding';
+    E = 0;    
+    atomic = eval(varargin{1});
+    interpolation_type = varargin{2}
+elseif nargin > 8 && strcmp(varargin{1},'sparse') == 1
     method = varargin{1};
     E = varargin{2};    
 end
@@ -64,6 +76,7 @@ if strcmp(method,'gridding')
     res.op.params.kernel_width = uint32(wg);
     res.op.params.sector_width = uint32(sw);
     res.op.params.trajectory_length = uint32(length(k));
+    res.op.params.interpolation_type = uint32(interpolation_type);
     res.op.params.is2d_processing = imageDim(3) == 0;
     
     [res.op.dataIndices,res.op.sectorDataCount,res.op.densSorted,res.op.coords,res.op.sectorCenters] = mex_griddingND_precomp_f(single(k)',single(w)',[],res.op.params);

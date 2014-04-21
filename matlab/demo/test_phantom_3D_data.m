@@ -31,7 +31,7 @@ imwidth = imgDim(1);
 %%
 disp('init GPU')
 tic
-FT = GRIDDING3D(k_traj',dens',imwidth,osf,wg,sw,imgDim,'false');
+FT = GRIDDING3D(k_traj',dens',imwidth,osf,wg,sw,imgDim,'false',1);
 toc
 disp('init CPU')
 tic

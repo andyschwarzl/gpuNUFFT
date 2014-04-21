@@ -313,6 +313,7 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
         printf("test value at point zero: %f\n",(imgData.data)[0].x);
 
       free(gi_host);
+      free(dataSorted);
       // Destroy the cuFFT plan.
       cufftDestroy(fft_plan);
       freeLookupTable();
@@ -348,6 +349,7 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
         printf("error on destroying cufft plan\n");
 
       free(gi_host);
+      free(dataSorted);
       // Destroy the cuFFT plan.
       cufftDestroy(fft_plan);
       freeLookupTable();
@@ -399,6 +401,7 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
   if ((cudaThreadSynchronize() != cudaSuccess))
     fprintf(stderr,"error in gridding3D_gpu_adj function: %s\n",cudaGetErrorString(cudaGetLastError()));
   free(gi_host);
+  free(dataSorted);
 }
 
 GriddingND::Array<CufftType> GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> kspaceData, GriddingOutput griddingOut)

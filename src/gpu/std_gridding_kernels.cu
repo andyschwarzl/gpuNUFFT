@@ -39,7 +39,7 @@ void initTexture(const char* symbol, cudaArray** devicePtr, GriddingND::Array<DT
     HANDLE_ERROR (cudaBindTextureToArray (texKERNEL2D, *devicePtr));
     HANDLE_ERROR(cudaMemcpyToArray(*devicePtr, 0, 0, hostTexture.data, sizeof(DType)*hostTexture.count(), cudaMemcpyHostToDevice));
     
-    texKERNEL2D.filterMode = cudaFilterModePoint;
+    texKERNEL2D.filterMode = cudaFilterModeLinear;
     texKERNEL2D.normalized = true;
     texKERNEL2D.addressMode[0] = cudaAddressModeClamp;
     texKERNEL2D.addressMode[1] = cudaAddressModeClamp;    
@@ -58,7 +58,7 @@ void initTexture(const char* symbol, cudaArray** devicePtr, GriddingND::Array<DT
     HANDLE_ERROR(cudaMemcpy3D(&copyparams)); 
     HANDLE_ERROR (cudaBindTextureToArray (texKERNEL3D, *devicePtr));
   
-    texKERNEL3D.filterMode = cudaFilterModeLinear;//cudaFilterModePoint; //cudaFilterModeLinear
+    texKERNEL3D.filterMode = cudaFilterModeLinear;
     texKERNEL3D.normalized = true;
     texKERNEL3D.addressMode[0] = cudaAddressModeClamp;
     texKERNEL3D.addressMode[1] = cudaAddressModeClamp;

@@ -29,17 +29,21 @@ imgDim = [64,64,32];
 N3D = imgDim(3);
 imwidth = imgDim(1);
 %%
+disp('init GPU')
 tic
 FT = GRIDDING3D(k_traj',dens',imwidth,osf,wg,sw,imgDim,'false');
 toc
+disp('init CPU')
 tic
 FTCPU = NUFFT3D(k_traj, dens, 1, 0, imgDim, 2,1);
 toc
 
 %% recon
+disp('GPU')
 tic
 imgRecon = FT'*dataRadial(:);
 toc
+disp('CPU')
 tic
 imgReconCPU = FTCPU'*dataRadial(:);
 toc
@@ -57,11 +61,23 @@ show3DImage([4,8],abs(imgRecon(:,:,N3D/2-15:N3D/2+16)),'GPU','slice');
 show3DImage([4,8],abs(imgReconCPU(:,:,N3D/2-15:N3D/2+16)),'CPU','slice');
 
 %% apply forward operation
+disp('CPU fw')
+tic
 data_reconCPU = FTCPU*imgReconCPU;
+toc
+
+disp('CPU adj')
+tic
 imgRecon2CPU = FTCPU'*data_reconCPU;
+toc
 
+disp('GPU fw')
+tic
 data_recon = FT*imgRecon;
+toc
+disp('GPU adj')
+tic
 imgRecon2 = FT'*data_recon;
-
+toc
 show3DImage([2,8],abs(imgRecon2CPU(:,:,N3D/2-7:N3D/2+8)),'CPU result of generated data','slice');
 show3DImage([2,8],abs(imgRecon2(:,:,N3D/2-7:N3D/2+8)),'GPU result of generated data','slice');

@@ -11,12 +11,12 @@ namespace GriddingND
   public:
 
     TextureGriddingOperator():
-        interpolationType(InterpolationType::TEXTURE_LOOKUP)
+        interpolationType(TEXTURE_LOOKUP)
     {
     }
 
     TextureGriddingOperator(IndType kernelWidth, IndType sectorWidth, DType osf, Dimensions imgDims): 
-    GriddingOperator(kernelWidth,sectorWidth,osf,imgDims),interpolationType(InterpolationType::TEXTURE_LOOKUP)
+    GriddingOperator(kernelWidth,sectorWidth,osf,imgDims),interpolationType(TEXTURE_LOOKUP)
     {
     }
 

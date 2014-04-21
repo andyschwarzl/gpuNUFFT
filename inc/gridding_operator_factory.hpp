@@ -27,13 +27,12 @@ namespace GriddingND
   {
   protected:
     GriddingOperatorFactory():
-           interpolationType(InterpolationType::CONST_LOOKUP)
+           interpolationType(CONST_LOOKUP)
     {
     }
 
     ~GriddingOperatorFactory()
     {
-
     }
 
     Array<IndType> assignSectors(GriddingOperator* griddingOp, Array<DType>& kSpaceTraj);

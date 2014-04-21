@@ -17,10 +17,11 @@ namespace GriddingND
         {
         }
 
-        GriddingOperator(IndType kernelWidth, IndType sectorWidth, DType osf, Dimensions imgDims): 
+        GriddingOperator(IndType kernelWidth, IndType sectorWidth, DType osf, Dimensions imgDims, bool loadKernel = true): 
         osf(osf), kernelWidth(kernelWidth), sectorWidth(sectorWidth),imgDims(imgDims)
         {
-          initKernel();	
+          if (loadKernel)
+            initKernel();	
 
           sectorDims.width = sectorWidth;
           sectorDims.height = sectorWidth;
@@ -141,7 +142,7 @@ namespace GriddingND
     virtual void initKernel();
 
     GriddingInfo* initGriddingInfo();
-    GriddingInfo* initAndCopyGriddingInfo();
+    virtual GriddingInfo* initAndCopyGriddingInfo();
 
     virtual void adjConvolution(DType2* data_d, 
       DType* crds_d, 

@@ -13,16 +13,19 @@ namespace GriddingND
     TextureGriddingOperator():
         interpolationType(TEXTURE_LOOKUP)
     {
-    }
-
-    TextureGriddingOperator(IndType kernelWidth, IndType sectorWidth, DType osf, Dimensions imgDims): 
-    GriddingOperator(kernelWidth,sectorWidth,osf,imgDims),interpolationType(TEXTURE_LOOKUP)
-    {
+      initKernel();	
     }
 
     TextureGriddingOperator(IndType kernelWidth, IndType sectorWidth, DType osf, Dimensions imgDims,InterpolationType interpolationType): 
-    GriddingOperator(kernelWidth,sectorWidth,osf,imgDims),interpolationType(interpolationType)
+    GriddingOperator(kernelWidth,sectorWidth,osf,imgDims,false),interpolationType(interpolationType)
     {
+        initKernel();	
+    }
+
+    TextureGriddingOperator(IndType kernelWidth, IndType sectorWidth, DType osf, Dimensions imgDims): 
+     GriddingOperator(kernelWidth,sectorWidth,osf,imgDims,false),interpolationType(TEXTURE_LOOKUP)
+    {
+      initKernel();	
     }
 
     ~TextureGriddingOperator()
@@ -30,7 +33,6 @@ namespace GriddingND
     }
 
     // OPERATIONS
-
   private:
     void initKernel();
 

@@ -11,10 +11,10 @@ void GriddingND::TextureGriddingOperator::initKernel()
 
   switch (interpolationType)
   {
-  case TEXTURE_LOOKUP:   load1DKernel(this->kernel.data,(int)kernelSize,(int)kernelWidth,osf);break;
-  case TEXTURE2D_LOOKUP:   load2DKernel(this->kernel.data,(int)kernelSize,(int)kernelWidth,osf);break;
-  case TEXTURE3D_LOOKUP:   load3DKernel(this->kernel.data,(int)kernelSize,(int)kernelWidth,osf);break;
-  default: load1DKernel(this->kernel.data,(int)kernelSize,(int)kernelWidth,osf);
+    case TEXTURE_LOOKUP:   load1DKernel(this->kernel.data,(int)kernelSize,(int)kernelWidth,osf);break;
+    case TEXTURE2D_LOOKUP:   load2DKernel(this->kernel.data,(int)kernelSize,(int)kernelWidth,osf);break;
+    case TEXTURE3D_LOOKUP:   load3DKernel(this->kernel.data,(int)kernelSize,(int)kernelWidth,osf);break;
+    default: load1DKernel(this->kernel.data,(int)kernelSize,(int)kernelWidth,osf);
   }
 
 }

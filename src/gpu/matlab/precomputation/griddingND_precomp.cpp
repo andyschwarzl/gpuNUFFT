@@ -97,10 +97,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	
 	try
 	{
-		GriddingND::GriddingOperatorMatlabFactory factory = GriddingND::GriddingOperatorMatlabFactory::getInstance();
-
-		GriddingND::GriddingOperator *griddingOp;
-		griddingOp = factory.createGriddingOperator(kSpaceTraj,density_compArray,sensArray,kernel_width,sector_width,osr,imgDims,plhs);
+		GriddingND::GriddingOperatorMatlabFactory factory;
+		GriddingND::GriddingOperator *griddingOp = factory.createGriddingOperator(kSpaceTraj,density_compArray,sensArray,kernel_width,sector_width,osr,imgDims,plhs);
 
 		delete griddingOp;
 	}

@@ -42,7 +42,7 @@ TEST(Test2DGPUGriddingConv,KernelCall1Sector)
 
 	GriddingND::Dimensions imgDims(im_width,im_width);
 
-    GriddingND::GriddingOperator *griddingOp = GriddingND::GriddingOperatorFactory::getInstance().createGriddingOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
+    GriddingND::GriddingOperatorFactory factory; GriddingND::GriddingOperator *griddingOp = factory.createGriddingOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
 
 	GriddingND::Array<DType2> dataArray;
 	dataArray.data = data;
@@ -118,7 +118,7 @@ TEST(Test2DGPUGriddingConv,GPUTest_1SectorKernel5)
 
 	GriddingND::Dimensions imgDims(im_width,im_width);
 	
-    GriddingND::GriddingOperator *griddingOp = GriddingND::GriddingOperatorFactory::getInstance().createGriddingOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
+    GriddingND::GriddingOperatorFactory factory; GriddingND::GriddingOperator *griddingOp = factory.createGriddingOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
 
 	GriddingND::Array<DType2> dataArray;
 	dataArray.data = data;
@@ -213,7 +213,7 @@ TEST(Test2DGPUGriddingConv,GPUTest_2SectorsKernel3nData)
 
 	GriddingND::Dimensions imgDims(im_width,im_width);
 	
-    GriddingND::GriddingOperator *griddingOp = GriddingND::GriddingOperatorFactory::getInstance().createGriddingOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
+    GriddingND::GriddingOperatorFactory factory; GriddingND::GriddingOperator *griddingOp = factory.createGriddingOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
 
 	GriddingND::Array<DType2> dataArray;
 	dataArray.data = data;
@@ -312,7 +312,7 @@ TEST(Test2DGPUGriddingConv,GPUTest_8SectorsKernel3nData)
 
 	GriddingND::Dimensions imgDims(im_width,im_width);
 	
-    GriddingND::GriddingOperator *griddingOp = GriddingND::GriddingOperatorFactory::getInstance().createGriddingOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
+    GriddingND::GriddingOperatorFactory factory; GriddingND::GriddingOperator *griddingOp = factory.createGriddingOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
 
 	GriddingND::Array<DType2> dataArray;
 	dataArray.data = data;
@@ -409,7 +409,7 @@ TEST(Test2DGPUGriddingConv,GPUTest_8SectorsKernel4nData)
 
 	GriddingND::Dimensions imgDims(im_width,im_width);
 	
-    GriddingND::GriddingOperator *griddingOp = GriddingND::GriddingOperatorFactory::getInstance().createGriddingOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
+    GriddingND::GriddingOperatorFactory factory; GriddingND::GriddingOperator *griddingOp = factory.createGriddingOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
 
 	GriddingND::Array<DType2> dataArray;
 	dataArray.data = data;
@@ -505,7 +505,7 @@ TEST(Test2DGPUGriddingConv,GPUTest_8SectorsKernel5nData)
 
 	GriddingND::Dimensions imgDims(im_width,im_width);
 
-    GriddingND::GriddingOperator *griddingOp = GriddingND::GriddingOperatorFactory::getInstance().createGriddingOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
+    GriddingND::GriddingOperatorFactory factory; GriddingND::GriddingOperator *griddingOp = factory.createGriddingOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
 
 	GriddingND::Array<DType2> dataArray;
 	dataArray.data = data;
@@ -600,7 +600,7 @@ TEST(Test2DGPUGriddingConv,GPUTest_8SectorsKernel3nDataw120)
 
 	GriddingND::Dimensions imgDims(im_width,im_width);
 
-    GriddingND::GriddingOperator *griddingOp = GriddingND::GriddingOperatorFactory::getInstance().createGriddingOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
+    GriddingND::GriddingOperatorFactory factory; GriddingND::GriddingOperator *griddingOp = factory.createGriddingOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
 
 	GriddingND::Array<DType2> dataArray;
 	dataArray.data = data;
@@ -679,7 +679,7 @@ TEST(Test2DGPUGriddingConv,GPUTest_FactorTwoTest)
 
 	GriddingND::Dimensions imgDims(im_width,im_width);
 
-    GriddingND::GriddingOperator *griddingOp = GriddingND::GriddingOperatorFactory::getInstance().createGriddingOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
+    GriddingND::GriddingOperatorFactory factory; GriddingND::GriddingOperator *griddingOp = factory.createGriddingOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
 
 	GriddingND::Array<DType2> dataArray;
 	dataArray.data = data;
@@ -761,7 +761,7 @@ TEST(Test2DGPUGriddingConv,GPUTest_8SectorsKernel3nDataw32)
 
 	GriddingND::Dimensions imgDims(im_width,im_width);
 
-    GriddingND::GriddingOperator *griddingOp = GriddingND::GriddingOperatorFactory::getInstance().createGriddingOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
+    GriddingND::GriddingOperatorFactory factory; GriddingND::GriddingOperator *griddingOp = factory.createGriddingOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
 
 	GriddingND::Array<DType2> dataArray;
 	dataArray.data = data;
@@ -850,7 +850,7 @@ TEST(Test2DGPUGriddingConv,MatlabTest_8SK3w32)
 
 	GriddingND::Dimensions imgDims(im_width,im_width);
 
-    GriddingND::GriddingOperator *griddingOp = GriddingND::GriddingOperatorFactory::getInstance().createGriddingOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
+    GriddingND::GriddingOperatorFactory factory; GriddingND::GriddingOperator *griddingOp = factory.createGriddingOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
 
 	GriddingND::Array<DType2> dataArray;
 	dataArray.data = data;

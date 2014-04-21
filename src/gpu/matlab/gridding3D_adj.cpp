@@ -122,7 +122,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
 	plhs[0] = mxCreateNumericArray(n_dims,dims_im,mxSINGLE_CLASS,mxREAL);
 	
-    imdata = (CufftType*)mxGetData(plhs[0]);
+  imdata = (CufftType*)mxGetData(plhs[0]);
 	if (imdata == NULL)
      mexErrMsgTxt("Could not create output mxArray.\n");
 
@@ -139,9 +139,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
 	try
 	{
-		GriddingND::GriddingOperator *griddingOp;
-
-		griddingOp = GriddingND::GriddingOperatorMatlabFactory::getInstance().loadPrecomputedGriddingOperator(kSpaceTraj,dataIndicesArray,sectorDataCountArray,sectorCentersArray,density_compArray,sensArray,kernel_width,sector_width,osr,imgDims);
+    GriddingND::GriddingOperatorMatlabFactory griddingFactory(GriddingND::InterpolationType::TEXTURE_LOOKUP);
+		GriddingND::GriddingOperator *griddingOp = griddingFactory.loadPrecomputedGriddingOperator(kSpaceTraj,dataIndicesArray,sectorDataCountArray,sectorCentersArray,density_compArray,sensArray,kernel_width,sector_width,osr,imgDims);
 
 		griddingOp->performGriddingAdj(dataArray,imdataArray);
 

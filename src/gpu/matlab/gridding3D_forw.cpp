@@ -130,7 +130,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
 	try
 	{
-		GriddingND::GriddingOperator* griddingOp = GriddingND::GriddingOperatorMatlabFactory::getInstance().loadPrecomputedGriddingOperator(kSpaceTraj,dataIndicesArray,sectorDataCountArray,sectorCentersArray,sensArray,kernel_width,sector_width,osr,imgDims);
+    GriddingND::GriddingOperatorMatlabFactory griddingFactory(GriddingND::InterpolationType::TEXTURE_LOOKUP);
+		GriddingND::GriddingOperator *griddingOp = griddingFactory.loadPrecomputedGriddingOperator(kSpaceTraj,dataIndicesArray,sectorDataCountArray,sectorCentersArray,sensArray,kernel_width,sector_width,osr,imgDims);
 
 		griddingOp->performForwardGridding(imdataArray,dataArray);
 		

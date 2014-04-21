@@ -5,13 +5,6 @@
 #include <stdexcept>
 #include "precomp_kernels.hpp"
 
-GriddingND::GriddingOperatorFactory GriddingND::GriddingOperatorFactory::instance;
-
-GriddingND::GriddingOperatorFactory& GriddingND::GriddingOperatorFactory::getInstance()
-{
-  return instance;
-}
-
 void GriddingND::GriddingOperatorFactory::setInterpolationType(InterpolationType interpolationType)
 {
   this->interpolationType = interpolationType;

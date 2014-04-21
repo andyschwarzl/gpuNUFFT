@@ -55,7 +55,11 @@ void GriddingND::TextureGriddingOperator::adjConvolution(DType2* data_d,
       IndType* sector_centers_d,
   GriddingND::GriddingInfo* gi_host)
 {
+  bindTo1DTexture("texDATA",data_d,this->kSpaceTraj.count());
+
   performTextureConvolution(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,gi_host);
+
+  unbindTexture("texDATA");
 }
 
 void GriddingND::TextureGriddingOperator::forwardConvolution(CufftType*		data_d, 
@@ -66,7 +70,11 @@ void GriddingND::TextureGriddingOperator::forwardConvolution(CufftType*		data_d,
   IndType*		sector_centers_d,
   GriddingND::GriddingInfo* gi_host)
 {
+  bindTo1DTexture("texGDATA",gdata_d,gi_host->grid_width_dim);
+
   performTextureForwardConvolution(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,gi_host);
+
+  unbindTexture("texGDATA");
 }
 
 void GriddingND::TextureGriddingOperator::initLookupTable()

@@ -98,8 +98,10 @@ __global__ void textureConvolutionKernel(DType2* data,
 
             // multiply data by current kernel val 
             // grid complex or scalar 
-            atomicAdd(&(sdata[ind].x),val * data[data_cnt].x);
-            atomicAdd(&(sdata[ind].y),val * data[data_cnt].y);
+            //atomicAdd(&(sdata[ind].x),val * data[data_cnt].x);
+            //atomicAdd(&(sdata[ind].y),val * data[data_cnt].y);
+            atomicAdd(&(sdata[ind].x),val * tex1Dfetch(texDATA,data_cnt).x);
+            atomicAdd(&(sdata[ind].y),val * tex1Dfetch(texDATA,data_cnt).y);
             i++;
           } // x 	 
           j++;
@@ -225,8 +227,10 @@ __global__ void textureConvolutionKernel2D(DType2* data,
 
           // multiply data by current kernel val 
           // grid complex or scalar 
-          atomicAdd(&(sdata[ind].x),val * data[data_cnt].x);
-          atomicAdd(&(sdata[ind].y),val * data[data_cnt].y);
+          //atomicAdd(&(sdata[ind].x),val * data[data_cnt].x);
+          //atomicAdd(&(sdata[ind].y),val * data[data_cnt].y);
+          atomicAdd(&(sdata[ind].x),val * tex1Dfetch(texDATA,data_cnt).x);
+          atomicAdd(&(sdata[ind].y),val * tex1Dfetch(texDATA,data_cnt).y);
           i++;
         } // x 	 
         j++;
@@ -384,8 +388,10 @@ __global__ void textureForwardConvolutionKernel( CufftType* data,
             else
               ind = (sector_ind_offset + computeXYZ2Lin(i,j,k,GI.gridDims));
 
-            shared_out_data[threadIdx.x].x += gdata[ind].x * val; 
-            shared_out_data[threadIdx.x].y += gdata[ind].y * val;
+            //shared_out_data[threadIdx.x].x += gdata[ind].x * val; 
+            //shared_out_data[threadIdx.x].y += gdata[ind].y * val;
+            shared_out_data[threadIdx.x].x += tex1Dfetch(texGDATA,ind).x * val;
+            shared_out_data[threadIdx.x].y += tex1Dfetch(texGDATA,ind).y * val;
             i++;
           } // x loop
           j++;
@@ -476,8 +482,10 @@ __global__ void textureForwardConvolutionKernel2D( CufftType* data,
           else
             ind = (sector_ind_offset + computeXY2Lin(i,j,GI.gridDims));
 
-          shared_out_data[threadIdx.x].x += gdata[ind].x * val; 
-          shared_out_data[threadIdx.x].y += gdata[ind].y * val;
+          //shared_out_data[threadIdx.x].x += gdata[ind].x * val; 
+          //shared_out_data[threadIdx.x].y += gdata[ind].y * val;
+          shared_out_data[threadIdx.x].x += tex1Dfetch(texGDATA,ind).x * val;
+          shared_out_data[threadIdx.x].y += tex1Dfetch(texGDATA,ind).y * val;
           i++;
         } // x loop
         j++;

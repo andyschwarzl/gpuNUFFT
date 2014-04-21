@@ -110,8 +110,10 @@ __global__ void textureConvolutionKernel(DType2* data,
 
               // multiply data by current kernel val 
               // grid complex or scalar 
-              sdata[ind].x += val * data[data_cnt].x;
-              sdata[ind].y += val * data[data_cnt].y;
+              //sdata[ind].x += val * data[data_cnt].x;
+              //sdata[ind].y += val * data[data_cnt].y;
+              sdata[ind].x += val * tex1Dfetch(texDATA,data_cnt).x;
+              sdata[ind].y += val * tex1Dfetch(texDATA,data_cnt).y;
             } // x
           } // y
         } // z
@@ -214,8 +216,10 @@ __global__ void textureConvolutionKernel2D(DType2* data,
 
           // multiply data by current kernel val 
           // grid complex or scalar 
-          sdata[ind].x += val * data[data_cnt].x;
-          sdata[ind].y += val * data[data_cnt].y;
+          //sdata[ind].x += val * data[data_cnt].x;
+          //sdata[ind].y += val * data[data_cnt].y;
+          sdata[ind].x += val * tex1Dfetch(texDATA,data_cnt).x;
+          sdata[ind].y += val * tex1Dfetch(texDATA,data_cnt).y;
         } // x 	 
       } // y 
       __syncthreads();	
@@ -261,6 +265,7 @@ void performTextureConvolution( DType2* data_d,
 
   long shared_mem_size = gi_host->sector_dim*sizeof(DType2);
 
+  //TODO third dimension > 1?
   dim3 block_dim(gi_host->sector_pad_width,gi_host->sector_pad_width,1);
   dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,(gi_host->sector_pad_width)*(gi_host->sector_pad_width)*(1)));
   if (DEBUG)
@@ -379,8 +384,11 @@ __global__ void textureForwardConvolutionKernel(CufftType* data,
             else
               ind = (sector_ind_offset + computeXYZ2Lin(i,j,k,GI.gridDims));
 
-            shared_out_data[threadIdx.x].x += gdata[ind].x * val; 
-            shared_out_data[threadIdx.x].y += gdata[ind].y * val;									
+            //shared_out_data[threadIdx.x].x += gdata[ind].x * val; 
+            //shared_out_data[threadIdx.x].y += gdata[ind].y * val;	
+            shared_out_data[threadIdx.x].x += tex1Dfetch(texGDATA,ind).x * val; 
+            shared_out_data[threadIdx.x].y += tex1Dfetch(texGDATA,ind).y * val;	
+            
             i++;
           } // x loop
           j++;
@@ -471,8 +479,10 @@ __global__ void textureForwardConvolutionKernel2D(CufftType* data,
           else
             ind = (sector_ind_offset + getIndex2D(i,j,GI.gridDims.x));
 
-          shared_out_data[threadIdx.x].x += gdata[ind].x * val; 
-          shared_out_data[threadIdx.x].y += gdata[ind].y * val;									
+          //shared_out_data[threadIdx.x].x += gdata[ind].x * val; 
+          //shared_out_data[threadIdx.x].y += gdata[ind].y * val;
+          shared_out_data[threadIdx.x].x += tex1Dfetch(texGDATA,ind).x * val; 
+          shared_out_data[threadIdx.x].y += tex1Dfetch(texGDATA,ind).y * val;	
           i++;
         } // x loop
         j++;

@@ -123,5 +123,10 @@ void initConstSymbol(const char* symbol, const void* src, IndType count);
 
 void initTexture(const char* symbol, cudaArray** devicePtr, GriddingND::Array<DType> hostTexture);
 
+void bindTo1DTexture(const char* symbol, void* devicePtr, IndType count);
+
+void unbindTexture(const char* symbol);
+
 void freeTexture(const char* symbol,cudaArray* devicePtr);
+
 #endif

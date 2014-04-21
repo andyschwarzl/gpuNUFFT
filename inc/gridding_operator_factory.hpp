@@ -38,7 +38,7 @@ namespace GriddingND
     }
 
     GriddingOperatorFactory() 
-      : interpolationType(TEXTURE_LOOKUP),useGpu(true)
+      : interpolationType(CONST_LOOKUP),useGpu(true)
     {
     }
 

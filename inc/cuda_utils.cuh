@@ -11,6 +11,8 @@ texture<DType,1,cudaReadModeElementType> texKERNEL;
 texture<DType,2,cudaReadModeElementType> texKERNEL2D;
 texture<DType,3,cudaReadModeElementType> texKERNEL3D;
 
+texture<DType2> texDATA;
+texture<CufftType> texGDATA;
 
 __inline__ __device__ DType compute1DTextureLookup(DType x, DType y)
 {

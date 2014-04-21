@@ -21,6 +21,19 @@ void initConstSymbol(const char* symbol, const void* src, IndType size)
     HANDLE_ERROR(cudaMemcpyToSymbol(KERNEL, src,size));
 }
 
+void bindTo1DTexture(const char* symbol, void* devicePtr, IndType count)
+{
+  if (std::string("texDATA").compare(symbol)==0)
+  {
+    HANDLE_ERROR (cudaBindTexture(NULL,texDATA, devicePtr,count*sizeof(DType2)));
+  }
+  else if (std::string("texGDATA").compare(symbol)==0)
+  {
+    HANDLE_ERROR (cudaBindTexture(NULL,texGDATA, devicePtr,count*sizeof(CufftType)));
+  }
+}
+
+
 void initTexture(const char* symbol, cudaArray** devicePtr, GriddingND::Array<DType> hostTexture)
 {
   if (std::string("texKERNEL").compare(symbol)==0)
@@ -66,10 +79,8 @@ void initTexture(const char* symbol, cudaArray** devicePtr, GriddingND::Array<DT
   }
 }
 
-void freeTexture(const char* symbol,cudaArray* devicePtr)
+void unbindTexture(const char* symbol)
 {
-  HANDLE_ERROR(cudaFreeArray(devicePtr));
-
   if (std::string("texKERNEL").compare(symbol)==0)
   {
     HANDLE_ERROR(cudaUnbindTexture(texKERNEL));    
@@ -82,6 +93,17 @@ void freeTexture(const char* symbol,cudaArray* devicePtr)
   {
     HANDLE_ERROR(cudaUnbindTexture(texKERNEL3D));    
   }
+  else if (std::string("texDATA").compare(symbol)==0)
+  {
+    HANDLE_ERROR(cudaUnbindTexture(texDATA));    
+  }
+}
+
+
+void freeTexture(const char* symbol,cudaArray* devicePtr)
+{
+  HANDLE_ERROR(cudaFreeArray(devicePtr));
+  unbindTexture(symbol);
 }
 
 __global__ void fftScaleKernel(CufftType* data, DType scaling, int N)

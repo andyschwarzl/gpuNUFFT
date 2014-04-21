@@ -133,10 +133,11 @@ void GriddingND::GriddingOperator::adjConvolution(DType2* data_d,
       CufftType* gdata_d,
       DType* kernel_d, 
       IndType* sectors_d, 
+      IndType* sector_processing_order_d,
       IndType* sector_centers_d,
   GriddingND::GriddingInfo* gi_host)
 {
-  performConvolution(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,gi_host);
+  performConvolution(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_processing_order_d,sector_centers_d,gi_host);
 }
 
 void GriddingND::GriddingOperator::forwardConvolution(CufftType*		data_d, 
@@ -228,7 +229,7 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
   DType2* data_d;
   DType* crds_d, *density_comp_d, *deapo_d;
   CufftType *gdata_d, *imdata_d;
-  IndType* sector_centers_d, *sectors_d;
+  IndType* sector_centers_d, *sectors_d, *sector_processing_order_d;
 
   if (DEBUG)
     printf("allocate and copy imdata of size %d...\n",imdata_count);
@@ -255,6 +256,11 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
   if (DEBUG)
     printf("allocate and copy sectors of size %d...\n",sector_count+1);
   allocateAndCopyToDeviceMem<IndType>(&sectors_d,this->sectorDataCount.data,sector_count+1);
+  
+  if (DEBUG)
+    printf("allocate and copy sector processing order of size %d...\n",sector_count);
+  allocateAndCopyToDeviceMem<IndType>(&sector_processing_order_d,this->sectorProcessingOrder.data,sector_count);
+
   if (DEBUG)
     printf("allocate and copy sector_centers of size %d...\n",getImageDimensionCount()*sector_count);
   allocateAndCopyToDeviceMem<IndType>(&sector_centers_d,(IndType*)this->getSectorCentersData(),getImageDimensionCount()*sector_count);
@@ -299,7 +305,7 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
 
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       printf("error at adj thread synchronization 1: %s\n",cudaGetErrorString(cudaGetLastError()));
-    adjConvolution(data_d,crds_d,gdata_d,NULL,sectors_d,sector_centers_d,gi_host);
+    adjConvolution(data_d,crds_d,gdata_d,NULL,sectors_d,sector_processing_order_d,sector_centers_d,gi_host);
 
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       fprintf(stderr,"error at adj  thread synchronization 2: %s\n",cudaGetErrorString(cudaGetLastError()));
@@ -318,7 +324,7 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
       cufftDestroy(fft_plan);
       freeLookupTable();
       cudaThreadSynchronize();
-      freeTotalDeviceMemory(data_d,crds_d,imdata_d,gdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop token
+      freeTotalDeviceMemory(data_d,crds_d,imdata_d,gdata_d,sectors_d,sector_processing_order_d,sector_centers_d,NULL);//NULL as stop token
       cudaThreadSynchronize();
 
       showMemoryInfo();
@@ -354,7 +360,7 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
       cufftDestroy(fft_plan);
       freeLookupTable();
       cudaThreadSynchronize();
-      freeTotalDeviceMemory(data_d,crds_d,imdata_d,gdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop token
+      freeTotalDeviceMemory(data_d,crds_d,imdata_d,gdata_d,sectors_d,sector_processing_order_d,sector_centers_d,NULL);//NULL as stop token
       cudaThreadSynchronize();
       printf("last cuda error: %s\n", cudaGetErrorString(cudaGetLastError()));
       return;
@@ -390,7 +396,7 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
   cufftDestroy(fft_plan);
 
   freeLookupTable();
-  freeTotalDeviceMemory(data_d,crds_d,gdata_d,imdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop
+  freeTotalDeviceMemory(data_d,crds_d,gdata_d,imdata_d,sectors_d,sector_processing_order_d,sector_centers_d,NULL);//NULL as stop
 
   if (this->applyDensComp())
     cudaFree(density_comp_d);

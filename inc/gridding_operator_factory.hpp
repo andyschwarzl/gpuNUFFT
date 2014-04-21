@@ -52,9 +52,9 @@ namespace GriddingND
 
     GriddingOperator* createGriddingOperator(Array<DType>& kSpaceTraj, Array<DType>& densCompData, Array<DType2>& sensData, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, Dimensions& imgDims);
 
-    GriddingOperator* loadPrecomputedGriddingOperator(Array<DType>& kSpaceTraj, Array<IndType>& dataIndices, Array<IndType>& sectorDataCount,Array<IndType>& sectorCenters, Array<DType>& densCompData, Array<DType2>& sensData, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, Dimensions& imgDims);
+    GriddingOperator* loadPrecomputedGriddingOperator(Array<DType>& kSpaceTraj, Array<IndType>& dataIndices, Array<IndType>& sectorDataCount,GriddingND::Array<IndType>& sectorProcessingOrder,Array<IndType>& sectorCenters, Array<DType>& densCompData, Array<DType2>& sensData, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, Dimensions& imgDims);
 
-    GriddingOperator* loadPrecomputedGriddingOperator(Array<DType>& kSpaceTraj, Array<IndType>& dataIndices, Array<IndType>& sectorDataCount,Array<IndType>& sectorCenters, Array<DType2>& sensData, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, Dimensions& imgDims);
+    GriddingOperator* loadPrecomputedGriddingOperator(Array<DType>& kSpaceTraj, Array<IndType>& dataIndices, Array<IndType>& sectorDataCount,GriddingND::Array<IndType>& sectorProcessingOrder,Array<IndType>& sectorCenters, Array<DType2>& sensData, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, Dimensions& imgDims);
 
     void setInterpolationType(InterpolationType interpolationType);
 
@@ -66,6 +66,7 @@ namespace GriddingND
 
     virtual Array<IndType> initDataIndices(GriddingOperator* griddingOp, IndType coordCnt);
     virtual Array<IndType> initSectorDataCount(GriddingOperator* griddingOp, IndType coordCnt);
+    virtual Array<IndType> initSectorProcessingOrder(GriddingOperator* griddingOp, IndType sectorCnt);
     virtual Array<DType> initDensData(GriddingOperator* griddingOp, IndType coordCnt);
     virtual Array<DType> initCoordsData(GriddingOperator* griddingOp, IndType coordCnt);
     virtual Array<IndType> initSectorCenters(GriddingOperator* griddingOp, IndType sectorCnt);

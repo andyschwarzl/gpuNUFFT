@@ -572,6 +572,34 @@ void performConvolution( DType2* data_d,
     printf("...finished with: %s\n", cudaGetErrorString(cudaGetLastError()));
 }
 
+void performConvolution( DType2* data_d, 
+  DType* crds_d, 
+  CufftType* gdata_d,
+  DType*			kernel_d, 
+  IndType* sectors_d, 
+  IndType* sector_processing_order_d,
+  IndType* sector_centers_d,
+  GriddingND::GriddingInfo* gi_host
+  )
+{
+  long shared_mem_size = (gi_host->sector_dim)*sizeof(DType2);
+  int thread_size =THREAD_BLOCK_SIZE;
+
+  dim3 block_dim(thread_size);
+  dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,1));
+  if (DEBUG)
+  {
+    printf("adjoint convolution requires %d bytes of shared memory!\n",shared_mem_size);
+    printf("grid dim %d, block dim %d \n",grid_dim.x, block_dim.x); 
+  }
+  if (gi_host->is2Dprocessing)
+    convolutionKernel2D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
+  else
+    convolutionKernel2<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
+  if (DEBUG)
+    printf("...finished with: %s\n", cudaGetErrorString(cudaGetLastError()));
+}
+
 // ----------------------------------------------------------------------------
 // forwardConvolutionKernel: NUFFT kernel
 //

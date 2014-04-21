@@ -48,6 +48,7 @@ __inline__ __device__ DType computeTextureLookup(DType x, DType y)
     case 1: return compute1DTextureLookup(x,y);
     case 2: return compute2DTextureLookup(x,y);
     case 3: return compute3DTextureLookup(x,y);
+    default: return (DType)0.0;
   }
 }
 
@@ -58,6 +59,7 @@ __inline__ __device__ DType computeTextureLookup(DType x, DType y, DType z)
     case 1: return compute1DTextureLookup(x,y,z);
     case 2: return compute2DTextureLookup(x,y,z);
     case 3: return compute3DTextureLookup(x,y,z);
+    default: return (DType)0.0;
   }
 }
 

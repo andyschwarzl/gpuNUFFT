@@ -79,9 +79,14 @@ if strcmp(method,'gridding')
     res.op.params.interpolation_type = uint32(interpolation_type);
     res.op.params.is2d_processing = imageDim(3) == 0;
     
-    [res.op.dataIndices,res.op.sectorDataCount,res.op.densSorted,res.op.coords,res.op.sectorCenters] = mex_griddingND_precomp_f(single(k)',single(w)',[],res.op.params);
+    [res.op.dataIndices,res.op.sectorDataCount,res.op.densSorted,res.op.coords,res.op.sectorCenters,res.op.sectorProcessingOrder] = mex_griddingND_precomp_f(single(k)',single(w)',[],res.op.params);
     res.op.atomic = atomic;
     res.op.verbose = false;
+    test = res.op.sectorDataCount;
+    test_cnt = test(2:end)-test(1:end-1);
+    test_order = res.op.sectorProcessingOrder;
+    bar(test_cnt,'DisplayName','Workload per Sector');figure(gcf)
+    bar(test_cnt(test_order+1),'DisplayName','Workload per Sector ordered');figure(gcf)   
 elseif strcmp(method,'sparse')
     res.op = E;
 end

@@ -32,6 +32,7 @@ namespace GriddingND
     {
     }
 
+    OperatorType getType() {return OperatorType::TEXTURE;}
     // OPERATIONS
   private:
     void initKernel();
@@ -59,6 +60,7 @@ namespace GriddingND
 		cudaArray* kernel_d;
     InterpolationType interpolationType;
     const char* getInterpolationTypeName();
+
   };
 }
 

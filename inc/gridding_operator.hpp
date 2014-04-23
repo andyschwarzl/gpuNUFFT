@@ -92,6 +92,7 @@ namespace GriddingND
 
         bool applyDensComp(){return (this->dens.data != NULL && this->dens.count()>1);}
 
+        OperatorType getType() {return OperatorType::DEFAULT;}
   protected:
     IndType getGridWidth() {return (IndType)(this->getGridDims().width);}
 

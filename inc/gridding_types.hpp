@@ -114,6 +114,13 @@ namespace GriddingND
     INVERSE
   };
 
+  enum OperatorType
+  {
+    DEFAULT,
+    TEXTURE,
+    BALANCED
+  };
+
   struct GriddingInfo 
   {
     int data_count;

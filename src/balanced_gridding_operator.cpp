@@ -1,6 +1,23 @@
 
 #include "balanced_gridding_operator.hpp"
 
+GriddingND::GriddingInfo* GriddingND::BalancedGriddingOperator::initAndCopyGriddingInfo()
+{
+  GriddingND::GriddingInfo* gi_host = initGriddingInfo();
+
+  gi_host->sectorsToProcess = sectorProcessingOrder.count();
+
+  if (DEBUG)
+    printf("copy Gridding Info to symbol memory... size = %ld \n",sizeof(GriddingND::GriddingInfo));
+
+  initConstSymbol("GI",gi_host,sizeof(GriddingND::GriddingInfo));
+
+  if (DEBUG)
+    printf("...done!\n");
+  return gi_host;
+}
+
+
 void GriddingND::BalancedGriddingOperator::adjConvolution(DType2* data_d, 
       DType* crds_d, 
       CufftType* gdata_d,

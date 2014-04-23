@@ -845,9 +845,9 @@ void performConvolution( DType2* data_d,
     printf("grid dim %d, block dim %d \n",grid_dim.x, block_dim.x); 
   }
   if (gi_host->is2Dprocessing)
-    balancedConvolutionKernel2D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_processing_order_d,sector_centers_d,gi_host->sector_count);
+    balancedConvolutionKernel2D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_processing_order_d,sector_centers_d,gi_host->sectorsToProcess);
   else
-    balancedConvolutionKernel2<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_processing_order_d,sector_centers_d,gi_host->sector_count);
+    balancedConvolutionKernel2<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_processing_order_d,sector_centers_d,gi_host->sectorsToProcess);
   if (DEBUG)
     printf("...finished with: %s\n", cudaGetErrorString(cudaGetLastError()));
 }

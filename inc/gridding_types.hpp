@@ -166,6 +166,7 @@ namespace GriddingND
 
     bool is2Dprocessing;
     int interpolationType;
+    int sectorsToProcess;
   };
 
 }

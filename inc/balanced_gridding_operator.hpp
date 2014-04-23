@@ -33,6 +33,8 @@ namespace GriddingND
     Array<IndType> sectorProcessingOrder;
     
     IndType* sector_processing_order_d;
+    
+    GriddingInfo* initAndCopyGriddingInfo();
 
     void adjConvolution(DType2* data_d, 
       DType* crds_d, 

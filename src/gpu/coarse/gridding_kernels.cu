@@ -653,9 +653,9 @@ void performConvolution( DType2* data_d,
     printf("convolution requires %d bytes of shared memory!\n",shared_mem_size);
 
   if (gi_host->is2Dprocessing)
-    balancedConvolutionKernel2D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_processing_order_d,sector_centers_d,temp_gdata_d,gi_host->sector_count);
+    balancedConvolutionKernel2D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_processing_order_d,sector_centers_d,temp_gdata_d,gi_host->sectorsToProcess);
   else
-    balancedConvolutionKernel<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_processing_order_d,sector_centers_d,temp_gdata_d,gi_host->sector_count);
+    balancedConvolutionKernel<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_processing_order_d,sector_centers_d,temp_gdata_d,gi_host->sectorsToProcess);
 
   if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
     printf("error at adj thread synchronization 2: %s\n",cudaGetErrorString(cudaGetLastError()));

@@ -81,7 +81,7 @@ namespace GriddingND
     IndType computeTotalSectorCount(Dimensions dim, IndType sectorWidth);
 
     template <typename T>
-    std::vector<IndPair> sortVector(Array<T> assignedSectors);
+    std::vector<IndPair> sortVector(Array<T> assignedSectors, bool descending=false);
 
     Array<IndType> computeSectorDataCount(GriddingND::GriddingOperator *griddingOp,GriddingND::Array<IndType> assignedSectors);
     void computeProcessingOrder(BalancedGriddingOperator* griddingOp);

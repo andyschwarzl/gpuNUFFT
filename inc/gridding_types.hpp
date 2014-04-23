@@ -20,6 +20,11 @@ namespace GriddingND
   {
     return this->second < a.second;
   }
+
+  bool operator>(const IndPair& a) const
+  {
+    return this->second > a.second;
+  }
   };
 
   //TODO work on dimensions

@@ -44,7 +44,7 @@ IndType GriddingND::GriddingOperatorFactory::computeTotalSectorCount(GriddingND:
 }
 
 template <typename T>
-std::vector<GriddingND::IndPair> GriddingND::GriddingOperatorFactory::sortVector(GriddingND::Array<T> assignedSectors)
+std::vector<GriddingND::IndPair> GriddingND::GriddingOperatorFactory::sortVector(GriddingND::Array<T> assignedSectors, bool descending)
 {
   std::vector<IndPair> secVector;
 
@@ -52,7 +52,10 @@ std::vector<GriddingND::IndPair> GriddingND::GriddingOperatorFactory::sortVector
     secVector.push_back(IndPair(i,assignedSectors.data[i]));
 
   // using function as comp
-  std::sort(secVector.begin(), secVector.end());
+  if (descending)
+    std::sort(secVector.begin(), secVector.end(),std::greater<IndPair>());
+  else
+    std::sort(secVector.begin(), secVector.end());
 
   return secVector;
 }

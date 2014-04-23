@@ -6,6 +6,7 @@
 
 #include "config.hpp" 
 #include "gridding_operator.hpp"
+#include "gridding_types.hpp"
 
 #define MIN(X,Y) ((X) < (Y) ? (X) : (Y))
 
@@ -128,10 +129,10 @@ inline GriddingND::InterpolationType getInterpolationTypeOf(int val)
 {
   switch (val)
   {
-  case 1 : return GriddingND::InterpolationType::TEXTURE_LOOKUP;
-  case 2: return GriddingND::InterpolationType::TEXTURE2D_LOOKUP;
-  case 3: return GriddingND::InterpolationType::TEXTURE3D_LOOKUP;
-  default : return GriddingND::InterpolationType::CONST_LOOKUP;
+  case 1 : return GriddingND::TEXTURE_LOOKUP;
+  case 2: return GriddingND::TEXTURE2D_LOOKUP;
+  case 3: return GriddingND::TEXTURE3D_LOOKUP;
+  default : return GriddingND::CONST_LOOKUP;
   }
 }
 

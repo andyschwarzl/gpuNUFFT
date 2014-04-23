@@ -13,7 +13,7 @@ namespace GriddingND
   {
   public:
 
-        GriddingOperator(IndType kernelWidth, IndType sectorWidth, DType osf, Dimensions imgDims, bool loadKernel = true, OperatorType operatorType = DEFAULT): 
+    GriddingOperator(IndType kernelWidth, IndType sectorWidth, DType osf, Dimensions imgDims, bool loadKernel = true, OperatorType operatorType = DEFAULT): 
         osf(osf), kernelWidth(kernelWidth), sectorWidth(sectorWidth),imgDims(imgDims),operatorType(operatorType)
         {
           if (loadKernel)
@@ -76,12 +76,12 @@ namespace GriddingND
 
         //adjoint gridding
         Array<CufftType> performGriddingAdj(Array<DType2> kspaceData);
-        void             performGriddingAdj(Array<DType2> kspaceData, Array<CufftType>& imgData, GriddingOutput griddingOut = DEAPODIZATION);
+        virtual void             performGriddingAdj(Array<DType2> kspaceData, Array<CufftType>& imgData, GriddingOutput griddingOut = DEAPODIZATION);
         Array<CufftType> performGriddingAdj(Array<DType2> kspaceData, GriddingOutput griddingOut);
 
         //forward gridding
         Array<CufftType> performForwardGridding(Array<DType2> imgData);
-        void             performForwardGridding(Array<DType2> imgData,Array<CufftType>& kspaceData, GriddingOutput griddingOut = DEAPODIZATION);
+        virtual void             performForwardGridding(Array<DType2> imgData,Array<CufftType>& kspaceData, GriddingOutput griddingOut = DEAPODIZATION);
         Array<CufftType> performForwardGridding(Array<DType2> imgData,GriddingOutput griddingOut);
 
         bool applyDensComp(){return (this->dens.data != NULL && this->dens.count()>1);}

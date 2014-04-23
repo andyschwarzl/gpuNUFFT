@@ -75,10 +75,13 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	int kernel_width = getParamField<int>(matParams,"kernel_width");
 	int sector_width = getParamField<int>(matParams,"sector_width");
 	int traj_length = getParamField<int>(matParams,"trajectory_length");
+  int interpolation_type = getParamField<int>(matParams,"interpolation_type");
+  bool balance_workload = getParamField<bool>(matParams,"balance_workload");
 		
 	if (MATLAB_DEBUG)
 	{
 		mexPrintf("passed Params, IM_WIDTH: [%d,%d,%d], OSR: %f, KERNEL_WIDTH: %d, SECTOR_WIDTH: %d dens_count: %d sens_count: %d traj_len: %d\n",imgDims.width,imgDims.height,imgDims.depth,osr,kernel_width,sector_width,density_compArray.count(),sensArray.count(),traj_length);
+    mexPrintf("balanceWorkload: %s\n",balance_workload ? "true" : "false");
 		size_t free_mem = 0;
 		size_t total_mem = 0;
 		cudaMemGetInfo(&free_mem, &total_mem);
@@ -98,6 +101,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	try
 	{
 		GriddingND::GriddingOperatorMatlabFactory factory;
+    factory.setBalanceWorkload(balance_workload);
 		GriddingND::GriddingOperator *griddingOp = factory.createGriddingOperator(kSpaceTraj,density_compArray,sensArray,kernel_width,sector_width,osr,imgDims,plhs);
 
 		delete griddingOp;

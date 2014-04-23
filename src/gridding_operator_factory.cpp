@@ -10,6 +10,11 @@ void GriddingND::GriddingOperatorFactory::setInterpolationType(InterpolationType
   this->interpolationType = interpolationType;
 }
 
+void GriddingND::GriddingOperatorFactory::setBalanceWorkload(bool balanceWorkload)
+{
+  this->balanceWorkload = balanceWorkload;
+}
+
 IndType GriddingND::GriddingOperatorFactory::computeSectorCountPerDimension(IndType dim, IndType sectorWidth)
 {
   return (IndType)std::ceil(static_cast<DType>(dim) / sectorWidth);
@@ -233,12 +238,18 @@ GriddingND::Array<IndType> GriddingND::GriddingOperatorFactory::initSectorCenter
 
 GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createNewGriddingOperator(IndType kernelWidth, IndType sectorWidth, DType osf, Dimensions imgDims)
 {
+  if (balanceWorkload)
+  {
+    debug("creating BalancedWorkloadOperator!\n");
+    return new GriddingND::BalancedGriddingOperator(kernelWidth,sectorWidth,osf,imgDims);
+  }
+
   switch(interpolationType)
   {
-  case TEXTURE_LOOKUP : return new GriddingND::TextureGriddingOperator(kernelWidth,sectorWidth,osf,imgDims,TEXTURE_LOOKUP);
-  case TEXTURE2D_LOOKUP : return new GriddingND::TextureGriddingOperator(kernelWidth,sectorWidth,osf,imgDims,TEXTURE2D_LOOKUP);
-  case TEXTURE3D_LOOKUP : return new GriddingND::TextureGriddingOperator(kernelWidth,sectorWidth,osf,imgDims,TEXTURE3D_LOOKUP);
-  default: return new GriddingND::GriddingOperator(kernelWidth,sectorWidth,osf,imgDims);
+  case TEXTURE_LOOKUP : debug("creating 1D TextureLookup Operator!\n");return new GriddingND::TextureGriddingOperator(kernelWidth,sectorWidth,osf,imgDims,TEXTURE_LOOKUP);
+  case TEXTURE2D_LOOKUP : debug("creating 2D TextureLookup Operator!\n");return new GriddingND::TextureGriddingOperator(kernelWidth,sectorWidth,osf,imgDims,TEXTURE2D_LOOKUP);
+  case TEXTURE3D_LOOKUP : debug("creating 3D TextureLookup Operator!\n");return new GriddingND::TextureGriddingOperator(kernelWidth,sectorWidth,osf,imgDims,TEXTURE3D_LOOKUP);
+  default: debug("creating DEFAULT Gridding Operator!\n");return new GriddingND::GriddingOperator(kernelWidth,sectorWidth,osf,imgDims);
   }
 
 }

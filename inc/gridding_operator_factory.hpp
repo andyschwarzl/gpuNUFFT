@@ -27,19 +27,18 @@ namespace GriddingND
   class GriddingOperatorFactory
   {
   public:
+    GriddingOperatorFactory() 
+      : interpolationType(CONST_LOOKUP),useGpu(true), balanceWorkload(false)
+    {
+    }
+    
+    GriddingOperatorFactory(const InterpolationType interpolationType) 
+      : interpolationType(interpolationType), useGpu(true), balanceWorkload(false)
+    {
+    }
 
     GriddingOperatorFactory(const InterpolationType interpolationType,const bool useGpu) 
-      : interpolationType(interpolationType), useGpu(useGpu)
-    {
-    }
-
-    GriddingOperatorFactory(const InterpolationType interpolationType) 
-      : interpolationType(interpolationType), useGpu(true)
-    {
-    }
-
-    GriddingOperatorFactory() 
-      : interpolationType(CONST_LOOKUP),useGpu(true)
+      : interpolationType(interpolationType), useGpu(useGpu), balanceWorkload(false)
     {
     }
 
@@ -58,6 +57,8 @@ namespace GriddingND
     GriddingOperator* loadPrecomputedGriddingOperator(Array<DType>& kSpaceTraj, Array<IndType>& dataIndices, Array<IndType>& sectorDataCount,GriddingND::Array<IndType>& sectorProcessingOrder,Array<IndType>& sectorCenters, Array<DType2>& sensData, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, Dimensions& imgDims);
 
     void setInterpolationType(InterpolationType interpolationType);
+
+    void setBalanceWorkload(bool balanceWorkload);
     
   protected:
     Array<IndType> assignSectors(GriddingOperator* griddingOp, Array<DType>& kSpaceTraj);
@@ -96,6 +97,8 @@ namespace GriddingND
     InterpolationType interpolationType;
 
     bool useGpu;
+
+    bool balanceWorkload;
   };
 
 }

@@ -10,12 +10,8 @@ namespace GriddingND
   {
   public:
 
-    BalancedGriddingOperator()
-    {
-    }
-
     BalancedGriddingOperator(IndType kernelWidth, IndType sectorWidth, DType osf, Dimensions imgDims): 
-    GriddingOperator(kernelWidth,sectorWidth,osf,imgDims,true)
+    GriddingOperator(kernelWidth,sectorWidth,osf,imgDims,true,BALANCED)
     {
     }
 

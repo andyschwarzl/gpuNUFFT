@@ -9,21 +9,15 @@ namespace GriddingND
   class TextureGriddingOperator : public GriddingOperator
   {
   public:
-
-    TextureGriddingOperator():
-        interpolationType(TEXTURE_LOOKUP)
-    {
-      initKernel();	
-    }
-
+    
     TextureGriddingOperator(IndType kernelWidth, IndType sectorWidth, DType osf, Dimensions imgDims,InterpolationType interpolationType): 
-    GriddingOperator(kernelWidth,sectorWidth,osf,imgDims,false),interpolationType(interpolationType)
+    GriddingOperator(kernelWidth,sectorWidth,osf,imgDims,false,TEXTURE),interpolationType(interpolationType)
     {
         initKernel();	
     }
 
     TextureGriddingOperator(IndType kernelWidth, IndType sectorWidth, DType osf, Dimensions imgDims): 
-     GriddingOperator(kernelWidth,sectorWidth,osf,imgDims,false),interpolationType(TEXTURE_LOOKUP)
+     GriddingOperator(kernelWidth,sectorWidth,osf,imgDims,false,TEXTURE),interpolationType(TEXTURE_LOOKUP)
     {
       initKernel();	
     }

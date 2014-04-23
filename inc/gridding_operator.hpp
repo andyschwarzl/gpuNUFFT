@@ -13,12 +13,8 @@ namespace GriddingND
   {
   public:
 
-    GriddingOperator()
-        {
-        }
-
-        GriddingOperator(IndType kernelWidth, IndType sectorWidth, DType osf, Dimensions imgDims, bool loadKernel = true): 
-        osf(osf), kernelWidth(kernelWidth), sectorWidth(sectorWidth),imgDims(imgDims)
+        GriddingOperator(IndType kernelWidth, IndType sectorWidth, DType osf, Dimensions imgDims, bool loadKernel = true, OperatorType operatorType = DEFAULT): 
+        osf(osf), kernelWidth(kernelWidth), sectorWidth(sectorWidth),imgDims(imgDims),operatorType(operatorType)
         {
           if (loadKernel)
             initKernel();	
@@ -90,8 +86,10 @@ namespace GriddingND
 
         bool applyDensComp(){return (this->dens.data != NULL && this->dens.count()>1);}
 
-        OperatorType getType() {return OperatorType::DEFAULT;}
+        OperatorType getType() {return operatorType;}
   protected:
+    OperatorType operatorType;
+
     IndType getGridWidth() {return (IndType)(this->getGridDims().width);}
 
     Array<DType> kernel;
@@ -163,6 +161,7 @@ namespace GriddingND
     virtual void initLookupTable();
     virtual void freeLookupTable();
   };
+
 }
 
 #endif //GRIDDING_OPERATOR_H_INCLUDED

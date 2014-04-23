@@ -1423,7 +1423,8 @@ TEST(TestGPUGriddingConvAnisotropic,GPUTest_20x20x10_osf_15)
   imgDims.height = 20;
   imgDims.depth = 10;
 
-  GriddingND::GriddingOperatorFactory factory; GriddingND::GriddingOperator *griddingOp = factory.createGriddingOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
+  GriddingND::GriddingOperatorFactory factory; 
+  GriddingND::GriddingOperator *griddingOp = factory.createGriddingOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
 
   GriddingND::Array<DType2> dataArray;
   dataArray.data = data;
@@ -1456,6 +1457,94 @@ TEST(TestGPUGriddingConvAnisotropic,GPUTest_20x20x10_osf_15)
   //int index = computeXYZ2Lin(20,20,10,gdataArray.dim);
   //if (DEBUG) printf("index to test %d\n",index);
   //EXPECT_EQ(index,2*555);
+  EXPECT_NEAR(0.5853f,gdata[computeXYZ2Lin(6,21,3,gdataArray.dim)].x,epsilon);
+  EXPECT_NEAR(0.9445f,gdata[computeXYZ2Lin(6,21,4,gdataArray.dim)].x,epsilon);
+  EXPECT_NEAR(4.8931f,gdata[computeXYZ2Lin(24,24,11,gdataArray.dim)].x,10*epsilon);
+
+  free(data);
+  free(coords);
+  free(gdata);
+
+  delete griddingOp;
+}
+
+
+TEST(TestGPUGriddingConvAnisotropic,GPUTest_20x20x10_osf_15_Balanced)
+{
+  float osr = 1.5f;
+  int kernel_width = 4;
+
+  //Data
+  int data_entries = 5;
+  DType2* data = (DType2*) calloc(data_entries,sizeof(DType2)); //2* re + im
+  int data_cnt = 0;
+  data[data_cnt].x = 1.0f;
+  data[data_cnt++].y = 0.5f;
+
+  data[data_cnt].x = 3.0f;
+  data[data_cnt++].y = 1;
+
+  data[data_cnt].x = 3.0f;
+  data[data_cnt++].y = 1;
+
+  data[data_cnt].x = 4.0f;
+  data[data_cnt++].y = 1;
+
+  data[data_cnt].x = 5.0f;
+  data[data_cnt++].y = 1;
+
+  //Coords
+  //Scaled between -0.5 and 0.5
+  //in triplets (x,y,z)
+  DType* coords = (DType*) calloc(3*data_entries,sizeof(DType));//3* x,y,z
+  int coord_cnt = 0;
+  //7.Sektor
+  coords[coord_cnt++] = -0.3f; //X
+  coords[coord_cnt++] = 0.3f;
+  coords[coord_cnt++] = 0.0f; 
+  coords[coord_cnt++] = 0.5f;
+  coords[coord_cnt++] = 0.3f;
+
+  coords[coord_cnt++] = 0.2f;//Y
+  coords[coord_cnt++] = 0.0f;
+  coords[coord_cnt++] = 0.0f;
+  coords[coord_cnt++] = 0.0f;
+  coords[coord_cnt++] = 0.3f;
+
+  coords[coord_cnt++] = -0.25f; //Z
+  coords[coord_cnt++] = -0.005f;
+  coords[coord_cnt++] = 0.0f;
+  coords[coord_cnt++] = 0.1f;
+  coords[coord_cnt++] = 0.22f;
+
+  //sectors of data, count and start indices
+  int sector_width = 5;
+
+  GriddingND::Array<DType> kSpaceData;
+  kSpaceData.data = coords;
+  kSpaceData.dim.length = data_entries;
+
+  GriddingND::Dimensions imgDims;
+  imgDims.width = 20;
+  imgDims.height = 20;
+  imgDims.depth = 10;
+
+  GriddingND::GriddingOperatorFactory factory(GriddingND::CONST_LOOKUP,true,true); 
+  GriddingND::GriddingOperator *griddingOp = factory.createGriddingOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
+
+  GriddingND::Array<DType2> dataArray;
+  dataArray.data = data;
+  dataArray.dim.length = data_entries;
+
+  GriddingND::Array<CufftType> gdataArray;
+
+  gdataArray = griddingOp->performGriddingAdj(dataArray,GriddingND::CONVOLUTION);
+
+  GriddingND::Dimensions gridDims=griddingOp->getGridDims();
+
+  //Output Grid
+  CufftType* gdata = gdataArray.data;
+
   EXPECT_NEAR(0.5853f,gdata[computeXYZ2Lin(6,21,3,gdataArray.dim)].x,epsilon);
   EXPECT_NEAR(0.9445f,gdata[computeXYZ2Lin(6,21,4,gdataArray.dim)].x,epsilon);
   EXPECT_NEAR(4.8931f,gdata[computeXYZ2Lin(24,24,11,gdataArray.dim)].x,10*epsilon);

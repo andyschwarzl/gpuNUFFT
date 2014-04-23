@@ -32,6 +32,11 @@ namespace GriddingND
     {
     }
 
+    GriddingOperatorMatlabFactory(const InterpolationType interpolationType,const bool useGpu, const bool balanceWorkload) 
+      : GriddingOperatorFactory(interpolationType,useGpu,balanceWorkload)
+    {
+    }
+
     GriddingOperatorMatlabFactory(const InterpolationType interpolationType,const bool useGpu) 
       : GriddingOperatorFactory(interpolationType,useGpu)
     {

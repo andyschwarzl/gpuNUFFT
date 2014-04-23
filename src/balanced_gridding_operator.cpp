@@ -20,7 +20,7 @@ void GriddingND::BalancedGriddingOperator::forwardConvolution(CufftType*		data_d
   IndType*		sector_centers_d,
   GriddingND::GriddingInfo* gi_host)
 {
-  performTextureForwardConvolution(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,gi_host);
+  performForwardConvolution(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,gi_host);
 }
 
 // Adds behaviour of GriddingOperator by 

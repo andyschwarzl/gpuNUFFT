@@ -93,7 +93,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	int sector_width = getParamField<int>(matParams,"sector_width");
 	int data_entries = getParamField<int>(matParams,"trajectory_length");
   int interpolation_type = getParamField<int>(matParams,"interpolation_type");
-	
+	bool balance_workload = getParamField<bool>(matParams,"balance_workload");
+
 	GriddingND::Array<DType2> imdataArray;
 	imdataArray.data = imdata;
 	imdataArray.dim = imgDims;
@@ -134,7 +135,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
 	try
 	{
-    GriddingND::GriddingOperatorMatlabFactory griddingFactory(getInterpolationTypeOf(interpolation_type));
+    GriddingND::GriddingOperatorMatlabFactory griddingFactory(getInterpolationTypeOf(interpolation_type),true,balance_workload);
 		GriddingND::GriddingOperator *griddingOp = griddingFactory.loadPrecomputedGriddingOperator(kSpaceTraj,dataIndicesArray,sectorDataCountArray,sectorProcessingOrderArray,sectorCentersArray,sensArray,kernel_width,sector_width,osr,imgDims);
 
 		griddingOp->performForwardGridding(imdataArray,dataArray);

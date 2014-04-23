@@ -98,7 +98,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	int sector_width = getParamField<int>(matParams,"sector_width");	
 	int traj_length = getParamField<int>(matParams,"trajectory_length");
   int interpolation_type = getParamField<int>(matParams,"interpolation_type");
-		
+  bool balance_workload = getParamField<bool>(matParams,"balance_workload");		
+
 	if (MATLAB_DEBUG)
 	{
 		mexPrintf("data indices count: %d\n",dataIndicesArray.count());
@@ -143,7 +144,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
 	try
 	{
-    GriddingND::GriddingOperatorMatlabFactory griddingFactory(getInterpolationTypeOf(interpolation_type));
+    GriddingND::GriddingOperatorMatlabFactory griddingFactory(getInterpolationTypeOf(interpolation_type),true,balance_workload);
 		GriddingND::GriddingOperator *griddingOp = griddingFactory.loadPrecomputedGriddingOperator(kSpaceTraj,dataIndicesArray,sectorDataCountArray,sectorProcessingOrderArray,sectorCentersArray,density_compArray,sensArray,kernel_width,sector_width,osr,imgDims);
 
 		griddingOp->performGriddingAdj(dataArray,imdataArray);

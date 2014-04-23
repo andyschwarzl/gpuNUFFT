@@ -42,7 +42,6 @@ namespace GriddingND
         void setKSpaceTraj(Array<DType> kSpaceTraj)				{this->kSpaceTraj = kSpaceTraj;}
         void setSectorCenters(Array<IndType> sectorCenters)		{this->sectorCenters = sectorCenters;}
         void setSectorDataCount(Array<IndType> sectorDataCount)	{this->sectorDataCount = sectorDataCount;}
-        void setSectorProcessingOrder(Array<IndType> sectorProcessingOrder)	{this->sectorProcessingOrder = sectorProcessingOrder;}
         void setDataIndices(Array<IndType> dataIndices)			{this->dataIndices = dataIndices;}
         void setSens(Array<DType2> sens)						{this->sens = sens;}
         void setDens(Array<DType> dens)							{this->dens = dens;}
@@ -57,7 +56,6 @@ namespace GriddingND
         Array<DType>	getDens()			{return this->dens;}
         Array<DType>    getKernel()			{return this->kernel;}
         Array<IndType>  getSectorDataCount(){return this->sectorDataCount;}
-        Array<IndType>  getSectorProcessingOrder(){return this->sectorProcessingOrder;}
 
         IndType getKernelWidth()		{return this->kernelWidth;}
         IndType getSectorWidth()		{return this->sectorWidth;}
@@ -116,9 +114,6 @@ namespace GriddingND
     // dataCount per sector
     Array<IndType> sectorDataCount;
 
-    // sectorProcessingOrder
-    Array<IndType> sectorProcessingOrder;
-
     // assignment of data index to according sector
     Array<IndType> dataIndices;
 
@@ -154,10 +149,10 @@ namespace GriddingND
       DType* crds_d, 
       CufftType* gdata_d,
       DType* kernel_d, 
-      IndType* sectors_d, 
-      IndType* sector_processing_order_d,
+      IndType* sectors_d,
       IndType* sector_centers_d,
       GriddingND::GriddingInfo* gi_host);
+
     virtual void forwardConvolution(CufftType*		data_d, 
       DType*			crds_d, 
       CufftType*		gdata_d,

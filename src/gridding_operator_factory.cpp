@@ -52,6 +52,27 @@ std::vector<GriddingND::IndPair> GriddingND::GriddingOperatorFactory::sortVector
   return secVector;
 }
 
+void GriddingND::GriddingOperatorFactory::computeProcessingOrder(GriddingND::BalancedGriddingOperator* griddingOp)
+{
+  Array<IndType> sectorDataCount = griddingOp->getSectorDataCount();
+  Array<IndType> sectorProcessingOrder = initSectorProcessingOrder(griddingOp,sectorDataCount.count()-1);
+
+  for (int i=0; i<sectorDataCount.count()-1;i++)
+  {
+    sectorProcessingOrder.data[i] = sectorDataCount.data[i+1]-sectorDataCount.data[i];
+  }
+
+  std::vector<IndPair> dataPerSectorSorted = sortVector<IndType>(sectorProcessingOrder);
+
+  for (int i=0; i<sectorDataCount.count()-1;i++)
+  {
+    //    std::cout << i << ": " << dataPerSectorSorted[i].first << " -> " << dataPerSectorSorted[i].second << std::endl;
+    sectorProcessingOrder.data[i] = dataPerSectorSorted[i].first;
+  }
+  griddingOp->setSectorProcessingOrder(sectorProcessingOrder);
+}
+
+
 
 GriddingND::Array<IndType> GriddingND::GriddingOperatorFactory::assignSectors(GriddingND::GriddingOperator* griddingOp, GriddingND::Array<DType>& kSpaceTraj)
 {
@@ -278,31 +299,15 @@ GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddin
   }
   
   griddingOp->setSectorDataCount(computeSectorDataCount(griddingOp,assignedSectors));
-
-  Array<IndType> sectorDataCount = griddingOp->getSectorDataCount();
-  Array<IndType> sectorProcessingOrder = initSectorProcessingOrder(griddingOp,sectorDataCount.count()-1);
   
-  for (int i=0; i<sectorDataCount.count()-1;i++)
-  {
-    sectorProcessingOrder.data[i] = sectorDataCount.data[i+1]-sectorDataCount.data[i];
-  }
+  if (griddingOp->getType() == OperatorType::BALANCED)
+    computeProcessingOrder(static_cast<BalancedGriddingOperator*>(griddingOp));
 
-  std::vector<IndPair> dataPerSectorSorted = sortVector<IndType>(sectorProcessingOrder);
-
-  for (int i=0; i<sectorDataCount.count()-1;i++)
-  {
-//    std::cout << i << ": " << dataPerSectorSorted[i].first << " -> " << dataPerSectorSorted[i].second << std::endl;
-    sectorProcessingOrder.data[i] = dataPerSectorSorted[i].first;
-  }
-
-  griddingOp->setSectorProcessingOrder(sectorProcessingOrder);
-  
   griddingOp->setDataIndices(dataIndices);
 
   griddingOp->setKSpaceTraj(trajSorted);
 
   griddingOp->setDens(densData);
-
 
   if (griddingOp->is3DProcessing())
     griddingOp->setSectorCenters(computeSectorCenters(griddingOp));
@@ -336,7 +341,10 @@ GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::loadPrecomput
   griddingOp->setKSpaceTraj(kSpaceTraj);
   griddingOp->setDataIndices(dataIndices);
   griddingOp->setSectorDataCount(sectorDataCount);
-  griddingOp->setSectorProcessingOrder(sectorProcessingOrder);
+  
+  if (griddingOp->getType() == OperatorType::BALANCED)
+    static_cast<BalancedGriddingOperator*>(griddingOp)->setSectorProcessingOrder(sectorProcessingOrder);
+  
   griddingOp->setSectorCenters(sectorCenters);
   griddingOp->setSens(sensData);
   return griddingOp;

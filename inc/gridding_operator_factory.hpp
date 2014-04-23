@@ -3,6 +3,7 @@
 
 #include "config.hpp"
 #include "gridding_operator.hpp"
+#include "balanced_gridding_operator.hpp"
 #include "texture_gridding_operator.hpp"
 #include <algorithm>    // std::sort
 #include <vector>       // std::vector
@@ -57,7 +58,7 @@ namespace GriddingND
     GriddingOperator* loadPrecomputedGriddingOperator(Array<DType>& kSpaceTraj, Array<IndType>& dataIndices, Array<IndType>& sectorDataCount,GriddingND::Array<IndType>& sectorProcessingOrder,Array<IndType>& sectorCenters, Array<DType2>& sensData, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, Dimensions& imgDims);
 
     void setInterpolationType(InterpolationType interpolationType);
-
+    
   protected:
     Array<IndType> assignSectors(GriddingOperator* griddingOp, Array<DType>& kSpaceTraj);
 
@@ -82,6 +83,7 @@ namespace GriddingND
     std::vector<IndPair> sortVector(Array<T> assignedSectors);
 
     Array<IndType> computeSectorDataCount(GriddingND::GriddingOperator *griddingOp,GriddingND::Array<IndType> assignedSectors);
+    void computeProcessingOrder(BalancedGriddingOperator* griddingOp);
 
     Array<IndType> computeSectorCenters(GriddingOperator *griddingOp);
     Array<IndType> computeSectorCenters2D(GriddingOperator *griddingOp);

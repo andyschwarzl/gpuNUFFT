@@ -63,20 +63,26 @@ std::vector<GriddingND::IndPair> GriddingND::GriddingOperatorFactory::sortVector
 void GriddingND::GriddingOperatorFactory::computeProcessingOrder(GriddingND::BalancedGriddingOperator* griddingOp)
 {
   Array<IndType> sectorDataCount = griddingOp->getSectorDataCount();
-  Array<IndType> sectorProcessingOrder = initSectorProcessingOrder(griddingOp,sectorDataCount.count()-1);
+  std::vector<IndPair> countPerSector;
 
   for (int i=0; i<sectorDataCount.count()-1;i++)
   {
-    sectorProcessingOrder.data[i] = sectorDataCount.data[i+1]-sectorDataCount.data[i];
+    countPerSector.push_back(IndPair(i,sectorDataCount.data[i+1]-sectorDataCount.data[i]));
   }
 
-  std::vector<IndPair> dataPerSectorSorted = sortVector<IndType>(sectorProcessingOrder);
+  std::sort(countPerSector.begin(),countPerSector.end(),std::greater<IndPair>());
+  std::vector<IndType> processingOrder;
 
-  for (int i=0; i<sectorDataCount.count()-1;i++)
+  for (int i=0; i<countPerSector.size();i++)
   {
-    //    std::cout << i << ": " << dataPerSectorSorted[i].first << " -> " << dataPerSectorSorted[i].second << std::endl;
-    sectorProcessingOrder.data[i] = dataPerSectorSorted[i].first;
+    if (countPerSector[i].second>0)
+      processingOrder.push_back(countPerSector[i].first);
+    else
+     break;
   }
+  
+  Array<IndType> sectorProcessingOrder = initSectorProcessingOrder(griddingOp,processingOrder.size());
+  std::copy(processingOrder.begin(),processingOrder.end(),sectorProcessingOrder.data);
   griddingOp->setSectorProcessingOrder(sectorProcessingOrder);
 }
 

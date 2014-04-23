@@ -166,8 +166,8 @@ __global__ void balancedConvolutionKernel(DType2* data,
 {
   extern __shared__ DType2 sdata[];//externally managed shared memory
 
+  int sec_cnt = blockIdx.x;
   int sec;
-  sec = sector_processing_order[blockIdx.x];
   //init shared memory
   for (int z=threadIdx.z;z<GI.sector_pad_width; z += blockDim.z)
   {
@@ -179,8 +179,9 @@ __global__ void balancedConvolutionKernel(DType2* data,
   }
   __syncthreads();
   //start convolution
-  while (sec < N)
+  while (sec_cnt < N)
   {
+    sec = sector_processing_order[sec_cnt];
     int ind, k, i, j;
     __shared__ int max_dim, imin, imax,jmin,jmax,kmin,kmax;
 
@@ -189,7 +190,7 @@ __global__ void balancedConvolutionKernel(DType2* data,
     __shared__ IndType3 center;
     center.x = sector_centers[sec * 3];
     center.y = sector_centers[sec * 3 + 1];
-    center.z = sector_centers[sec * 3 + 2];//+ GI.aniso_z_shift;
+    center.z = sector_centers[sec * 3 + 2];
 
     //Grid Points over threads
     int data_cnt;
@@ -284,7 +285,7 @@ __global__ void balancedConvolutionKernel(DType2* data,
       __syncthreads();
     }
     __syncthreads();
-    sec = sec + gridDim.x;
+    sec_cnt = sec_cnt + gridDim.x;
   }//sec < sector_count
   
 }
@@ -406,9 +407,10 @@ __global__ void balancedConvolutionKernel2D(DType2* data,
   )
 {
   extern __shared__ DType2 sdata[];//externally managed shared memory
-
+  
+  int sec_cnt = blockIdx.x;
   int sec;
-  sec = sector_processing_order[blockIdx.x];
+
   //init shared memory
   int y=threadIdx.y;
   int x=threadIdx.x;
@@ -417,8 +419,9 @@ __global__ void balancedConvolutionKernel2D(DType2* data,
   sdata[s_ind].y = 0.0f;//Im
   __syncthreads();
   //start convolution
-  while (sec < N)
+  while (sec_cnt < N)
   {
+    sec = sector_processing_order[sec_cnt];
     int ind, i, j;
     __shared__ int max_dim, imin, imax,jmin,jmax;
 
@@ -498,7 +501,7 @@ __global__ void balancedConvolutionKernel2D(DType2* data,
     sdata[s_ind].y = (DType)0.0;
 
     __syncthreads();
-    sec = sec + gridDim.x;
+    sec_cnt = sec_cnt + gridDim.x;
   }//sec < sector_count
 }
 

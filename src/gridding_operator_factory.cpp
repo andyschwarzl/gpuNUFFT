@@ -108,7 +108,7 @@ GriddingND::Array<IndType> GriddingND::GriddingOperatorFactory::computeSectorDat
   std::vector<IndType> dataCount;
 
   dataCount.push_back(0);
-  for (IndType i=0; i<=griddingOp->getGridSectorDims().count(); i++)
+  for (IndType i=0; i<griddingOp->getGridSectorDims().count(); i++)
   {	
     while (cnt < assignedSectors.count() && i == assignedSectors.data[cnt])
       cnt++;
@@ -285,14 +285,13 @@ GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddin
   for (int i=0; i<sectorDataCount.count()-1;i++)
   {
     sectorProcessingOrder.data[i] = sectorDataCount.data[i+1]-sectorDataCount.data[i];
-    //std::cout << "data in sector " << i << ": " << sectorProcessingOrder.data[i] << std::endl;
   }
 
   std::vector<IndPair> dataPerSectorSorted = sortVector<IndType>(sectorProcessingOrder);
 
   for (int i=0; i<sectorDataCount.count()-1;i++)
   {
-    //std::cout << i << ": " << dataPerSectorSorted[i].first << " -> " << dataPerSectorSorted[i].second << std::endl;
+//    std::cout << i << ": " << dataPerSectorSorted[i].first << " -> " << dataPerSectorSorted[i].second << std::endl;
     sectorProcessingOrder.data[i] = dataPerSectorSorted[i].first;
   }
 

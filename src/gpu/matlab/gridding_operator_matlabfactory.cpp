@@ -1,6 +1,8 @@
 #include "gridding_operator_matlabfactory.hpp"
 #include <iostream>
 
+#define INDTYPE_MATLAB ((sizeof(IndType) == 8) ? mxUINT64_CLASS : mxUINT32_CLASS)
+
 void GriddingND::GriddingOperatorMatlabFactory::debug(const std::string& message)
 {
 	if (MATLAB_DEBUG)
@@ -10,13 +12,13 @@ void GriddingND::GriddingOperatorMatlabFactory::debug(const std::string& message
 mxArray* createIndicesArray(const IndType arrSize)
 {
 	mwSize indSize[] = {1,arrSize};
-	return mxCreateNumericArray(2,indSize,mxUINT64_CLASS,mxREAL);
+	return mxCreateNumericArray(2,indSize,INDTYPE_MATLAB,mxREAL);
 }
 
 mxArray* createSectorDataArray(const IndType arrSize)
 {
 	mwSize secSize[] = {1,arrSize};	
-	return mxCreateNumericArray(2,secSize,mxUINT64_CLASS,mxREAL);
+	return mxCreateNumericArray(2,secSize,INDTYPE_MATLAB,mxREAL);
 }
 
 mxArray* createDensArray(const IndType arrSize)
@@ -34,7 +36,7 @@ mxArray* createCoordsArray(const IndType arrSize, const IndType nDim)
 mxArray* createSectorCentersArray(const IndType arrSize, const IndType nDim)
 {
 	mwSize secSize[] = {nDim,arrSize};//IndType3 or IndType2
-	return mxCreateNumericArray(2,secSize,mxUINT64_CLASS,mxREAL);
+	return mxCreateNumericArray(2,secSize,INDTYPE_MATLAB,mxREAL);
 }
 
 GriddingND::Array<IndType> GriddingND::GriddingOperatorMatlabFactory::initDataIndices(GriddingND::GriddingOperator* griddingOp, IndType coordCnt)

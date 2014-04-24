@@ -46,7 +46,7 @@ void GriddingND::BalancedGriddingOperator::performGriddingAdj(GriddingND::Array<
 {
   if (DEBUG)
     printf("allocate and copy sector processing order of size %d...\n",this->sectorProcessingOrder.count());
-  allocateAndCopyToDeviceMem<IndType>(&sector_processing_order_d,this->sectorProcessingOrder.data,this->sectorProcessingOrder.count());
+  allocateAndCopyToDeviceMem<IndType2>(&sector_processing_order_d,this->sectorProcessingOrder.data,this->sectorProcessingOrder.count());
 
   GriddingOperator::performGriddingAdj(kspaceData,imgData,griddingOut);
 

@@ -20,7 +20,7 @@ void performConvolution( DType2* data_d,
   CufftType* gdata_d,
   DType* kernel_d,
   IndType* sectors_d, 
-  IndType* sector_processing_order_d,
+  IndType2* sector_processing_order_d,
   IndType* sector_centers_d,
   GriddingND::GriddingInfo* gi_host
   );

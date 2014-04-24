@@ -19,8 +19,8 @@ namespace GriddingND
     {
     }
 
-    Array<IndType>  getSectorProcessingOrder(){return this->sectorProcessingOrder;}
-    void setSectorProcessingOrder(Array<IndType> sectorProcessingOrder)	{this->sectorProcessingOrder = sectorProcessingOrder;}
+    Array<IndType2>  getSectorProcessingOrder(){return this->sectorProcessingOrder;}
+    void setSectorProcessingOrder(Array<IndType2> sectorProcessingOrder)	{this->sectorProcessingOrder = sectorProcessingOrder;}
 
     // OPERATIONS
     void performGriddingAdj(Array<DType2> kspaceData, Array<CufftType>& imgData, GriddingOutput griddingOut = DEAPODIZATION);
@@ -30,9 +30,9 @@ namespace GriddingND
   protected:
 	
     // sectorProcessingOrder
-    Array<IndType> sectorProcessingOrder;
+    Array<IndType2> sectorProcessingOrder;
     
-    IndType* sector_processing_order_d;
+    IndType2* sector_processing_order_d;
     
     GriddingInfo* initAndCopyGriddingInfo();
 

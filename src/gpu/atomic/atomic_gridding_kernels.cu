@@ -289,7 +289,7 @@ __global__ void balancedConvolutionKernel2(DType2* data,
   DType* crds, 
   CufftType* gdata,
   IndType* sectors, 
-  IndType* sector_processing_order,
+  IndType2* sector_processing_order,
   IndType* sector_centers,
   int N
   )
@@ -300,7 +300,7 @@ __global__ void balancedConvolutionKernel2(DType2* data,
   
   while (sec_cnt < N)
   {
-    sec[threadIdx.x] = sector_processing_order[sec_cnt];
+    sec[threadIdx.x] = sector_processing_order[sec_cnt].x;
     //init shared memory
     for (int s_ind=threadIdx.x;s_ind<GI.sector_dim; s_ind+= blockDim.x)
     {
@@ -553,7 +553,7 @@ __global__ void balancedConvolutionKernel2D(DType2* data,
   DType* crds, 
   CufftType* gdata,
   IndType* sectors, 
-  IndType* sector_processing_order,
+  IndType2* sector_processing_order,
   IndType* sector_centers,
   int N
   )
@@ -564,7 +564,7 @@ __global__ void balancedConvolutionKernel2D(DType2* data,
   
   while (sec_cnt < N)
   {
-    sec[threadIdx.x] = sector_processing_order[sec_cnt];
+    sec[threadIdx.x] = sector_processing_order[sec_cnt].x;
     //init shared memory
     for (int s_ind=threadIdx.x;s_ind<GI.sector_dim; s_ind+= blockDim.x)
     {
@@ -829,7 +829,7 @@ void performConvolution( DType2* data_d,
   CufftType* gdata_d,
   DType*			kernel_d, 
   IndType* sectors_d, 
-  IndType* sector_processing_order_d,
+  IndType2* sector_processing_order_d,
   IndType* sector_centers_d,
   GriddingND::GriddingInfo* gi_host
   )

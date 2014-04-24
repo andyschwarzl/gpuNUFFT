@@ -60,7 +60,7 @@ namespace GriddingND
     Array<DType> initCoordsData(GriddingOperator* griddingOp, IndType coordCnt);
     Array<IndType> initSectorCenters(GriddingOperator* griddingOp, IndType sectorCnt);
     Array<IndType> initSectorDataCount(GriddingOperator* griddingOp, IndType dataCount);
-    Array<IndType> initSectorProcessingOrder(GriddingOperator* griddingOp, IndType sectorCnt);
+    Array<IndType2> initSectorProcessingOrder(GriddingOperator* griddingOp, IndType sectorCnt);
     Array<DType> initDensData(GriddingOperator* griddingOp, IndType coordCnt);
 
     void debug(const std::string& message);

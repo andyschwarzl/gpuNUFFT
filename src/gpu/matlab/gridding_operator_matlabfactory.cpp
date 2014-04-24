@@ -91,14 +91,14 @@ GriddingND::Array<IndType> GriddingND::GriddingOperatorMatlabFactory::initSector
 	return sectorDataCount;
 
 }
-GriddingND::Array<IndType> GriddingND::GriddingOperatorMatlabFactory::initSectorProcessingOrder(GriddingND::GriddingOperator* griddingOp, IndType sectorCnt)
+GriddingND::Array<IndType2> GriddingND::GriddingOperatorMatlabFactory::initSectorProcessingOrder(GriddingND::GriddingOperator* griddingOp, IndType sectorCnt)
 {
   if (MATLAB_DEBUG)
 		mexPrintf("init SectorProcessingOrder Output Array: %d\n",sectorCnt);
-	plhs[5] = createSectorDataArray(sectorCnt);
+	plhs[5] = createSectorCentersArray(sectorCnt,2);
 
-	Array<IndType> sectorProcessingOrder;
-	sectorProcessingOrder.data = (IndType*)mxGetData(plhs[5]);
+	Array<IndType2> sectorProcessingOrder;
+	sectorProcessingOrder.data = (IndType2*)mxGetData(plhs[5]);
 	sectorProcessingOrder.dim.length = sectorCnt;
 	return sectorProcessingOrder;
 }

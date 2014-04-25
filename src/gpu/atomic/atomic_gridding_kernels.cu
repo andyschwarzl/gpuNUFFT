@@ -321,7 +321,7 @@ __global__ void balancedConvolutionKernel2(DType2* data,
     center.z = sector_centers[sec[threadIdx.x] * 3 + 2];
 
     //Grid Points over Threads
-    int data_cnt = sectors[sec[threadIdx.x]] + threadIdx.x;
+    int data_cnt = sectors[sec[threadIdx.x]] + threadIdx.x + sector_processing_order[sec_cnt].y;
     __shared__ int data_max;
     data_max = sectors[sec[threadIdx.x]+1];
     //loop over all data points of the current sector, and check if grid position lies inside 
@@ -584,7 +584,7 @@ __global__ void balancedConvolutionKernel2D(DType2* data,
     center.y = sector_centers[sec[threadIdx.x] * 2 + 1];
 
     //Grid Points over Threads
-    int data_cnt = sectors[sec[threadIdx.x]] + threadIdx.x;
+    int data_cnt = sectors[sec[threadIdx.x]] + threadIdx.x + sector_processing_order[sec_cnt].y;
     __shared__ int data_max;
     data_max = sectors[sec[threadIdx.x]+1];
     //loop over all data points of the current sector, and check if grid position lies inside 

@@ -86,7 +86,7 @@ void GriddingND::GriddingOperatorFactory::computeProcessingOrder(GriddingND::Bal
         while ((remaining - MAXIMUM_PAYLOAD) > 0)
         {
           remaining -= MAXIMUM_PAYLOAD;
-          processingOrder.push_back(IndType2(countPerSector[i].first,offset++));
+          processingOrder.push_back(IndType2(countPerSector[i].first,(offset++)*MAXIMUM_PAYLOAD));
         }
       }
     }

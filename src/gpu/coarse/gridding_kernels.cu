@@ -194,7 +194,7 @@ __global__ void balancedConvolutionKernel(DType2* data,
 
     //Grid Points over threads
     int data_cnt;
-    data_cnt = sectors[sec];
+    data_cnt = sectors[sec]+sector_processing_order[sec_cnt].y;
 
     max_dim =  GI.sector_pad_max;		
     
@@ -433,7 +433,7 @@ __global__ void balancedConvolutionKernel2D(DType2* data,
 
     //Grid Points over threads
     int data_cnt;
-    data_cnt = sectors[sec];
+    data_cnt = sectors[sec]+sector_processing_order[sec_cnt].y;
 
     max_dim =  GI.sector_pad_max;		
     while (data_cnt < sectors[sec+1])

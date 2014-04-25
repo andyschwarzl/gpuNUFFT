@@ -74,8 +74,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	GriddingND::Array<IndType> sectorDataCountArray = readAndCreateArray<IndType>(prhs,pcount++,0,"sector-data-count");
 
   // Sector Processing Order
-  GriddingND::Array<IndType2> sectorProcessingOrderArray = readAndCreateArray<IndType2>(prhs,pcount++,0,"sector-processing-order");
-  
+  GriddingND::Array<IndType2> sectorProcessingOrderArray = readAndCreateArray<IndType2>(prhs,pcount++,2,"sector-processing-order");
+
 	// Sector centers
 	GriddingND::Array<IndType> sectorCentersArray = readAndCreateArray<IndType>(prhs,pcount++,0,"sector-centers");
 

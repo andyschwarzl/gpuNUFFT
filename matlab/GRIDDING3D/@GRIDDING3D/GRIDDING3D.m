@@ -77,7 +77,7 @@ if strcmp(method,'gridding')
     res.op.params.sector_width = uint32(sw);
     res.op.params.trajectory_length = uint32(length(k));
     res.op.params.interpolation_type = uint32(interpolation_type);
-    res.op.params.balance_workload = false;
+    res.op.params.balance_workload = true;
     res.op.params.is2d_processing = imageDim(3) == 0;
     
     [res.op.dataIndices,res.op.sectorDataCount,res.op.densSorted,res.op.coords,res.op.sectorCenters,res.op.sectorProcessingOrder] = mex_griddingND_precomp_f(single(k)',single(w)',[],res.op.params);
@@ -89,7 +89,7 @@ if strcmp(method,'gridding')
     figure;
     bar(test_cnt,'DisplayName','Workload per Sector');
     figure;
-    bar(test_cnt(test_order+1),'DisplayName','Workload per Sector ordered');figure(gcf)   
+    bar(test_cnt(test_order(1,:)+1),'DisplayName','Workload per Sector ordered');figure(gcf)   
 elseif strcmp(method,'sparse')
     res.op = E;
 end

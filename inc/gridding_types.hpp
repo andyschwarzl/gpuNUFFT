@@ -7,6 +7,8 @@
 
 #define DEFAULT_VALUE(a) ((a == 0) ? 1 : a)
 
+#define MAXIMUM_PAYLOAD 128
+
 namespace GriddingND
 {
   struct IndPair : std::pair<IndType,IndType>

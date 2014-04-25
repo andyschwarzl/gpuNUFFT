@@ -72,7 +72,7 @@ void GriddingND::GriddingOperatorFactory::computeProcessingOrder(GriddingND::Bal
 
   std::sort(countPerSector.begin(),countPerSector.end(),std::greater<IndPair>());
   std::vector<IndType2> processingOrder;
-  int MAXIMUM_PAYLOAD = 128;
+
   for (int i=0; i<countPerSector.size();i++)
   {
     if (countPerSector[i].second>0)
@@ -97,10 +97,6 @@ void GriddingND::GriddingOperatorFactory::computeProcessingOrder(GriddingND::Bal
   Array<IndType2> sectorProcessingOrder = initSectorProcessingOrder(griddingOp,processingOrder.size());
   std::copy(processingOrder.begin(),processingOrder.end(),sectorProcessingOrder.data);
   griddingOp->setSectorProcessingOrder(sectorProcessingOrder);
-  
-  for (int i=0; i < sectorProcessingOrder.count(); i++)
-    std::cout << "process " << sectorProcessingOrder.data[i].x << " offset " << sectorProcessingOrder.data[i].y << std::endl;
-  
 }
 
 

@@ -26,7 +26,7 @@ namespace GriddingND
     {
     }
 
-    OperatorType getType() {return OperatorType::TEXTURE;}
+    OperatorType getType() {return GriddingND::TEXTURE;}
     // OPERATIONS
   private:
     void initKernel();

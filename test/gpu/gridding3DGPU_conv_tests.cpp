@@ -1314,7 +1314,7 @@ TEST(TestGPUGriddingConvAnisotropic,GPUTest_32SectorsKernel4nData)
   imgDims.height = 20;
   imgDims.depth = 10;
 
-  GriddingND::GriddingOperatorFactory factory(GriddingND::InterpolationType::TEXTURE_LOOKUP); 
+  GriddingND::GriddingOperatorFactory factory(GriddingND::TEXTURE_LOOKUP); 
   GriddingND::GriddingOperator *griddingOp = factory.createGriddingOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
 
   GriddingND::Array<DType2> dataArray;

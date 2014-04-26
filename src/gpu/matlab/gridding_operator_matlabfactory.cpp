@@ -133,7 +133,7 @@ GriddingND::GriddingOperator* GriddingND::GriddingOperatorMatlabFactory::createG
 			mexPrintf("returning empty dens array\n");
 		plhs[2] = createDensArray(1);
 	}
-  if (griddingOp->getType() != OperatorType::BALANCED)
+  if (griddingOp->getType() != GriddingND::BALANCED)
   {	
     if (MATLAB_DEBUG)
 			mexPrintf("returning empty processing order array\n");

@@ -25,7 +25,7 @@ namespace GriddingND
     // OPERATIONS
     void performGriddingAdj(Array<DType2> kspaceData, Array<CufftType>& imgData, GriddingOutput griddingOut = DEAPODIZATION);
     
-    OperatorType getType() {return OperatorType::BALANCED;}
+    OperatorType getType() {return GriddingND::BALANCED;}
 
   protected:
 	

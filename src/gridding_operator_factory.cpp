@@ -333,7 +333,7 @@ GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::createGriddin
   
   griddingOp->setSectorDataCount(computeSectorDataCount(griddingOp,assignedSectors));
   
-  if (griddingOp->getType() == OperatorType::BALANCED)
+  if (griddingOp->getType() == GriddingND::BALANCED)
     computeProcessingOrder(static_cast<BalancedGriddingOperator*>(griddingOp));
 
   griddingOp->setDataIndices(dataIndices);
@@ -375,7 +375,7 @@ GriddingND::GriddingOperator* GriddingND::GriddingOperatorFactory::loadPrecomput
   griddingOp->setDataIndices(dataIndices);
   griddingOp->setSectorDataCount(sectorDataCount);
   
-  if (griddingOp->getType() == OperatorType::BALANCED)
+  if (griddingOp->getType() == GriddingND::BALANCED)
     static_cast<BalancedGriddingOperator*>(griddingOp)->setSectorProcessingOrder(sectorProcessingOrder);
   
   griddingOp->setSectorCenters(sectorCenters);

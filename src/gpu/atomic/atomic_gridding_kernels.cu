@@ -785,9 +785,13 @@ void performConvolution( DType2* data_d,
 #define CONVKERNEL2
 
 #ifdef CONVKERNEL 	
+  long shared_mem_size = (gi_host->sector_dim)*sizeof(DType2);
   dim3 block_dim(THREAD_BLOCK_SIZE);
   dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,THREAD_BLOCK_SIZE));
-  convolutionKernel<<<grid_dim,block_dim>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
+  if (gi_host->is2Dprocessing)
+    convolutionKernel2D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
+  else
+    convolutionKernel<<<grid_dim,block_dim>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
 #else
 #ifdef CONVKERNEL2
   long shared_mem_size = (gi_host->sector_dim)*sizeof(DType2);

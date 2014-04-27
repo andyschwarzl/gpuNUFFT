@@ -175,7 +175,7 @@ __global__ void convolutionKernel2(DType2* data,
     __syncthreads();
 
     //start convolution
-    int ind, k, i, j, x, y, z, r;
+    int ind, k, i, j, x, y, z;
     int imin, imax,jmin,jmax,kmin,kmax;
 
     DType dx_sqr, dy_sqr, dz_sqr, val, ix, jy, kz;
@@ -263,10 +263,7 @@ __global__ void convolutionKernel2(DType2* data,
     //each thread writes one position from shared mem to global mem
     for (int s_ind=threadIdx.x;s_ind<GI.sector_dim; s_ind += blockDim.x)
     {
-      x = s_ind % GI.sector_pad_width;
-      z = (int)(s_ind / (GI.sector_pad_width*GI.sector_pad_width)) ;
-      r = s_ind - z * GI.sector_pad_width * GI.sector_pad_width;
-      y = (int)(r / GI.sector_pad_width);
+      getCoordsFromIndex(s_ind,&x,&y,&z,GI.sector_pad_width);
 
       if (isOutlier(x,y,z,center.x,center.y,center.z,GI.gridDims,GI.sector_offset))
         //calculate opposite index
@@ -310,7 +307,7 @@ __global__ void balancedConvolutionKernel2(DType2* data,
     __syncthreads();
 
     //start convolution
-    int ind, k, i, j, x, y, z, r;
+    int ind, k, i, j, x, y, z;
     int imin, imax,jmin,jmax,kmin,kmax;
 
     DType dx_sqr, dy_sqr, dz_sqr, val, ix, jy, kz;
@@ -398,10 +395,7 @@ __global__ void balancedConvolutionKernel2(DType2* data,
     //each thread writes one position from shared mem to global mem
     for (int s_ind=threadIdx.x;s_ind<GI.sector_dim; s_ind += blockDim.x)
     {
-      x = s_ind % GI.sector_pad_width;
-      z = (int)(s_ind / (GI.sector_pad_width*GI.sector_pad_width)) ;
-      r = s_ind - z * GI.sector_pad_width * GI.sector_pad_width;
-      y = (int)(r / GI.sector_pad_width);
+      getCoordsFromIndex(s_ind,&x,&y,&z,GI.sector_pad_width);
 
       if (isOutlier(x,y,z,center.x,center.y,center.z,GI.gridDims,GI.sector_offset))
         //calculate opposite index
@@ -530,8 +524,7 @@ __global__ void convolutionKernel2D(DType2* data,
     //each thread writes one position from shared mem to global mem
     for (int s_ind=threadIdx.x;s_ind<GI.sector_dim; s_ind += blockDim.x)
     {
-      x = s_ind % GI.sector_pad_width;
-      y = (int)(s_ind / GI.sector_pad_width);
+      getCoordsFromIndex2D(s_ind,&x,&y,GI.sector_pad_width);
 
       if (isOutlier2D(x,y,center.x,center.y,GI.gridDims,GI.sector_offset))
         //calculate opposite index
@@ -646,8 +639,7 @@ __global__ void balancedConvolutionKernel2D(DType2* data,
     //each thread writes one position from shared mem to global mem
     for (int s_ind=threadIdx.x;s_ind<GI.sector_dim; s_ind += blockDim.x)
     {
-      x = s_ind % GI.sector_pad_width;
-      y = (int)(s_ind / GI.sector_pad_width);
+      getCoordsFromIndex2D(s_ind,&x,&y,GI.sector_pad_width);
 
       if (isOutlier2D(x,y,center.x,center.y,GI.gridDims,GI.sector_offset))
         //calculate opposite index

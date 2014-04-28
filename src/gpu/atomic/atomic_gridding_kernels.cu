@@ -948,7 +948,15 @@ void performConvolution( DType2* data_d,
     printf("grid dim (%d,%d,%d), block dim (%d,%d,%d) \n",grid_dim.x,grid_dim.y,grid_dim.z, block_dim.x,block_dim.y,block_dim.z); 
   }
   if (gi_host->is2Dprocessing)
+  {
+    shared_mem_size = (gi_host->sector_dim)*sizeof(DType2);
+    int thread_size =THREAD_BLOCK_SIZE;
+
+    dim3 block_dim(thread_size);
+    dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,1));
+
     convolutionKernel2D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
+  }
   else
     convolutionKernel4<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
 #else

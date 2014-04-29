@@ -586,7 +586,7 @@ __global__ void balancedConvolutionKernel2(DType2* data,
     data_max = sectors[sec[threadIdx.x]+1];
     //loop over all data points of the current sector, and check if grid position lies inside 
     //affected region, if so, add data point weighted to grid position value
-    while (data_cnt < data_max)
+    while (data_cnt < min(data_max,sectors[sec[threadIdx.x]] + threadIdx.x + sector_processing_order[sec_cnt].y+MAXIMUM_PAYLOAD))
     {
       DType3 data_point; //datapoint per thread
       data_point.x = crds[data_cnt];
@@ -1045,7 +1045,7 @@ void performConvolution( DType2* data_d,
   GriddingND::GriddingInfo* gi_host
   )
 {
-#define CONVKERNEL4
+#define CONVKERNEL2
 
 #ifdef CONVKERNEL 	
   long shared_mem_size = (gi_host->sector_dim)*sizeof(DType2);
@@ -1075,7 +1075,7 @@ void performConvolution( DType2* data_d,
 #ifdef CONVKERNEL4
   // TODO tune param z dim
   // defines size of total shared mem used
-  dim3 block_dim(gi_host->sector_pad_width,gi_host->sector_pad_width,2);
+  dim3 block_dim(gi_host->sector_pad_width,gi_host->sector_pad_width,3);
   long shared_mem_size = block_dim.x*block_dim.y*block_dim.z*sizeof(DType2);
   
   dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,1));
@@ -1096,7 +1096,7 @@ void performConvolution( DType2* data_d,
     convolutionKernel2D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
   }
   else
-    convolutionKernel4<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
+    convolutionKernel4<<<grid_dim,block_dim>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
 #else
   long cache_size = 176;
   long shared_mem_size = (2*cache_size + 3*cache_size)*sizeof(DType);
@@ -1133,7 +1133,12 @@ void performConvolution( DType2* data_d,
   if (gi_host->is2Dprocessing)
     balancedConvolutionKernel2D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_processing_order_d,sector_centers_d,gi_host->sectorsToProcess);
   else
+  {
     balancedConvolutionKernel2<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_processing_order_d,sector_centers_d,gi_host->sectorsToProcess);
+    //dim3 block_dim(gi_host->sector_pad_width,gi_host->sector_pad_width,3);
+    //dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,block_dim.x*block_dim.y*block_dim.z));
+    //balancedConvolutionKernel4<<<grid_dim,block_dim>>>(data_d,crds_d,gdata_d,sectors_d,sector_processing_order_d,sector_centers_d,gi_host->sectorsToProcess);
+  }
   if (DEBUG)
     printf("...finished with: %s\n", cudaGetErrorString(cudaGetLastError()));
 }

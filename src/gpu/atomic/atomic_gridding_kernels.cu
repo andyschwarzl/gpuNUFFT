@@ -146,7 +146,7 @@ __global__ void convolutionKernel4(DType2* data,
   int N
   )
 {
-  extern __shared__ DType2 sdata[];//externally managed shared memory
+  //extern __shared__ DType2 sdata[];//externally managed shared memory
 
   int sec;
   sec = blockIdx.x;
@@ -154,6 +154,7 @@ __global__ void convolutionKernel4(DType2* data,
   //start convolution
   while (sec < N)
   {
+    __syncthreads();	
     int ind, k, i, j;
     __shared__ int max_dim, imin, imax,jmin,jmax,kmin,kmax;
 
@@ -167,6 +168,7 @@ __global__ void convolutionKernel4(DType2* data,
     __shared__ int sector_ind_offset;
     sector_ind_offset = computeXYZ2Lin(center.x - GI.sector_offset,center.y - GI.sector_offset,center.z - GI.sector_offset,GI.gridDims);
 
+    __syncthreads();	
     //Grid Points over threads
     int data_cnt;
     data_cnt = sectors[sec];
@@ -177,14 +179,17 @@ __global__ void convolutionKernel4(DType2* data,
 
     while (data_cnt < sectors[sec+1])
     {
+      __syncthreads();	
       __shared__ DType3 data_point; //datapoint shared in every thread
       data_point.x = crds[data_cnt];
       data_point.y = crds[data_cnt +GI.data_count];
       data_point.z = crds[data_cnt +2*GI.data_count];
 
       __shared__ DType2 s_data;
-      s_data = data[data_cnt];
+      s_data.x = data[data_cnt].x;
+      s_data.y = data[data_cnt].y;
 
+      __syncthreads();	
       // set the boundaries of final dataset for gridding this point
       ix = static_cast<DType>((data_point.x + 0.5) * (GI.gridDims.x) - center.x + GI.sector_offset);
       set_minmax(&ix, &imin, &imax, max_dim, GI.kernel_radius);
@@ -197,8 +202,8 @@ __global__ void convolutionKernel4(DType2* data,
       for (k=threadIdx.z;k<=kmax; k += blockDim.z)
       {
         //reset shared memory
-        sdata[s_ind].x = 0.0f;//Re
-        sdata[s_ind].y = 0.0f;//Im
+        //sdata[s_ind].x = 0.0f;//Re
+        //sdata[s_ind].y = 0.0f;//Im
         if (k<=kmax && k>=kmin)
         {
           kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.gridDims.z)) - 0.5f;
@@ -231,34 +236,167 @@ __global__ void convolutionKernel4(DType2* data,
                       KERNEL[(int) round(dx_sqr * GI.dist_multiplier)];
                     // multiply data by current kernel val 
                     // grid complex or scalar 
-                    sdata[s_ind].x += val * s_data.x;
-                    sdata[s_ind].y += val * s_data.y;
-                  }  // kernel bounds check x, spherical support 
+                    //sdata[s_ind].x += val * s_data.x;
+                    //sdata[s_ind].y += val * s_data.y;
+                    
+                    //each thread writes one position from shared mem to global mem
+                    if (isOutlier(i,j,k,center.x,center.y,center.z,GI.gridDims,GI.sector_offset))
+                      //calculate opposite index
+                      ind = computeXYZ2Lin(calculateOppositeIndex(i,center.x,GI.gridDims.x,GI.sector_offset),
+                          calculateOppositeIndex(j,center.y,GI.gridDims.y,GI.sector_offset),
+                          calculateOppositeIndex(k,center.z,GI.gridDims.z,GI.sector_offset),
+                          GI.gridDims);
+                    else
+                      ind = sector_ind_offset + computeXYZ2Lin(i,j,k,GI.gridDims);//index in output grid
+
+                    atomicAdd(&(gdata[ind].x),val * s_data.x);//Re
+                    atomicAdd(&(gdata[ind].y),val * s_data.y);//Im
+
+                }  // kernel bounds check x, spherical support 
                 } // x 	 
               }// kernel bounds check y, spherical support 
             } // y 
           } //kernel bounds check z 
         } // z
-
-        //each thread writes one position from shared mem to global mem
-        if (isOutlier(i,j,k,center.x,center.y,center.z,GI.gridDims,GI.sector_offset))
-          //calculate opposite index
-          ind = computeXYZ2Lin(calculateOppositeIndex(i,center.x,GI.gridDims.x,GI.sector_offset),
-          calculateOppositeIndex(j,center.y,GI.gridDims.y,GI.sector_offset),
-          calculateOppositeIndex(k,center.z,GI.gridDims.z,GI.sector_offset),
-          GI.gridDims);
-        else
-          ind = sector_ind_offset + computeXYZ2Lin(i,j,k,GI.gridDims);//index in output grid
-
-        atomicAdd(&(gdata[ind].x),sdata[s_ind].x);//Re
-        atomicAdd(&(gdata[ind].y),sdata[s_ind].y);//Im
-
-        __syncthreads();	
       }//k, for loop over z entries
+      __syncthreads();	
       data_cnt++;
     } //grid points per sector
     __syncthreads();	
     sec = sec + gridDim.x;
+  }//sec < sector_count
+  
+}
+
+__global__ void balancedConvolutionKernel4(DType2* data, 
+  DType* crds, 
+  CufftType* gdata,
+  IndType* sectors, 
+  IndType2* sector_processing_order,
+  IndType* sector_centers,
+  int N
+  )
+{
+  //extern __shared__ DType2 sdata[];//externally managed shared memory
+
+  int sec;
+//  sec = blockIdx.x;
+  int sec_cnt = blockIdx.x;
+
+  //start convolution
+  while (sec_cnt < N)
+  {
+    __syncthreads();	
+    sec = sector_processing_order[sec_cnt].x;
+    int ind, k, i, j;
+    __shared__ int max_dim, imin, imax,jmin,jmax,kmin,kmax;
+
+    DType dx_sqr, dy_sqr, dz_sqr, val, ix, jy, kz;
+
+    __shared__ IndType3 center;
+    center.x = sector_centers[sec * 3];
+    center.y = sector_centers[sec * 3 + 1];
+    center.z = sector_centers[sec * 3 + 2];//+ GI.aniso_z_shift;
+
+    __shared__ int sector_ind_offset;
+    sector_ind_offset = computeXYZ2Lin(center.x - GI.sector_offset,center.y - GI.sector_offset,center.z - GI.sector_offset,GI.gridDims);
+
+    __syncthreads();	
+    //Grid Points over threads
+    int data_cnt;
+    data_cnt = sectors[sec] + sector_processing_order[sec_cnt].y;
+
+    max_dim =  GI.sector_pad_max;		
+    
+    int s_ind = getIndex(threadIdx.x,threadIdx.y,threadIdx.z,GI.sector_pad_width);
+
+    while (data_cnt < min(sectors[sec+1],sectors[sec]+sector_processing_order[sec_cnt].y+MAXIMUM_PAYLOAD))
+    {
+      __syncthreads();	
+      __shared__ DType3 data_point; //datapoint shared in every thread
+      data_point.x = crds[data_cnt];
+      data_point.y = crds[data_cnt +GI.data_count];
+      data_point.z = crds[data_cnt +2*GI.data_count];
+
+      __shared__ DType2 s_data;
+      s_data.x = data[data_cnt].x;
+      s_data.y = data[data_cnt].y;
+
+      __syncthreads();	
+      // set the boundaries of final dataset for gridding this point
+      ix = static_cast<DType>((data_point.x + 0.5) * (GI.gridDims.x) - center.x + GI.sector_offset);
+      set_minmax(&ix, &imin, &imax, max_dim, GI.kernel_radius);
+      jy = static_cast<DType>((data_point.y + 0.5) * (GI.gridDims.y) - center.y + GI.sector_offset);
+      set_minmax(&jy, &jmin, &jmax, max_dim, GI.kernel_radius);
+      kz = static_cast<DType>((data_point.z + 0.5) * (GI.gridDims.z) - center.z + GI.sector_offset);
+      set_minmax(&kz, &kmin, &kmax, max_dim, GI.kernel_radius);
+      
+      // grid this point onto the neighboring cartesian points
+      for (k=threadIdx.z;k<=kmax; k += blockDim.z)
+      {
+        //reset shared memory
+        //sdata[s_ind].x = 0.0f;//Re
+        //sdata[s_ind].y = 0.0f;//Im
+        if (k<=kmax && k>=kmin)
+        {
+          kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.gridDims.z)) - 0.5f;
+          // scale distance in z direction with x,y dimension
+          dz_sqr = (kz - data_point.z)*GI.aniso_z_scale;
+          dz_sqr *= dz_sqr;
+          if (dz_sqr < GI.radiusSquared)
+          {
+            j=threadIdx.y;
+            if (j<=jmax && j>=jmin)
+            {
+              jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.y)) - 0.5f;
+              dy_sqr = jy - data_point.y;
+              dy_sqr *= dy_sqr;
+              if (dy_sqr < GI.radiusSquared)	
+              {
+                i=threadIdx.x;
+
+                if (i<=imax && i>=imin)
+                {
+                  ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;
+                  dx_sqr = ix - data_point.x;
+                  dx_sqr *= dx_sqr;
+                  if (dx_sqr < GI.radiusSquared)	
+                  {
+                    //get kernel value
+                    //Calculate Separable Filters 
+                    val = KERNEL[(int) round(dz_sqr * GI.dist_multiplier)] *
+                      KERNEL[(int) round(dy_sqr * GI.dist_multiplier)] *
+                      KERNEL[(int) round(dx_sqr * GI.dist_multiplier)];
+                    // multiply data by current kernel val 
+                    // grid complex or scalar 
+                    //sdata[s_ind].x += val * s_data.x;
+                    //sdata[s_ind].y += val * s_data.y;
+                    
+                    //each thread writes one position from shared mem to global mem
+                    if (isOutlier(i,j,k,center.x,center.y,center.z,GI.gridDims,GI.sector_offset))
+                      //calculate opposite index
+                      ind = computeXYZ2Lin(calculateOppositeIndex(i,center.x,GI.gridDims.x,GI.sector_offset),
+                          calculateOppositeIndex(j,center.y,GI.gridDims.y,GI.sector_offset),
+                          calculateOppositeIndex(k,center.z,GI.gridDims.z,GI.sector_offset),
+                          GI.gridDims);
+                    else
+                      ind = sector_ind_offset + computeXYZ2Lin(i,j,k,GI.gridDims);//index in output grid
+
+                    atomicAdd(&(gdata[ind].x),val * s_data.x);//Re
+                    atomicAdd(&(gdata[ind].y),val * s_data.y);//Im
+
+                }  // kernel bounds check x, spherical support 
+                } // x 	 
+              }// kernel bounds check y, spherical support 
+            } // y 
+          } //kernel bounds check z 
+        } // z
+      }//k, for loop over z entries
+      __syncthreads();	
+      data_cnt++;
+    } //grid points per sector
+    __syncthreads();	
+    sec_cnt = sec_cnt + gridDim.x;
   }//sec < sector_count
   
 }

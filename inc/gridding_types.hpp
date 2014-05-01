@@ -7,7 +7,7 @@
 
 #define DEFAULT_VALUE(a) ((a == 0) ? 1 : a)
 
-#define MAXIMUM_PAYLOAD 128
+#define MAXIMUM_PAYLOAD 256
 
 namespace GriddingND
 {

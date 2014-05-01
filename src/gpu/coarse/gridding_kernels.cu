@@ -198,7 +198,7 @@ __global__ void balancedConvolutionKernel(DType2* data,
 
     max_dim =  GI.sector_pad_max;		
     
-    while (data_cnt < sectors[sec+1])
+    while (data_cnt < min(sectors[sec+1],sectors[sec]+sector_processing_order[sec_cnt].y+MAXIMUM_PAYLOAD))
     {
       __shared__ DType3 data_point; //datapoint shared in every thread
       data_point.x = crds[data_cnt];
@@ -436,7 +436,7 @@ __global__ void balancedConvolutionKernel2D(DType2* data,
     data_cnt = sectors[sec]+sector_processing_order[sec_cnt].y;
 
     max_dim =  GI.sector_pad_max;		
-    while (data_cnt < sectors[sec+1])
+    while (data_cnt < min((int)(sectors[sec+1]),(int)(sectors[sec]+sector_processing_order[sec_cnt].y+MAXIMUM_PAYLOAD)))
     {
       __shared__ DType2 data_point; //datapoint shared in every thread
       data_point.x = crds[data_cnt];
@@ -485,7 +485,7 @@ __global__ void balancedConvolutionKernel2D(DType2* data,
     __syncthreads();	
 
     //write shared data to temporary output grid
-    int sector_ind_offset = sec * GI.sector_dim;
+    int sector_ind_offset = sec_cnt * GI.sector_dim;
 
     i=threadIdx.x;
     j=threadIdx.y;
@@ -506,10 +506,15 @@ __global__ void balancedConvolutionKernel2D(DType2* data,
 }
 
 
-__global__ void composeOutputKernel(DType2* temp_gdata, CufftType* gdata, IndType* sector_centers)
+__global__ void composeOutputKernel(DType2* temp_gdata, CufftType* gdata, IndType* sector_centers, IndType2* sector_processing_order, int N)
 {
-  for (int sec = 0; sec < GI.sector_count; sec++)
-  {
+  int sec;
+  for (int sec_cnt = 0; sec_cnt < N; sec_cnt++)
+  {    
+    if (sector_processing_order != NULL)
+      sec = sector_processing_order[sec_cnt].x;
+    else
+      sec = sec_cnt;
     __syncthreads();
     __shared__ IndType3 center;
     center.x = sector_centers[sec * 3];
@@ -520,7 +525,7 @@ __global__ void composeOutputKernel(DType2* temp_gdata, CufftType* gdata, IndTyp
     sector_ind_offset = computeXYZ2Lin(center.x - GI.sector_offset,center.y - GI.sector_offset,center.z - GI.sector_offset,GI.gridDims);
 
     __shared__ int sector_grid_offset;
-    sector_grid_offset = sec * GI.sector_dim;
+    sector_grid_offset = sec_cnt * GI.sector_dim;
     //write data from temp grid to overall output grid
     for (int z=threadIdx.z;z<GI.sector_pad_width; z += blockDim.z)
     {
@@ -547,10 +552,16 @@ __global__ void composeOutputKernel(DType2* temp_gdata, CufftType* gdata, IndTyp
 }
 
 
-__global__ void composeOutputKernel2D(DType2* temp_gdata, CufftType* gdata, IndType* sector_centers)
+__global__ void composeOutputKernel2D(DType2* temp_gdata, CufftType* gdata, IndType* sector_centers, IndType2* sector_processing_order, int N)
 {
-  for (int sec = 0; sec < GI.sector_count; sec++)
+  int sec;
+  for (int sec_cnt = 0; sec_cnt < N; sec_cnt++)
   {
+    if (sector_processing_order != NULL)
+      sec = sector_processing_order[sec_cnt].x;
+    else
+      sec = sec_cnt;
+
     __syncthreads();
     __shared__ IndType2 center;
     center.x = sector_centers[sec * 2];
@@ -558,7 +569,7 @@ __global__ void composeOutputKernel2D(DType2* temp_gdata, CufftType* gdata, IndT
     __shared__ int sector_ind_offset;
     sector_ind_offset = computeXY2Lin(center.x - GI.sector_offset,center.y - GI.sector_offset,GI.gridDims);
     __shared__ int sector_grid_offset;
-    sector_grid_offset = sec * GI.sector_dim;
+    sector_grid_offset = sec_cnt * GI.sector_dim;
     //write data from temp grid to overall output grid
     int x=threadIdx.x;
     int y=threadIdx.y;
@@ -580,14 +591,14 @@ __global__ void composeOutputKernel2D(DType2* temp_gdata, CufftType* gdata, IndT
 
 
 //very slow way of composing the output, should only be used on compute capabilties lower than 2.0
-void composeOutput(DType2* temp_gdata_d, CufftType* gdata_d, IndType* sector_centers_d, GriddingND::GriddingInfo* gi_host)
+void composeOutput(DType2* temp_gdata_d, CufftType* gdata_d, IndType* sector_centers_d, GriddingND::GriddingInfo* gi_host, IndType2* sector_processing_order_d, int N)
 {
   dim3 grid_dim(1);
   dim3 block_dim(gi_host->sector_pad_width,gi_host->sector_pad_width,1);
   if (gi_host->is2Dprocessing)
-    composeOutputKernel2D<<<grid_dim,block_dim>>>(temp_gdata_d,gdata_d,sector_centers_d);
+    composeOutputKernel2D<<<grid_dim,block_dim>>>(temp_gdata_d,gdata_d,sector_centers_d,sector_processing_order_d,N);
   else
-    composeOutputKernel<<<grid_dim,block_dim>>>(temp_gdata_d,gdata_d,sector_centers_d);
+    composeOutputKernel<<<grid_dim,block_dim>>>(temp_gdata_d,gdata_d,sector_centers_d,sector_processing_order_d,N);
 }
 
 void performConvolution( DType2* data_d, 
@@ -620,7 +631,7 @@ void performConvolution( DType2* data_d,
   if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
     printf("error at adj thread synchronization 2: %s\n",cudaGetErrorString(cudaGetLastError()));
   //compose total output from local blocks 
-  composeOutput(temp_gdata_d,gdata_d,sector_centers_d,gi_host);
+  composeOutput(temp_gdata_d,gdata_d,sector_centers_d,gi_host,NULL,gi_host->sector_count);
   
   if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
     printf("error at adj thread synchronization 3: %s\n",cudaGetErrorString(cudaGetLastError()));
@@ -640,7 +651,7 @@ void performConvolution( DType2* data_d,
   )
 {
   DType2* temp_gdata_d;
-  int temp_grid_count = gi_host->sector_count * gi_host->sector_dim;
+  int temp_grid_count = gi_host->sectorsToProcess * gi_host->sector_dim;
   if (DEBUG)
     printf("allocate temp grid data of size %d...\n",temp_grid_count);
   allocateDeviceMem<DType2>(&temp_gdata_d,temp_grid_count);
@@ -660,7 +671,7 @@ void performConvolution( DType2* data_d,
   if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
     printf("error at adj thread synchronization 2: %s\n",cudaGetErrorString(cudaGetLastError()));
   //compose total output from local blocks 
-  composeOutput(temp_gdata_d,gdata_d,sector_centers_d,gi_host);
+  composeOutput(temp_gdata_d,gdata_d,sector_centers_d,gi_host,sector_processing_order_d,gi_host->sectorsToProcess);
   
   if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
     printf("error at adj thread synchronization 3: %s\n",cudaGetErrorString(cudaGetLastError()));

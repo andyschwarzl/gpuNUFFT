@@ -279,7 +279,7 @@ void performTextureConvolution( DType2* data_d,
   if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
     printf("error at adj thread synchronization 2: %s\n",cudaGetErrorString(cudaGetLastError()));
   //compose total output from local blocks 
-  composeOutput(temp_gdata_d,gdata_d,sector_centers_d,gi_host);
+  composeOutput(temp_gdata_d,gdata_d,sector_centers_d,gi_host,NULL,gi_host->sector_count);
 
   if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
     printf("error at adj thread synchronization 3: %s\n",cudaGetErrorString(cudaGetLastError()));

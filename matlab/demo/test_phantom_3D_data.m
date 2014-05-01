@@ -31,7 +31,7 @@ imwidth = imgDim(1);
 %%
 disp('init GPU')
 tic
-FT = GRIDDING3D(k_traj',dens',imwidth,osf,wg,sw,imgDim,'false',1);
+FT = GRIDDING3D(k_traj',dens',imwidth,osf,wg,sw,imgDim,'false',0);
 toc
 disp('init CPU')
 tic
@@ -70,7 +70,7 @@ disp('CPU adj')
 tic
 imgRecon2CPU = FTCPU'*data_reconCPU;
 toc
-
+%%
 disp('GPU fw')
 tic
 data_recon = FT*imgRecon;
@@ -79,5 +79,6 @@ disp('GPU adj')
 tic
 imgRecon2 = FT'*data_recon;
 toc
+%%
 show3DImage([2,8],abs(imgRecon2CPU(:,:,N3D/2-7:N3D/2+8)),'CPU result of generated data','slice');
 show3DImage([2,8],abs(imgRecon2(:,:,N3D/2-7:N3D/2+8)),'GPU result of generated data','slice');

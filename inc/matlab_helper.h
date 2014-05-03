@@ -124,5 +124,15 @@ inline GriddingND::Dimensions getDimensionsFromParamField(const mxArray* params,
 	return dim;
 }
 
+inline GriddingND::InterpolationType getInterpolationTypeOf(int val)
+{
+  switch (val)
+  {
+  case 1 : return GriddingND::TEXTURE_LOOKUP;
+  case 2: return GriddingND::TEXTURE2D_LOOKUP;
+  case 3: return GriddingND::TEXTURE3D_LOOKUP;
+  default : return GriddingND::CONST_LOOKUP;
+  }
+}
 
-#endif
+#endif  // __MATLAB_HELPER_H

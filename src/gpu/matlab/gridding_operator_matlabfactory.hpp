@@ -13,58 +13,62 @@
 
 namespace GriddingND
 {
-	// GriddingOperatorMatlabFactory
-	// decorates GriddingOperatorFactory
-	//
-	// Manages the initialization of the Gridding Operator.
-	// Distinguishes between two cases:
-	//
-	// * new calculation of "data - sector" mapping, sorting etc.
-	//  
-	// * reuse of previously calculated mapping
-	// 
-	class GriddingOperatorMatlabFactory : public GriddingOperatorFactory
-	{
-    protected:
-      GriddingOperatorMatlabFactory()
-      {
-      }
+  // GriddingOperatorMatlabFactory
+  // decorates GriddingOperatorFactory
+  //
+  // Manages the initialization of the Gridding Operator.
+  // Distinguishes between two cases:
+  //
+  // * new calculation of "data - sector" mapping, sorting etc.
+  //  
+  // * reuse of previously calculated mapping
+  // 
+  class GriddingOperatorMatlabFactory : public GriddingOperatorFactory
+  {
+  public:
 
-	  
-	  //abstract methods from GriddingOperatorFactory
-	  Array<IndType> initDataIndices(GriddingOperator* griddingOp, IndType coordCnt);
-	  Array<DType> initCoordsData(GriddingOperator* griddingOp, IndType coordCnt);
-	  Array<IndType> initSectorCenters(GriddingOperator* griddingOp, IndType sectorCnt);
-	  Array<IndType> initSectorDataCount(GriddingOperator* griddingOp, IndType dataCount);
-	  Array<DType> initDensData(GriddingOperator* griddingOp, IndType coordCnt);
+    GriddingOperatorMatlabFactory():
+        GriddingOperatorFactory()
+    {
+    }
 
-	  void debug(const std::string& message);
+    GriddingOperatorMatlabFactory(const InterpolationType interpolationType,const bool useGpu, const bool balanceWorkload) 
+      : GriddingOperatorFactory(interpolationType,useGpu,balanceWorkload)
+    {
+    }
 
-    public:
-	
-		  ~GriddingOperatorMatlabFactory()
-		  {
-        if (DEBUG)
-			    std::cout << "GOMF destruct " << std::endl;
-		  }
+    GriddingOperatorMatlabFactory(const InterpolationType interpolationType,const bool useGpu) 
+      : GriddingOperatorFactory(interpolationType,useGpu)
+    {
+    }
 
-		// SETTER 
-		
-		// GETTER
-		
-		// OPERATIONS
+    GriddingOperatorMatlabFactory(const InterpolationType interpolationType) 
+      : GriddingOperatorFactory(interpolationType)
+    {
+    }
 
-        static GriddingOperatorMatlabFactory& getInstance();
-        
-		GriddingOperator* createGriddingOperator(Array<DType>& kSpaceTraj, Array<DType>& densCompData, Array<DType2>& sensData, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, Dimensions& imgDims,mxArray *plhs[]);
-		GriddingOperator* loadPrecomputedGriddingOperator(Array<DType>& kSpaceTraj, Array<IndType>& dataIndices, Array<IndType>& sectorDataCount,Array<IndType>& sectorCenters, Array<DType>& densCompData, Array<DType2>& sensData, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, Dimensions& imgDims);
-		GriddingOperator* loadPrecomputedGriddingOperator(Array<DType>& kSpaceTraj, Array<IndType>& dataIndices, Array<IndType>& sectorDataCount,Array<IndType>& sectorCenters, Array<DType2>& sensData, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, Dimensions& imgDims);
-	private:
-		static GriddingOperatorMatlabFactory instance;
+    ~GriddingOperatorMatlabFactory()
+    {
+    }
 
-		mxArray **plhs;
-		
-    };
+    GriddingOperator* createGriddingOperator(Array<DType>& kSpaceTraj, Array<DType>& densCompData, Array<DType2>& sensData, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, Dimensions& imgDims,mxArray *plhs[]);
+
+  protected:
+
+    //abstract methods from GriddingOperatorFactory
+    Array<IndType> initDataIndices(GriddingOperator* griddingOp, IndType coordCnt);
+    Array<DType> initCoordsData(GriddingOperator* griddingOp, IndType coordCnt);
+    Array<IndType> initSectorCenters(GriddingOperator* griddingOp, IndType sectorCnt);
+    Array<IndType> initSectorDataCount(GriddingOperator* griddingOp, IndType dataCount);
+    Array<IndType2> initSectorProcessingOrder(GriddingOperator* griddingOp, IndType sectorCnt);
+    Array<DType> initDensData(GriddingOperator* griddingOp, IndType coordCnt);
+
+    void debug(const std::string& message);
+
+  private:
+    mxArray **plhs;
+
+  };
 
 }
 

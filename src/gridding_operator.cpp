@@ -1,6 +1,5 @@
 
 #include "gridding_operator.hpp"
-
 #include "gridding_kernels.hpp"
 #include "cufft_config.hpp"
 #include "cuda_utils.hpp"
@@ -36,27 +35,28 @@ void GriddingND::GriddingOperator::writeOrdered(GriddingND::Array<T>& destArray,
 
 void GriddingND::GriddingOperator::initKernel()
 {
-  this->kernel.dim.length = calculateGrid3KernelSize(osf, kernelWidth/2.0f);
+  IndType kernelSize = calculateGrid3KernelSize(osf, kernelWidth/2.0f);
+  this->kernel.dim.length = kernelSize;
   this->kernel.data = (DType*) calloc(this->kernel.count(),sizeof(DType));
-  loadGrid3Kernel(this->kernel.data,(int)this->kernel.count(),(int)kernelWidth,osf);
+  load1DKernel(this->kernel.data,(int)kernelSize,(int)kernelWidth,osf);
 }
 
-GriddingND::GriddingInfo* GriddingND::GriddingOperator::initAndCopyGriddingInfo()
+GriddingND::GriddingInfo* GriddingND::GriddingOperator::initGriddingInfo()
 {
   GriddingND::GriddingInfo* gi_host = (GriddingND::GriddingInfo*)malloc(sizeof(GriddingND::GriddingInfo));
 
-  gi_host->data_count = this->kSpaceTraj.count();
-  gi_host->sector_count = this->gridSectorDims.count();
-  gi_host->sector_width = sectorDims.width;
+  gi_host->data_count = (int)this->kSpaceTraj.count();
+  gi_host->sector_count = (int)this->gridSectorDims.count();
+  gi_host->sector_width = (int)sectorDims.width;
 
-  gi_host->kernel_width = this->kernelWidth; 
-  gi_host->kernel_widthSquared = this->kernelWidth * this->kernelWidth;
-  gi_host->kernel_count = this->kernel.count();
+  gi_host->kernel_width = (int)this->kernelWidth; 
+  gi_host->kernel_widthSquared = (int)(this->kernelWidth * this->kernelWidth);
+  gi_host->kernel_count = (int)this->kernel.count();
 
-  gi_host->grid_width_dim = this->getGridDims().count();
+  gi_host->grid_width_dim = (int)this->getGridDims().count();
   gi_host->grid_width_offset= (int)(floor(this->getGridDims().width / (DType)2.0));
 
-  gi_host->im_width_dim = imgDims.count();
+  gi_host->im_width_dim = (int)imgDims.count();
   gi_host->im_width_offset.x = (int)(floor(imgDims.width / (DType)2.0));
   gi_host->im_width_offset.y = (int)(floor(imgDims.height / (DType)2.0));
   gi_host->im_width_offset.z = (int)(floor(imgDims.depth / (DType)2.0));
@@ -71,22 +71,22 @@ GriddingND::GriddingInfo* GriddingND::GriddingOperator::initAndCopyGriddingInfo(
   gi_host->gridDims.z = this->getGridDims().depth;
   gi_host->gridDims_count = this->getGridDims().width*this->getGridDims().height*DEFAULT_VALUE(this->getGridDims().depth);//s.a.
 
-  DType kernel_radius = static_cast<DType>(this->kernelWidth) / (DType)2.0;
-  DType radius = kernel_radius / static_cast<DType>(this->getGridDims().width);
+  double kernel_radius = static_cast<double>(this->kernelWidth) / 2.0;
+  double radius = kernel_radius / static_cast<double>(this->getGridDims().width);
 
   DType kernel_width_inv = (DType)1.0 / static_cast<DType>(this->kernelWidth);
 
-  DType radiusSquared = radius * radius;
-  DType kernelRadius_invSqr = (DType)1.0 / radiusSquared;
-  DType dist_multiplier = (this->kernel.count() - 1) * kernelRadius_invSqr;
+  double radiusSquared = radius * radius;
+  double kernelRadius_invSqr = 1.0 / radiusSquared;
+  DType dist_multiplier = (DType)((this->kernel.count() - 1) * kernelRadius_invSqr);
 
   if (DEBUG)
     printf("radius rel. to grid width %f\n",radius);
 
   GriddingND::Dimensions sectorPadDims = sectorDims + 2*(int)(floor(this->kernelWidth / (DType)2.0));
 
-  int sector_pad_width = sectorPadDims.width;
-  int sector_dim = sectorPadDims.count();
+  int sector_pad_width = (int)sectorPadDims.width;
+  int sector_dim = (int)sectorPadDims.count();
   int sector_offset = (int)(floor(sector_pad_width / (DType)2.0));
 
   gi_host->grid_width_inv.x = (DType)1.0 / static_cast<DType>(this->getGridDims().width);
@@ -95,23 +95,29 @@ GriddingND::GriddingInfo* GriddingND::GriddingOperator::initAndCopyGriddingInfo(
   gi_host->kernel_widthInvSquared = kernel_width_inv * kernel_width_inv;
   gi_host->osr = this->osf;
 
-  gi_host->kernel_radius = kernel_radius;
+  gi_host->kernel_radius = (DType)kernel_radius;
   gi_host->sector_pad_width = sector_pad_width;
   gi_host->sector_pad_max = sector_pad_width - 1;
   gi_host->sector_dim = sector_dim;
   gi_host->sector_offset = sector_offset;
-  
-  gi_host->aniso_z_scale = ((DType)this->getGridDims().depth/(DType)this->getGridDims().width);
-  
-  double sectorKdim = 1.0 / gridSectorDims.width;
-  gi_host->aniso_z_shift = ((gridSectorDims.width-gridSectorDims.depth)/2.0)*sectorKdim;
 
-  gi_host->radiusSquared = radiusSquared;
+  gi_host->aniso_z_scale = ((DType)this->getGridDims().depth/(DType)this->getGridDims().width);
+
+  double sectorKdim = 1.0 / gridSectorDims.width;
+  gi_host->aniso_z_shift = (DType)(((gridSectorDims.width-gridSectorDims.depth)/2.0)*sectorKdim);
+
+  gi_host->radiusSquared = (DType)radiusSquared;
+  gi_host->radiusSquared_inv = (DType)kernelRadius_invSqr;
   gi_host->dist_multiplier = dist_multiplier;
 
   gi_host->is2Dprocessing = this->is2DProcessing();
+  return gi_host;
+}
 
-  if (DEBUG)
+GriddingND::GriddingInfo* GriddingND::GriddingOperator::initAndCopyGriddingInfo()
+{
+  GriddingInfo* gi_host = initGriddingInfo();
+    if (DEBUG)
     printf("copy Gridding Info to symbol memory... size = %ld \n",sizeof(GriddingND::GriddingInfo));
 
   initConstSymbol("GI",gi_host,sizeof(GriddingND::GriddingInfo));
@@ -121,6 +127,38 @@ GriddingND::GriddingInfo* GriddingND::GriddingOperator::initAndCopyGriddingInfo(
     printf("...done!\n");
   return gi_host;
 }
+
+void GriddingND::GriddingOperator::adjConvolution(DType2* data_d, 
+      DType* crds_d, 
+      CufftType* gdata_d,
+      DType* kernel_d, 
+      IndType* sectors_d,
+      IndType* sector_centers_d,
+  GriddingND::GriddingInfo* gi_host)
+{
+  performConvolution(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,gi_host);
+}
+
+void GriddingND::GriddingOperator::forwardConvolution(CufftType*		data_d, 
+  DType*			crds_d, 
+  CufftType*		gdata_d,
+  DType*			kernel_d, 
+  IndType*		sectors_d, 
+  IndType*		sector_centers_d,
+  GriddingND::GriddingInfo* gi_host)
+{
+  performForwardConvolution(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,gi_host);
+}
+
+  void GriddingND::GriddingOperator::initLookupTable()
+  {
+    initConstSymbol("KERNEL",(void*)this->kernel.data,this->kernel.count()*sizeof(DType));
+  }
+  
+  void GriddingND::GriddingOperator::freeLookupTable()
+  {
+    
+  }
 
 // ----------------------------------------------------------------------------
 // performGriddingAdj: NUFFT^H
@@ -169,15 +207,15 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
   }
 
   // select data ordered
-  DType2* dataSorted = selectOrdered<DType2>(kspaceData,this->kSpaceTraj.count());
+  DType2* dataSorted = selectOrdered<DType2>(kspaceData,(int)this->kSpaceTraj.count());
   DType* densSorted = NULL;
   if (this->applyDensComp())
-    densSorted = this->dens.data;//selectOrdered<DType>(this->dens);
+    densSorted = this->dens.data;
 
-  int			data_count          = this->kSpaceTraj.count();
-  int			n_coils             = kspaceData.dim.channels;
+  int			data_count          = (int)this->kSpaceTraj.count();
+  int			n_coils             = (int)kspaceData.dim.channels;
   IndType		imdata_count        = this->imgDims.count();
-  int			sector_count        = this->gridSectorDims.count();
+  int			sector_count        = (int)this->gridSectorDims.count();
 
   DType*  density_comp            = densSorted;
 
@@ -211,12 +249,13 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
   if (DEBUG)
     printf("allocate and copy kernel in const memory of size %d...\n",this->kernel.count());
 
-  initConstSymbol("KERNEL",(void*)this->kernel.data,this->kernel.count()*sizeof(DType));
+  initLookupTable();
 
   //allocateAndCopyToDeviceMem<DType>(&kernel_d,kernel,kernel_count);
   if (DEBUG)
     printf("allocate and copy sectors of size %d...\n",sector_count+1);
   allocateAndCopyToDeviceMem<IndType>(&sectors_d,this->sectorDataCount.data,sector_count+1);
+
   if (DEBUG)
     printf("allocate and copy sector_centers of size %d...\n",getImageDimensionCount()*sector_count);
   allocateAndCopyToDeviceMem<IndType>(&sector_centers_d,(IndType*)this->getSectorCentersData(),getImageDimensionCount()*sector_count);
@@ -242,7 +281,7 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
   cufftHandle fft_plan;
   if (DEBUG)
     printf("creating cufft plan with %d,%d,%d dimensions\n",DEFAULT_VALUE(gi_host->gridDims.z),gi_host->gridDims.y,gi_host->gridDims.x);
-  cufftResult res = cufftPlan3d(&fft_plan, DEFAULT_VALUE(gi_host->gridDims.z),gi_host->gridDims.y,gi_host->gridDims.x, CufftTransformType) ;
+  cufftResult res = cufftPlan3d(&fft_plan, (int)DEFAULT_VALUE(gi_host->gridDims.z),(int)gi_host->gridDims.y,(int)gi_host->gridDims.x, CufftTransformType) ;
   if (res != CUFFT_SUCCESS) 
     fprintf(stderr,"error on CUFFT Plan creation!!! %d\n",res);
   int err;
@@ -251,7 +290,7 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
   for (int coil_it = 0; coil_it < n_coils; coil_it++)
   {
     int data_coil_offset = coil_it * data_count;
-    int im_coil_offset = coil_it * imdata_count;//gi_host->width_dim;
+    int im_coil_offset = coil_it * (int)imdata_count;//gi_host->width_dim;
 
     cudaMemset(gdata_d,0, sizeof(CufftType)*gi_host->grid_width_dim);
     copyToDevice(dataSorted + data_coil_offset, data_d,data_count);
@@ -261,7 +300,7 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
 
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       printf("error at adj thread synchronization 1: %s\n",cudaGetErrorString(cudaGetLastError()));
-    performConvolution(data_d,crds_d,gdata_d,NULL,sectors_d,sector_centers_d,gi_host);
+    adjConvolution(data_d,crds_d,gdata_d,NULL,sectors_d,sector_centers_d,gi_host);
 
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       fprintf(stderr,"error at adj  thread synchronization 2: %s\n",cudaGetErrorString(cudaGetLastError()));
@@ -275,9 +314,11 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
         printf("test value at point zero: %f\n",(imgData.data)[0].x);
 
       free(gi_host);
+      free(dataSorted);
       // Destroy the cuFFT plan.
       cufftDestroy(fft_plan);
-
+      freeLookupTable();
+      cudaThreadSynchronize();
       freeTotalDeviceMemory(data_d,crds_d,imdata_d,gdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop token
       cudaThreadSynchronize();
 
@@ -309,9 +350,11 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
         printf("error on destroying cufft plan\n");
 
       free(gi_host);
+      free(dataSorted);
       // Destroy the cuFFT plan.
       cufftDestroy(fft_plan);
-
+      freeLookupTable();
+      cudaThreadSynchronize();
       freeTotalDeviceMemory(data_d,crds_d,imdata_d,gdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop token
       cudaThreadSynchronize();
       printf("last cuda error: %s\n", cudaGetErrorString(cudaGetLastError()));
@@ -338,7 +381,7 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
     performFFTScaling(imdata_d,gi_host->im_width_dim,gi_host);
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       printf("error: at adj  thread synchronization 9: %s\n",cudaGetErrorString(cudaGetLastError()));
-      
+
     //get result
     copyFromDevice<CufftType>(imdata_d,imgData.data+im_coil_offset,imdata_count);
   }//iterate over coils
@@ -346,6 +389,8 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
     printf("error: at adj  thread synchronization 10: %s\n",cudaGetErrorString(cudaGetLastError()));
   // Destroy the cuFFT plan.
   cufftDestroy(fft_plan);
+
+  freeLookupTable();
   freeTotalDeviceMemory(data_d,crds_d,gdata_d,imdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop
 
   if (this->applyDensComp())
@@ -357,6 +402,7 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
   if ((cudaThreadSynchronize() != cudaSuccess))
     fprintf(stderr,"error in gridding3D_gpu_adj function: %s\n",cudaGetErrorString(cudaGetLastError()));
   free(gi_host);
+  free(dataSorted);
 }
 
 GriddingND::Array<CufftType> GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> kspaceData, GriddingOutput griddingOut)
@@ -431,10 +477,10 @@ void GriddingND::GriddingOperator::performForwardGridding(GriddingND::Array<DTyp
 
   showMemoryInfo();
 
-  int			data_count          = this->kSpaceTraj.count();
-  int			n_coils             = kspaceData.dim.channels;
+  int			data_count          = (int)this->kSpaceTraj.count();
+  int			n_coils             = (int)kspaceData.dim.channels;
   IndType		imdata_count        = this->imgDims.count();
-  int			sector_count        = this->gridSectorDims.count();
+  int			sector_count        = (int)this->gridSectorDims.count();
 
   GriddingInfo* gi_host = initAndCopyGriddingInfo();
 
@@ -460,11 +506,10 @@ void GriddingND::GriddingOperator::performForwardGridding(GriddingND::Array<DTyp
     printf("allocate and copy coords of size %d...\n",getImageDimensionCount()*data_count);
   allocateAndCopyToDeviceMem<DType>(&crds_d,this->kSpaceTraj.data,getImageDimensionCount()*data_count);
 
-
   if (DEBUG)
     printf("allocate and copy kernel in const memory of size %d...\n",this->kernel.count());
 
-  initConstSymbol("KERNEL",(void*)this->kernel.data,this->kernel.count()*sizeof(DType));
+  initLookupTable();
 
   if (DEBUG)
     printf("allocate and copy sectors of size %d...\n",sector_count+1);
@@ -487,8 +532,8 @@ void GriddingND::GriddingOperator::performForwardGridding(GriddingND::Array<DTyp
   cufftHandle fft_plan;
   if (DEBUG)
     printf("creating cufft plan with %d,%d,%d dimensions\n",DEFAULT_VALUE(gi_host->gridDims.z),gi_host->gridDims.y,gi_host->gridDims.x);
-  cufftResult res = cufftPlan3d(&fft_plan, DEFAULT_VALUE(gi_host->gridDims.z),gi_host->gridDims.y,gi_host->gridDims.x, CufftTransformType) ;
-  //cufftResult res = cufftPlan2d(&fft_plan, gi_host->gridDims.y,gi_host->gridDims.x, CufftTransformType) ;
+  cufftResult res = cufftPlan3d(&fft_plan, (int)DEFAULT_VALUE(gi_host->gridDims.z),(int)gi_host->gridDims.y,(int)gi_host->gridDims.x, CufftTransformType) ;
+
   if (res != CUFFT_SUCCESS) 
     printf("error on CUFFT Plan creation!!! %d\n",res);
   int err;
@@ -497,7 +542,7 @@ void GriddingND::GriddingOperator::performForwardGridding(GriddingND::Array<DTyp
   for (int coil_it = 0; coil_it < n_coils; coil_it++)
   {
     int data_coil_offset = coil_it * data_count;
-    int im_coil_offset = coil_it * imdata_count;//gi_host->width_dim;
+    int im_coil_offset = coil_it * (int)imdata_count;//gi_host->width_dim;
     //reset temp array
     copyToDevice(imgData.data + im_coil_offset,imdata_d,imdata_count);	
     cudaMemset(data_d,0, sizeof(CufftType)*data_count);
@@ -538,7 +583,7 @@ void GriddingND::GriddingOperator::performForwardGridding(GriddingND::Array<DTyp
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       printf("error at thread synchronization 6: %s\n",cudaGetErrorString(cudaGetLastError()));
     // convolution and resampling to non-standard trajectory
-    performForwardConvolution(data_d,crds_d,gdata_d,NULL,sectors_d,sector_centers_d,gi_host);
+    forwardConvolution(data_d,crds_d,gdata_d,NULL,sectors_d,sector_centers_d,gi_host);
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       printf("error at thread synchronization 7: %s\n",cudaGetErrorString(cudaGetLastError()));
 
@@ -553,6 +598,7 @@ void GriddingND::GriddingOperator::performForwardGridding(GriddingND::Array<DTyp
   // Destroy the cuFFT plan.
   if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
     printf("error at thread synchronization 9: %s\n",cudaGetErrorString(cudaGetLastError()));
+  freeLookupTable();
   freeTotalDeviceMemory(data_d,crds_d,gdata_d,imdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop
   if (n_coils > 1 && deapo_d != NULL)
     cudaFree(deapo_d);
@@ -561,7 +607,7 @@ void GriddingND::GriddingOperator::performForwardGridding(GriddingND::Array<DTyp
     fprintf(stderr,"error in gridding3D_gpu function: %s\n",cudaGetErrorString(cudaGetLastError()));
   free(gi_host);
 
-  writeOrdered<CufftType>(kspaceData,kspaceDataSorted,this->kSpaceTraj.count());
+  writeOrdered<CufftType>(kspaceData,kspaceDataSorted,(int)this->kSpaceTraj.count());
 
   free(kspaceDataSorted);
 }

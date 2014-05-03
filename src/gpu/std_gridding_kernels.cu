@@ -11,7 +11,6 @@
 // Method to initialize CONSTANT memory symbols. Needs to reside in *.cu file 
 // to work properly
 //
-// TODO find better solution
 //
 void initConstSymbol(const char* symbol, const void* src, IndType size)
 {
@@ -20,6 +19,91 @@ void initConstSymbol(const char* symbol, const void* src, IndType size)
 
   if (std::string("KERNEL").compare(symbol)==0)
     HANDLE_ERROR(cudaMemcpyToSymbol(KERNEL, src,size));
+}
+
+void bindTo1DTexture(const char* symbol, void* devicePtr, IndType count)
+{
+  if (std::string("texDATA").compare(symbol)==0)
+  {
+    HANDLE_ERROR (cudaBindTexture(NULL,texDATA, devicePtr,count*sizeof(DType2)));
+  }
+  else if (std::string("texGDATA").compare(symbol)==0)
+  {
+    HANDLE_ERROR (cudaBindTexture(NULL,texGDATA, devicePtr,count*sizeof(CufftType)));
+  }
+}
+
+
+void initTexture(const char* symbol, cudaArray** devicePtr, GriddingND::Array<DType> hostTexture)
+{
+  if (std::string("texKERNEL").compare(symbol)==0)
+  {
+    HANDLE_ERROR (cudaMallocArray (devicePtr, &texKERNEL.channelDesc, hostTexture.dim.width, 1));
+    HANDLE_ERROR (cudaBindTextureToArray (texKERNEL, *devicePtr));
+    HANDLE_ERROR(cudaMemcpyToArray(*devicePtr, 0, 0, hostTexture.data, sizeof(DType)*hostTexture.count(), cudaMemcpyHostToDevice));
+    
+    texKERNEL.filterMode = cudaFilterModePoint;
+    texKERNEL.normalized = true;
+    texKERNEL.addressMode[0] = cudaAddressModeClamp;
+  }
+  if (std::string("texKERNEL2D").compare(symbol)==0)
+  {
+    HANDLE_ERROR (cudaMallocArray (devicePtr, &texKERNEL2D.channelDesc, hostTexture.dim.width, hostTexture.dim.height));
+    HANDLE_ERROR (cudaBindTextureToArray (texKERNEL2D, *devicePtr));
+    HANDLE_ERROR(cudaMemcpyToArray(*devicePtr, 0, 0, hostTexture.data, sizeof(DType)*hostTexture.count(), cudaMemcpyHostToDevice));
+    
+    texKERNEL2D.filterMode = cudaFilterModeLinear;
+    texKERNEL2D.normalized = true;
+    texKERNEL2D.addressMode[0] = cudaAddressModeClamp;
+    texKERNEL2D.addressMode[1] = cudaAddressModeClamp;    
+  }
+  else if (std::string("texKERNEL3D").compare(symbol)==0)
+  {
+    cudaExtent volumesize=make_cudaExtent(hostTexture.dim.width, hostTexture.dim.height, hostTexture.dim.depth); 
+    cudaMalloc3DArray(devicePtr,&texKERNEL3D.channelDesc,volumesize); 
+
+    cudaMemcpy3DParms copyparams = {0};
+    copyparams.extent=volumesize; 
+    copyparams.dstArray=*devicePtr; 
+    copyparams.kind=cudaMemcpyHostToDevice; 
+    copyparams.srcPtr= make_cudaPitchedPtr((void*)hostTexture.data,sizeof(DType)*hostTexture.dim.width,hostTexture.dim.height,hostTexture.dim.depth); 
+
+    HANDLE_ERROR(cudaMemcpy3D(&copyparams)); 
+    HANDLE_ERROR (cudaBindTextureToArray (texKERNEL3D, *devicePtr));
+  
+    texKERNEL3D.filterMode = cudaFilterModeLinear;
+    texKERNEL3D.normalized = true;
+    texKERNEL3D.addressMode[0] = cudaAddressModeClamp;
+    texKERNEL3D.addressMode[1] = cudaAddressModeClamp;
+    texKERNEL3D.addressMode[2] = cudaAddressModeClamp;
+  }
+}
+
+void unbindTexture(const char* symbol)
+{
+  if (std::string("texKERNEL").compare(symbol)==0)
+  {
+    HANDLE_ERROR(cudaUnbindTexture(texKERNEL));    
+  }
+  else if (std::string("texKERNEL2D").compare(symbol)==0)
+  {
+    HANDLE_ERROR(cudaUnbindTexture(texKERNEL2D));    
+  }
+  else if (std::string("texKERNEL3D").compare(symbol)==0)
+  {
+    HANDLE_ERROR(cudaUnbindTexture(texKERNEL3D));    
+  }
+  else if (std::string("texDATA").compare(symbol)==0)
+  {
+    HANDLE_ERROR(cudaUnbindTexture(texDATA));    
+  }
+}
+
+
+void freeTexture(const char* symbol,cudaArray* devicePtr)
+{
+  HANDLE_ERROR(cudaFreeArray(devicePtr));
+  unbindTexture(symbol);
 }
 
 __global__ void fftScaleKernel(CufftType* data, DType scaling, int N)
@@ -339,30 +423,30 @@ void performFFTShift(CufftType* gdata_d,
     offset.z = (int)ceil((DType)(gridDims.depth / (DType)2.0));
     if (gridDims.width % 2)
     {
-      t_width = offset.x - 1;
+      t_width = (int)offset.x - 1;
     }
     else 
-      t_width = offset.x;
+      t_width = (int)offset.x;
   }
   else
   {
     offset.x = (int)floor((DType)(gridDims.width / (DType)2.0));
     offset.y = (int)floor((DType)(gridDims.height / (DType)2.0));
     offset.z = (int)floor((DType)(gridDims.depth / (DType)2.0));
-    t_width = offset.x;
+    t_width = (int)offset.x;
   }
   dim3 grid_dim;
   if (gi_host->is2Dprocessing)
-    grid_dim = dim3(getOptimalGridDim(gridDims.width*t_width,THREAD_BLOCK_SIZE));
+    grid_dim = dim3(getOptimalGridDim((long)(gridDims.width*t_width),THREAD_BLOCK_SIZE));
   else
-    grid_dim = dim3(getOptimalGridDim(gridDims.width*gridDims.width,THREAD_BLOCK_SIZE));
+    grid_dim = dim3(getOptimalGridDim((long)(gridDims.width*gridDims.width),THREAD_BLOCK_SIZE));
 
   dim3 block_dim(THREAD_BLOCK_SIZE);
 
   if (gi_host->is2Dprocessing)
-    fftShiftKernel2D<<<grid_dim,block_dim>>>(gdata_d,offset,gridDims.width*t_width);
+    fftShiftKernel2D<<<grid_dim,block_dim>>>(gdata_d,offset,(int)gridDims.width*t_width);
   else
-    fftShiftKernel<<<grid_dim,block_dim>>>(gdata_d,offset,gridDims.count()/2);
+    fftShiftKernel<<<grid_dim,block_dim>>>(gdata_d,offset,(int)gridDims.count()/2);
 }
 
 __global__ void forwardDeapodizationKernel(DType2* imdata, DType beta, DType norm_val, int N)

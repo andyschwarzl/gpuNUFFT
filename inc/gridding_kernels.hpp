@@ -1,6 +1,6 @@
 #ifndef GRIDDING_KERNELS_H
 #define GRIDDING_KERNELS_H
-#include "griddingFunctions.hpp"
+#include "gridding_utils.hpp"
 #include "cuda_utils.hpp"
 
 //INVERSE Operations
@@ -9,13 +9,41 @@
 void performConvolution( DType2* data_d, 
   DType* crds_d, 
   CufftType* gdata_d,
-  DType* kernel_d, 
+  DType* kernel_d,
+  IndType* sectors_d,
+  IndType* sector_centers_d,
+  GriddingND::GriddingInfo* gi_host
+  );
+
+void performConvolution( DType2* data_d, 
+  DType* crds_d, 
+  CufftType* gdata_d,
+  DType* kernel_d,
+  IndType* sectors_d, 
+  IndType2* sector_processing_order_d,
+  IndType* sector_centers_d,
+  GriddingND::GriddingInfo* gi_host
+  );
+
+void performTextureConvolution( DType2* data_d, 
+  DType* crds_d, 
+  CufftType* gdata_d,
+  DType*			kernel_d, 
   IndType* sectors_d, 
   IndType* sector_centers_d,
   GriddingND::GriddingInfo* gi_host
   );
 
 void performForwardConvolution( CufftType*		data_d, 
+  DType*			crds_d, 
+  CufftType*		gdata_d,
+  DType*			kernel_d, 
+  IndType*		sectors_d, 
+  IndType*		sector_centers_d,
+  GriddingND::GriddingInfo*	gi_host
+  );
+
+void performTextureForwardConvolution( CufftType*		data_d, 
   DType*			crds_d, 
   CufftType*		gdata_d,
   DType*			kernel_d, 

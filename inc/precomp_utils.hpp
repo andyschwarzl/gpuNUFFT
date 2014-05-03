@@ -56,32 +56,32 @@ __inline__ __device__ __host__ IndType2 computeSectorMapping(DType2 coord, Gridd
 
 __inline__ __device__ __host__ int computeXYZ2Lin(int x, int y, int z, GriddingND::Dimensions dim)
 {
-  return x + dim.height * (y + dim.width * z);
+  return x + (int)dim.height * (y + (int)dim.width * z);
 }
 
 __inline__ __device__ __host__ int computeXYZ2Lin(int x, int y, int z, IndType3 dim)
 {
-  return x + dim.y * (y + dim.x * z);
+  return x + (int)dim.y * (y + (int)dim.x * z);
 }
 
 __inline__ __device__ __host__ int computeXY2Lin(int x, int y, GriddingND::Dimensions dim)
 {
-  return x + dim.height * y;
+  return x + (int)dim.height * y;
 }
 
 __inline__ __device__ __host__ int computeXY2Lin(int x, int y, IndType3 dim)
 {
-  return x + dim.y * y;
+  return x + (int)dim.y * y;
 }
 
 __inline__ __device__ __host__ int computeInd32Lin(IndType3 sector, GriddingND::Dimensions dim)
 {
-  return sector.x + dim.height * (sector.y + dim.width * sector.z);
+  return (int)(sector.x + dim.height * (sector.y + dim.width * sector.z));
 }
 
 __inline__ __device__ __host__ int computeInd22Lin(IndType2 sector, GriddingND::Dimensions dim)
 {
-  return sector.x + dim.height * sector.y ;
+  return (int)(sector.x + dim.height * sector.y);
 }
 
 #endif

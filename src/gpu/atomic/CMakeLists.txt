@@ -5,7 +5,9 @@ include_directories(${GRIDDING_INC_DIR})
 													
 cuda_include_directories(${GRIDDING_INC_DIR})
 
-set(GPU_CU_SOURCES	${CMAKE_CURRENT_SOURCE_DIR}/atomic_gridding_kernels.cu 
+set(GPU_CU_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/atomic_gridding.cu 	
+					#${CMAKE_CURRENT_SOURCE_DIR}/atomic_gridding_kernels.cu 
+					#${CMAKE_CURRENT_SOURCE_DIR}/texture_gridding_kernels.cu 
 					#${CMAKE_CURRENT_SOURCE_DIR}/../std_gridding_kernels.cu
 									 )
 SET(CUDA_NVCC_FLAGS "-arch;sm_20;--ptxas-options=-v")

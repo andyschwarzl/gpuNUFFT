@@ -68,6 +68,9 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	// SectorData Count
 	GriddingND::Array<IndType> sectorDataCountArray = readAndCreateArray<IndType>(prhs,pcount++,0,"sector-data-count");
 
+  // Sector Processing Order
+  GriddingND::Array<IndType2> sectorProcessingOrderArray = readAndCreateArray<IndType2>(prhs,pcount++,0,"sector-processing-order");
+  
 	// Sector centers
 	GriddingND::Array<IndType> sectorCentersArray = readAndCreateArray<IndType>(prhs,pcount++,0,"sector-centers");
 
@@ -89,7 +92,9 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	int kernel_width = getParamField<int>(matParams,"kernel_width");
 	int sector_width = getParamField<int>(matParams,"sector_width");
 	int data_entries = getParamField<int>(matParams,"trajectory_length");
-	
+  int interpolation_type = getParamField<int>(matParams,"interpolation_type");
+	bool balance_workload = getParamField<bool>(matParams,"balance_workload");
+
 	GriddingND::Array<DType2> imdataArray;
 	imdataArray.data = imdata;
 	imdataArray.dim = imgDims;
@@ -102,7 +107,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 		mexPrintf("sector data count: %d\n",sectorDataCountArray.count());
 		mexPrintf("centers count: %d\n",sectorCentersArray.count());
 
-		mexPrintf("passed Params, IM_WIDTH: [%d,%d,%d], IM_COUNT: %d, OSR: %f, KERNEL_WIDTH: %d, SECTOR_WIDTH: %d, DATA_ENTRIES: %d, n_coils: %d\n",imgDims.width,imgDims.height,imgDims.depth,im_count,osr,kernel_width,sector_width,data_entries,n_coils);
+		mexPrintf("passed Params, IM_WIDTH: [%d,%d,%d], IM_COUNT: %d, OSR: %f, KERNEL_WIDTH: %d, SECTOR_WIDTH: %d, DATA_ENTRIES: %d, n_coils: %d, interpolation type: %d\n",imgDims.width,imgDims.height,imgDims.depth,im_count,osr,kernel_width,sector_width,data_entries,n_coils,interpolation_type);
 		size_t free_mem = 0;
 		size_t total_mem = 0;
 		cudaMemGetInfo(&free_mem, &total_mem);
@@ -130,7 +135,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
 	try
 	{
-		GriddingND::GriddingOperator* griddingOp = GriddingND::GriddingOperatorMatlabFactory::getInstance().loadPrecomputedGriddingOperator(kSpaceTraj,dataIndicesArray,sectorDataCountArray,sectorCentersArray,sensArray,kernel_width,sector_width,osr,imgDims);
+    GriddingND::GriddingOperatorMatlabFactory griddingFactory(getInterpolationTypeOf(interpolation_type),true,balance_workload);
+		GriddingND::GriddingOperator *griddingOp = griddingFactory.loadPrecomputedGriddingOperator(kSpaceTraj,dataIndicesArray,sectorDataCountArray,sectorProcessingOrderArray,sectorCentersArray,sensArray,kernel_width,sector_width,osr,imgDims);
 
 		griddingOp->performForwardGridding(imdataArray,dataArray);
 		

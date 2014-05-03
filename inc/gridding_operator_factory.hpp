@@ -3,6 +3,8 @@
 
 #include "config.hpp"
 #include "gridding_operator.hpp"
+#include "balanced_gridding_operator.hpp"
+#include "texture_gridding_operator.hpp"
 #include <algorithm>    // std::sort
 #include <vector>       // std::vector
 #include <string>
@@ -24,16 +26,46 @@ namespace GriddingND
   // 
   class GriddingOperatorFactory
   {
-  protected:
-    GriddingOperatorFactory()
+  public:
+    GriddingOperatorFactory() 
+      : interpolationType(CONST_LOOKUP),useGpu(true), balanceWorkload(false)
+    {
+    }
+    
+    GriddingOperatorFactory(const InterpolationType interpolationType) 
+      : interpolationType(interpolationType), useGpu(true), balanceWorkload(false)
+    {
+    }
+
+    GriddingOperatorFactory(const InterpolationType interpolationType,const bool useGpu) 
+      : interpolationType(interpolationType), useGpu(useGpu), balanceWorkload(false)
+    {
+    }
+
+    GriddingOperatorFactory(const InterpolationType interpolationType,const bool useGpu, bool balanceWorkload) 
+      : interpolationType(interpolationType), useGpu(useGpu), balanceWorkload(balanceWorkload)
     {
     }
 
     ~GriddingOperatorFactory()
     {
-
     }
 
+    GriddingOperator* createGriddingOperator(Array<DType>& kSpaceTraj, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, Dimensions& imgDims);
+
+    GriddingOperator* createGriddingOperator(Array<DType>& kSpaceTraj, Array<DType>& densCompData, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, Dimensions& imgDims);
+
+    GriddingOperator* createGriddingOperator(Array<DType>& kSpaceTraj, Array<DType>& densCompData, Array<DType2>& sensData, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, Dimensions& imgDims);
+
+    GriddingOperator* loadPrecomputedGriddingOperator(Array<DType>& kSpaceTraj, Array<IndType>& dataIndices, Array<IndType>& sectorDataCount,GriddingND::Array<IndType2>& sectorProcessingOrder,Array<IndType>& sectorCenters, Array<DType>& densCompData, Array<DType2>& sensData, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, Dimensions& imgDims);
+
+    GriddingOperator* loadPrecomputedGriddingOperator(Array<DType>& kSpaceTraj, Array<IndType>& dataIndices, Array<IndType>& sectorDataCount,GriddingND::Array<IndType2>& sectorProcessingOrder,Array<IndType>& sectorCenters, Array<DType2>& sensData, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, Dimensions& imgDims);
+
+    void setInterpolationType(InterpolationType interpolationType);
+
+    void setBalanceWorkload(bool balanceWorkload);
+    
+  protected:
     Array<IndType> assignSectors(GriddingOperator* griddingOp, Array<DType>& kSpaceTraj);
 
     template <typename T> 
@@ -41,6 +73,7 @@ namespace GriddingND
 
     virtual Array<IndType> initDataIndices(GriddingOperator* griddingOp, IndType coordCnt);
     virtual Array<IndType> initSectorDataCount(GriddingOperator* griddingOp, IndType coordCnt);
+    virtual Array<IndType2> initSectorProcessingOrder(GriddingOperator* griddingOp, IndType sectorCnt);
     virtual Array<DType> initDensData(GriddingOperator* griddingOp, IndType coordCnt);
     virtual Array<DType> initCoordsData(GriddingOperator* griddingOp, IndType coordCnt);
     virtual Array<IndType> initSectorCenters(GriddingOperator* griddingOp, IndType sectorCnt);
@@ -53,29 +86,24 @@ namespace GriddingND
     IndType computeTotalSectorCount(Dimensions dim, IndType sectorWidth);
 
     template <typename T>
-    std::vector<IndPair> sortVector(Array<T> assignedSectors);
+    std::vector<IndPair> sortVector(Array<T> assignedSectors, bool descending=false);
 
     Array<IndType> computeSectorDataCount(GriddingND::GriddingOperator *griddingOp,GriddingND::Array<IndType> assignedSectors);
+    void computeProcessingOrder(BalancedGriddingOperator* griddingOp);
 
     Array<IndType> computeSectorCenters(GriddingOperator *griddingOp);
     Array<IndType> computeSectorCenters2D(GriddingOperator *griddingOp);
 
     IndType computeSectorCenter(IndType var, IndType sectorWidth);
 
-  public:
-
-    GriddingOperator* createGriddingOperator(Array<DType>& kSpaceTraj, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, Dimensions& imgDims);
-
-    GriddingOperator* createGriddingOperator(Array<DType>& kSpaceTraj, Array<DType>& densCompData, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, Dimensions& imgDims);
-
-    GriddingOperator* createGriddingOperator(Array<DType>& kSpaceTraj, Array<DType>& densCompData, Array<DType2>& sensData, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, Dimensions& imgDims);
-
-    static GriddingOperatorFactory& getInstance();
+    GriddingOperator* createNewGriddingOperator(IndType kernelWidth, IndType sectorWidth, DType osf, Dimensions imgDims);
 
   private:
-    static GriddingOperatorFactory instance;
+    InterpolationType interpolationType;
 
-    static const bool useGpu = true;
+    bool useGpu;
+
+    bool balanceWorkload;
   };
 
 }

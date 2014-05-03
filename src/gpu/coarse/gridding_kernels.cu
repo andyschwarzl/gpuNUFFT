@@ -20,32 +20,8 @@
 //  * sector_centers : coordinates (x,y,z) of sector centers
 //  * temp_gdata     : temporary grid data
 //  * N              : number of threads
-__global__ void convolutionKernel(DType2* data, 
-  DType* crds, 
-  CufftType* gdata,
-  IndType* sectors, 
-  IndType* sector_centers,
-  DType2* temp_gdata,
-  int N
-  )
+__device__ void convolutionFunction(DType2* sdata, int sec, int sec_cnt, int sec_max, int sec_offset, DType2* data, DType* crds, CufftType* gdata, IndType* sectors, IndType* sector_centers,DType2* temp_gdata)
 {
-  extern __shared__ DType2 sdata[];//externally managed shared memory
-
-  int sec;
-  sec = blockIdx.x;
-  //init shared memory
-  for (int z=threadIdx.z;z<GI.sector_pad_width; z += blockDim.z)
-  {
-    int y=threadIdx.y;
-    int x=threadIdx.x;
-    int s_ind = getIndex(x,y,z,GI.sector_pad_width) ;
-    sdata[s_ind].x = 0.0f;//Re
-    sdata[s_ind].y = 0.0f;//Im
-  }
-  __syncthreads();
-  //start convolution
-  while (sec < N)
-  {
     int ind, k, i, j;
     __shared__ int max_dim, imin, imax,jmin,jmax,kmin,kmax;
 
@@ -58,11 +34,11 @@ __global__ void convolutionKernel(DType2* data,
 
     //Grid Points over threads
     int data_cnt;
-    data_cnt = sectors[sec];
+    data_cnt = sectors[sec] + sec_offset;
 
     max_dim =  GI.sector_pad_max;		
     
-    while (data_cnt < sectors[sec+1])
+    while (data_cnt < sec_max)
     {
       __shared__ DType3 data_point; //datapoint shared in every thread
       data_point.x = crds[data_cnt];
@@ -131,7 +107,7 @@ __global__ void convolutionKernel(DType2* data,
     } //grid points per sector
     __syncthreads();	
     //write shared data to temporary output grid
-    int sector_ind_offset = sec * GI.sector_dim;
+    int sector_ind_offset = sec_cnt * GI.sector_dim;
     
     for (k=threadIdx.z;k<GI.sector_pad_width; k += blockDim.z)
     {
@@ -148,13 +124,9 @@ __global__ void convolutionKernel(DType2* data,
       sdata[s_ind].y = (DType)0.0;
       __syncthreads();
     }
-    __syncthreads();
-    sec = sec + gridDim.x;
-  }//sec < sector_count
-  
 }
 
-__global__ void convolutionKernel2D(DType2* data, 
+__global__ void convolutionKernel(DType2* data, 
   DType* crds, 
   CufftType* gdata,
   IndType* sectors, 
@@ -168,15 +140,61 @@ __global__ void convolutionKernel2D(DType2* data,
   int sec;
   sec = blockIdx.x;
   //init shared memory
-  int y=threadIdx.y;
-  int x=threadIdx.x;
-  int s_ind = getIndex2D(x,y,GI.sector_pad_width) ;
-  sdata[s_ind].x = 0.0f;//Re
-  sdata[s_ind].y = 0.0f;//Im
+  for (int z=threadIdx.z;z<GI.sector_pad_width; z += blockDim.z)
+  {
+    int y=threadIdx.y;
+    int x=threadIdx.x;
+    int s_ind = getIndex(x,y,z,GI.sector_pad_width) ;
+    sdata[s_ind].x = 0.0f;//Re
+    sdata[s_ind].y = 0.0f;//Im
+  }
   __syncthreads();
   //start convolution
   while (sec < N)
   {
+    convolutionFunction(sdata,sec,sec,sectors[sec+1],0,data,crds,gdata,sectors,sector_centers,temp_gdata);
+    __syncthreads();
+    sec = sec + gridDim.x;
+  }//sec < sector_count
+  
+}
+
+__global__ void balancedConvolutionKernel(DType2* data, 
+  DType* crds, 
+  CufftType* gdata,
+  IndType* sectors,
+  IndType2* sector_processing_order,
+  IndType* sector_centers,
+  DType2* temp_gdata,
+  int N
+  )
+{
+  extern __shared__ DType2 sdata[];//externally managed shared memory
+
+  int sec_cnt = blockIdx.x;
+  int sec;
+  //init shared memory
+  for (int z=threadIdx.z;z<GI.sector_pad_width; z += blockDim.z)
+  {
+    int y=threadIdx.y;
+    int x=threadIdx.x;
+    int s_ind = getIndex(x,y,z,GI.sector_pad_width) ;
+    sdata[s_ind].x = 0.0f;//Re
+    sdata[s_ind].y = 0.0f;//Im
+  }
+  __syncthreads();
+  //start convolution
+  while (sec_cnt < N)
+  {
+    sec = sector_processing_order[sec_cnt].x;
+    convolutionFunction(sdata,sec,sec_cnt,min(sectors[sec+1],sectors[sec]+sector_processing_order[sec_cnt].y+MAXIMUM_PAYLOAD),sector_processing_order[sec_cnt].y,data,crds,gdata,sectors,sector_centers,temp_gdata);
+    __syncthreads();
+    sec_cnt = sec_cnt + gridDim.x;
+  }//sec < sector_count
+}
+
+__device__ void convolutionFunction2D(DType2* sdata, int sec, int sec_cnt, int sec_max, int sec_offset, DType2* data, DType* crds, CufftType* gdata, IndType* sectors, IndType* sector_centers, DType2* temp_gdata)
+{
     int ind, i, j;
     __shared__ int max_dim, imin, imax,jmin,jmax;
 
@@ -188,10 +206,10 @@ __global__ void convolutionKernel2D(DType2* data,
 
     //Grid Points over threads
     int data_cnt;
-    data_cnt = sectors[sec];
+    data_cnt = sectors[sec] + sec_offset;
 
     max_dim =  GI.sector_pad_max;		
-    while (data_cnt < sectors[sec+1])
+    while (data_cnt < sec_max)
     {
       __shared__ DType2 data_point; //datapoint shared in every thread
       data_point.x = crds[data_cnt];
@@ -240,7 +258,7 @@ __global__ void convolutionKernel2D(DType2* data,
     __syncthreads();	
 
     //write shared data to temporary output grid
-    int sector_ind_offset = sec * GI.sector_dim;
+    int sector_ind_offset = sec_cnt * GI.sector_dim;
 
     i=threadIdx.x;
     j=threadIdx.y;
@@ -254,17 +272,79 @@ __global__ void convolutionKernel2D(DType2* data,
     __syncthreads();
     sdata[s_ind].x = (DType)0.0;
     sdata[s_ind].y = (DType)0.0;
+}
 
+__global__ void convolutionKernel2D(DType2* data, 
+  DType* crds, 
+  CufftType* gdata,
+  IndType* sectors, 
+  IndType* sector_centers,
+  DType2* temp_gdata,
+  int N
+  )
+{
+  extern __shared__ DType2 sdata[];//externally managed shared memory
+
+  int sec;
+  sec = blockIdx.x;
+  //init shared memory
+  int y=threadIdx.y;
+  int x=threadIdx.x;
+  int s_ind = getIndex2D(x,y,GI.sector_pad_width) ;
+  sdata[s_ind].x = 0.0f;//Re
+  sdata[s_ind].y = 0.0f;//Im
+  __syncthreads();
+  //start convolution
+  while (sec < N)
+  {
+    convolutionFunction2D(sdata,sec,sec,sectors[sec+1],0,data,crds,gdata,sectors,sector_centers,temp_gdata);
     __syncthreads();
     sec = sec + gridDim.x;
   }//sec < sector_count
 }
 
-
-__global__ void composeOutputKernel(DType2* temp_gdata, CufftType* gdata, IndType* sector_centers)
+__global__ void balancedConvolutionKernel2D(DType2* data, 
+  DType* crds, 
+  CufftType* gdata,
+  IndType* sectors, 
+  IndType2* sector_processing_order,
+  IndType* sector_centers,
+  DType2* temp_gdata,
+  int N
+  )
 {
-  for (int sec = 0; sec < GI.sector_count; sec++)
+  extern __shared__ DType2 sdata[];//externally managed shared memory
+  
+  int sec_cnt = blockIdx.x;
+  int sec;
+
+  //init shared memory
+  int y=threadIdx.y;
+  int x=threadIdx.x;
+  int s_ind = getIndex2D(x,y,GI.sector_pad_width) ;
+  sdata[s_ind].x = 0.0f;//Re
+  sdata[s_ind].y = 0.0f;//Im
+  __syncthreads();
+  //start convolution
+  while (sec_cnt < N)
   {
+    sec = sector_processing_order[sec_cnt].x;
+    convolutionFunction2D(sdata,sec,sec_cnt,min(sectors[sec+1],sectors[sec]+sector_processing_order[sec_cnt].y+MAXIMUM_PAYLOAD),sector_processing_order[sec_cnt].y,data,crds,gdata,sectors,sector_centers,temp_gdata);
+    __syncthreads();
+    sec_cnt = sec_cnt + gridDim.x;
+  }//sec < sector_count
+}
+
+
+__global__ void composeOutputKernel(DType2* temp_gdata, CufftType* gdata, IndType* sector_centers, IndType2* sector_processing_order, int N)
+{
+  int sec;
+  for (int sec_cnt = 0; sec_cnt < N; sec_cnt++)
+  {    
+    if (sector_processing_order != NULL)
+      sec = sector_processing_order[sec_cnt].x;
+    else
+      sec = sec_cnt;
     __syncthreads();
     __shared__ IndType3 center;
     center.x = sector_centers[sec * 3];
@@ -275,7 +355,7 @@ __global__ void composeOutputKernel(DType2* temp_gdata, CufftType* gdata, IndTyp
     sector_ind_offset = computeXYZ2Lin(center.x - GI.sector_offset,center.y - GI.sector_offset,center.z - GI.sector_offset,GI.gridDims);
 
     __shared__ int sector_grid_offset;
-    sector_grid_offset = sec * GI.sector_dim;
+    sector_grid_offset = sec_cnt * GI.sector_dim;
     //write data from temp grid to overall output grid
     for (int z=threadIdx.z;z<GI.sector_pad_width; z += blockDim.z)
     {
@@ -302,10 +382,16 @@ __global__ void composeOutputKernel(DType2* temp_gdata, CufftType* gdata, IndTyp
 }
 
 
-__global__ void composeOutputKernel2D(DType2* temp_gdata, CufftType* gdata, IndType* sector_centers)
+__global__ void composeOutputKernel2D(DType2* temp_gdata, CufftType* gdata, IndType* sector_centers, IndType2* sector_processing_order, int N)
 {
-  for (int sec = 0; sec < GI.sector_count; sec++)
+  int sec;
+  for (int sec_cnt = 0; sec_cnt < N; sec_cnt++)
   {
+    if (sector_processing_order != NULL)
+      sec = sector_processing_order[sec_cnt].x;
+    else
+      sec = sec_cnt;
+
     __syncthreads();
     __shared__ IndType2 center;
     center.x = sector_centers[sec * 2];
@@ -313,7 +399,7 @@ __global__ void composeOutputKernel2D(DType2* temp_gdata, CufftType* gdata, IndT
     __shared__ int sector_ind_offset;
     sector_ind_offset = computeXY2Lin(center.x - GI.sector_offset,center.y - GI.sector_offset,GI.gridDims);
     __shared__ int sector_grid_offset;
-    sector_grid_offset = sec * GI.sector_dim;
+    sector_grid_offset = sec_cnt * GI.sector_dim;
     //write data from temp grid to overall output grid
     int x=threadIdx.x;
     int y=threadIdx.y;
@@ -335,14 +421,14 @@ __global__ void composeOutputKernel2D(DType2* temp_gdata, CufftType* gdata, IndT
 
 
 //very slow way of composing the output, should only be used on compute capabilties lower than 2.0
-void composeOutput(DType2* temp_gdata_d, CufftType* gdata_d, IndType* sector_centers_d, GriddingND::GriddingInfo* gi_host)
+void composeOutput(DType2* temp_gdata_d, CufftType* gdata_d, IndType* sector_centers_d, GriddingND::GriddingInfo* gi_host, IndType2* sector_processing_order_d, int N)
 {
   dim3 grid_dim(1);
   dim3 block_dim(gi_host->sector_pad_width,gi_host->sector_pad_width,1);
   if (gi_host->is2Dprocessing)
-    composeOutputKernel2D<<<grid_dim,block_dim>>>(temp_gdata_d,gdata_d,sector_centers_d);
+    composeOutputKernel2D<<<grid_dim,block_dim>>>(temp_gdata_d,gdata_d,sector_centers_d,sector_processing_order_d,N);
   else
-    composeOutputKernel<<<grid_dim,block_dim>>>(temp_gdata_d,gdata_d,sector_centers_d);
+    composeOutputKernel<<<grid_dim,block_dim>>>(temp_gdata_d,gdata_d,sector_centers_d,sector_processing_order_d,N);
 }
 
 void performConvolution( DType2* data_d, 
@@ -375,7 +461,7 @@ void performConvolution( DType2* data_d,
   if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
     printf("error at adj thread synchronization 2: %s\n",cudaGetErrorString(cudaGetLastError()));
   //compose total output from local blocks 
-  composeOutput(temp_gdata_d,gdata_d,sector_centers_d,gi_host);
+  composeOutput(temp_gdata_d,gdata_d,sector_centers_d,gi_host,NULL,gi_host->sector_count);
   
   if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
     printf("error at adj thread synchronization 3: %s\n",cudaGetErrorString(cudaGetLastError()));
@@ -383,6 +469,45 @@ void performConvolution( DType2* data_d,
   freeDeviceMem((void*)temp_gdata_d);
 }
 
+
+void performConvolution( DType2* data_d, 
+  DType* crds_d, 
+  CufftType* gdata_d,
+  DType* kernel_d, 
+  IndType* sectors_d,
+  IndType2* sector_processing_order_d,
+  IndType* sector_centers_d,
+  GriddingND::GriddingInfo* gi_host
+  )
+{
+  DType2* temp_gdata_d;
+  int temp_grid_count = gi_host->sectorsToProcess * gi_host->sector_dim;
+  if (DEBUG)
+    printf("allocate temp grid data of size %d...\n",temp_grid_count);
+  allocateDeviceMem<DType2>(&temp_gdata_d,temp_grid_count);
+
+  long shared_mem_size = gi_host->sector_dim*sizeof(DType2);
+
+  dim3 block_dim(gi_host->sector_pad_width,gi_host->sector_pad_width,1);
+  dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,(gi_host->sector_pad_width)*(gi_host->sector_pad_width)*(1)));
+  if (DEBUG)
+    printf("convolution requires %d bytes of shared memory!\n",shared_mem_size);
+
+  if (gi_host->is2Dprocessing)
+    balancedConvolutionKernel2D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_processing_order_d,sector_centers_d,temp_gdata_d,gi_host->sectorsToProcess);
+  else
+    balancedConvolutionKernel<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_processing_order_d,sector_centers_d,temp_gdata_d,gi_host->sectorsToProcess);
+
+  if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
+    printf("error at adj thread synchronization 2: %s\n",cudaGetErrorString(cudaGetLastError()));
+  //compose total output from local blocks 
+  composeOutput(temp_gdata_d,gdata_d,sector_centers_d,gi_host,sector_processing_order_d,gi_host->sectorsToProcess);
+  
+  if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
+    printf("error at adj thread synchronization 3: %s\n",cudaGetErrorString(cudaGetLastError()));
+  
+  freeDeviceMem((void*)temp_gdata_d);
+}
 
 // ----------------------------------------------------------------------------
 // forwardConvolutionKernel: NUFFT kernel

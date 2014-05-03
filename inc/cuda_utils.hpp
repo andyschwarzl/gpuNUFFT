@@ -5,7 +5,7 @@
 #include <cuda_runtime.h>
 #include <stdio.h>
 #include "cufft.h"
-#include "griddingFunctions.hpp"
+#include "gridding_utils.hpp"
 #include "gridding_operator.hpp"
 #include <stdarg.h>
 
@@ -21,7 +21,7 @@
   }}\
 
 template<typename TypeName>
-inline void allocateDeviceMem(TypeName** device_ptr, int num_elements)
+inline void allocateDeviceMem(TypeName** device_ptr, IndType num_elements)
 {
   HANDLE_ERROR(cudaMalloc(device_ptr,num_elements*sizeof(TypeName)));
 }
@@ -32,27 +32,27 @@ inline void freeDeviceMem(void* device_ptr)
 }
 
 template<typename TypeName>
-inline void copyToDevice(TypeName* host_ptr, TypeName* device_ptr, int num_elements)
+inline void copyToDevice(TypeName* host_ptr, TypeName* device_ptr, IndType num_elements)
 {
   HANDLE_ERROR(cudaMemcpy(device_ptr, host_ptr,num_elements*sizeof(TypeName),cudaMemcpyHostToDevice ));
 }
 
 template<typename TypeName>
-inline void allocateAndCopyToDeviceMem(TypeName** device_ptr, TypeName* host_ptr, int num_elements)
+inline void allocateAndCopyToDeviceMem(TypeName** device_ptr, TypeName* host_ptr, IndType num_elements)
 {
   allocateDeviceMem<TypeName>(device_ptr,num_elements);
   copyToDevice<TypeName>(host_ptr,*device_ptr,num_elements);
 }
 
 template<typename TypeName>
-inline void allocateAndSetMem(TypeName** device_ptr, int num_elements,int value)
+inline void allocateAndSetMem(TypeName** device_ptr, IndType num_elements,int value)
 {
   allocateDeviceMem<TypeName>(device_ptr,num_elements);
   HANDLE_ERROR(cudaMemset(*device_ptr,value,num_elements*sizeof(TypeName)));
 }
 
 template<typename TypeName>
-inline void copyFromDevice(TypeName* device_ptr, TypeName* host_ptr, int num_elements)
+inline void copyFromDevice(TypeName* device_ptr, TypeName* host_ptr, IndType num_elements)
 {
   HANDLE_ERROR(cudaMemcpy(host_ptr, device_ptr,num_elements*sizeof(TypeName),cudaMemcpyDeviceToHost ));
 }
@@ -116,8 +116,17 @@ inline void showMemoryInfo()
   showMemoryInfo(false);
 }
 
-// prototype
-// implementation in cu file
+// prototypes
+// for function
+// implementations that have to reside in cu file
 void initConstSymbol(const char* symbol, const void* src, IndType count);
+
+void initTexture(const char* symbol, cudaArray** devicePtr, GriddingND::Array<DType> hostTexture);
+
+void bindTo1DTexture(const char* symbol, void* devicePtr, IndType count);
+
+void unbindTexture(const char* symbol);
+
+void freeTexture(const char* symbol,cudaArray* devicePtr);
 
 #endif

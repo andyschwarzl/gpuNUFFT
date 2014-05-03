@@ -7,6 +7,8 @@
 
 #define DEFAULT_VALUE(a) ((a == 0) ? 1 : a)
 
+#define MAXIMUM_PAYLOAD 256
+
 namespace GriddingND
 {
   struct IndPair : std::pair<IndType,IndType>
@@ -19,6 +21,11 @@ namespace GriddingND
   bool operator<(const IndPair& a) const
   {
     return this->second < a.second;
+  }
+
+  bool operator>(const IndPair& a) const
+  {
+    return this->second > a.second;
   }
   };
 
@@ -93,6 +100,14 @@ namespace GriddingND
 
   };
 
+  enum InterpolationType
+  {
+    CONST_LOOKUP,
+    TEXTURE_LOOKUP,
+    TEXTURE2D_LOOKUP,
+    TEXTURE3D_LOOKUP
+  };
+
   enum GriddingOutput
   {
     CONVOLUTION,
@@ -104,6 +119,13 @@ namespace GriddingND
   {
     FORWARD,
     INVERSE
+  };
+
+  enum OperatorType
+  {
+    DEFAULT,
+    TEXTURE,
+    BALANCED
   };
 
   struct GriddingInfo 
@@ -135,6 +157,7 @@ namespace GriddingND
     DType aniso_z_scale;
 
     DType radiusSquared;
+    DType radiusSquared_inv;
     DType dist_multiplier;
 
     IndType3 imgDims;
@@ -144,6 +167,8 @@ namespace GriddingND
     IndType gridDims_count;
 
     bool is2Dprocessing;
+    int interpolationType;
+    int sectorsToProcess;
   };
 
 }

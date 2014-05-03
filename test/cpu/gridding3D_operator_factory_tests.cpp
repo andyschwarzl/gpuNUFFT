@@ -38,8 +38,8 @@ TEST(OperatorFactoryTest,TestInit)
 	imgDims.width = imageWidth;
 	imgDims.height = imageWidth;
 	imgDims.depth = imageWidth;
-
-	GriddingND::GriddingOperator *griddingOp = GriddingND::GriddingOperatorFactory::getInstance().createGriddingOperator(kSpaceTraj, kernelWidth, sectorWidth, osf, imgDims);
+  GriddingND::GriddingOperatorFactory factory;
+	GriddingND::GriddingOperator *griddingOp = factory.createGriddingOperator(kSpaceTraj, kernelWidth, sectorWidth, osf, imgDims);
 
 	EXPECT_TRUE(griddingOp != NULL);
 
@@ -103,7 +103,8 @@ TEST(OperatorFactoryTest,TestInvalidArgumentInit)
 	imgDims.depth = imageWidth;
 
 	EXPECT_THROW({
-	GriddingND::GriddingOperator *griddingOp = GriddingND::GriddingOperatorFactory::getInstance().createGriddingOperator(kSpaceTraj, kernelWidth, sectorWidth, osf, imgDims);
+    GriddingND::GriddingOperatorFactory factory;
+	GriddingND::GriddingOperator *griddingOp = factory.createGriddingOperator(kSpaceTraj, kernelWidth, sectorWidth, osf, imgDims);
 	},std::invalid_argument);
 }
 
@@ -126,8 +127,8 @@ TEST(OperatorFactoryTest,Test2DInit)
     kSpaceTraj.dim.length = coordCnt;
 
 	GriddingND::Dimensions imgDims(imageWidth,imageWidth);
-
-	GriddingND::GriddingOperator *griddingOp = GriddingND::GriddingOperatorFactory::getInstance().createGriddingOperator(kSpaceTraj, kernelWidth, sectorWidth, osf, imgDims);
+  GriddingND::GriddingOperatorFactory factory;
+	GriddingND::GriddingOperator *griddingOp = factory.createGriddingOperator(kSpaceTraj, kernelWidth, sectorWidth, osf, imgDims);
 
 	EXPECT_TRUE(griddingOp != NULL);
 

@@ -20,6 +20,104 @@
 //  * sector_centers : coordinates (x,y,z) of sector centers
 //  * temp_gdata     : temporary grid data
 //  * N              : number of threads
+__device__ void textureConvolutionFunction(DType2* sdata, int sec, int sec_cnt, int sec_max, int sec_offset, DType2* data, DType* crds, CufftType* gdata, IndType* sectors, IndType* sector_centers,DType2* temp_gdata)
+{
+  int ind, k, i, j;
+  __shared__ int max_dim, imin, imax,jmin,jmax,kmin,kmax;
+
+  DType dx_sqr, dy_sqr, dz_sqr, val, ix, jy, kz;
+
+  __shared__ IndType3 center;
+  center.x = sector_centers[sec * 3];
+  center.y = sector_centers[sec * 3 + 1];
+  center.z = sector_centers[sec * 3 + 2];//+ GI.aniso_z_shift;
+
+  //Grid Points over threads
+  int data_cnt;
+  data_cnt = sectors[sec] + sec_offset;
+
+  max_dim =  GI.sector_pad_max;		
+
+  while (data_cnt < sec_max)
+  {
+    __shared__ DType3 data_point; //datapoint shared in every thread
+    data_point.x = crds[data_cnt];
+    data_point.y = crds[data_cnt +GI.data_count];
+    data_point.z = crds[data_cnt +2*GI.data_count];
+    // set the boundaries of final dataset for gridding this point
+    ix = static_cast<DType>((data_point.x + 0.5) * (GI.gridDims.x) - center.x + GI.sector_offset);
+    set_minmax(&ix, &imin, &imax, max_dim, GI.kernel_radius);
+    jy = static_cast<DType>((data_point.y + 0.5) * (GI.gridDims.y) - center.y + GI.sector_offset);
+    set_minmax(&jy, &jmin, &jmax, max_dim, GI.kernel_radius);
+    // take resolution in x(y) direction to keep isotropic voxel size
+    //kz = static_cast<DType>((data_point.z + 0.5 - GI.aniso_z_shift) * (GI.gridDims.x) - center.z + GI.sector_offset);
+    kz = static_cast<DType>((data_point.z + 0.5) * (GI.gridDims.z) - center.z + GI.sector_offset);
+    set_minmax(&kz, &kmin, &kmax, max_dim, GI.kernel_radius);
+
+    // grid this point onto the neighboring cartesian points
+    for (k=threadIdx.z;k<=kmax; k += blockDim.z)
+    {
+      if (k<=kmax && k>=kmin)
+      {
+        //kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.gridDims.x)) - 0.5f + GI.aniso_z_shift;
+        kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.gridDims.z)) - 0.5f;
+        // scale distance in z direction with x,y dimension
+        dz_sqr = (kz - data_point.z)*GI.aniso_z_scale;
+        dz_sqr *= dz_sqr;
+
+        j=threadIdx.y;
+        if (j<=jmax && j>=jmin)
+        {
+          jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.y)) - 0.5f;
+          dy_sqr = jy - data_point.y;
+          dy_sqr *= dy_sqr;
+          i=threadIdx.x;
+
+          if (i<=imax && i>=imin)
+          {
+            ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;
+            dx_sqr = ix - data_point.x;
+            dx_sqr *= dx_sqr;
+
+            //get kernel value from texture
+            val = computeTextureLookup(dx_sqr*GI.radiusSquared_inv,dy_sqr*GI.radiusSquared_inv,dz_sqr*GI.radiusSquared_inv);
+
+            ind = getIndex(i,j,k,GI.sector_pad_width);
+
+            // multiply data by current kernel val 
+            // grid complex or scalar 
+            //sdata[ind].x += val * data[data_cnt].x;
+            //sdata[ind].y += val * data[data_cnt].y;
+            sdata[ind].x += val * tex1Dfetch(texDATA,data_cnt).x;
+            sdata[ind].y += val * tex1Dfetch(texDATA,data_cnt).y;
+          } // x
+        } // y
+      } // z
+    }//for loop over z entries
+    __syncthreads();	
+    data_cnt++;
+  } //grid points per sector
+  __syncthreads();	
+  //write shared data to temporary output grid
+  int sector_ind_offset = sec_cnt * GI.sector_dim;
+
+  for (k=threadIdx.z;k<GI.sector_pad_width; k += blockDim.z)
+  {
+    i=threadIdx.x;
+    j=threadIdx.y;
+
+    int s_ind = getIndex(i,j,k,GI.sector_pad_width) ;//index in shared grid
+    ind = sector_ind_offset + s_ind;//index in temp output grid
+
+    temp_gdata[ind].x = sdata[s_ind].x;//Re
+    temp_gdata[ind].y = sdata[s_ind].y;//Im
+    __syncthreads();
+    sdata[s_ind].x = (DType)0.0;
+    sdata[s_ind].y = (DType)0.0;
+    __syncthreads();
+  }
+}
+
 __global__ void textureConvolutionKernel(DType2* data, 
   DType* crds, 
   CufftType* gdata,
@@ -46,104 +144,88 @@ __global__ void textureConvolutionKernel(DType2* data,
   //start convolution
   while (sec < N)
   {
-    int ind, k, i, j;
-    __shared__ int max_dim, imin, imax,jmin,jmax,kmin,kmax;
-
-    DType dx_sqr, dy_sqr, dz_sqr, val, ix, jy, kz;
-
-    __shared__ IndType3 center;
-    center.x = sector_centers[sec * 3];
-    center.y = sector_centers[sec * 3 + 1];
-    center.z = sector_centers[sec * 3 + 2];//+ GI.aniso_z_shift;
-
-    //Grid Points over threads
-    int data_cnt;
-    data_cnt = sectors[sec];
-
-    max_dim =  GI.sector_pad_max;		
-
-    while (data_cnt < sectors[sec+1])
-    {
-      __shared__ DType3 data_point; //datapoint shared in every thread
-      data_point.x = crds[data_cnt];
-      data_point.y = crds[data_cnt +GI.data_count];
-      data_point.z = crds[data_cnt +2*GI.data_count];
-      // set the boundaries of final dataset for gridding this point
-      ix = static_cast<DType>((data_point.x + 0.5) * (GI.gridDims.x) - center.x + GI.sector_offset);
-      set_minmax(&ix, &imin, &imax, max_dim, GI.kernel_radius);
-      jy = static_cast<DType>((data_point.y + 0.5) * (GI.gridDims.y) - center.y + GI.sector_offset);
-      set_minmax(&jy, &jmin, &jmax, max_dim, GI.kernel_radius);
-      // take resolution in x(y) direction to keep isotropic voxel size
-      //kz = static_cast<DType>((data_point.z + 0.5 - GI.aniso_z_shift) * (GI.gridDims.x) - center.z + GI.sector_offset);
-      kz = static_cast<DType>((data_point.z + 0.5) * (GI.gridDims.z) - center.z + GI.sector_offset);
-      set_minmax(&kz, &kmin, &kmax, max_dim, GI.kernel_radius);
-
-      // grid this point onto the neighboring cartesian points
-      for (k=threadIdx.z;k<=kmax; k += blockDim.z)
-      {
-        if (k<=kmax && k>=kmin)
-        {
-          //kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.gridDims.x)) - 0.5f + GI.aniso_z_shift;
-          kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.gridDims.z)) - 0.5f;
-          // scale distance in z direction with x,y dimension
-          dz_sqr = (kz - data_point.z)*GI.aniso_z_scale;
-          dz_sqr *= dz_sqr;
-
-          j=threadIdx.y;
-          if (j<=jmax && j>=jmin)
-          {
-            jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.y)) - 0.5f;
-            dy_sqr = jy - data_point.y;
-            dy_sqr *= dy_sqr;
-            i=threadIdx.x;
-
-            if (i<=imax && i>=imin)
-            {
-              ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;
-              dx_sqr = ix - data_point.x;
-              dx_sqr *= dx_sqr;
-
-              //get kernel value from texture
-              val = computeTextureLookup(dx_sqr*GI.radiusSquared_inv,dy_sqr*GI.radiusSquared_inv,dz_sqr*GI.radiusSquared_inv);
-
-              ind = getIndex(i,j,k,GI.sector_pad_width);
-
-              // multiply data by current kernel val 
-              // grid complex or scalar 
-              //sdata[ind].x += val * data[data_cnt].x;
-              //sdata[ind].y += val * data[data_cnt].y;
-              sdata[ind].x += val * tex1Dfetch(texDATA,data_cnt).x;
-              sdata[ind].y += val * tex1Dfetch(texDATA,data_cnt).y;
-            } // x
-          } // y
-        } // z
-      }//for loop over z entries
-      __syncthreads();	
-      data_cnt++;
-    } //grid points per sector
-    __syncthreads();	
-    //write shared data to temporary output grid
-    int sector_ind_offset = sec * GI.sector_dim;
-
-    for (k=threadIdx.z;k<GI.sector_pad_width; k += blockDim.z)
-    {
-      i=threadIdx.x;
-      j=threadIdx.y;
-
-      int s_ind = getIndex(i,j,k,GI.sector_pad_width) ;//index in shared grid
-      ind = sector_ind_offset + s_ind;//index in temp output grid
-
-      temp_gdata[ind].x = sdata[s_ind].x;//Re
-      temp_gdata[ind].y = sdata[s_ind].y;//Im
-      __syncthreads();
-      sdata[s_ind].x = (DType)0.0;
-      sdata[s_ind].y = (DType)0.0;
-      __syncthreads();
-    }
+    convolutionFunction(sdata,sec,sec,sectors[sec+1],0,data,crds,gdata,sectors,sector_centers,temp_gdata);
     __syncthreads();
     sec = sec + gridDim.x;
   }//sec < sector_count
 
+}
+
+__device__ void textureConvolutionFunction2D(DType2* sdata, int sec, int sec_cnt, int sec_max, int sec_offset, DType2* data, DType* crds, CufftType* gdata, IndType* sectors, IndType* sector_centers, DType2* temp_gdata)
+{
+    int ind, i, j;
+  __shared__ int max_dim, imin, imax,jmin,jmax;
+
+  DType dx_sqr, dy_sqr, val, ix, jy;
+
+  __shared__ IndType2 center;
+  center.x = sector_centers[sec * 2];
+  center.y = sector_centers[sec * 2 + 1];
+
+  //Grid Points over threads
+  int data_cnt;
+  data_cnt = sectors[sec] + sec_offset;
+
+  max_dim =  GI.sector_pad_max;		
+  while (data_cnt < sec_max)
+  {
+    __shared__ DType2 data_point; //datapoint shared in every thread
+    data_point.x = crds[data_cnt];
+    data_point.y = crds[data_cnt +GI.data_count];
+    // set the boundaries of final dataset for gridding this point
+    ix = (data_point.x + 0.5f) * (GI.gridDims.x) - center.x + GI.sector_offset;
+    set_minmax(&ix, &imin, &imax, max_dim, GI.kernel_radius);
+    jy = (data_point.y + 0.5f) * (GI.gridDims.y) - center.y + GI.sector_offset;
+    set_minmax(&jy, &jmin, &jmax, max_dim, GI.kernel_radius);
+
+    // grid this point onto the neighboring cartesian points
+    j=threadIdx.y;
+    if (j<=jmax && j>=jmin)
+    {
+      jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.y)) - 0.5f;   
+      dy_sqr = jy - data_point.y;
+      dy_sqr *= dy_sqr;
+
+      i=threadIdx.x;
+
+      if (i<=imax && i>=imin)
+      {
+        ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;
+        dx_sqr = ix - data_point.x;
+        dx_sqr *= dx_sqr;
+        //get kernel value from texture
+        val = computeTextureLookup(dx_sqr*GI.radiusSquared_inv,dy_sqr*GI.radiusSquared_inv);
+
+        ind = getIndex2D(i,j,GI.sector_pad_width);
+
+        // multiply data by current kernel val 
+        // grid complex or scalar 
+        //sdata[ind].x += val * data[data_cnt].x;
+        //sdata[ind].y += val * data[data_cnt].y;
+        sdata[ind].x += val * tex1Dfetch(texDATA,data_cnt).x;
+        sdata[ind].y += val * tex1Dfetch(texDATA,data_cnt).y;
+      } // x 	 
+    } // y 
+    __syncthreads();	
+    data_cnt++;
+  } //grid points per sector
+  __syncthreads();	
+
+  //write shared data to temporary output grid
+  int sector_ind_offset = sec_cnt * GI.sector_dim;
+
+  i=threadIdx.x;
+  j=threadIdx.y;
+
+  int s_ind = getIndex2D(i,j,GI.sector_pad_width) ;//index in shared grid
+  ind = sector_ind_offset + s_ind;//index in temp output grid
+
+  temp_gdata[ind].x = sdata[s_ind].x;//Re
+  temp_gdata[ind].y = sdata[s_ind].y;//Im
+
+  __syncthreads();
+  sdata[s_ind].x = (DType)0.0;
+  sdata[s_ind].y = (DType)0.0;
 }
 
 __global__ void textureConvolutionKernel2D(DType2* data, 
@@ -169,80 +251,7 @@ __global__ void textureConvolutionKernel2D(DType2* data,
   //start convolution
   while (sec < N)
   {
-    int ind, i, j;
-    __shared__ int max_dim, imin, imax,jmin,jmax;
-
-    DType dx_sqr, dy_sqr, val, ix, jy;
-
-    __shared__ IndType2 center;
-    center.x = sector_centers[sec * 2];
-    center.y = sector_centers[sec * 2 + 1];
-
-    //Grid Points over threads
-    int data_cnt;
-    data_cnt = sectors[sec];
-
-    max_dim =  GI.sector_pad_max;		
-    while (data_cnt < sectors[sec+1])
-    {
-      __shared__ DType2 data_point; //datapoint shared in every thread
-      data_point.x = crds[data_cnt];
-      data_point.y = crds[data_cnt +GI.data_count];
-      // set the boundaries of final dataset for gridding this point
-      ix = (data_point.x + 0.5f) * (GI.gridDims.x) - center.x + GI.sector_offset;
-      set_minmax(&ix, &imin, &imax, max_dim, GI.kernel_radius);
-      jy = (data_point.y + 0.5f) * (GI.gridDims.y) - center.y + GI.sector_offset;
-      set_minmax(&jy, &jmin, &jmax, max_dim, GI.kernel_radius);
-
-      // grid this point onto the neighboring cartesian points
-      j=threadIdx.y;
-      if (j<=jmax && j>=jmin)
-      {
-        jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.y)) - 0.5f;   
-        dy_sqr = jy - data_point.y;
-        dy_sqr *= dy_sqr;
-
-        i=threadIdx.x;
-
-        if (i<=imax && i>=imin)
-        {
-          ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;
-          dx_sqr = ix - data_point.x;
-          dx_sqr *= dx_sqr;
-          //get kernel value from texture
-          val = computeTextureLookup(dx_sqr*GI.radiusSquared_inv,dy_sqr*GI.radiusSquared_inv);
-
-          ind = getIndex2D(i,j,GI.sector_pad_width);
-
-          // multiply data by current kernel val 
-          // grid complex or scalar 
-          //sdata[ind].x += val * data[data_cnt].x;
-          //sdata[ind].y += val * data[data_cnt].y;
-          sdata[ind].x += val * tex1Dfetch(texDATA,data_cnt).x;
-          sdata[ind].y += val * tex1Dfetch(texDATA,data_cnt).y;
-        } // x 	 
-      } // y 
-      __syncthreads();	
-      data_cnt++;
-    } //grid points per sector
-    __syncthreads();	
-
-    //write shared data to temporary output grid
-    int sector_ind_offset = sec * GI.sector_dim;
-
-    i=threadIdx.x;
-    j=threadIdx.y;
-
-    int s_ind = getIndex2D(i,j,GI.sector_pad_width) ;//index in shared grid
-    ind = sector_ind_offset + s_ind;//index in temp output grid
-
-    temp_gdata[ind].x = sdata[s_ind].x;//Re
-    temp_gdata[ind].y = sdata[s_ind].y;//Im
-
-    __syncthreads();
-    sdata[s_ind].x = (DType)0.0;
-    sdata[s_ind].y = (DType)0.0;
-
+    convolutionFunction2D(sdata,sec,sec,sectors[sec+1],0,data,crds,gdata,sectors,sector_centers,temp_gdata);
     __syncthreads();
     sec = sec + gridDim.x;
   }//sec < sector_count

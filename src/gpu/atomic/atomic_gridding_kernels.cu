@@ -389,7 +389,7 @@ __device__ void convolutionFunction2(int* sec, int sec_max, int sec_offset, DTyp
 
     //write shared data to output grid
     __syncthreads();
-    //int sector_ind_offset = sec * GI.sector_dim;
+
     __shared__ int sector_ind_offset;
     sector_ind_offset  = computeXYZ2Lin(center.x - GI.sector_offset,center.y - GI.sector_offset,center.z - GI.sector_offset,GI.gridDims);
 

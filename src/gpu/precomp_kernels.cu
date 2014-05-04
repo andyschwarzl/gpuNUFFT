@@ -174,13 +174,13 @@ void sortArrays(GriddingND::GriddingOperator* griddingOp,
 
 __global__ void selectOrderedGPUKernel(DType2* data, DType2* data_sorted, IndType* dataIndices, IndType offset, IndType N)
 {
-  int t = threadIdx.x +  blockIdx.x *blockDim.x;
+  int t = threadIdx.x;
   
-  while (t < N) 
+  while (t < offset) 
   {
     data_sorted[t+blockIdx.x*offset] = data[dataIndices[t]+blockIdx.x*offset];
 
-    t = t+ blockDim.x*gridDim.x;
+    t = t + blockDim.x;
   }
 }
 

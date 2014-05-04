@@ -186,11 +186,7 @@ __global__ void selectOrderedGPUKernel(DType2* data, DType2* data_sorted, IndTyp
 
 DType2* selectOrderedGPU(GriddingND::Array<DType2>& dataArray, GriddingND::Array<IndType> dataIndices,int offset)
 {
-  //output array
-  DType2* dataSorted = (DType2*) calloc(dataArray.count(),sizeof(DType2)); //2* re + im
-
   dim3 block_dim(THREAD_BLOCK_SIZE);
-  
   // one thread block for each channel 
   dim3 grid_dim(dataArray.dim.channels); 
 
@@ -214,15 +210,9 @@ DType2* selectOrderedGPU(GriddingND::Array<DType2>& dataArray, GriddingND::Array
   if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
     printf("error: at selectOrderedGPU thread synchronization 1: %s\n",cudaGetErrorString(cudaGetLastError()));
 
-  //get result from device 
-  copyFromDevice<DType2>(data_sorted_d,dataSorted,dataArray.count());
+  freeTotalDeviceMemory(data_d, dataIndices_d,NULL);//NULL as stop
 
-  if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
-    printf("error: at selectOrderedGPU thread synchronization 2: %s\n",cudaGetErrorString(cudaGetLastError()));
-
-  freeTotalDeviceMemory(data_d, data_sorted_d, dataIndices_d,NULL);//NULL as stop
-
-  return dataSorted;
+  return data_sorted_d;
 }
 
 void writeOrderedGPU(GriddingND::Array<DType2>& destArray, GriddingND::Array<IndType> dataIndices, CufftType* sortedArray, int offset)

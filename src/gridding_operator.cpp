@@ -3,6 +3,7 @@
 #include "gridding_kernels.hpp"
 #include "cufft_config.hpp"
 #include "cuda_utils.hpp"
+#include "precomp_kernels.hpp"
 
 #include <iostream>
 
@@ -207,7 +208,7 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
   }
 
   // select data ordered
-  DType2* dataSorted = selectOrdered<DType2>(kspaceData,(int)this->kSpaceTraj.count());
+  DType2* dataSorted = selectOrderedGPU(kspaceData,dataIndices,(int)this->kSpaceTraj.count());
   DType* densSorted = NULL;
   if (this->applyDensComp())
     densSorted = this->dens.data;
@@ -607,7 +608,7 @@ void GriddingND::GriddingOperator::performForwardGridding(GriddingND::Array<DTyp
     fprintf(stderr,"error in gridding3D_gpu function: %s\n",cudaGetErrorString(cudaGetLastError()));
   free(gi_host);
 
-  writeOrdered<CufftType>(kspaceData,kspaceDataSorted,(int)this->kSpaceTraj.count());
+  writeOrderedGPU(kspaceData,dataIndices,kspaceDataSorted,(int)this->kSpaceTraj.count());
 
   free(kspaceDataSorted);
 }

@@ -172,4 +172,68 @@ void sortArrays(GriddingND::GriddingOperator* griddingOp,
   freeTotalDeviceMemory(kSpaceTraj_d,assignedSectorsAndIndicesSorted_d,assignedSectors_d,dataIndices_d,trajSorted_d,densCompData_d,densData_d,NULL);//NULL as stop
 }
 
+__global__ void selectOrderedGPUKernel(DType2* data, DType2* data_sorted, IndType* dataIndices, IndType offset, IndType N)
+{
+  int t = threadIdx.x +  blockIdx.x *blockDim.x;
+  
+  while (t < N) 
+  {
+    data_sorted[t+blockIdx.x*offset] = data[dataIndices[t]+blockIdx.x*offset];
+
+    t = t+ blockDim.x*gridDim.x;
+  }
+}
+
+DType2* selectOrderedGPU(GriddingND::Array<DType2>& dataArray, GriddingND::Array<IndType> dataIndices,int offset)
+{
+  //output array
+  DType2* dataSorted = (DType2*) calloc(dataArray.count(),sizeof(DType2)); //2* re + im
+
+  dim3 block_dim(THREAD_BLOCK_SIZE);
+  
+  // one thread block for each channel 
+  dim3 grid_dim(dataArray.dim.channels); 
+
+  DType2* data_d, *data_sorted_d;
+  IndType* dataIndices_d;
+
+  if (DEBUG)
+    printf("allocate and copy data of size %d...\n",dataArray.count());
+  allocateAndCopyToDeviceMem<DType2>(&data_d,dataArray.data,dataArray.count());
+
+  if (DEBUG)
+    printf("allocate and copy output data of size %d...\n",dataArray.count());
+  allocateDeviceMem<DType2>(&data_sorted_d,dataArray.count());
+  
+  if (DEBUG)
+    printf("allocate and copy data indices of size %d...\n",dataIndices.count());
+  allocateAndCopyToDeviceMem<IndType>(&dataIndices_d,dataIndices.data,dataIndices.count());
+  
+  selectOrderedGPUKernel<<<grid_dim,block_dim>>>(data_d,data_sorted_d,dataIndices_d,offset,dataArray.count());
+
+  if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
+    printf("error: at selectOrderedGPU thread synchronization 1: %s\n",cudaGetErrorString(cudaGetLastError()));
+
+  //get result from device 
+  copyFromDevice<DType2>(data_sorted_d,dataSorted,dataArray.count());
+
+  if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
+    printf("error: at selectOrderedGPU thread synchronization 2: %s\n",cudaGetErrorString(cudaGetLastError()));
+
+  freeTotalDeviceMemory(data_d, data_sorted_d, dataIndices_d,NULL);//NULL as stop
+
+  return dataSorted;
+}
+
+void writeOrderedGPU(GriddingND::Array<DType2>& destArray, GriddingND::Array<IndType> dataIndices, CufftType* sortedArray, int offset)
+{
+  for (IndType i=0; i<dataIndices.count();i++)
+  {
+    for (IndType chn=0; chn<destArray.dim.channels; chn++)
+    {
+      destArray.data[dataIndices.data[i]+chn*offset] = sortedArray[i+chn*offset];
+    }
+  }
+}
+
 #endif

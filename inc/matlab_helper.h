@@ -6,6 +6,7 @@
 
 #include "config.hpp" 
 #include "gridding_operator.hpp"
+#include "gridding_types.hpp"
 
 #define MIN(X,Y) ((X) < (Y) ? (X) : (Y))
 

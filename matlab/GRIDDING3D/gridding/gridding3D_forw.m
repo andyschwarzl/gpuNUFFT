@@ -30,8 +30,10 @@ if a.verbose
     disp('call forward gridding mex kernel');
 end
 if a.atomic == true
-    data = mex_gridding3D_forw_atomic_f(single(bb),(a.dataIndices),single(a.coords),(a.sectorDataCount),(a.sectorCenters(:)),a.params);
+    %data = mex_gridding3D_forw_atomic_f(single(bb),uint32(a.dataIndices),single(a.coords),uint32(a.sectorDataCount),uint32(a.sectorProcessingOrder),uint32(a.sectorCenters(:)),a.params);
+    data = mex_gridding3D_forw_atomic_f(single(bb),(a.dataIndices),single(a.coords),(a.sectorDataCount),(a.sectorProcessingOrder),(a.sectorCenters(:)),a.params);
 else
+    %data = mex_gridding3D_forw_f(single(bb),uint32(a.dataIndices),single(a.coords),uint32(a.sectorDataCount),uint32(a.sectorProcessingOrder),uint32(a.sectorCenters(:)),a.params);
     data = mex_gridding3D_forw_f(single(bb),(a.dataIndices),single(a.coords),(a.sectorDataCount),(a.sectorProcessingOrder),(a.sectorCenters(:)),a.params);
 end
 %put data in correct order

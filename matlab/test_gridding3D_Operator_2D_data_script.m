@@ -4,7 +4,6 @@ close all; clc;
 
 %% add bin to path
 addpath ../bin  
-addpath ../../cuda-test/gridding3D/daten
 addpath(genpath('./GRIDDING3D'));
 addpath(genpath('./utils'));
 %% Load data
@@ -65,7 +64,7 @@ recon_sos_dc = sqrt(sum(abs(imgRegrid_kb_dc).^2,4));
 recon_sos_res = recon_sos_dc(:,:,slice);
 
 disp('finished');
-out_file = ['../tmp/results/2D_',num2str(trimmed_size),'_',strrep(num2str(osf), '.', '_'),'_',num2str(wg),'_',num2str(slice),'.png'];
+out_file = ['tmp/results/2D_',num2str(trimmed_size),'_',strrep(num2str(osf), '.', '_'),'_',num2str(wg),'_',num2str(slice),'.png'];
 imwrite(abs(recon_sos_res)/max(recon_sos_res(:)),out_file,'png');
 disp(['output written to ',out_file]);
 exit;

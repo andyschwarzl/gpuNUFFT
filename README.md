@@ -63,24 +63,24 @@ reference: http://stackoverflow.com/questions/8900617/how-can-i-setup-nvcc-to-us
 -------------------------------------------------------------------------------
 TEST FRAMEWORK:
 -------------------------------------------------------------------------------
-To enable the tests accordingly download and install the google test framework 
+To enable the tests accordingly download and install the google test framework (https://code.google.com/p/googletest/downloads/list)
 as follows:
-
-  > wget http://googletest.googlecode.com/files/gtest-1.7.0.zip
-  > unzip gtest-1.7.0.zip
-  > mv gtest-1.7.0 gtest
-  > cd gtest
-  > mkdir build
-  > cd build
-  > cmake ..
-  > make 
+```
+> wget http://googletest.googlecode.com/files/gtest-1.7.0.zip
+> unzip gtest-1.7.0.zip
+> mv gtest-1.7.0 gtest
+> cd gtest
+> mkdir build
+> cd build
+> cmake ..
+> make 
 
 Note to keep the following directory structure, e.g.:
 
 work
  | - gpuNUFFT
  | - gtest
-
+```
 -------------------------------------------------------------------------------
 KNOWN ISSUES:
 -------------------------------------------------------------------------------

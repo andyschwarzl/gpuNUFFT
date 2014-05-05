@@ -1,13 +1,13 @@
 #setup testframework
 MESSAGE("------setting up testframework-------")
 
-set(GTEST_DIR "${CMAKE_SOURCE_DIR}/../cuda-test/gridding3D/gtest-1.6.0")
+set(GTEST_DIR "${CMAKE_SOURCE_DIR}/../gtest")
 MESSAGE("GTEST_DIR " ${GTEST_DIR})
 
 include_directories("${GTEST_DIR}/include")
 
-find_library(GTEST_LIB NAMES gtest libgtest HINTS "${GTEST_DIR}/mybuild" "${GTEST_DIR}/mybuild/Debug")
-find_library(GTESTMAIN_LIB NAMES gtest_main libgtest_main HINTS "${GTEST_DIR}/mybuild" "${GTEST_DIR}/mybuild/Debug")
+find_library(GTEST_LIB NAMES gtest libgtest HINTS "${GTEST_DIR}/build" "${GTEST_DIR}/build/Debug")
+find_library(GTESTMAIN_LIB NAMES gtest_main libgtest_main HINTS "${GTEST_DIR}/build" "${GTEST_DIR}/build/Debug")
 
 MESSAGE("GTEST_LIB = ${GTEST_LIB}")
 MESSAGE("GTESTMAIN_LIB = ${GTESTMAIN_LIB}")
@@ -23,9 +23,9 @@ set(GPU_SOURCES gpu/gridding3DGPU_conv_tests.cpp
 add_subdirectory(cpu)
 
 cuda_add_executable(runGPUUnitTests ${GPU_SOURCES} ${GRIDDING_SOURCES}  ../inc/gridding_utils.hpp ../inc/gridding_operator_factory.hpp ../inc/gridding_operator.hpp ../inc/gridding_kernels.hpp)
-target_link_libraries(runGPUUnitTests ${GRID_LIB_NAME} ${GTEST_LIB} ${GTESTMAIN_LIB})
+target_link_libraries(runGPUUnitTests pthread ${GRID_LIB_NAME} ${GTEST_LIB} ${GTESTMAIN_LIB})
 
 if(GEN_ATOMIC)
     cuda_add_executable(runGPUATMUnitTests ${GPU_SOURCES} ${GRIDDING_SOURCES} ../inc/gridding_utils.hpp ../inc/gridding_operator_factory.hpp ../inc/gridding_operator.hpp ../inc/gridding_kernels.hpp)
-	target_link_libraries(runGPUATMUnitTests ${GRID_LIB_ATM_NAME} ${GTEST_LIB} ${GTESTMAIN_LIB})
+	target_link_libraries(runGPUATMUnitTests pthread ${GRID_LIB_ATM_NAME} ${GTEST_LIB} ${GTESTMAIN_LIB})
 endif()

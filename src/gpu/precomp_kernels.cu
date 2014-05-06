@@ -215,15 +215,49 @@ DType2* selectOrderedGPU(GriddingND::Array<DType2>& dataArray, GriddingND::Array
   return data_sorted_d;
 }
 
+__global__ void writeOrderedGPUKernel(DType2* data, DType2* data_sorted, IndType* dataIndices, IndType offset, IndType N)
+{
+  int t = threadIdx.x;
+  
+  while (t < offset) 
+  {
+    data[dataIndices[t]+blockIdx.x*offset] = data_sorted[t+blockIdx.x*offset];
+
+    t = t + blockDim.x;
+  }
+}
+
+
 void writeOrderedGPU(GriddingND::Array<DType2>& destArray, GriddingND::Array<IndType> dataIndices, CufftType* sortedArray, int offset)
 {
-  for (IndType i=0; i<dataIndices.count();i++)
-  {
-    for (IndType chn=0; chn<destArray.dim.channels; chn++)
-    {
-      destArray.data[dataIndices.data[i]+chn*offset] = sortedArray[i+chn*offset];
-    }
-  }
+  dim3 block_dim(THREAD_BLOCK_SIZE);
+  // one thread block for each channel 
+  dim3 grid_dim(destArray.dim.channels); 
+
+  DType2* data_d;
+  CufftType* data_sorted_d;
+  IndType* dataIndices_d;
+
+  if (DEBUG)
+    printf("allocate and copy data of size %d...\n",destArray.count());
+  allocateDeviceMem<DType2>(&data_d,destArray.count());
+
+  if (DEBUG)
+    printf("allocate and copy output data of size %d...\n",destArray.count());
+  allocateAndCopyToDeviceMem<CufftType>(&data_sorted_d,sortedArray,destArray.count());
+  
+  if (DEBUG)
+    printf("allocate and copy data indices of size %d...\n",dataIndices.count());
+  allocateAndCopyToDeviceMem<IndType>(&dataIndices_d,dataIndices.data,dataIndices.count());
+  
+  writeOrderedGPUKernel<<<grid_dim,block_dim>>>(data_d,data_sorted_d,dataIndices_d,offset,destArray.count());
+
+  if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
+    printf("error: at selectOrderedGPU thread synchronization 1: %s\n",cudaGetErrorString(cudaGetLastError()));
+
+  copyFromDevice<DType2>(data_d,destArray.data,destArray.count());
+
+  freeTotalDeviceMemory(data_sorted_d, data_d, dataIndices_d,NULL);//NULL as stop
 }
 
 #endif

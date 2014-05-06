@@ -228,23 +228,18 @@ __global__ void writeOrderedGPUKernel(DType2* data, DType2* data_sorted, IndType
 }
 
 
-void writeOrderedGPU(GriddingND::Array<DType2>& destArray, GriddingND::Array<IndType> dataIndices, CufftType* sortedArray, int offset)
+void writeOrderedGPU(GriddingND::Array<DType2>& destArray, GriddingND::Array<IndType> dataIndices, CufftType* data_sorted_d, int offset)
 {
   dim3 block_dim(THREAD_BLOCK_SIZE);
   // one thread block for each channel 
   dim3 grid_dim(destArray.dim.channels); 
 
   DType2* data_d;
-  CufftType* data_sorted_d;
   IndType* dataIndices_d;
 
   if (DEBUG)
     printf("allocate and copy data of size %d...\n",destArray.count());
   allocateDeviceMem<DType2>(&data_d,destArray.count());
-
-  if (DEBUG)
-    printf("allocate and copy output data of size %d...\n",destArray.count());
-  allocateAndCopyToDeviceMem<CufftType>(&data_sorted_d,sortedArray,destArray.count());
   
   if (DEBUG)
     printf("allocate and copy data indices of size %d...\n",dataIndices.count());
@@ -257,7 +252,7 @@ void writeOrderedGPU(GriddingND::Array<DType2>& destArray, GriddingND::Array<Ind
 
   copyFromDevice<DType2>(data_d,destArray.data,destArray.count());
 
-  freeTotalDeviceMemory(data_sorted_d, data_d, dataIndices_d,NULL);//NULL as stop
+  freeTotalDeviceMemory(data_d, dataIndices_d,NULL);//NULL as stop
 }
 
 #endif

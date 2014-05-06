@@ -28,7 +28,7 @@ DType2* selectOrderedGPU(GriddingND::Array<DType2>& dataArray,
 
 void writeOrderedGPU(GriddingND::Array<DType2>& destArray,
   GriddingND::Array<IndType> dataIndices,
-  CufftType* sortedArray,
+  CufftType* data_sorted_d,
   int offset);
 
 #endif

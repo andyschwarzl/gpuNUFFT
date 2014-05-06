@@ -465,9 +465,6 @@ void GriddingND::GriddingOperator::performForwardGridding(GriddingND::Array<DTyp
     std::cout << "dataCount: " << kspaceData.count() << " chnCount: " << kspaceData.dim.channels << std::endl;
     std::cout << "imgCount: " << imgData.count() << " gridWidth: " << this->getGridWidth() << std::endl;
   }
-
-  CufftType* kspaceDataSorted = (CufftType*) calloc(kspaceData.count(),sizeof(CufftType));
-
   showMemoryInfo();
 
   int			data_count          = (int)this->kSpaceTraj.count();
@@ -492,8 +489,8 @@ void GriddingND::GriddingOperator::performForwardGridding(GriddingND::Array<DTyp
   allocateAndSetMem<CufftType>(&gdata_d, gi_host->grid_width_dim,0);
 
   if (DEBUG)
-    printf("allocate and copy data of size %d...\n",data_count);
-  allocateDeviceMem<CufftType>(&data_d,data_count);
+    printf("allocate and copy data of size %d...\n",kspaceData.count());
+  allocateDeviceMem<CufftType>(&data_d,kspaceData.count());
 
   if (DEBUG)
     printf("allocate and copy coords of size %d...\n",getImageDimensionCount()*data_count);
@@ -538,7 +535,6 @@ void GriddingND::GriddingOperator::performForwardGridding(GriddingND::Array<DTyp
     int im_coil_offset = coil_it * (int)imdata_count;//gi_host->width_dim;
     //reset temp array
     copyToDevice(imgData.data + im_coil_offset,imdata_d,imdata_count);	
-    cudaMemset(data_d,0, sizeof(CufftType)*data_count);
     cudaMemset(gdata_d,0, sizeof(CufftType)*gi_host->grid_width_dim);
 
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
@@ -576,17 +572,18 @@ void GriddingND::GriddingOperator::performForwardGridding(GriddingND::Array<DTyp
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       printf("error at thread synchronization 6: %s\n",cudaGetErrorString(cudaGetLastError()));
     // convolution and resampling to non-standard trajectory
-    forwardConvolution(data_d,crds_d,gdata_d,NULL,sectors_d,sector_centers_d,gi_host);
+    forwardConvolution(data_d + data_coil_offset,crds_d,gdata_d,NULL,sectors_d,sector_centers_d,gi_host);
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       printf("error at thread synchronization 7: %s\n",cudaGetErrorString(cudaGetLastError()));
 
-    performFFTScaling(data_d,gi_host->data_count,gi_host);
+    performFFTScaling(data_d + data_coil_offset,gi_host->data_count,gi_host);
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       printf("error: at adj  thread synchronization 8: %s\n",cudaGetErrorString(cudaGetLastError()));
-
-    //get result
-    copyFromDevice<CufftType>(data_d, kspaceDataSorted + data_coil_offset,data_count);
   }//iterate over coils
+
+  //write result in correct order back into output array
+  writeOrderedGPU(kspaceData,dataIndices,data_d,(int)this->kSpaceTraj.count());
+
   cufftDestroy(fft_plan);
   // Destroy the cuFFT plan.
   if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
@@ -599,10 +596,6 @@ void GriddingND::GriddingOperator::performForwardGridding(GriddingND::Array<DTyp
   if ((cudaThreadSynchronize() != cudaSuccess))
     fprintf(stderr,"error in gridding3D_gpu function: %s\n",cudaGetErrorString(cudaGetLastError()));
   free(gi_host);
-
-  writeOrderedGPU(kspaceData,dataIndices,kspaceDataSorted,(int)this->kSpaceTraj.count());
-
-  free(kspaceDataSorted);
 }
 
 GriddingND::Array<CufftType> GriddingND::GriddingOperator::performForwardGridding(Array<DType2> imgData,GriddingOutput griddingOut)

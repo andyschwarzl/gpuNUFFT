@@ -129,6 +129,51 @@ void performFFTScaling(CufftType* data,int N, GriddingND::GriddingInfo* gi_host)
   fftScaleKernel<<<grid_dim,block_dim>>>(data,scaling_factor,N);
 }
 
+__global__ void sensMulKernel(CufftType* imdata, DType2* sens, int N)
+{
+  int t = threadIdx.x +  blockIdx.x *blockDim.x;
+
+  while (t < N) 
+  {
+    CufftType data_p = imdata[t]; 
+    data_p.x = data_p.x * sens[t].x - data_p.y * sens[t].y; //Re
+    data_p.y = data_p.x * sens[t].y + data_p.y * sens[t].x; //Im
+    imdata[t] = data_p;
+    t = t+ blockDim.x*gridDim.x;
+  }
+}
+
+__global__ void conjSensMulKernel(CufftType* imdata, DType2* sens, int N)
+{
+  int t = threadIdx.x +  blockIdx.x *blockDim.x;
+
+  while (t < N) 
+  {
+    CufftType data_p = imdata[t]; 
+    data_p.x = data_p.x * sens[t].x + data_p.y * sens[t].y; //Re
+    data_p.y = data_p.y * sens[t].x - data_p.x * sens[t].y; //Im
+    imdata[t] = data_p;
+    t = t+ blockDim.x*gridDim.x;
+  }
+}
+
+void performSensMul(CufftType* imdata_d,
+  DType2* sens_d,
+  GriddingND::GriddingInfo* gi_host,
+  bool conjugate)
+{
+  if (DEBUG)
+    printf("running deapodization with precomputed values\n");
+
+  dim3 grid_dim(getOptimalGridDim(gi_host->im_width_dim,THREAD_BLOCK_SIZE));
+  dim3 block_dim(THREAD_BLOCK_SIZE);
+  if (conjugate)
+    conjSensMulKernel<<<grid_dim,block_dim>>>(imdata_d,sens_d,gi_host->im_width_dim);
+  else
+    sensMulKernel<<<grid_dim,block_dim>>>(imdata_d,sens_d,gi_host->im_width_dim);
+}
+
+
 __global__ void densityCompensationKernel(DType2* data, DType* density_comp, int N)
 {
   int t = threadIdx.x +  blockIdx.x *blockDim.x;

@@ -58,6 +58,11 @@ void performFFTScaling(CufftType* data,
 
 void performDensityCompensation(DType2* data, DType* density_comp, GriddingND::GriddingInfo* gi_host);
 
+void performSensMul(CufftType* imdata_d,
+  DType2* sens_d,
+  GriddingND::GriddingInfo* gi_host,
+  bool conjugate);
+
 void performFFTShift(CufftType* gdata_d,
   GriddingND::FFTShiftDir shift_dir,
   GriddingND::Dimensions gridDims,

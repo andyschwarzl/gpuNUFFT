@@ -3,7 +3,7 @@ Version 2.0.4
 ----------------------------------------------------------------------
 	- Use textures for kernel lookup
 	- Use textures for data readout
-	- 
+	- Balanced gridding to work more efficiently
 
 ---------------------------------------------------------------------
 Version 2.0.3

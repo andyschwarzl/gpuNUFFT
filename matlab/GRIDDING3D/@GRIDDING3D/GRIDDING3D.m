@@ -1,5 +1,5 @@
-function [res] = gridding3D(k,w,n,osf,wg,sw,imageDim,varargin)
-% function m = GRIDDING3D(d,k,w,n,osf,kw,sw,imageDim,varargin)
+function [res] = gridding3D(k,w,n,osf,wg,sw,imageDim,sens,varargin)
+% function m = GRIDDING3D(d,k,w,n,osf,kw,sw,imageDim,sens,varargin)
 %
 %     k -- k-trajectory, scaled -0.5 to 0.5
 %          dims: 3 ... x, y and z
@@ -25,16 +25,16 @@ function [res] = gridding3D(k,w,n,osf,wg,sw,imageDim,varargin)
 %  A. Schwarzl, Graz University of Technology
 
 interpolation_type = 0;
-if nargin <= 8,
+if nargin <= 9,
     method = 'gridding';
     E = 0;
     atomic = eval(varargin{1});
-elseif nargin > 8 && strcmp(varargin{1},'sparse') == 0
+elseif nargin > 9 && strcmp(varargin{1},'sparse') == 0
     method = 'gridding';
     E = 0;    
     atomic = eval(varargin{1});
     interpolation_type = varargin{2}
-elseif nargin > 8 && strcmp(varargin{1},'sparse') == 1
+elseif nargin > 9 && strcmp(varargin{1},'sparse') == 1
     method = varargin{1};
     E = varargin{2};    
 end
@@ -80,9 +80,17 @@ if strcmp(method,'gridding')
     res.op.params.balance_workload = true;
     res.op.params.is2d_processing = imageDim(3) == 0;
     
-    [res.op.dataIndices,res.op.sectorDataCount,res.op.densSorted,res.op.coords,res.op.sectorCenters,res.op.sectorProcessingOrder] = mex_griddingND_precomp_f(single(k)',single(w)',[],res.op.params);
+    [res.op.dataIndices,res.op.sectorDataCount,res.op.densSorted,res.op.coords,res.op.sectorCenters,res.op.sectorProcessingOrder] = mex_griddingND_precomp_f(single(k)',single(w)',res.op.params);
     res.op.atomic = atomic;
     res.op.verbose = false;
+    res.op.sens = [real(sens(:))'; imag(sens(:))'];
+    test = res.op.sectorDataCount;
+    test_cnt = test(2:end)-test(1:end-1);
+    test_order = res.op.sectorProcessingOrder;
+    figure;
+    bar(test_cnt,'DisplayName','Workload per Sector');
+    figure;
+    bar(test_cnt(test_order(1,:)+1),'DisplayName','Workload per Sector ordered');figure(gcf)   
 elseif strcmp(method,'sparse')
     res.op = E;
 end

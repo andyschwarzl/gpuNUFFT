@@ -1,4 +1,4 @@
-function  us = pmri_cgsense_arbtra(data,FT,c,x0,alpha,tol,maxit)
+function  us = pmri_cgsense_arbtra(data,FT,c,x0,alpha,tol,maxit,useGPU)
 
 % [us] = pmri_cgsense_radial(data,FT,c,maxit)
 % reconstruct subsampled PMRI data using CG SENSE
@@ -20,6 +20,10 @@ function  us = pmri_cgsense_arbtra(data,FT,c,x0,alpha,tol,maxit)
 % Last Change: 15.2.2010
 % By: Florian
 % =========================================================================
+
+if (nargin < 8)
+    useGPU = false;
+end
 
 %% set up parameters and operators
 [nx,ny] = size(FT'*data(:,1));
@@ -46,12 +50,18 @@ cbar = conj(c);
 
 % right hand side: -K^*residual 
 y  = zeros(nx,ny);
-for i = 1:nc
-    y = y + FH(data(:,i)).*cbar(:,:,i);
+
+if (useGPU)
+    rhs = FH(data).*cbar;
+    y = sum(rhs,3);
+else
+    for i = 1:nc
+        y = y + FH(data(:,i)).*cbar(:,:,i);
+    end
 end
 
 % system matrix: F'^T*F' + alpha I
-M  = @(x) applyM(F,FH,c,cbar,x) + alpha*x;
+M  = @(x) applyM(F,FH,c,cbar,x,useGPU) + alpha*x;
 
 dx = pcg(M,y(:),tol,maxit,[],[],x0(:));
 
@@ -64,13 +74,17 @@ us = cscale.*u;
 
 %% Derivative evaluation
 
-function y = applyM(F,FH,c,cconj,x)
+function y = applyM(F,FH,c,cconj,x,useGPU)
 [nx,ny,nc] = size(c);
 dx = reshape(x,nx,ny);
 
 y  = zeros(nx,ny);
-for i = 1:nc
-    y = y + cconj(:,:,i).*FH(F(c(:,:,i).*dx));
+if (useGPU)
+   y = sum(cconj.*FH(F(c.*repmat(dx,[1,1,nc]))),3);
+else
+    for i = 1:nc
+        y = y + cconj(:,:,i).*FH(F(c(:,:,i).*dx));
+    end
 end
 y = y(:);
 % end function applyM

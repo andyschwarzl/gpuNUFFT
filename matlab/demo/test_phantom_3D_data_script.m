@@ -28,7 +28,7 @@ dens = dens(1:R:end);
 %% debug
 display('GPU init')
 tic
-FT = GRIDDING3D(k_traj',dens',imwidth,osf,wg,sw,imgDim,'true');
+FT = GRIDDING3D(k_traj',dens',imwidth,osf,wg,sw,imgDim,[],'true');
 toc
 display('CPU init')
 tic

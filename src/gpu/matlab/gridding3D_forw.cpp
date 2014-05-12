@@ -77,15 +77,14 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	if (MATLAB_DEBUG)
     mexPrintf("1st sector center: [%d,%d]\n", sectorCentersArray.data[0],sectorCentersArray.data[1]);
 
-	//TODO Sens array	
-	GriddingND::Array<DType2>  sensArray;
-	sensArray.data = NULL;
+	//Sens array - same dimension as image data
+	GriddingND::Array<DType2>  sensArray = readAndCreateArray<DType2>(prhs,pcount++,0,"sens-data");
 
 	//Parameters
-    const mxArray *matParams = prhs[pcount++];
+  const mxArray *matParams = prhs[pcount++];
 	
 	if (!mxIsStruct (matParams))
-         mexErrMsgTxt ("expects struct containing parameters!");
+    mexErrMsgTxt ("expects struct containing parameters!");
 
 	GriddingND::Dimensions imgDims = getDimensionsFromParamField(matParams,"img_dims");
 	DType osr = getParamField<DType>(matParams,"osr"); 

@@ -10,7 +10,8 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 clear all; close all; clear classes; clc
-addpath('./data')
+addpath('./data');
+addpath ../../bin;
 addpath(genpath('../GRIDDING3D'));
 addpath(genpath('../../../fessler/NUFFT'));
 addpath(genpath('./utils'));
@@ -20,7 +21,7 @@ load smaps_phantom.mat
 %% generate noisy data
 acc_factor = 1;
 refL = 0;
-noise_scale = 0.2;
+noise_scale = 0.02;
 
 [data, sp, smaps_true, Rn, ground_truth] = generate_data(acc_factor,refL,'normal',noise_scale);
 noisy_im= ifft2c(data);
@@ -40,11 +41,18 @@ N = nx*ny;
 [k,w] = ismrm_generate_radial_trajectory(nRO, nProjections);
 w = w./max(w(:));
 figure; plot(k(:,1),k(:,2),'*b')
-
+%%
 % build sampling operators
 F = NUFFT(k(:,1)+1i.*k(:,2), w, 1, 0, [nx,ny], 2);
-noisy_data = squeeze(F * (noisy_im));
+%%
+%gpuNUFFT
+osf =1.25;
+wg = 3;
+sw = 8;
+FT = GRIDDING3D(k',w,nx,osf,wg,sw,[nx,ny],[],'false');
 
+noisy_data = squeeze(F * (noisy_im));
+%%
 % define operators
 ift = @(x) F'*x;
 ft = @(x) F*x;
@@ -82,9 +90,10 @@ triv_recon = sqrt(sum(abs(alias_image).^2,3));
 %  
 % ismrm_imshow(abs(smaps_est),[],[2 4]);
     
-%% (3) Image Reconstruction with CG SENSE
+%% (3) Image Reconstruction with CG SENSE CPU
+display('CPU recon...');
 tic
-alpha = .01;    % penalty
+alpha = .1;    % penalty
 tol = 1e-8;     % CG tolerance
 maxitCG = 40;   % maximal CG iterations
 cgsense_recon = pmri_cgsense_arbtra(data,F,smaps,zeros(nx,ny),alpha,tol,maxitCG);
@@ -95,40 +104,16 @@ subplot(1,3,1);imshow(abs(cgsense_recon),[]); title('CG-Sense Recon');
 subplot(1,3,2);imshow(abs(im1),[]); title('Ground Truth');
 subplot(1,3,3);imshow(abs(triv_recon),[]); title('trivial Recon');   
 
-%% my NUFFT CG SENSE
-NFT = NUFFT(k(:,1)+1i.*k(:,2), w, 1, 0, [nx,ny], 2);
+%% (4) Image Reconstruction with CG SENSE GPU
+display('GPU recon...');
+tic
+alpha = .1;    % penalty
+tol = 1e-8;     % CG tolerance
+maxitCG = 40;   % maximal CG iterations
+cgsense_recon = pmri_cgsense_arbtra(data,FT,smaps,zeros(nx,ny),alpha,tol,maxitCG,true);
+toc
 
-ground_truth = im1;
-smaps_true = smaps;
-triv_recon = sum(NFT' * reshape(data,[nRO nProjections nc]),3);
-
-FT = @(x) NFT * x;
-IFT = @(x) NFT' * x;
-
-%sampling pattern given by NUFFT Operator
-
-% image -> k-space
-F = @(x,s) FT(x.*s);
-% k-space -> image
-FH = @(x,s) conj(s).*IFT(x);
-
-% build righthand-side, K^T g
-for chn_cnt = 1:nc
-    KHg(:,:,chn_cnt) = FH(noisy_data(:,chn_cnt),smaps_true(:,:,chn_cnt));
-end
-KHg = sum(KHg,3);
-myalpha = 0.01;
-
-% left side (K^T K + alpha I) u_k
-KHK = @(u_k) myop(F,FH,u_k,smaps_true) + myalpha*u_k;
-% solve system
-[u,flag,relres,iter] = pcg(KHK,KHg(:),1E-8,100);
-[relres,iter]
-% reshape solution vector
-u = reshape(u,nx,ny);
-%%
-figure('name','my CG-sense recon');
-h1 = subplot(1,3,1);imshow(abs(u),[]); title(['my CG-Sense Recon, noise scale ']);
-h2 = subplot(1,3,2);imshow(abs(ground_truth),[]); title('Ground Truth');
-h3 = subplot(1,3,3);imshow(abs(triv_recon),[]); title('trivial Recon');  
-linkaxes([h1,h2,h3]);
+figure;
+subplot(1,3,1);imshow(abs(cgsense_recon),[]); title('CG-Sense Recon GPU');
+subplot(1,3,2);imshow(abs(im1),[]); title('Ground Truth');
+subplot(1,3,3);imshow(abs(triv_recon),[]); title('trivial Recon');   

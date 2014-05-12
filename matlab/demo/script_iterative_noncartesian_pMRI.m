@@ -49,7 +49,8 @@ F = NUFFT(k(:,1)+1i.*k(:,2), w, 1, 0, [nx,ny], 2);
 osf =1.25;
 wg = 3;
 sw = 8;
-FT = GRIDDING3D(k',w,nx,osf,wg,sw,[nx,ny],[],'false');
+
+FT = GRIDDING3D(k',w,nx,osf,wg,sw,[nx,ny],smaps,'false');
 
 noisy_data = squeeze(F * (noisy_im));
 %%
@@ -67,8 +68,9 @@ data = data./max(abs(data(:)));
 % trivial reconstruction
 alias_image = zeros(nx,ny,nc);
 for i = 1:nc
-alias_image(:,:,i) = F'*(data(:,i));
+     alias_image(:,:,i) = F'*(data(:,i));
 end
+
 ismrm_imshow(abs(alias_image),[],[2 4]);
  
 triv_recon = sqrt(sum(abs(alias_image).^2,3));

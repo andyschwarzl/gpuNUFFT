@@ -52,7 +52,7 @@ cbar = conj(c);
 y  = zeros(nx,ny);
 
 if (useGPU)
-    rhs = FH(data).*cbar;
+    rhs = FH(data);
     y = sum(rhs,3);
 else
     for i = 1:nc
@@ -77,10 +77,9 @@ us = cscale.*u;
 function y = applyM(F,FH,c,cconj,x,useGPU)
 [nx,ny,nc] = size(c);
 dx = reshape(x,nx,ny);
-
 y  = zeros(nx,ny);
 if (useGPU)
-   y = sum(cconj.*FH(F(c.*repmat(dx,[1,1,nc]))),3);
+   y = sum(FH(F(repmat(dx,[1,1,nc]))),3);
 else
     for i = 1:nc
         y = y + cconj(:,:,i).*FH(F(c(:,:,i).*dx));

@@ -136,9 +136,8 @@ __global__ void sensMulKernel(CufftType* imdata, DType2* sens, int N)
   while (t < N) 
   {
     CufftType data_p = imdata[t]; 
-    data_p.x = data_p.x * sens[t].x - data_p.y * sens[t].y; //Re
-    data_p.y = data_p.x * sens[t].y + data_p.y * sens[t].x; //Im
-    imdata[t] = data_p;
+    imdata[t].x = data_p.x * sens[t].x - data_p.y * sens[t].y; //Re
+    imdata[t].y = data_p.x * sens[t].y + data_p.y * sens[t].x; //Im
     t = t+ blockDim.x*gridDim.x;
   }
 }
@@ -150,9 +149,8 @@ __global__ void conjSensMulKernel(CufftType* imdata, DType2* sens, int N)
   while (t < N) 
   {
     CufftType data_p = imdata[t]; 
-    data_p.x = data_p.x * sens[t].x + data_p.y * sens[t].y; //Re
-    data_p.y = data_p.y * sens[t].x - data_p.x * sens[t].y; //Im
-    imdata[t] = data_p;
+    imdata[t].x = data_p.x * sens[t].x + data_p.y * sens[t].y; //Re
+    imdata[t].y = data_p.y * sens[t].x - data_p.x * sens[t].y; //Im
     t = t+ blockDim.x*gridDim.x;
   }
 }

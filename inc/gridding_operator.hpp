@@ -101,7 +101,7 @@ namespace GriddingND
     Array<DType> kSpaceTraj;
 
     // complex array
-    // dimensions: kspaceDim * chnCount
+    // dimensions: imgDim * chnCount
     Array<DType2> sens;
 
     // density compensation

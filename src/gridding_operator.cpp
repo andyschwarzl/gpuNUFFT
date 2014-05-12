@@ -662,6 +662,8 @@ void GriddingND::GriddingOperator::performForwardGridding(GriddingND::Array<DTyp
   if ((cudaThreadSynchronize() != cudaSuccess))
     fprintf(stderr,"error in gridding3D_gpu function: %s\n",cudaGetErrorString(cudaGetLastError()));
   free(gi_host);
+  if (this->applySensData())
+    cudaFree(sens_d);
 }
 
 GriddingND::Array<CufftType> GriddingND::GriddingOperator::performForwardGridding(Array<DType2> imgData,GriddingOutput griddingOut)

@@ -29,10 +29,20 @@ if a.verbose
  disp('call forward gridding mex kernel');
 end
 
+% check if sens data (multichannel) is present and show
+% warning if only single channel data is passed
+% do not pass sens data in this case
+sens = a.sens;
+if a.sensChn ~= 0 && ...
+   a.sensChn ~= nChn
+    warning('GRIDDING3D:forw:sens',['Image data dimensions (', num2str(size(bb)), ') do not fit sense data dimensions (', num2str(size(a.sens)), '). Sens data will not be applied. Please pass image data in correct dimensions.']);
+   sens = [];
+end
+
 if a.atomic == true
-    data = mex_gridding3D_forw_atomic_f(single(bb),(a.dataIndices),single(a.coords),(a.sectorDataCount),(a.sectorProcessingOrder),(a.sectorCenters(:)),single(a.sens),a.params);
+    data = mex_gridding3D_forw_atomic_f(single(bb),(a.dataIndices),single(a.coords),(a.sectorDataCount),(a.sectorProcessingOrder),(a.sectorCenters(:)),single(sens),a.params);
 else
-    data = mex_gridding3D_forw_f(single(bb),(a.dataIndices),single(a.coords),(a.sectorDataCount),(a.sectorProcessingOrder),(a.sectorCenters(:)),single(a.sens),a.params);
+    data = mex_gridding3D_forw_f(single(bb),(a.dataIndices),single(a.coords),(a.sectorDataCount),(a.sectorProcessingOrder),(a.sectorCenters(:)),single(sens),a.params);
 end
 
 if a.verbose

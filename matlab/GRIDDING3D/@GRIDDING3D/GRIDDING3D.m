@@ -83,6 +83,13 @@ if strcmp(method,'gridding')
     [res.op.dataIndices,res.op.sectorDataCount,res.op.densSorted,res.op.coords,res.op.sectorCenters,res.op.sectorProcessingOrder] = mex_griddingND_precomp_f(single(k)',single(w)',res.op.params);
     res.op.atomic = atomic;
     res.op.verbose = false;
+    
+    if (res.op.params.is2d_processing)
+        res.op.sensChn = size(sens,3);
+    else
+        res.op.sensChn = size(sens,4);
+    end
+    
     res.op.sens = [real(sens(:))'; imag(sens(:))'];
     test = res.op.sectorDataCount;
     test_cnt = test(2:end)-test(1:end-1);

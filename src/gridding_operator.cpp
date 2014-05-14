@@ -207,21 +207,32 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
     std::cout << (this->dens.data == NULL) << std::endl; 
   }
 
-  // select data ordered and leave it on gpu
-  DType2* data_d = selectOrderedGPU(kspaceData,dataIndices,(int)this->kSpaceTraj.count());
-
-  DType* densSorted = NULL;
-  if (this->applyDensComp())
-    densSorted = this->dens.data;
+  showMemoryInfo();
 
   int			data_count          = (int)this->kSpaceTraj.count();
   int			n_coils             = (int)kspaceData.dim.channels;
   IndType		imdata_count        = this->imgDims.count();
   int			sector_count        = (int)this->gridSectorDims.count();
 
-  DType*  density_comp            = densSorted;
+  // select data ordered and leave it on gpu
+  DType2* data_d, *data_sorted_d;
+  IndType* data_indices_d;
 
-  showMemoryInfo();
+  if (DEBUG)
+    printf("allocate data of size %d...\n",data_count);
+  allocateDeviceMem<DType2>(&data_d,data_count);
+
+  if (DEBUG)
+    printf("allocate and copy output data of size %d...\n",data_count);
+  allocateDeviceMem<DType2>(&data_sorted_d,data_count);
+  
+  if (DEBUG)
+    printf("allocate and copy data indices of size %d...\n",dataIndices.count());
+  allocateAndCopyToDeviceMem<IndType>(&data_indices_d,dataIndices.data,dataIndices.count());
+  
+  DType* density_comp = NULL;
+  if (this->applyDensComp())
+    density_comp = this->dens.data;
 
   //split and run sectors into blocks
   //and each data point to one thread inside this block 
@@ -290,13 +301,16 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
     int im_coil_offset = coil_it * (int)imdata_count;//gi_host->width_dim;
 
     cudaMemset(gdata_d,0, sizeof(CufftType)*gi_host->grid_width_dim);
+    //copy coil data to device and select ordered
+    copyToDevice(kspaceData.data + data_coil_offset,data_d,data_count);
+    selectOrderedGPU(data_d,data_indices_d,data_sorted_d,data_count);
 
     if (this->applyDensComp())
-      performDensityCompensation(data_d + data_coil_offset,density_comp_d,gi_host);
+      performDensityCompensation(data_sorted_d,density_comp_d,gi_host);
 
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       printf("error at adj thread synchronization 1: %s\n",cudaGetErrorString(cudaGetLastError()));
-    adjConvolution(data_d + data_coil_offset,crds_d,gdata_d,NULL,sectors_d,sector_centers_d,gi_host);
+    adjConvolution(data_sorted_d,crds_d,gdata_d,NULL,sectors_d,sector_centers_d,gi_host);
 
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       fprintf(stderr,"error at adj  thread synchronization 2: %s\n",cudaGetErrorString(cudaGetLastError()));
@@ -314,7 +328,9 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
       cufftDestroy(fft_plan);
       freeLookupTable();
       cudaThreadSynchronize();
-      freeTotalDeviceMemory(data_d,crds_d,imdata_d,gdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop token
+      freeTotalDeviceMemory(data_d,data_sorted_d,data_indices_d,crds_d,imdata_d,gdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop token
+      if (n_coils > 1)
+        cudaFree(deapo_d);
       cudaThreadSynchronize();
 
       showMemoryInfo();
@@ -349,7 +365,9 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
       cufftDestroy(fft_plan);
       freeLookupTable();
       cudaThreadSynchronize();
-      freeTotalDeviceMemory(data_d,crds_d,imdata_d,gdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop token
+      freeTotalDeviceMemory(data_d,data_sorted_d,data_indices_d,crds_d,imdata_d,gdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop token
+      if (n_coils > 1)
+        cudaFree(deapo_d);
       cudaThreadSynchronize();
       printf("last cuda error: %s\n", cudaGetErrorString(cudaGetLastError()));
       return;
@@ -385,7 +403,7 @@ void GriddingND::GriddingOperator::performGriddingAdj(GriddingND::Array<DType2> 
   cufftDestroy(fft_plan);
 
   freeLookupTable();
-  freeTotalDeviceMemory(data_d,crds_d,gdata_d,imdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop
+  freeTotalDeviceMemory(data_d,data_sorted_d,data_indices_d,gdata_d,imdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop
 
   if (this->applyDensComp())
     cudaFree(density_comp_d);

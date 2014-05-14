@@ -22,9 +22,10 @@ void sortArrays(GriddingND::GriddingOperator* griddingOp,
   DType* densCompData,
   DType* densData);
 
-DType2* selectOrderedGPU(GriddingND::Array<DType2>& dataArray,
-  GriddingND::Array<IndType> dataIndices,
-  int offset);
+void selectOrderedGPU(DType2* data_d, 
+  IndType* data_indices_d, 
+  DType2* data_sorted_d,
+  int N);
 
 void writeOrderedGPU(GriddingND::Array<DType2>& destArray,
   GriddingND::Array<IndType> dataIndices,

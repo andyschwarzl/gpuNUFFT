@@ -172,47 +172,27 @@ void sortArrays(GriddingND::GriddingOperator* griddingOp,
   freeTotalDeviceMemory(kSpaceTraj_d,assignedSectorsAndIndicesSorted_d,assignedSectors_d,dataIndices_d,trajSorted_d,densCompData_d,densData_d,NULL);//NULL as stop
 }
 
-__global__ void selectOrderedGPUKernel(DType2* data, DType2* data_sorted, IndType* dataIndices, IndType offset, IndType N)
+__global__ void selectOrderedGPUKernel(DType2* data, DType2* data_sorted, IndType* dataIndices, int N)
 {
-  int t = threadIdx.x;
+  int t = threadIdx.x + blockIdx.x * blockDim.x;
   
-  while (t < offset) 
+  while (t < N) 
   {
-    data_sorted[t+blockIdx.x*offset] = data[dataIndices[t]+blockIdx.x*offset];
+    data_sorted[t] = data[dataIndices[t]];
 
-    t = t + blockDim.x;
+    t = t + blockDim.x * gridDim.x;
   }
 }
 
-DType2* selectOrderedGPU(GriddingND::Array<DType2>& dataArray, GriddingND::Array<IndType> dataIndices,int offset)
+void selectOrderedGPU(DType2* data_d, IndType* data_indices_d, DType2* data_sorted_d,int N)
 {
   dim3 block_dim(THREAD_BLOCK_SIZE);
-  // one thread block for each channel 
-  dim3 grid_dim(dataArray.dim.channels); 
+  dim3 grid_dim(getOptimalGridDim(N,THREAD_BLOCK_SIZE)); 
 
-  DType2* data_d, *data_sorted_d;
-  IndType* dataIndices_d;
-
-  if (DEBUG)
-    printf("allocate and copy data of size %d...\n",dataArray.count());
-  allocateAndCopyToDeviceMem<DType2>(&data_d,dataArray.data,dataArray.count());
-
-  if (DEBUG)
-    printf("allocate and copy output data of size %d...\n",dataArray.count());
-  allocateDeviceMem<DType2>(&data_sorted_d,dataArray.count());
-  
-  if (DEBUG)
-    printf("allocate and copy data indices of size %d...\n",dataIndices.count());
-  allocateAndCopyToDeviceMem<IndType>(&dataIndices_d,dataIndices.data,dataIndices.count());
-  
-  selectOrderedGPUKernel<<<grid_dim,block_dim>>>(data_d,data_sorted_d,dataIndices_d,offset,dataArray.count());
+  selectOrderedGPUKernel<<<grid_dim,block_dim>>>(data_d,data_sorted_d,data_indices_d,N);
 
   if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
     printf("error: at selectOrderedGPU thread synchronization 1: %s\n",cudaGetErrorString(cudaGetLastError()));
-
-  freeTotalDeviceMemory(data_d, dataIndices_d,NULL);//NULL as stop
-
-  return data_sorted_d;
 }
 
 __global__ void writeOrderedGPUKernel(DType2* data, DType2* data_sorted, IndType* dataIndices, IndType offset, IndType N)

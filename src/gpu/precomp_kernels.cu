@@ -195,44 +195,27 @@ void selectOrderedGPU(DType2* data_d, IndType* data_indices_d, DType2* data_sort
     printf("error: at selectOrderedGPU thread synchronization 1: %s\n",cudaGetErrorString(cudaGetLastError()));
 }
 
-__global__ void writeOrderedGPUKernel(DType2* data, DType2* data_sorted, IndType* dataIndices, IndType offset, IndType N)
+__global__ void writeOrderedGPUKernel(DType2* data_sorted, CufftType* data, IndType* dataIndices, int N)
 {
-  int t = threadIdx.x;
+  int t = threadIdx.x + blockIdx.x * blockDim.x;
   
-  while (t < offset) 
+  while (t < N) 
   {
-    data[dataIndices[t]+blockIdx.x*offset] = data_sorted[t+blockIdx.x*offset];
+    data_sorted[dataIndices[t]] = data[t];
 
-    t = t + blockDim.x;
+    t = t + blockDim.x * gridDim.x;
   }
 }
 
-
-void writeOrderedGPU(GriddingND::Array<DType2>& destArray, GriddingND::Array<IndType> dataIndices, CufftType* data_sorted_d, int offset)
+void writeOrderedGPU( DType2* data_sorted_d, IndType* data_indices_d,CufftType* data_d, int N)
 {
   dim3 block_dim(THREAD_BLOCK_SIZE);
-  // one thread block for each channel 
-  dim3 grid_dim(destArray.dim.channels); 
-
-  DType2* data_d;
-  IndType* dataIndices_d;
-
-  if (DEBUG)
-    printf("allocate and copy data of size %d...\n",destArray.count());
-  allocateDeviceMem<DType2>(&data_d,destArray.count());
+  dim3 grid_dim(getOptimalGridDim(N,THREAD_BLOCK_SIZE)); 
   
-  if (DEBUG)
-    printf("allocate and copy data indices of size %d...\n",dataIndices.count());
-  allocateAndCopyToDeviceMem<IndType>(&dataIndices_d,dataIndices.data,dataIndices.count());
-  
-  writeOrderedGPUKernel<<<grid_dim,block_dim>>>(data_d,data_sorted_d,dataIndices_d,offset,destArray.count());
+  writeOrderedGPUKernel<<<grid_dim,block_dim>>>(data_sorted_d,data_d,data_indices_d,N);
 
   if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
     printf("error: at selectOrderedGPU thread synchronization 1: %s\n",cudaGetErrorString(cudaGetLastError()));
-
-  copyFromDevice<DType2>(data_d,destArray.data,destArray.count());
-
-  freeTotalDeviceMemory(data_d, dataIndices_d,NULL);//NULL as stop
 }
 
 #endif

@@ -67,9 +67,9 @@ __inline__ __device__ DType computeTextureLookup(DType x, DType y, DType z)
 }
 
 #if __CUDA_ARCH__ < 200
-	#define THREAD_BLOCK_SIZE 128 
+	#define THREAD_BLOCK_SIZE 256 
 #else
-	#define THREAD_BLOCK_SIZE 128
+	#define THREAD_BLOCK_SIZE 256
 #endif
 
 #endif

@@ -658,12 +658,13 @@ void GriddingND::GriddingOperator::performForwardGridding(GriddingND::Array<DTyp
   freeTotalDeviceMemory(data_d,data_sorted_d,data_indices_d,crds_d,gdata_d,imdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop
   if (n_coils > 1 && deapo_d != NULL)
     cudaFree(deapo_d);
+  
+  if (this->applySensData())
+    cudaFree(sens_d);
 
   if ((cudaThreadSynchronize() != cudaSuccess))
     fprintf(stderr,"error in gridding3D_gpu function: %s\n",cudaGetErrorString(cudaGetLastError()));
   free(gi_host);
-  if (this->applySensData())
-    cudaFree(sens_d);
 }
 
 GriddingND::Array<CufftType> GriddingND::GriddingOperator::performForwardGridding(Array<DType2> imgData,GriddingOutput griddingOut)

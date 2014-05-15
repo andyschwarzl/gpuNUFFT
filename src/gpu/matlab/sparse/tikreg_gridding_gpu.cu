@@ -16,10 +16,10 @@
 
 #define MAX_BLOCK_SZ 512
 
-#include "tikreg_gridding_kernels.cu"
+#include "tikreg_gpuNUFFT_kernels.cu"
 
 /**
- * Adjoint Gridding using sparse Matrix
+ * Adjoint GpuNUFFT using sparse Matrix
  * 
  * Extracted from FREIBURG Code 
  * 
@@ -262,7 +262,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     { 
 		//reset data for next coil
         cudaMemset(tmp1,0, sizeof(CufftType)*totsz_pad);
-		//convolution with Gridding Kernel and Sampling (precomputed)
+		//convolution with GpuNUFFT Kernel and Sampling (precomputed)
         backprojVX<<<dimGrid_vx,dimBlock_vx>>>(_bpidx,_bponset,_bpweight,_bpmidx,_bpsize,_meas + i*numK, tmp1,numVox);
         //Inverse FFT
 		if (err=pt2CufftExec(plan, tmp1, tmp2, CUFFT_INVERSE) != CUFFT_SUCCESS)

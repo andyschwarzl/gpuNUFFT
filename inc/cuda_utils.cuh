@@ -1,9 +1,9 @@
 #ifndef CUDA_UTILS_CUH
 #define CUDA_UTILS_CUH
-#include "gridding_types.hpp"
-#include "gridding_utils.hpp"
+#include "gpuNUFFT_types.hpp"
+#include "gpuNUFFT_utils.hpp"
 
-__constant__ GriddingND::GriddingInfo GI;
+__constant__ gpuNUFFT::GpuNUFFTInfo GI;
 
 __constant__ DType KERNEL[5000];
 
@@ -67,7 +67,7 @@ __inline__ __device__ DType computeTextureLookup(DType x, DType y, DType z)
 }
 
 #if __CUDA_ARCH__ < 200
-	#define THREAD_BLOCK_SIZE 256 
+	#define THREAD_BLOCK_SIZE 128 
 #else
 	#define THREAD_BLOCK_SIZE 256
 #endif

@@ -1,5 +1,5 @@
 #The name of the project
-PROJECT(gridding3D)
+PROJECT(gpuNUFFT)
 
 #The CMake Minimum version that is required. The FindCUDA script
 #is distributed since version 2.8
@@ -17,7 +17,7 @@ SET(ARCHIVE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 
 #patch output path
 SET(PATCH_OUTPUT_DIR ${PROJECT_SOURCE_DIR}/deploy)
-SET(PATCH_OUTPUT_PATH ${PATCH_OUTPUT_DIR}/gridding3D.zip)
+SET(PATCH_OUTPUT_PATH ${PATCH_OUTPUT_DIR}/gpuNUFFT.zip)
 
 #Searching CUDA
 FIND_PACKAGE(CUDA REQUIRED)
@@ -79,21 +79,21 @@ endif(GPU_DOUBLE_PREC)
 MESSAGE(STATUS "setting NVCC FLAGS to: ${CUDA_NVCC_FLAGS}")
 
 #LIB and MEX-file names
-SET(GRID_LIB_NAME "gridding3D${PREC_SUFFIX}")
-SET(GRID_LIB_ATM_NAME "gridding3D_ATM${PREC_SUFFIX}")
+SET(GRID_LIB_NAME "gpuNUFFT${PREC_SUFFIX}")
+SET(GRID_LIB_ATM_NAME "gpuNUFFT_ATM${PREC_SUFFIX}")
 
-SET(GRID_MEX_FORW_NAME "mex_gridding3D_forw${PREC_SUFFIX}")
-SET(GRID_MEX_ADJ_NAME "mex_gridding3D_adj${PREC_SUFFIX}")
+SET(GRID_MEX_FORW_NAME "mex_gpuNUFFT_forw${PREC_SUFFIX}")
+SET(GRID_MEX_ADJ_NAME "mex_gpuNUFFT_adj${PREC_SUFFIX}")
 
-SET(GRID_MEX_FORW_ATM_NAME "mex_gridding3D_forw_atomic${PREC_SUFFIX}")
-SET(GRID_MEX_ADJ_ATM_NAME "mex_gridding3D_adj_atomic${PREC_SUFFIX}")
+SET(GRID_MEX_FORW_ATM_NAME "mex_gpuNUFFT_forw_atomic${PREC_SUFFIX}")
+SET(GRID_MEX_ADJ_ATM_NAME "mex_gpuNUFFT_adj_atomic${PREC_SUFFIX}")
 
 #Precomputation MEX file
-SET(GRID_MEX_PRECOMP_NAME "mex_griddingND_precomp${PREC_SUFFIX}")
+SET(GRID_MEX_PRECOMP_NAME "mex_gpuNUFFT_precomp${PREC_SUFFIX}")
 
 #Freiburg Reference Implementation
-SET(GRID_MEX_FORW_SPARSE_NAME "mex_gridding3D_forw_sparse${PREC_SUFFIX}")
-SET(GRID_MEX_ADJ_SPARSE_NAME "mex_gridding3D_adj_sparse${PREC_SUFFIX}")
+SET(GRID_MEX_FORW_SPARSE_NAME "mex_gpuNUFFT_forw_sparse${PREC_SUFFIX}")
+SET(GRID_MEX_ADJ_SPARSE_NAME "mex_gpuNUFFT_adj_sparse${PREC_SUFFIX}")
 
 MESSAGE(STATUS "creating lib with name: ${GRID_LIB_NAME}")
 
@@ -106,15 +106,15 @@ SET(GRIDDING_INC_DIR ${CMAKE_SOURCE_DIR}/inc)
 SET(GRIDDING_INCLUDE ${GRIDDING_INC_DIR}/cuda_utils.hpp 
 										 ${GRIDDING_INC_DIR}/cuda_utils.cuh
 										 ${GRIDDING_INC_DIR}/config.hpp
-										 ${GRIDDING_INC_DIR}/gridding_utils.hpp
-										 ${GRIDDING_INC_DIR}/gridding_types.hpp
-										 ${GRIDDING_INC_DIR}/gridding_kernels.hpp
+										 ${GRIDDING_INC_DIR}/gpuNUFFT_utils.hpp
+										 ${GRIDDING_INC_DIR}/gpuNUFFT_types.hpp
+										 ${GRIDDING_INC_DIR}/gpuNUFFT_kernels.hpp
 										 ${GRIDDING_INC_DIR}/precomp_kernels.hpp
 										 ${GRIDDING_INC_DIR}/precomp_utils.hpp
-                     ${GRIDDING_INC_DIR}/gridding_operator.hpp
-										 ${GRIDDING_INC_DIR}/texture_gridding_operator.hpp
-										 ${GRIDDING_INC_DIR}/balanced_gridding_operator.hpp
-                     ${GRIDDING_INC_DIR}/gridding_operator_factory.hpp)
+                     ${GRIDDING_INC_DIR}/gpuNUFFT_operator.hpp
+										 ${GRIDDING_INC_DIR}/texture_gpuNUFFT_operator.hpp
+										 ${GRIDDING_INC_DIR}/balanced_gpuNUFFT_operator.hpp
+                     ${GRIDDING_INC_DIR}/gpuNUFFT_operator_factory.hpp)
 					 
 SET(MATLAB_HELPER_INCLUDE ${GRIDDING_INC_DIR}/matlab_helper.h)
 SET(CONFIG_INCLUDE ${GRIDDING_INC_DIR}/config.hpp ${GRIDDING_INC_DIR}/cufft_config.hpp)
@@ -158,7 +158,7 @@ OUTPUT_VARIABLE _file_list
     COMMAND "${Java_JAR_EXECUTABLE}" "cfM" "${PATCH_OUTPUT_PATH}" "`" 
 		"find" "${CMAKE_CURRENT_SOURCE_DIR}/src" "-not" "-name" "CMakeLists.txt" "-not" "-type" "d" "`"
 #		"-C" ${CMAKE_CURRENT_SOURCE_DIR} "inc" 
-#		"-C" ${CMAKE_CURRENT_SOURCE_DIR} "matlab/GRIDDING3D"
+#		"-C" ${CMAKE_CURRENT_SOURCE_DIR} "matlab/gpuNUFFT"
 	    RESULT_VARIABLE _result
 	)
 endif(GEN_ZIP)

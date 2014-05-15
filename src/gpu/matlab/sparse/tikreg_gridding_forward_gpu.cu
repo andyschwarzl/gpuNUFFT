@@ -16,10 +16,10 @@
 
 #define MAX_BLOCK_SZ 512
 
-#include "tikreg_gridding_kernels.cu"
+#include "tikreg_gpuNUFFT_kernels.cu"
 
 /**
- * Forward Gridding using sparse Matrix
+ * Forward GpuNUFFT using sparse Matrix
  * 
  * Extracted from FREIBURG Code 
  * 
@@ -207,7 +207,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     cudaMemset(_r,0, sizeof(CufftType)*numK*numsens);            
 	
 	if (VERBOSE == 1)
-		mexPrintf("start forward gridding...\n");
+		mexPrintf("start forward gpuNUFFT...\n");
 	// do sens -- b=A x
     for (int i = 0; i < numsens; i++)
     { 

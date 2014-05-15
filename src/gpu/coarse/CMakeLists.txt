@@ -1,13 +1,13 @@
-MESSAGE("Coarse GPU Gridding Library")
-#add exe to build from gridding3D
+MESSAGE("Coarse GPU GpuNUFFT Library")
+#add exe to build from gpuNUFFT
 
 include_directories(${GRIDDING_INC_DIR})
 													
 cuda_include_directories(${GRIDDING_INC_DIR})
 
-set(GPU_CU_SOURCES	${CMAKE_CURRENT_SOURCE_DIR}/coarse_gridding.cu 
-					#${CMAKE_CURRENT_SOURCE_DIR}/gridding_kernels.cu
-					#${CMAKE_CURRENT_SOURCE_DIR}/../std_gridding_kernels.cu
+set(GPU_CU_SOURCES	${CMAKE_CURRENT_SOURCE_DIR}/coarse_gpuNUFFT.cu 
+					#${CMAKE_CURRENT_SOURCE_DIR}/gpuNUFFT_kernels.cu
+					#${CMAKE_CURRENT_SOURCE_DIR}/../std_gpuNUFFT_kernels.cu
 									 )
 
 SET(CUDA_NVCC_FLAGS "-arch;sm_11;--ptxas-options=-v")

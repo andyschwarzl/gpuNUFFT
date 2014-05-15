@@ -1,9 +1,9 @@
-gridding3D
+gpuNUFFT
 ==========
 
-Matlab/CPP Gridding Library
+Matlab/CPP GpuNUFFT Library
 
-gridding3D - GPU Regridding of Radial 3-D MRI data
+gpuNUFFT - GPU Regridding of Radial 3-D MRI data
 
 Andreas Schwarzl - andreas.schwarzl@student.tugraz.at
 -------------------------------------------------------------------------------
@@ -44,7 +44,7 @@ build project using cmake or cmake-gui, starting from project root directory:
     > mkdir build 
 	> cd build
 	> cmake .. -G "Visual Studio 2008 Win64" 
-    > Build created Solution gridding3D.sln using Visual Studio
+    > Build created Solution gpuNUFFT.sln using Visual Studio
 
 Ensure that at least a Visual Studio 2008 Express build environment is setup correctly.
 If the library shall run using Win64 check that all necessary Visual Studio Add-ons are
@@ -93,7 +93,7 @@ of MATLAB 'clear classes' command, leading to a crash of the MATLAB application.
 
 ----------------  RESOLVED  -----------------
 Invalid MEX-file
-'/home/florian/Documents/MATLAB/functions/gridding_gpu/mex_gridding3D_adj_atomic_f.mexa64':
+'/home/florian/Documents/MATLAB/functions/gridding_gpu/mex_gpuNUFFT_adj_atomic_f.mexa64':
 /home/florian/Programs/MATLAB/R2012b/bin/glnxa64/../../sys/os/glnxa64/libstdc++.so.6: 
 version `GLIBCXX_3.4.15' not found (required by
 /usr/local/cuda-5.0/lib64/libcudart.so.5.0)

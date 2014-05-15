@@ -3,7 +3,7 @@
 clear all; close all; clc;
 %%
 load ../../daten/MREG_data_Graz;
-addpath(genpath('GRIDDING3D'));
+addpath(genpath('gpuNUFFT'));
 addpath(genpath('../bin'));
 %%
 % test for adjoint property: looks good
@@ -18,8 +18,8 @@ imwidth = 64;
 k = E.nufftStruct.om'./(2*pi);
 w = ones(E.trajectory_length,1);
 %%
-%G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw,'false');
-G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw,E.imageDim,E.sensmaps,'sparse',E);
+%G3D = gpuNUFFT(k,w,imwidth,osf,wg,sw,'false');
+G3D = gpuNUFFT(k,w,imwidth,osf,wg,sw,E.imageDim,E.sensmaps,'sparse',E);
 
 %%
 y1 = G3D * x1;

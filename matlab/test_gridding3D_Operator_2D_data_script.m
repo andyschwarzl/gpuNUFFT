@@ -4,7 +4,7 @@ close all; clc;
 
 %% add bin to path
 addpath ../bin  
-addpath(genpath('./GRIDDING3D'));
+addpath(genpath('./gpuNUFFT'));
 addpath(genpath('./utils'));
 %% Load data
 load img_brain_4ch;
@@ -44,7 +44,7 @@ w_mc = reshape(repmat(w(:),[1 n_chn]),[size(w), n_chn]);
 %%
 disp('init');
 tic
-FT = GRIDDING3D(k_traj,w,imwidth,osf,wg,sw,[trimmed_size trimmed_size trimmed_size],'true');
+FT = gpuNUFFT(k_traj,w,imwidth,osf,wg,sw,[trimmed_size trimmed_size trimmed_size],'true');
 toc
 %% generate radial data
 disp('inverse');

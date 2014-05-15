@@ -4,7 +4,7 @@ clear all; close all; clc;
 %% add bin to path
 addpath ../bin
 addpath ../../daten
-addpath(genpath('./GRIDDING3D'));
+addpath(genpath('./gpuNUFFT'));
 %% Load data
 %load 20111017_Daten_MREG;
 load MREG_data_Graz;
@@ -25,7 +25,7 @@ for k = 1:length(smaps),
 end;
 smaps = squeeze(smaps_il(1,:,:,:,:) + 1i*smaps_il(2,:,:,:,:));
 clear smaps_il;
-%% Perform Regridding with Kaiser Besser Kernel 64
+%% Perform RegpuNUFFT with Kaiser Besser Kernel 64
 osf = 1.25;%1,1.25,1.5,1.75,2
 wg = 3;%3-7
 sw = 8;
@@ -34,9 +34,9 @@ k = E.nufftStruct.om'./(2*pi);
 w = ones(E.trajectory_length,1);
 
 if (use_freiburg==true)
-    G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw,E.imageDim,'sparse',E);
+    G3D = gpuNUFFT(k,w,imwidth,osf,wg,sw,E.imageDim,'sparse',E);
 else
-    G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw,E.imageDim,'true');
+    G3D = gpuNUFFT(k,w,imwidth,osf,wg,sw,E.imageDim,'true');
 end
 %% one call for all coils
 res = zeros(E.imageDim);
@@ -60,7 +60,7 @@ res = sqrt(sum(abs(imgRegrid_kb).^2,4));
 %%
 slice = 25;
 z_ref = z; %z4em9
-figure, imshow(imresize(abs(res(:,:,slice)),4),[]), title('gridding all coils at once');
+figure, imshow(imresize(abs(res(:,:,slice)),4),[]), title('gpuNUFFT all coils at once');
 figure, imshow(imresize(abs(z_ref(:,:,slice)),4),[]), title('reference (CG)');
 
 %% single call per coil 
@@ -83,14 +83,14 @@ figure, imshow(imresize(abs(z_ref(:,:,slice)),4),[]), title('reference (CG)');
 % end
 % toc
 % %%
-% figure, imshow(imresize(abs(res(:,:,25)),4),[]), title('gridding');
+% figure, imshow(imresize(abs(res(:,:,25)),4),[]), title('gpuNUFFT');
 
 %%
 %for slice = 1:64
 %    figure, imshow(imresize(abs(z(:,:,slice)),4),[]);
 %end
 
-%% check forward gridding using solution z
+%% check forward gpuNUFFT using solution z
 if (use_freiburg==true)
     z_pad = z_ref;
 else
@@ -105,9 +105,9 @@ sw = 8;
 k = E.nufftStruct.om'./(2*pi);
 w = ones(1,E.trajectory_length);
 if (use_freiburg==true)
-    G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw,E.imageDim,'sparse',E);
+    G3D = gpuNUFFT(k,w,imwidth,osf,wg,sw,E.imageDim,'sparse',E);
 else
-    G3D = GRIDDING3D(k,w,imwidth,osf,wg,sw,E.imageDim,'true');
+    G3D = gpuNUFFT(k,w,imwidth,osf,wg,sw,E.imageDim,'true');
 end;
 %%
 tic
@@ -125,9 +125,9 @@ imgRegrid = G3D'*dataRadial;
 exec_time = toc;
 disp(['execution time adjoint: ', num2str(exec_time)]);
 %%
-figure, imshow(imresize(abs(imgRegrid(:,:,slice)),4),[]), title('gridding');
-figure, imshow(imresize(abs(imgRegrid_dc(:,:,slice)),4),[]), title('gridding dc');
+figure, imshow(imresize(abs(imgRegrid(:,:,slice)),4),[]), title('gpuNUFFT');
+figure, imshow(imresize(abs(imgRegrid_dc(:,:,slice)),4),[]), title('gpuNUFFT dc');
 figure, imshow(imresize(abs(z_ref(:,:,slice)),4),[]), title('input z');
 
-%show3DImageasArray([4 4],imgRegrid,'gridding','slice ');
-%show3DImageasArray([4 4],imgRegrid_dc,'gridding dc','slice ');
+%show3DImageasArray([4 4],imgRegrid,'gpuNUFFT','slice ');
+%show3DImageasArray([4 4],imgRegrid_dc,'gpuNUFFT dc','slice ');

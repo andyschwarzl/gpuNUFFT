@@ -15,7 +15,7 @@ Version 2.0.3
 Version 2.0.2
 ----------------------------------------------------------------------
 	- Precomputation step on the GPU
-	- Better performance to continuously create the Gridding Operator
+	- Better performance to continuously create the GpuNUFFT Operator
 
 ----------------------------------------------------------------------
 Version 2.0.1

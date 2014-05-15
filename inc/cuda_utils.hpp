@@ -5,8 +5,8 @@
 #include <cuda_runtime.h>
 #include <stdio.h>
 #include "cufft.h"
-#include "gridding_utils.hpp"
-#include "gridding_operator.hpp"
+#include "gpuNUFFT_utils.hpp"
+#include "gpuNUFFT_operator.hpp"
 #include <stdarg.h>
 
 #define MIN(X,Y) ((X) < (Y) ? (X) : (Y))
@@ -121,7 +121,7 @@ inline void showMemoryInfo()
 // implementations that have to reside in cu file
 void initConstSymbol(const char* symbol, const void* src, IndType count);
 
-void initTexture(const char* symbol, cudaArray** devicePtr, GriddingND::Array<DType> hostTexture);
+void initTexture(const char* symbol, cudaArray** devicePtr, gpuNUFFT::Array<DType> hostTexture);
 
 void bindTo1DTexture(const char* symbol, void* devicePtr, IndType count);
 

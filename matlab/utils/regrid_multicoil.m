@@ -1,6 +1,6 @@
 function img = regrid_multicoil(data, FT)
 % 
-% Regridding wrapper 3D multicoil data
+% RegpuNUFFT wrapper 3D multicoil data
 % 
 
 [nIntl,nRO,nCh]=size(data);

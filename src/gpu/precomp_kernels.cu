@@ -9,7 +9,7 @@ __global__ void assignSectorsKernel(DType* kSpaceTraj,
   IndType* assignedSectors,
   long coordCnt,
   bool is2DProcessing,
-  GriddingND::Dimensions gridSectorDims)
+  gpuNUFFT::Dimensions gridSectorDims)
 {
   int t = threadIdx.x +  blockIdx.x *blockDim.x;
   IndType sector;
@@ -42,7 +42,7 @@ __global__ void assignSectorsKernel(DType* kSpaceTraj,
   }
 }
 
-void assignSectorsGPU(GriddingND::GriddingOperator* griddingOp, GriddingND::Array<DType>& kSpaceTraj, IndType* assignedSectors)
+void assignSectorsGPU(gpuNUFFT::GpuNUFFTOperator* gpuNUFFTOp, gpuNUFFT::Array<DType>& kSpaceTraj, IndType* assignedSectors)
 {
   IndType coordCnt = kSpaceTraj.count();
 
@@ -53,8 +53,8 @@ void assignSectorsGPU(GriddingND::GriddingOperator* griddingOp, GriddingND::Arra
   IndType* assignedSectors_d;
 
   if (DEBUG)
-    printf("allocate and copy trajectory of size %d...\n",griddingOp->getImageDimensionCount()*coordCnt);
-  allocateAndCopyToDeviceMem<DType>(&kSpaceTraj_d,kSpaceTraj.data,griddingOp->getImageDimensionCount()*coordCnt);
+    printf("allocate and copy trajectory of size %d...\n",gpuNUFFTOp->getImageDimensionCount()*coordCnt);
+  allocateAndCopyToDeviceMem<DType>(&kSpaceTraj_d,kSpaceTraj.data,gpuNUFFTOp->getImageDimensionCount()*coordCnt);
 
   if (DEBUG)
     printf("allocate and copy data of size %d...\n",coordCnt);
@@ -63,8 +63,8 @@ void assignSectorsGPU(GriddingND::GriddingOperator* griddingOp, GriddingND::Arra
   assignSectorsKernel<<<grid_dim,block_dim>>>(kSpaceTraj_d,
     assignedSectors_d,
     (long)coordCnt,
-    griddingOp->is2DProcessing(),
-    griddingOp->getGridSectorDims());
+    gpuNUFFTOp->is2DProcessing(),
+    gpuNUFFTOp->getGridSectorDims());
 
   if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
     printf("error: at assignSectors thread synchronization 1: %s\n",cudaGetErrorString(cudaGetLastError()));
@@ -78,7 +78,7 @@ void assignSectorsGPU(GriddingND::GriddingOperator* griddingOp, GriddingND::Arra
   freeTotalDeviceMemory(kSpaceTraj_d,assignedSectors_d,NULL);//NULL as stop
 }
 
-__global__ void sortArraysKernel(GriddingND::IndPair* assignedSectorsAndIndicesSorted,
+__global__ void sortArraysKernel(gpuNUFFT::IndPair* assignedSectorsAndIndicesSorted,
   IndType* assignedSectors, 
   IndType* dataIndices,
   DType* kSpaceTraj,
@@ -108,11 +108,11 @@ __global__ void sortArraysKernel(GriddingND::IndPair* assignedSectorsAndIndicesS
   }
 }
 
-void sortArrays(GriddingND::GriddingOperator* griddingOp, 
-  std::vector<GriddingND::IndPair> assignedSectorsAndIndicesSorted,
+void sortArrays(gpuNUFFT::GpuNUFFTOperator* gpuNUFFTOp, 
+  std::vector<gpuNUFFT::IndPair> assignedSectorsAndIndicesSorted,
   IndType* assignedSectors, 
   IndType* dataIndices,
-  GriddingND::Array<DType>& kSpaceTraj,
+  gpuNUFFT::Array<DType>& kSpaceTraj,
   DType* trajSorted,
   DType* densCompData,
   DType* densData)
@@ -122,7 +122,7 @@ void sortArrays(GriddingND::GriddingOperator* griddingOp,
   dim3 grid_dim(getOptimalGridDim((long)coordCnt,THREAD_BLOCK_SIZE));
 
   DType* kSpaceTraj_d;
-  GriddingND::IndPair* assignedSectorsAndIndicesSorted_d;
+  gpuNUFFT::IndPair* assignedSectorsAndIndicesSorted_d;
   IndType* assignedSectors_d;
   IndType* dataIndices_d;
   DType* trajSorted_d;
@@ -130,11 +130,11 @@ void sortArrays(GriddingND::GriddingOperator* griddingOp,
   DType* densData_d = NULL;
 
   //Trajectory and sorted result 
-  allocateAndCopyToDeviceMem<DType>(&kSpaceTraj_d,kSpaceTraj.data,griddingOp->getImageDimensionCount()*coordCnt);
-  allocateDeviceMem<DType>(&trajSorted_d,griddingOp->getImageDimensionCount()*coordCnt);
+  allocateAndCopyToDeviceMem<DType>(&kSpaceTraj_d,kSpaceTraj.data,gpuNUFFTOp->getImageDimensionCount()*coordCnt);
+  allocateDeviceMem<DType>(&trajSorted_d,gpuNUFFTOp->getImageDimensionCount()*coordCnt);
 
   //Assigned sorted sectors and data indices and result
-  allocateAndCopyToDeviceMem<GriddingND::IndPair>(&assignedSectorsAndIndicesSorted_d,assignedSectorsAndIndicesSorted.data(),coordCnt);
+  allocateAndCopyToDeviceMem<gpuNUFFT::IndPair>(&assignedSectorsAndIndicesSorted_d,assignedSectorsAndIndicesSorted.data(),coordCnt);
   allocateDeviceMem<IndType>(&assignedSectors_d,coordCnt);	 
   allocateDeviceMem<IndType>(&dataIndices_d,coordCnt);	 
 
@@ -155,14 +155,14 @@ void sortArrays(GriddingND::GriddingOperator* griddingOp,
     trajSorted_d,
     densCompData_d,
     densData_d,
-    griddingOp->is3DProcessing(),
+    gpuNUFFTOp->is3DProcessing(),
     (long)coordCnt);
   if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
     printf("error: at sortArrays thread synchronization 1: %s\n",cudaGetErrorString(cudaGetLastError()));
 
   copyFromDevice<IndType>(assignedSectors_d,assignedSectors,coordCnt);
   copyFromDevice<IndType>(dataIndices_d,dataIndices,coordCnt);
-  copyFromDevice<DType>(trajSorted_d,trajSorted,griddingOp->getImageDimensionCount()*coordCnt);
+  copyFromDevice<DType>(trajSorted_d,trajSorted,gpuNUFFTOp->getImageDimensionCount()*coordCnt);
   if (densCompData != NULL)
     copyFromDevice<DType>(densData_d,densData,coordCnt);
 

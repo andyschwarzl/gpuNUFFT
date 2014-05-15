@@ -13,16 +13,16 @@ MESSAGE("GTEST_LIB = ${GTEST_LIB}")
 MESSAGE("GTESTMAIN_LIB = ${GTESTMAIN_LIB}")
 
 #gpu test sources
-set(GPU_SOURCES gpu/gridding3DGPU_conv_tests.cpp
-				gpu/gridding2DGPU_conv_tests.cpp
-				gpu/gridding3DGPU_fft_tests.cpp
-				gpu/gridding3DGPU_deapo_tests.cpp
-				gpu/forward/gridding3DGPU_forward_tests.cpp)
+set(GPU_SOURCES gpu/gpuNUFFT_conv_tests.cpp
+				gpu/gpuNUFFT_2D_conv_tests.cpp
+				gpu/gpuNUFFT_fft_tests.cpp
+				gpu/gpuNUFFT_deapo_tests.cpp
+				gpu/forward/gpuNUFFT_forward_tests.cpp)
 
 #add CPU Tests
 add_subdirectory(cpu)
 
-cuda_add_executable(runGPUUnitTests ${GPU_SOURCES} ${GRIDDING_SOURCES}  ../inc/gridding_utils.hpp ../inc/gridding_operator_factory.hpp ../inc/gridding_operator.hpp ../inc/gridding_kernels.hpp)
+cuda_add_executable(runGPUUnitTests ${GPU_SOURCES} ${GRIDDING_SOURCES}  ../inc/gpuNUFFT_utils.hpp ../inc/gpuNUFFT_operator_factory.hpp ../inc/gpuNUFFT_operator.hpp ../inc/gpuNUFFT_kernels.hpp)
 
 if(WIN32)
 	target_link_libraries(runGPUUnitTests ${GRID_LIB_NAME} ${GTEST_LIB} ${GTESTMAIN_LIB})
@@ -31,7 +31,7 @@ else(WIN32)
 endif(WIN32)
 
 if(GEN_ATOMIC)
-    cuda_add_executable(runGPUATMUnitTests ${GPU_SOURCES} ${GRIDDING_SOURCES} ../inc/gridding_utils.hpp ../inc/gridding_operator_factory.hpp ../inc/gridding_operator.hpp ../inc/gridding_kernels.hpp)
+    cuda_add_executable(runGPUATMUnitTests ${GPU_SOURCES} ${GRIDDING_SOURCES} ../inc/gpuNUFFT_utils.hpp ../inc/gpuNUFFT_operator_factory.hpp ../inc/gpuNUFFT_operator.hpp ../inc/gpuNUFFT_kernels.hpp)
 	if(WIN32)
 		target_link_libraries(runGPUATMUnitTests ${GRID_LIB_ATM_NAME} ${GTEST_LIB} ${GTESTMAIN_LIB})
 	else(WIN32)

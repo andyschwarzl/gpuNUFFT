@@ -1,2 +1,2 @@
-matlab -nojvm -nosplash -r test_gridding3D_Operator_script
+matlab -nojvm -nosplash -r test_gpuNUFFT_Operator_script
 

@@ -5,8 +5,8 @@
 #include "matrix.h"
 
 #include "config.hpp" 
-#include "gridding_operator.hpp"
-#include "gridding_types.hpp"
+#include "gpuNUFFT_operator.hpp"
+#include "gpuNUFFT_types.hpp"
 
 #define MIN(X,Y) ((X) < (Y) ? (X) : (Y))
 
@@ -88,13 +88,13 @@ void readMatlabInputArray(const mxArray *prhs[], int input_index, int highest_va
 }
 
 template <typename TType>
-GriddingND::Array<TType> readAndCreateArray(const mxArray *prhs[], int input_index, int highest_varying_dim, const char* name)
+gpuNUFFT::Array<TType> readAndCreateArray(const mxArray *prhs[], int input_index, int highest_varying_dim, const char* name)
 {
 	TType* data = NULL;
 	int data_count;
 	readMatlabInputArray<TType>(prhs, input_index, highest_varying_dim,name,&data, &data_count);
 	
-	GriddingND::Array<TType> dataArray;
+	gpuNUFFT::Array<TType> dataArray;
 	dataArray.data = (TType*)data;
 	dataArray.dim.length = data_count;
 	return dataArray;
@@ -114,10 +114,10 @@ inline TType getParamField(const mxArray* params, const char* fieldname)
 	}
 }
 
-inline GriddingND::Dimensions getDimensionsFromParamField(const mxArray* params, const char* fieldname)
+inline gpuNUFFT::Dimensions getDimensionsFromParamField(const mxArray* params, const char* fieldname)
 {
 	const mxArray* data = mxGetField(params, 0, fieldname);
-	GriddingND::Dimensions dim; 
+	gpuNUFFT::Dimensions dim; 
 	int* dims = (int*)mxGetData(data);
 	dim.width = dims[0];
 	dim.height = dims[1];
@@ -125,14 +125,14 @@ inline GriddingND::Dimensions getDimensionsFromParamField(const mxArray* params,
 	return dim;
 }
 
-inline GriddingND::InterpolationType getInterpolationTypeOf(int val)
+inline gpuNUFFT::InterpolationType getInterpolationTypeOf(int val)
 {
   switch (val)
   {
-  case 1 : return GriddingND::TEXTURE_LOOKUP;
-  case 2: return GriddingND::TEXTURE2D_LOOKUP;
-  case 3: return GriddingND::TEXTURE3D_LOOKUP;
-  default : return GriddingND::CONST_LOOKUP;
+  case 1 : return gpuNUFFT::TEXTURE_LOOKUP;
+  case 2: return gpuNUFFT::TEXTURE2D_LOOKUP;
+  case 3: return gpuNUFFT::TEXTURE3D_LOOKUP;
+  default : return gpuNUFFT::CONST_LOOKUP;
   }
 }
 

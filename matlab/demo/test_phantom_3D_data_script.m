@@ -6,7 +6,7 @@ close all; clc;
 addpath ../../bin  
 addpath ..
 addpath data
-addpath(genpath('../GRIDDING3D'));
+addpath(genpath('../gpuNUFFT'));
 addpath(genpath('../../../fessler/NUFFT'));
 addpath(genpath('../utils'));
 %% Load d12
@@ -28,7 +28,7 @@ dens = dens(1:R:end);
 %% debug
 display('GPU init')
 tic
-FT = GRIDDING3D(k_traj',dens',imwidth,osf,wg,sw,imgDim,[],'true');
+FT = gpuNUFFT(k_traj',dens',imwidth,osf,wg,sw,imgDim,[],'true');
 toc
 display('CPU init')
 tic

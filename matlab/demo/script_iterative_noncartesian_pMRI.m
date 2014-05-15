@@ -9,7 +9,7 @@
 % matthias.schloegl@tugraz.at
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-clear all; close all; clear classes; clc
+clear all; close all; clear classes; clc;
 addpath('./data');
 addpath ../../bin;
 addpath(genpath('../GRIDDING3D'));
@@ -19,6 +19,7 @@ addpath(genpath('./utils'));
 load im1.mat
 load smaps_phantom.mat
 %% generate noisy data
+verbose = false;
 acc_factor = 1;
 refL = 0;
 noise_scale = 0.02;
@@ -40,7 +41,9 @@ N = nx*ny;
 % simulate trajectory
 [k,w] = ismrm_generate_radial_trajectory(nRO, nProjections);
 w = w./max(w(:));
-figure; plot(k(:,1),k(:,2),'*b')
+if verbose
+  figure; plot(k(:,1),k(:,2),'*b')
+end
 %%
 % build sampling operators
 F = NUFFT(k(:,1)+1i.*k(:,2), w, 1, 0, [nx,ny], 2);
@@ -71,7 +74,9 @@ for i = 1:nc
      alias_image(:,:,i) = F'*(data(:,i));
 end
 
-ismrm_imshow(abs(alias_image),[],[2 4]);
+if verbose
+  ismrm_imshow(abs(alias_image),[],[2 4]);
+end
  
 triv_recon = sqrt(sum(abs(alias_image).^2,3));
 
@@ -100,11 +105,13 @@ tol = 1e-8;     % CG tolerance
 maxitCG = 40;   % maximal CG iterations
 cgsense_recon = pmri_cgsense_arbtra(data,F,smaps,zeros(nx,ny),alpha,tol,maxitCG);
 toc
-   
-figure;
-subplot(1,3,1);imshow(abs(cgsense_recon),[]); title('CG-Sense Recon');
-subplot(1,3,2);imshow(abs(im1),[]); title('Ground Truth');
-subplot(1,3,3);imshow(abs(triv_recon),[]); title('trivial Recon');   
+
+if verbose   
+  figure;
+  subplot(1,3,1);imshow(abs(cgsense_recon),[]); title('CG-Sense Recon');
+  subplot(1,3,2);imshow(abs(im1),[]); title('Ground Truth');
+  subplot(1,3,3);imshow(abs(triv_recon),[]); title('trivial Recon');   
+end
 
 %% (4) Image Reconstruction with CG SENSE GPU
 display('GPU recon...');
@@ -115,7 +122,9 @@ maxitCG = 40;   % maximal CG iterations
 cgsense_recon = pmri_cgsense_arbtra(data,FT,smaps,zeros(nx,ny),alpha,tol,maxitCG,true);
 toc
 
-figure;
-subplot(1,3,1);imshow(abs(cgsense_recon),[]); title('CG-Sense Recon GPU');
-subplot(1,3,2);imshow(abs(im1),[]); title('Ground Truth');
-subplot(1,3,3);imshow(abs(triv_recon),[]); title('trivial Recon');   
+if verbose
+  figure;
+  subplot(1,3,1);imshow(abs(cgsense_recon),[]); title('CG-Sense Recon GPU');
+  subplot(1,3,2);imshow(abs(im1),[]); title('Ground Truth');
+  subplot(1,3,3);imshow(abs(triv_recon),[]); title('trivial Recon');   
+end

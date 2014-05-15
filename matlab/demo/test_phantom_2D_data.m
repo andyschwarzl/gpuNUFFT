@@ -17,7 +17,7 @@ sw = 8;
 imwidth = imgDim(1);
 %%
 tic
-FT = GRIDDING3D(k_traj',dens,imwidth,osf,wg,sw,imgDim,'false');
+FT = GRIDDING3D(k_traj',dens,imwidth,osf,wg,sw,imgDim,[],'false');
 toc
 
 %% recon

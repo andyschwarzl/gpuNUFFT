@@ -82,12 +82,11 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	// Density compensation
 	GriddingND::Array<DType> density_compArray = readAndCreateArray<DType>(prhs, pcount++, 0,"density-comp");
 
-	//TODO Sens array	
-	GriddingND::Array<DType2>  sensArray;
-	sensArray.data = NULL;
+	// Sens array	- same dimension as image data
+	GriddingND::Array<DType2>  sensArray = readAndCreateArray<DType2>(prhs,pcount++,0,"sens-data");
 
 	//Parameters
-    const mxArray *matParams = prhs[pcount++];
+  const mxArray *matParams = prhs[pcount++];
 	
 	if (!mxIsStruct (matParams))
          mexErrMsgTxt ("expects struct containing parameters!");

@@ -86,6 +86,8 @@ namespace GriddingND
 
         bool applyDensComp(){return (this->dens.data != NULL && this->dens.count()>1);}
 
+        bool applySensData(){return (this->sens.data != NULL && this->sens.count()>1);}
+
         OperatorType getType() {return operatorType;}
   protected:
     OperatorType operatorType;
@@ -99,7 +101,7 @@ namespace GriddingND
     Array<DType> kSpaceTraj;
 
     // complex array
-    // dimensions: kspaceDim * chnCount
+    // dimensions: imgDim * chnCount
     Array<DType2> sens;
 
     // density compensation

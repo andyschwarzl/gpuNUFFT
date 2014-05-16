@@ -1,4 +1,4 @@
-# gpuNUFFT - GPU Regridding of Radial 3-D MRI data
+## gpuNUFFT - GPU Regridding of Radial 3-D MRI data
 
 - Andreas Schwarzl - andreas.schwarzl@student.tugraz.at
 - Florian Knoll - florian.knoll@nyumc.org

@@ -30,7 +30,9 @@ SET(MATLAB_ROOT_DIR "/home/florian/Programs/MATLAB/R2012b" CACHE STRING "MATLAB 
 
 Alternatively, it can be passed as command line argument when calling cmake, e.g.:
 
+```
 cmake .. -DMATLAB_ROOT_DIR=/path/to/matlab
+```
 
 -------------------------------------------------------------------------------
 LINUX, using gcc:

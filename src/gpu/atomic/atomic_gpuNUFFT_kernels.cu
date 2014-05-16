@@ -1,5 +1,5 @@
-#ifndef ATOMIC_GRIDDING_KERNELS_H
-#define ATOMIC_GRIDDING_KERNELS_H
+#ifndef ATOMIC_GPUNUFFT_KERNELS_H
+#define ATOMIC_GPUNUFFT_KERNELS_H
 #include "gpuNUFFT_kernels.hpp"
 #include "../std_gpuNUFFT_kernels.cu"
 #include "cuda_utils.cuh"

@@ -102,22 +102,22 @@ CONFIGURE_FILE( ${CMAKE_SOURCE_DIR}/inc/cufft_config.hpp.cmake ${CMAKE_SOURCE_DI
 
 #Include dirs
 include_directories(inc)
-SET(GRIDDING_INC_DIR ${CMAKE_SOURCE_DIR}/inc)
-SET(GRIDDING_INCLUDE ${GRIDDING_INC_DIR}/cuda_utils.hpp 
-										 ${GRIDDING_INC_DIR}/cuda_utils.cuh
-										 ${GRIDDING_INC_DIR}/config.hpp
-										 ${GRIDDING_INC_DIR}/gpuNUFFT_utils.hpp
-										 ${GRIDDING_INC_DIR}/gpuNUFFT_types.hpp
-										 ${GRIDDING_INC_DIR}/gpuNUFFT_kernels.hpp
-										 ${GRIDDING_INC_DIR}/precomp_kernels.hpp
-										 ${GRIDDING_INC_DIR}/precomp_utils.hpp
-                     ${GRIDDING_INC_DIR}/gpuNUFFT_operator.hpp
-										 ${GRIDDING_INC_DIR}/texture_gpuNUFFT_operator.hpp
-										 ${GRIDDING_INC_DIR}/balanced_gpuNUFFT_operator.hpp
-                     ${GRIDDING_INC_DIR}/gpuNUFFT_operator_factory.hpp)
+SET(GPUNUFFT_INC_DIR ${CMAKE_SOURCE_DIR}/inc)
+SET(GPUNUFFT_INCLUDE ${GPUNUFFT_INC_DIR}/cuda_utils.hpp 
+										 ${GPUNUFFT_INC_DIR}/cuda_utils.cuh
+										 ${GPUNUFFT_INC_DIR}/config.hpp
+										 ${GPUNUFFT_INC_DIR}/gpuNUFFT_utils.hpp
+										 ${GPUNUFFT_INC_DIR}/gpuNUFFT_types.hpp
+										 ${GPUNUFFT_INC_DIR}/gpuNUFFT_kernels.hpp
+										 ${GPUNUFFT_INC_DIR}/precomp_kernels.hpp
+										 ${GPUNUFFT_INC_DIR}/precomp_utils.hpp
+                     ${GPUNUFFT_INC_DIR}/gpuNUFFT_operator.hpp
+										 ${GPUNUFFT_INC_DIR}/texture_gpuNUFFT_operator.hpp
+										 ${GPUNUFFT_INC_DIR}/balanced_gpuNUFFT_operator.hpp
+                     ${GPUNUFFT_INC_DIR}/gpuNUFFT_operator_factory.hpp)
 					 
-SET(MATLAB_HELPER_INCLUDE ${GRIDDING_INC_DIR}/matlab_helper.h)
-SET(CONFIG_INCLUDE ${GRIDDING_INC_DIR}/config.hpp ${GRIDDING_INC_DIR}/cufft_config.hpp)
+SET(MATLAB_HELPER_INCLUDE ${GPUNUFFT_INC_DIR}/matlab_helper.h)
+SET(CONFIG_INCLUDE ${GPUNUFFT_INC_DIR}/config.hpp ${GPUNUFFT_INC_DIR}/cufft_config.hpp)
 
 #Adding src directory to the project
 

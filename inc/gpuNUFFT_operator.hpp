@@ -1,5 +1,5 @@
-#ifndef GRIDDING_OPERATOR_H_INCLUDED
-#define GRIDDING_OPERATOR_H_INCLUDED
+#ifndef GPUNUFFT_OPERATOR_H_INCLUDED
+#define GPUNUFFT_OPERATOR_H_INCLUDED
 
 #include "gpuNUFFT_types.hpp"
 #include "gpuNUFFT_kernels.hpp"
@@ -76,12 +76,12 @@ namespace gpuNUFFT
 
         //adjoint gpuNUFFT
         Array<CufftType> performGpuNUFFTAdj(Array<DType2> kspaceData);
-        virtual void             performGpuNUFFTAdj(Array<DType2> kspaceData, Array<CufftType>& imgData, GpuNUFFTOutput gpuNUFFTOut = DEAPODIZATION);
+        virtual void     performGpuNUFFTAdj(Array<DType2> kspaceData, Array<CufftType>& imgData, GpuNUFFTOutput gpuNUFFTOut = DEAPODIZATION);
         Array<CufftType> performGpuNUFFTAdj(Array<DType2> kspaceData, GpuNUFFTOutput gpuNUFFTOut);
 
         //forward gpuNUFFT
         Array<CufftType> performForwardGpuNUFFT(Array<DType2> imgData);
-        virtual void             performForwardGpuNUFFT(Array<DType2> imgData,Array<CufftType>& kspaceData, GpuNUFFTOutput gpuNUFFTOut = DEAPODIZATION);
+        virtual void     performForwardGpuNUFFT(Array<DType2> imgData,Array<CufftType>& kspaceData, GpuNUFFTOutput gpuNUFFTOut = DEAPODIZATION);
         Array<CufftType> performForwardGpuNUFFT(Array<DType2> imgData,GpuNUFFTOutput gpuNUFFTOut);
 
         bool applyDensComp(){return (this->dens.data != NULL && this->dens.count()>1);}
@@ -166,4 +166,4 @@ namespace gpuNUFFT
 
 }
 
-#endif //GRIDDING_OPERATOR_H_INCLUDED
+#endif //GPUNUFFT_OPERATOR_H_INCLUDED

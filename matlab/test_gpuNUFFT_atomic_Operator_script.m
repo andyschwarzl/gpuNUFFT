@@ -23,15 +23,15 @@ for k = 1:length(smaps),
 end;
 smaps = squeeze(smaps_il(1,:,:,:,:) + 1i*smaps_il(2,:,:,:,:));
 clear smaps_il;
-%% Perform RegpuNUFFT with Kaiser Besser Kernel 64
-osf = 1.5;%1,1.25,1.5,1.75,2
+%% Perform gpuNUFFT with Kaiser Besser Kernel 64
+osf = 1.25;%1,1.25,1.5,1.75,2
 wg = 3;%3-7
 sw = 8;
 imwidth = 64;
 k = E.nufftStruct.om'./(2*pi);
 w = ones(E.trajectory_length,1);
 
-G3D = gpuNUFFT(k,w,imwidth,osf,wg,sw,E.imageDim,'false');
+G3D = gpuNUFFT(k,w,imwidth,osf,wg,sw,'true');
 %freiburg implementation
 %G3D = gpuNUFFT(k,w,imwidth,osf,wg,sw,'sparse',E);
 %% one call for all coils
@@ -39,10 +39,7 @@ res = zeros(E.imageDim);
 kspace = reshape(data,[E.trajectory_length E.numCoils]);
 %[imgRegrid_kb,kernel] = grid3D(kspace,k,w,imwidth,osf,wg,sw,'deappo');
 tic
-%imgRegrid_kb = G3D'*kspace;
-for ii = 1:32
-    imgRegrid_kb(:,:,:,ii) = G3D'*kspace(:,ii);
-end
+imgRegrid_kb = G3D'*kspace;
 size(imgRegrid_kb);
 exec_time = toc;
 disp(['execution time adjoint: ', num2str(exec_time)]);
@@ -67,12 +64,12 @@ z_pad = padarray(z_ref,[0 0 10]);
 %%
 
 imwidth = 64; %E.imageDim(1);
-osf = 1.5;
+osf = 1.25;
 wg = 3;
 sw = 8;
 k = E.nufftStruct.om'./(2*pi);
 w = ones(1,E.trajectory_length);
-G3D = gpuNUFFT(k,w,imwidth,osf,wg,sw,E.imageDim,'false');
+G3D = gpuNUFFT(k,w,imwidth,osf,wg,sw,'true');
 tic
 dataRadial = G3D*z_pad;
 exec_time = toc;

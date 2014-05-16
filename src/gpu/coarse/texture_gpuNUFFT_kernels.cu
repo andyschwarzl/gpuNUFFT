@@ -1,5 +1,5 @@
-#ifndef TEXTURE_GRIDDING_KERNELS_CU
-#define TEXTURE_GRIDDING_KERNELS_CU
+#ifndef TEXTURE_GPUNUFFT_KERNELS_CU
+#define TEXTURE_GPUNUFFT_KERNELS_CU
 
 #include "gpuNUFFT_kernels.hpp"
 #include "../std_gpuNUFFT_kernels.cu"
@@ -532,4 +532,4 @@ void performTextureForwardConvolution( CufftType*		data_d,
     textureForwardConvolutionKernel<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
 }
 
-#endif //TEXTURE_GRIDDING_KERNELS_CU
+#endif //TEXTURE_GPUNUFFT_KERNELS_CU

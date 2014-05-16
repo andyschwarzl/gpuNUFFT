@@ -1,5 +1,5 @@
-#ifndef GRIDDING_CPU_H_
-#define GRIDDING_CPU_H_
+#ifndef GPUNUFFT_CPU_H_
+#define GPUNUFFT_CPU_H_
 
 #include "gpuNUFFT_utils.hpp"
 
@@ -15,4 +15,4 @@ void gpuNUFFT_cpu(DType* data,
 				int kernel_count, 
 				int width);
 
-#endif  // GRIDDING_CPU_H_
+#endif  // GPUNUFFT_CPU_H_

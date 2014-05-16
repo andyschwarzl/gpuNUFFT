@@ -1,5 +1,5 @@
-#ifndef STD_GRIDDING_KERNELS_CU
-#define STD_GRIDDING_KERNELS_CU
+#ifndef STD_GPUNUFFT_KERNELS_CU
+#define STD_GPUNUFFT_KERNELS_CU
 
 #include <string>
 
@@ -626,4 +626,4 @@ void performPadding(DType2* imdata_d,
     paddingKernel<<<grid_dim,block_dim>>>(imdata_d,gdata_d,ind_off,gi_host->im_width_dim);
 }
 
-#endif //STD_GRIDDING_KERNELS_CU
+#endif //STD_GPUNUFFT_KERNELS_CU

@@ -1,5 +1,5 @@
-#ifndef GRIDDING_FUNCTIONS_H_
-#define GRIDDING_FUNCTIONS_H_
+#ifndef GPUNUFFT_FUNCTIONS_H_
+#define GPUNUFFT_FUNCTIONS_H_
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -223,4 +223,4 @@ __inline__ __device__ __host__ DType calculateDeapodizationAt2D(int x, int y,Ind
   return val_x * val_y / norm_val;
 }
 
-#endif  // GRIDDING_FUNCTIONS_H_
+#endif  // GPUNUFFT_FUNCTIONS_H_

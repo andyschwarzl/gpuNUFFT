@@ -16,8 +16,8 @@
 common/
 lib/
 bin/
-/gpuNUFFT/GPU_RegpuNUFFT_3D/data/
-/gpuNUFFT/GPU_RegpuNUFFT_3D/functions/trash/
+/gpuNUFFT/GPU_gpuNUFFT_3D/data/
+/gpuNUFFT/GPU_gpuNUFFT_3D/functions/trash/
 /gpuNUFFT/gpuNUFFT/build/
 test_03/build/
 gpuNUFFT/NUFFT_recon_demo_2D/kspaceRadial.mat

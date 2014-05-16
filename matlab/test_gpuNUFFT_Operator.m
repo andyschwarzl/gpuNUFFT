@@ -25,7 +25,7 @@ for k = 1:length(smaps),
 end;
 smaps = squeeze(smaps_il(1,:,:,:,:) + 1i*smaps_il(2,:,:,:,:));
 clear smaps_il;
-%% Perform RegpuNUFFT with Kaiser Besser Kernel 64
+%% Perform gpuNUFFT with Kaiser Besser Kernel 64
 osf = 1.25;%1,1.25,1.5,1.75,2
 wg = 3;%3-7
 sw = 8;

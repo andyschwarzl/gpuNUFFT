@@ -1,5 +1,5 @@
-#ifndef GRIDDING_TYPES_H_INCLUDED
-#define GRIDDING_TYPES_H_INCLUDED
+#ifndef GPUNUFFT_TYPES_H_INCLUDED
+#define GPUNUFFT_TYPES_H_INCLUDED
 
 #include <cstdlib>
 #include <iostream>
@@ -173,4 +173,4 @@ namespace gpuNUFFT
 
 }
 
-#endif //GRIDDING_TYPES_H_INCLUDED
+#endif //GPUNUFFT_TYPES_H_INCLUDED

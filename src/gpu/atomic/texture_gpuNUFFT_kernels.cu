@@ -1,5 +1,5 @@
-#ifndef TEXTURE_GRIDDING_KERNELS_H
-#define TEXTURE_GRIDDING_KERNELS_H
+#ifndef TEXTURE_GPUNUFFT_KERNELS_H
+#define TEXTURE_GPUNUFFT_KERNELS_H
 #include "gpuNUFFT_kernels.hpp"
 #include "../std_gpuNUFFT_kernels.cu"
 #include "cuda_utils.cuh"

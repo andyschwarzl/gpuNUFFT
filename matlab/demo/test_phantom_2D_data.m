@@ -3,9 +3,8 @@ clear all;
 close all; clc; 
 
 %% add bin to path
-addpath ../../bin  
 addpath data
-addpath(genpath('../gpuNUFFT'));
+addpath(genpath('../../gpuNUFFT'));
 addpath(genpath('../utils'));
 %% Load data
 load sl2d

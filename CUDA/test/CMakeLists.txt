@@ -1,7 +1,7 @@
 #setup testframework
 MESSAGE("------setting up testframework-------")
 
-set(GTEST_DIR "${CMAKE_SOURCE_DIR}/../gtest")
+set(GTEST_DIR "${CMAKE_SOURCE_DIR}/../../gtest")
 MESSAGE("GTEST_DIR " ${GTEST_DIR})
 
 include_directories("${GTEST_DIR}/include")

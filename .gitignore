@@ -35,7 +35,7 @@ gpuNUFFT/bUTE/data/
 gpuNUFFT/3D_radial_bUTE_test/results/
 gpuNUFFT/bUTE/script.out*
 gpuNUFFT/daten/
-gpuNUFFT/gpuNUFFT/inc/*config.hpp
+CUDA/inc/*config.hpp
 build/
 *.out
 *.out.*

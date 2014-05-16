@@ -3,10 +3,9 @@ clear all;
 close all; clc; 
 
 %% add bin to path
-addpath ../../bin  
 addpath ..
 addpath data
-addpath(genpath('../gpuNUFFT'));
+addpath(genpath('../../gpuNUFFT'));
 addpath(genpath('../../../fessler/NUFFT'));
 addpath(genpath('../utils'));
 %% Load d12

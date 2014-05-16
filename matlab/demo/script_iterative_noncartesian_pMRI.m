@@ -11,8 +11,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 clear all; close all; clear classes; clc;
 addpath('./data');
-addpath ../../bin;
-addpath(genpath('../gpuNUFFT'));
+%addpath ../../bin;
+addpath(genpath('../../gpuNUFFT'));
 addpath(genpath('../../../fessler/NUFFT'));
 addpath(genpath('./utils'));
 %% (1) simulate data

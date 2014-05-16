@@ -62,9 +62,6 @@ SET(GEN_ATOMIC ON CACHE BOOL "Enable atomic kernel generation (Compute Capabilit
 #Enable Google Tests
 SET(GEN_TESTS OFF CACHE BOOL "Enable and generate simple GOOGLE test framework unit tests")
 
-#Build Freiburg Tikreg Solution
-SET(GEN_TIKREG OFF CACHE BOOL "Build Freiburg Tikreg Solution")
-
 #Enable/Disable GPU double precision 
 SET(GPU_DOUBLE_PREC OFF CACHE BOOL "Enable double precision floating point operations on GPU (Compute Capability 1.3 needed)")
 
@@ -90,10 +87,6 @@ SET(GRID_MEX_ADJ_ATM_NAME "mex_gpuNUFFT_adj_atomic${PREC_SUFFIX}")
 
 #Precomputation MEX file
 SET(GRID_MEX_PRECOMP_NAME "mex_gpuNUFFT_precomp${PREC_SUFFIX}")
-
-#Freiburg Reference Implementation
-SET(GRID_MEX_FORW_SPARSE_NAME "mex_gpuNUFFT_forw_sparse${PREC_SUFFIX}")
-SET(GRID_MEX_ADJ_SPARSE_NAME "mex_gpuNUFFT_adj_sparse${PREC_SUFFIX}")
 
 MESSAGE(STATUS "creating lib with name: ${GRID_LIB_NAME}")
 

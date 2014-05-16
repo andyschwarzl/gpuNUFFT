@@ -139,8 +139,4 @@ if(GEN_ATOMIC)
   endif()
 endif()
 
-if (GEN_TIKREG)
-	ADD_SUBDIRECTORY(sparse)
-endif()
-
 ADD_SUBDIRECTORY(precomputation)

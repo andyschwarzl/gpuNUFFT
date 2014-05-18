@@ -1,4 +1,4 @@
-TODOs gridding3D: + ... done, - ... TODO
+TODOs gpuNUFFT: + ... done, - ... TODO
  + kernel in const mem + tests
  + coordinate structe as float3 + coalesced read instructions via shared memory 
    (http://www.scribd.com/doc/37932042/CUDA-Performance-Optimization, 

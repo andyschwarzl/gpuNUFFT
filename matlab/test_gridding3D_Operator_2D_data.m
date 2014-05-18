@@ -4,8 +4,8 @@ close all; clc;
 
 %% add bin to path
 addpath ../bin  
-addpath ../../cuda-test/gridding3D/daten
-addpath(genpath('./GRIDDING3D'));
+addpath ../../cuda-test/gpuNUFFT/daten
+addpath(genpath('./gpuNUFFT'));
 addpath(genpath('./utils'));
 %% Load data
 load img_brain_4ch;
@@ -26,7 +26,7 @@ end
 %img_a = padarray(img(:,:,1),[0 0 trimmed_size/2]);
 %%
 size(img_a);
-%figure, imshow(imresize(abs(img_a(:,:,1,n_chn)),4),[]), title('gridding input');
+%figure, imshow(imresize(abs(img_a(:,:,1,n_chn)),4),[]), title('gpuNUFFT input');
 
 [nPE,nFE,nCh]=size(img_a);
 
@@ -39,7 +39,7 @@ rho=linspace(-0.5,0.5,nPE*2)';
 k=rho*exp(-1j*theta);
 
 %% generate Fourier sampling operator
-%FT = GRIDDING3D(k, 1, 1, 0, [nPE,nFE], 2);
+%FT = gpuNUFFT(k, 1, 1, 0, [nPE,nFE], 2);
 k_traj = [real(k(:))'; imag(k(:))';zeros(1,length(k(:)))];
 imwidth = nPE;
 osf = 1.25;
@@ -53,7 +53,7 @@ w_mc = reshape(repmat(w(:),[1 n_chn]),[size(w), n_chn]);
 %w = w_mc(:);
 %%
 tic
-FT = GRIDDING3D(k_traj,w,imwidth,osf,wg,sw,[trimmed_size trimmed_size trimmed_size],'false');
+FT = gpuNUFFT(k_traj,w,imwidth,osf,wg,sw,[trimmed_size trimmed_size trimmed_size],[],'false');
 toc
 %% generate radial data
 tic
@@ -74,12 +74,12 @@ tic
 imgRegrid_kb_dc = regrid_multicoil_gpu(reshape(dataRadial_dc,[size(k),chn]),FT);
 toc
 %% show results
-%figure, imshow(imresize(((abs(imgRegrid_kb_dc(:,:,32,n_chn)))),4),[]), title('gridding dc');
+%figure, imshow(imresize(((abs(imgRegrid_kb_dc(:,:,32,n_chn)))),4),[]), title('gpuNUFFT dc');
 
 %% merge channels
 recon_sos_dc = sqrt(sum(abs(imgRegrid_kb_dc).^2,4));
 recon_sos_res = recon_sos_dc(:,:,slice);
-figure, imshow(imresize(((abs(recon_sos_res(:,:)))),1),[]), title('gridding dc sos');
+figure, imshow(imresize(((abs(recon_sos_res(:,:)))),1),[]), title('gpuNUFFT dc sos');
 disp('finished');
 out_file = ['../tmp/results/2D_',num2str(trimmed_size),'_',strrep(num2str(osf), '.', '_'),'_',num2str(wg),'_',num2str(slice),'.png'];
 %save(out_file, 'recon_sos_res');

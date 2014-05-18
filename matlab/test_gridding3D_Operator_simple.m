@@ -1,11 +1,11 @@
-%simple testfile to test the behavior of the gridding operator 
+%simple testfile to test the behavior of the gpuNUFFT operator 
 %generates a simple 16x16x16 image with 3 spots in the middle layer
 clear all; close all; clc;
 
 %% add bin to path
 addpath ../bin
 addpath ../../daten
-addpath(genpath('./GRIDDING3D'));
+addpath(genpath('./gpuNUFFT'));
 
 %% create image data
 im_size = 16;
@@ -40,7 +40,7 @@ rho=linspace(-0.5,0.5,nPE*2)';
 k=rho*exp(-j*theta);
 
 %% generate Fourier sampling operator
-%FT = GRIDDING3D(k, 1, 1, 0, [nPE,nFE], 2);
+%FT = gpuNUFFT(k, 1, 1, 0, [nPE,nFE], 2);
 k_traj = [real(k(:))'; imag(k(:))';zeros(1,length(k(:)))];
 z_crds = linspace(-0.5,0.5,im_size);
 z_crds_rep = repmat(z_crds,[length(k(:)) 1]);
@@ -65,7 +65,7 @@ w = repmat(w, [1, numSpokes,1]);
 w = w(:);
 w = repmat(w, [1 im_size]);
 %%
-FT = GRIDDING3D(k_traj_3d,w(:),imwidth,osf,wg,sw,[imwidth imwidth imwidth],'false');
+FT = gpuNUFFT(k_traj_3d,w(:),imwidth,osf,wg,sw,[imwidth imwidth imwidth],'false');
 
 %% generate radial data
 dataRadial = (FT*img);
@@ -82,4 +82,4 @@ dataRadial_dc = dataRadial.*w(:);
 imgRegrid_kb = FT'*dataRadial_dc;
 imgRegrid_kb_x = (1/sqrt(prod([16 16 16]))) * imgRegrid_kb;
 
-show3DImageasArray([4 4],imgRegrid_kb,'gridding reconstruction','fft slice ');
+show3DImageasArray([4 4],imgRegrid_kb,'gpuNUFFT reconstruction','fft slice ');

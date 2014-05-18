@@ -1,6 +1,6 @@
 function img = regrid_singlecoil_gpu(data, FT)
 % 
-% Regridding wrapper 3D singlecoil data
+% gpuNUFFT wrapper 3D singlecoil data
 % 
 
 [nIntl,nRO]=size(data);

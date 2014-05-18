@@ -1,6 +1,6 @@
 function data = inversegrid_multicoil_gpu(img, FT, nIntl,nRO)
 % 
-% Inverse gridding wrapper for multicoil data
+% Inverse gpuNUFFT wrapper for multicoil data
 
 if (length(size(img))>3)
     [nx,ny,nz,nCh]=size(img);

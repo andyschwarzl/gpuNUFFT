@@ -1,7 +1,7 @@
 % MREG Test
 
 clear all; close all; clc;
-addpath(genpath('./GRIDDING3D'));
+addpath(genpath('./gpuNUFFT'));
 addpath(genpath('../bin'));
 %% test for adjoint prop
 imwidth = 64;
@@ -24,7 +24,7 @@ k_traj = [real(k(:))'; imag(k(:))';zeros(1,length(k(:)))];
 
 w = ones(1,length(k(:)));
 %%
-G3D = GRIDDING3D(k_traj,w,imwidth,osf,wg,sw,[imwidth imwidth imwidth],'false');
+G3D = gpuNUFFT(k_traj,w,imwidth,osf,wg,sw,[imwidth imwidth imwidth],'false');
 
 %%
 y1 = G3D * x1;

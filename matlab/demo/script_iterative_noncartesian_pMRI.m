@@ -11,8 +11,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 clear all; close all; clear classes; clc;
 addpath('./data');
-addpath ../../bin;
-addpath(genpath('../GRIDDING3D'));
+%addpath ../../bin;
+addpath(genpath('../../gpuNUFFT'));
 addpath(genpath('../../../fessler/NUFFT'));
 addpath(genpath('./utils'));
 %% (1) simulate data
@@ -53,7 +53,7 @@ osf =1.25;
 wg = 3;
 sw = 8;
 
-FT = GRIDDING3D(k',w,nx,osf,wg,sw,[nx,ny],smaps,'false');
+FT = gpuNUFFT(k',w,nx,osf,wg,sw,[nx,ny],smaps,'false');
 
 noisy_data = squeeze(F * (noisy_im));
 %%

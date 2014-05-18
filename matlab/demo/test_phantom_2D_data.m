@@ -3,9 +3,8 @@ clear all;
 close all; clc; 
 
 %% add bin to path
-addpath ../../bin  
 addpath data
-addpath(genpath('../GRIDDING3D'));
+addpath(genpath('../../gpuNUFFT'));
 addpath(genpath('../utils'));
 %% Load data
 load sl2d
@@ -17,7 +16,7 @@ sw = 8;
 imwidth = imgDim(1);
 %%
 tic
-FT = GRIDDING3D(k_traj',dens,imwidth,osf,wg,sw,imgDim,[],'false');
+FT = gpuNUFFT(k_traj',dens,imwidth,osf,wg,sw,imgDim,[],'false');
 toc
 
 %% recon

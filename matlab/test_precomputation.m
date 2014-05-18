@@ -1,11 +1,11 @@
-%simple testfile to test the behavior of the gridding operator 
+%simple testfile to test the behavior of the gpuNUFFT operator 
 %generates a simple 16x16x16 image with 3 spots in the middle layer
 clear all; close all; clc;
 
 %% add bin to path
 addpath ../bin
 addpath ../../daten
-addpath(genpath('./GRIDDING3D'));
+addpath(genpath('./gpuNUFFT'));
 
 %% create image data
 im_size = 16;
@@ -41,7 +41,7 @@ sw = 8;
 w = ones(1,length(k_traj(:)));
 
 tic
-FT = GRIDDING3D(k_traj',w,imwidth,osf,wg,sw,[imwidth imwidth imwidth],'false');
+FT = gpuNUFFT(k_traj',w,imwidth,osf,wg,sw,[imwidth imwidth imwidth],'false');
 toc
 %% generate radial data
 dataRadial = (FT*img);
@@ -58,4 +58,4 @@ dataRadial_dc = dataRadial;
 %% recon
 imgRegrid_kb = FT'*dataRadial_dc;
 %%
-show3DImageasArray([4 4],imgRegrid_kb,'gridding reconstruction','fft slice ');
+show3DImageasArray([4 4],imgRegrid_kb,'gpuNUFFT reconstruction','fft slice ');

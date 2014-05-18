@@ -7,7 +7,7 @@
 INFO:
 -------------------------------------------------------------------------------
 GPU 3D regridding library with MATLAB(R) Mexfile output.
-Go to subfolder CUDA to compile mexfiles.
+Go to subfolder CUDA to compile mexfiles. 
 
 REQUIREMENTS:
 -------------------------------------------------------------------------------
@@ -64,4 +64,7 @@ installed correctly and a Win64 dummy project can be created using VS.
 -------------------------------------------------------------------------------
 Run:
 -------------------------------------------------------------------------------
-The compiled CUDA-mexfiles will appear in the bin directory, which has to be included in the matlab search path in order to run the provided demo example.
+The compiled CUDA-mexfiles will appear in the bin directory and are also copied 
+automatically into the gpuNUFFT/@gpuNUFFT/private directory . Include the gpuNUFFT
+directory into the matlab search path, in order to run the provided demo example.
+

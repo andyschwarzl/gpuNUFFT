@@ -3,7 +3,6 @@ clear all;
 close all; clc; 
 
 %% add bin to path
-addpath ..
 addpath data
 addpath(genpath('../../gpuNUFFT'));
 addpath(genpath('../../../fessler/NUFFT'));

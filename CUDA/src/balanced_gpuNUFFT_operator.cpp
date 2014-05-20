@@ -37,7 +37,7 @@ void gpuNUFFT::BalancedGpuNUFFTOperator::forwardConvolution(CufftType*		data_d,
   IndType*		sector_centers_d,
   gpuNUFFT::GpuNUFFTInfo* gi_host)
 {
-  performForwardConvolution(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,gi_host);
+  performForwardConvolution(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_processing_order_d,sector_centers_d,gi_host);
 }
 
 // Adds behaviour of GpuNUFFTOperator by 

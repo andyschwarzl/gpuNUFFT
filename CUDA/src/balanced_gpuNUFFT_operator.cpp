@@ -52,3 +52,14 @@ void gpuNUFFT::BalancedGpuNUFFTOperator::performGpuNUFFTAdj(gpuNUFFT::Array<DTyp
 
   freeTotalDeviceMemory(sector_processing_order_d,NULL);//NULL as stop token
 }
+
+void gpuNUFFT::BalancedGpuNUFFTOperator::performForwardGpuNUFFT(gpuNUFFT::Array<DType2> imgData,gpuNUFFT::Array<CufftType>& kspaceData, GpuNUFFTOutput gpuNUFFTOut)
+{
+  if (DEBUG)
+    printf("allocate and copy sector processing order of size %d...\n",this->sectorProcessingOrder.count());
+  allocateAndCopyToDeviceMem<IndType2>(&sector_processing_order_d,this->sectorProcessingOrder.data,this->sectorProcessingOrder.count());
+  
+  GpuNUFFTOperator::performForwardGpuNUFFT(imgData,kspaceData,gpuNUFFTOut);
+
+  freeTotalDeviceMemory(sector_processing_order_d,NULL);//NULL as stop token
+}

@@ -5,6 +5,9 @@ Version 2.0.4
 	- Use textures for data readout
 	- Balanced gridding to work more efficiently
 	- Apply sens data on GPU
+	- Automatically export mex-files into gpuNUFFT/@gpuNUFFT/private 
+	  folder
+  - 
 
 ---------------------------------------------------------------------
 Version 2.0.3

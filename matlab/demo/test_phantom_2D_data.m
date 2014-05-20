@@ -6,22 +6,51 @@ close all; clc;
 addpath data
 addpath(genpath('../../gpuNUFFT'));
 addpath(genpath('../utils'));
+addpath(genpath('../../../fessler/NUFFT'));
 %% Load data
 load sl2d
 
 %% generate Fourier sampling operator
-osf =1.25;
+osf =2;
 wg = 3;
 sw = 8;
 imwidth = imgDim(1);
 %%
+disp('init gpu op');
 tic
 FT = gpuNUFFT(k_traj',dens,imwidth,osf,wg,sw,imgDim,[],'false');
 toc
-
-%% recon
+disp('init cpu op');
 tic
-imgRecon = FT'*dataRadial(:);
+FTCPU = NUFFT(k_traj(:,1)+1i*k_traj(:,2), dens, 1, 0, imgDim, 2);
 toc
+%% recon
+disp('GPU...');
+imgRecon = FT'*dataRadial(:);
+disp('GPU fw')
+tic
+data_recon = FT*imgRecon(:);
+toc
+disp('GPU adj')
+tic
+imgRecon2 = FT'*data_recon;
+toc
+
+disp('CPU...');
+imgReconCPU = FTCPU'*dataRadial(:);
+disp('CPU fw')
+tic
+data_reconCPU = FTCPU*imgReconCPU(:);
+toc
+disp('CPU adj')
+tic
+imgRecon2CPU = FTCPU'*data_reconCPU;
+toc
+
 %% show results
-figure, imshow(imrotate(abs(imgRecon(:,:)),90),[]), title('Recon');
+figure, h1 = subplot(121); imshow(imrotate(abs(imgRecon(:,:)),90),[]), title('Recon');
+h2 = subplot(122); imshow(imrotate(abs(imgReconCPU(:,:)),90),[]), title('CPU Recon');
+linkaxes([h1 h2]);
+figure, h1 = subplot(121); imshow(imrotate(abs(imgRecon2(:,:)),90),[]), title('Recon2');
+h2 = subplot(122); imshow(imrotate(abs(imgRecon2CPU(:,:)),90),[]), title('CPU Recon2');
+linkaxes([h1 h2]);

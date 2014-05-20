@@ -37,7 +37,7 @@ void gpuNUFFT::BalancedGpuNUFFTOperator::forwardConvolution(CufftType*		data_d,
   IndType*		sector_centers_d,
   gpuNUFFT::GpuNUFFTInfo* gi_host)
 {
-  performForwardConvolution(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,gi_host);
+  performForwardConvolution(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_processing_order_d,sector_centers_d,gi_host);
 }
 
 // Adds behaviour of GpuNUFFTOperator by 
@@ -49,6 +49,17 @@ void gpuNUFFT::BalancedGpuNUFFTOperator::performGpuNUFFTAdj(gpuNUFFT::Array<DTyp
   allocateAndCopyToDeviceMem<IndType2>(&sector_processing_order_d,this->sectorProcessingOrder.data,this->sectorProcessingOrder.count());
 
   GpuNUFFTOperator::performGpuNUFFTAdj(kspaceData,imgData,gpuNUFFTOut);
+
+  freeTotalDeviceMemory(sector_processing_order_d,NULL);//NULL as stop token
+}
+
+void gpuNUFFT::BalancedGpuNUFFTOperator::performForwardGpuNUFFT(gpuNUFFT::Array<DType2> imgData,gpuNUFFT::Array<CufftType>& kspaceData, GpuNUFFTOutput gpuNUFFTOut)
+{
+  if (DEBUG)
+    printf("allocate and copy sector processing order of size %d...\n",this->sectorProcessingOrder.count());
+  allocateAndCopyToDeviceMem<IndType2>(&sector_processing_order_d,this->sectorProcessingOrder.data,this->sectorProcessingOrder.count());
+  
+  GpuNUFFTOperator::performForwardGpuNUFFT(imgData,kspaceData,gpuNUFFTOut);
 
   freeTotalDeviceMemory(sector_processing_order_d,NULL);//NULL as stop token
 }

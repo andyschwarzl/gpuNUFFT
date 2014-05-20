@@ -643,7 +643,7 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(gpuNUFFT::Array<DType2> 
 
     performFFTScaling(data_d,gi_host->data_count,gi_host);
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
-      printf("error: at adj  thread synchronization 8: %s\n",cudaGetErrorString(cudaGetLastError()));
+      printf("error: at thread synchronization 8: %s\n",cudaGetErrorString(cudaGetLastError()));
     
     //write result in correct order back into output array
     writeOrderedGPU(data_sorted_d,data_indices_d,data_d,(int)this->kSpaceTraj.count());
@@ -663,7 +663,7 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(gpuNUFFT::Array<DType2> 
     cudaFree(sens_d);
 
   if ((cudaThreadSynchronize() != cudaSuccess))
-    fprintf(stderr,"error in gpuNUFFT_gpu function: %s\n",cudaGetErrorString(cudaGetLastError()));
+    fprintf(stderr,"error in performForwardGpuNUFFT function: %s\n",cudaGetErrorString(cudaGetLastError()));
   free(gi_host);
 }
 

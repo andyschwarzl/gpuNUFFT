@@ -1452,7 +1452,7 @@ void performForwardConvolution( CufftType*		data_d,
   if (DEBUG)
     printf("balanced convolution requires %d bytes of shared memory!\n",shared_mem_size);
   if (gi_host->is2Dprocessing)
-    balancedForwardConvolutionKernel22D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sectorsToProcess);
+    balancedForwardConvolutionKernel22D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_processing_order_d,sector_centers_d,gi_host->sectorsToProcess);
   else
     balancedForwardConvolutionKernel2<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_processing_order_d,sector_centers_d,gi_host->sectorsToProcess);
 }

@@ -15,6 +15,7 @@ void performConvolution( DType2* data_d,
   gpuNUFFT::GpuNUFFTInfo* gi_host
   );
 
+//Balanced Version
 void performConvolution( DType2* data_d, 
   DType* crds_d, 
   CufftType* gdata_d,
@@ -34,6 +35,17 @@ void performTextureConvolution( DType2* data_d,
   gpuNUFFT::GpuNUFFTInfo* gi_host
   );
 
+//Balanced Version
+void performTextureConvolution( DType2* data_d, 
+  DType* crds_d, 
+  CufftType* gdata_d,
+  DType*			kernel_d, 
+  IndType* sectors_d, 
+  IndType2* sector_processing_order_d,
+  IndType* sector_centers_d,
+  gpuNUFFT::GpuNUFFTInfo* gi_host
+  );
+
 void performForwardConvolution( CufftType*		data_d, 
   DType*			crds_d, 
   CufftType*		gdata_d,
@@ -43,6 +55,7 @@ void performForwardConvolution( CufftType*		data_d,
   gpuNUFFT::GpuNUFFTInfo*	gi_host
   );
 
+//Balanced Version
 void performForwardConvolution( CufftType*		data_d, 
   DType*			crds_d, 
   CufftType*	gdata_d,

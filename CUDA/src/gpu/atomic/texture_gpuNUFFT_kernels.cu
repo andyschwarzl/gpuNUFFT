@@ -144,6 +144,31 @@ __global__ void textureConvolutionKernel(DType2* data,
   }//sec < sector_count	
 }
 
+__global__ void balancedTextureConvolutionKernel(DType2* data, 
+  DType* crds, 
+  CufftType* gdata,
+  IndType* sectors, 
+  IndType2* sector_processing_order,
+  IndType* sector_centers,
+  int N
+  )
+{
+  extern __shared__ DType2 sdata[];//externally managed shared memory
+  int sec_cnt = blockIdx.x;
+  __shared__ int sec[THREAD_BLOCK_SIZE];
+  
+  while (sec_cnt < N)
+  {
+    sec[threadIdx.x] = sector_processing_order[sec_cnt].x;
+    __shared__ int data_max;
+    data_max = min(sectors[sec[threadIdx.x]+1],sectors[sec[threadIdx.x]] + threadIdx.x + sector_processing_order[sec_cnt].y+MAXIMUM_PAYLOAD);
+    textureConvolutionFunction(sec,data_max,sector_processing_order[sec_cnt].y,sdata,data,crds,gdata,sectors,sector_centers);
+    __syncthreads();
+    sec_cnt = sec_cnt + gridDim.x;
+  }//sec < sector_count	
+}
+
+
 // ----------------------------------------------------------------------------
 // convolutionKernel: NUFFT^H kernel
 //
@@ -271,6 +296,30 @@ __global__ void textureConvolutionKernel2D(DType2* data,
   }//sec < sector_count	
 }
 
+__global__ void balancedTextureConvolutionKernel2D(DType2* data, 
+  DType* crds, 
+  CufftType* gdata,
+  IndType* sectors, 
+  IndType2* sector_processing_order,
+  IndType* sector_centers,
+  int N
+  )
+{
+  extern __shared__ DType2 sdata[];//externally managed shared memory
+  int sec_cnt = blockIdx.x;
+  __shared__ int sec[THREAD_BLOCK_SIZE];
+  
+  while (sec_cnt < N)
+  {
+    sec[threadIdx.x] = sector_processing_order[sec_cnt].x; 
+    __shared__ int data_max;
+    data_max = min(sectors[sec[threadIdx.x]+1],sectors[sec[threadIdx.x]] + threadIdx.x + sector_processing_order[sec_cnt].y + MAXIMUM_PAYLOAD);
+    textureConvolutionFunction2D(sdata,sec,data_max,sector_processing_order[sec_cnt].y,data,crds,gdata,sectors,sector_centers);
+    __syncthreads();
+    sec_cnt = sec_cnt+ gridDim.x;
+  }//sec < sector_count	
+}
+
 void performTextureConvolution( DType2* data_d, 
   DType* crds_d, 
   CufftType* gdata_d,
@@ -287,13 +336,42 @@ void performTextureConvolution( DType2* data_d,
   dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,1));
   if (DEBUG)
   {
-    printf("adjoint convolution requires %d bytes of shared memory!\n",shared_mem_size);
+    printf("adjoint textured convolution requires %d bytes of shared memory!\n",shared_mem_size);
     printf("grid dim %d, block dim %d \n",grid_dim.x, block_dim.x); 
   }
   if (gi_host->is2Dprocessing)
     textureConvolutionKernel2D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
   else
     textureConvolutionKernel<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
+
+  if (DEBUG)
+    printf("...finished with: %s\n", cudaGetErrorString(cudaGetLastError()));
+}
+
+void performTextureConvolution( DType2* data_d, 
+  DType* crds_d, 
+  CufftType* gdata_d,
+  DType*			kernel_d, 
+  IndType* sectors_d, 
+  IndType2* sector_processing_order_d,
+  IndType* sector_centers_d,
+  gpuNUFFT::GpuNUFFTInfo* gi_host
+  )
+{
+  long shared_mem_size = (gi_host->sector_dim)*sizeof(DType2);
+  int thread_size =THREAD_BLOCK_SIZE;
+
+  dim3 block_dim(thread_size);
+  dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,1));
+  if (DEBUG)
+  {
+    printf("adjoint textured balanced convolution requires %d bytes of shared memory!\n",shared_mem_size);
+    printf("grid dim %d, block dim %d \n",grid_dim.x, block_dim.x); 
+  }
+  if (gi_host->is2Dprocessing)
+    balancedTextureConvolutionKernel2D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_processing_order_d,sector_centers_d,gi_host->sectorsToProcess);
+  else
+    balancedTextureConvolutionKernel<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_processing_order_d,sector_centers_d,gi_host->sectorsToProcess);
 
   if (DEBUG)
     printf("...finished with: %s\n", cudaGetErrorString(cudaGetLastError()));

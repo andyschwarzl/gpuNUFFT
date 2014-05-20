@@ -24,7 +24,8 @@ namespace gpuNUFFT
 
     // OPERATIONS
     void performGpuNUFFTAdj(Array<DType2> kspaceData, Array<CufftType>& imgData, GpuNUFFTOutput gpuNUFFTOut = DEAPODIZATION);
-    
+    void performForwardGpuNUFFT(Array<DType2> imgData,Array<CufftType>& kspaceData, GpuNUFFTOutput gpuNUFFTOut = DEAPODIZATION);
+        
     OperatorType getType() {return gpuNUFFT::BALANCED;}
 
   protected:

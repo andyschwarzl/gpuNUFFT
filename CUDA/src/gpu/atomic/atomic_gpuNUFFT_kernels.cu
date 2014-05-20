@@ -1406,7 +1406,7 @@ void performForwardConvolution( CufftType*		data_d,
   )
 {
   int thread_size =THREAD_BLOCK_SIZE;
-  long shared_mem_size = thread_size * sizeof(CufftType);//empiric
+  long shared_mem_size = (thread_size + gi_host->sector_dim) * sizeof(CufftType);//empiric
 
   dim3 block_dim(thread_size);
   dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,thread_size));

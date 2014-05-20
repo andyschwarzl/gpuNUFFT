@@ -902,7 +902,7 @@ __global__ void forwardConvolutionKernel22D(CufftType* data,
     for (int ind=threadIdx.x; ind<GI.sector_dim; ind+=blockDim.x)
     {
       int grid_index;
-      getCoordsFromIndex(ind,&i,&j,GI.sector_pad_width);
+      getCoordsFromIndex2D(ind,&i,&j,GI.sector_pad_width);
 
       // multiply data by current kernel val 
       // grid complex or scalar 
@@ -956,7 +956,7 @@ __global__ void forwardConvolutionKernel22D(CufftType* data,
               val = KERNEL[(int) round(dy_sqr * GI.dist_multiplier)] *
                 KERNEL[(int) round(dx_sqr * GI.dist_multiplier)];
               
-              ind = getIndex(i,j,GI.sector_pad_width);
+              ind = getIndex2D(i,j,GI.sector_pad_width);
 
               shared_out_data[threadIdx.x].x += gdata_cache[ind].x * val; 
               shared_out_data[threadIdx.x].y += gdata_cache[ind].y * val;									

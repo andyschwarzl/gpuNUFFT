@@ -1412,11 +1412,11 @@ void performForwardConvolution( CufftType*		data_d,
   dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,thread_size));
 
   if (DEBUG)
-    printf("convolution requires %d bytes of shared memory!\n",shared_mem_size);
+    printf("balanced convolution requires %d bytes of shared memory!\n",shared_mem_size);
   if (gi_host->is2Dprocessing)
     forwardConvolutionKernel22D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
   else
-    balancedForwardConvolutionKernel2<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_processing_order_d,sector_centers_d,gi_host->sector_count);
+    balancedForwardConvolutionKernel2<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_processing_order_d,sector_centers_d,gi_host->sectorsToProcess);
 }
 
 #endif

@@ -75,6 +75,17 @@ void performTextureForwardConvolution( CufftType*		data_d,
   gpuNUFFT::GpuNUFFTInfo*	gi_host
   );
 
+//Balanced Version
+void performTextureForwardConvolution( CufftType*		data_d, 
+  DType*			crds_d, 
+  CufftType*  gdata_d,
+  DType*			kernel_d, 
+  IndType*		sectors_d, 
+  IndType2*   sector_processing_order_d,
+  IndType*		sector_centers_d,
+  gpuNUFFT::GpuNUFFTInfo*	gi_host
+  );
+
 void performFFTScaling(CufftType* data,
   int N, 
   gpuNUFFT::GpuNUFFTInfo* gi_host);

@@ -637,4 +637,18 @@ void performTextureForwardConvolution( CufftType*		data_d,
     textureForwardConvolutionKernel<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
 }
 
+void performTextureForwardConvolution( CufftType*		data_d, 
+  DType*			crds_d, 
+  CufftType*  gdata_d,
+  DType*			kernel_d, 
+  IndType*		sectors_d, 
+  IndType2*   sector_processing_order_d,
+  IndType*		sector_centers_d,
+  gpuNUFFT::GpuNUFFTInfo*	gi_host
+  )
+{
+  // balanced version in coarse gridding due to lack of atomic operations not possible
+  performTextureForwardConvolution(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,gi_host);
+}
+
 #endif //TEXTURE_GPUNUFFT_KERNELS_CU

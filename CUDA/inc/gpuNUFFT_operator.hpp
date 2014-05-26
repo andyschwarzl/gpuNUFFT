@@ -88,7 +88,7 @@ namespace gpuNUFFT
 
         bool applySensData(){return (this->sens.data != NULL && this->sens.count()>1);}
 
-        OperatorType getType() {return operatorType;}
+        virtual OperatorType getType() {return operatorType;}
   protected:
     OperatorType operatorType;
 

@@ -3,10 +3,11 @@
 
 #include "gpuNUFFT_types.hpp"
 #include "gpuNUFFT_operator.hpp"
+#include "balanced_operator.hpp"
 
 namespace gpuNUFFT
 {
-  class BalancedGpuNUFFTOperator : public GpuNUFFTOperator
+  class BalancedGpuNUFFTOperator : public GpuNUFFTOperator, public BalancedOperator
   {
   public:
 

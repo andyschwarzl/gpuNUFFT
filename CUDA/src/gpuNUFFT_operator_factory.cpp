@@ -60,7 +60,7 @@ std::vector<gpuNUFFT::IndPair> gpuNUFFT::GpuNUFFTOperatorFactory::sortVector(gpu
   return secVector;
 }
 
-void gpuNUFFT::GpuNUFFTOperatorFactory::computeProcessingOrder(gpuNUFFT::BalancedGpuNUFFTOperator* gpuNUFFTOp)
+void gpuNUFFT::GpuNUFFTOperatorFactory::computeProcessingOrder(gpuNUFFT::GpuNUFFTOperator* gpuNUFFTOp)
 {
   Array<IndType> sectorDataCount = gpuNUFFTOp->getSectorDataCount();
   std::vector<IndPair> countPerSector;
@@ -96,9 +96,11 @@ void gpuNUFFT::GpuNUFFTOperatorFactory::computeProcessingOrder(gpuNUFFT::Balance
 
   Array<IndType2> sectorProcessingOrder = initSectorProcessingOrder(gpuNUFFTOp,processingOrder.size());
   std::copy(processingOrder.begin(),processingOrder.end(),sectorProcessingOrder.data);
-  gpuNUFFTOp->setSectorProcessingOrder(sectorProcessingOrder);
+  if (gpuNUFFTOp->getType() == gpuNUFFT::BALANCED)
+    static_cast<BalancedGpuNUFFTOperator*>(gpuNUFFTOp)->setSectorProcessingOrder(sectorProcessingOrder);
+  else
+    static_cast<BalancedTextureGpuNUFFTOperator*>(gpuNUFFTOp)->setSectorProcessingOrder(sectorProcessingOrder);
 }
-
 
 
 gpuNUFFT::Array<IndType> gpuNUFFT::GpuNUFFTOperatorFactory::assignSectors(gpuNUFFT::GpuNUFFTOperator* gpuNUFFTOp, gpuNUFFT::Array<DType>& kSpaceTraj)
@@ -262,8 +264,13 @@ gpuNUFFT::GpuNUFFTOperator* gpuNUFFT::GpuNUFFTOperatorFactory::createNewGpuNUFFT
 {
   if (balanceWorkload)
   {
-    debug("creating BalancedWorkloadOperator!\n");
-    return new gpuNUFFT::BalancedGpuNUFFTOperator(kernelWidth,sectorWidth,osf,imgDims);
+    switch(interpolationType)
+    {
+      case TEXTURE_LOOKUP : debug("creating Balanced 1D TextureLookup Operator!\n");return new gpuNUFFT::BalancedTextureGpuNUFFTOperator(kernelWidth,sectorWidth,osf,imgDims,TEXTURE_LOOKUP);
+      case TEXTURE2D_LOOKUP : debug("creating Balanced 2D TextureLookup Operator!\n");return new gpuNUFFT::BalancedTextureGpuNUFFTOperator(kernelWidth,sectorWidth,osf,imgDims,TEXTURE2D_LOOKUP);
+      case TEXTURE3D_LOOKUP : debug("creating Balanced 3D TextureLookup Operator!\n");return new gpuNUFFT::BalancedTextureGpuNUFFTOperator(kernelWidth,sectorWidth,osf,imgDims,TEXTURE3D_LOOKUP);
+      default: debug("creating Balanced GpuNUFFT Operator!\n");return new gpuNUFFT::BalancedGpuNUFFTOperator(kernelWidth,sectorWidth,osf,imgDims);
+    }
   }
 
   switch(interpolationType)
@@ -333,8 +340,8 @@ gpuNUFFT::GpuNUFFTOperator* gpuNUFFT::GpuNUFFTOperatorFactory::createGpuNUFFTOpe
   
   gpuNUFFTOp->setSectorDataCount(computeSectorDataCount(gpuNUFFTOp,assignedSectors));
   
-  if (gpuNUFFTOp->getType() == gpuNUFFT::BALANCED)
-    computeProcessingOrder(static_cast<BalancedGpuNUFFTOperator*>(gpuNUFFTOp));
+  if (gpuNUFFTOp->getType() == gpuNUFFT::BALANCED ||gpuNUFFTOp->getType() == gpuNUFFT::BALANCED_TEXTURE)
+    computeProcessingOrder(gpuNUFFTOp);
 
   gpuNUFFTOp->setDataIndices(dataIndices);
 
@@ -377,6 +384,8 @@ gpuNUFFT::GpuNUFFTOperator* gpuNUFFT::GpuNUFFTOperatorFactory::loadPrecomputedGp
   
   if (gpuNUFFTOp->getType() == gpuNUFFT::BALANCED)
     static_cast<BalancedGpuNUFFTOperator*>(gpuNUFFTOp)->setSectorProcessingOrder(sectorProcessingOrder);
+  else if (gpuNUFFTOp->getType() == gpuNUFFT::BALANCED_TEXTURE)
+    static_cast<BalancedTextureGpuNUFFTOperator*>(gpuNUFFTOp)->setSectorProcessingOrder(sectorProcessingOrder);
   
   gpuNUFFTOp->setSectorCenters(sectorCenters);
   gpuNUFFTOp->setSens(sensData);

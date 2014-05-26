@@ -136,6 +136,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	{
     gpuNUFFT::GpuNUFFTOperatorMatlabFactory gpuNUFFTFactory(getInterpolationTypeOf(interpolation_type),true,balance_workload);
 		gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = gpuNUFFTFactory.loadPrecomputedGpuNUFFTOperator(kSpaceTraj,dataIndicesArray,sectorDataCountArray,sectorProcessingOrderArray,sectorCentersArray,sensArray,kernel_width,sector_width,osr,imgDims);
+    
+    mexPrintf("Creating gpuNUFFT Operator of Type: %d \n",gpuNUFFTOp->getType());
 
 		gpuNUFFTOp->performForwardGpuNUFFT(imdataArray,dataArray);
 		

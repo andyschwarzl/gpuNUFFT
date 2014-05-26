@@ -13,7 +13,7 @@ namespace gpuNUFFT
     TextureGpuNUFFTOperator(IndType kernelWidth, IndType sectorWidth, DType osf, Dimensions imgDims,InterpolationType interpolationType): 
     GpuNUFFTOperator(kernelWidth,sectorWidth,osf,imgDims,false,TEXTURE),interpolationType(interpolationType)
     {
-        initKernel();	
+      initKernel();	
     }
 
     TextureGpuNUFFTOperator(IndType kernelWidth, IndType sectorWidth, DType osf, Dimensions imgDims): 
@@ -26,21 +26,27 @@ namespace gpuNUFFT
     {
     }
 
-    OperatorType getType() {return gpuNUFFT::TEXTURE;}
+    virtual OperatorType getType() {return gpuNUFFT::TEXTURE;}
+
+  protected:
+    void initKernel();
+    
+		cudaArray* kernel_d;
+    InterpolationType interpolationType;
+    const char* getInterpolationTypeName();
+
     // OPERATIONS
   private:
-    void initKernel();
-
     GpuNUFFTInfo* initAndCopyGpuNUFFTInfo();
 
-    void adjConvolution(DType2* data_d, 
+    virtual void adjConvolution(DType2* data_d, 
       DType* crds_d, 
       CufftType* gdata_d,
       DType* kernel_d, 
       IndType* sectors_d, 
       IndType* sector_centers_d,
       gpuNUFFT::GpuNUFFTInfo* gi_host);
-    void forwardConvolution(CufftType*		data_d, 
+    virtual void forwardConvolution(CufftType*		data_d, 
       DType*			crds_d, 
       CufftType*		gdata_d,
       DType*			kernel_d, 
@@ -50,11 +56,6 @@ namespace gpuNUFFT
     
     void initLookupTable();
     void freeLookupTable();
-
-		cudaArray* kernel_d;
-    InterpolationType interpolationType;
-    const char* getInterpolationTypeName();
-
   };
 }
 

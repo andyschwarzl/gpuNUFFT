@@ -125,7 +125,8 @@ namespace gpuNUFFT
   {
     DEFAULT,
     TEXTURE,
-    BALANCED
+    BALANCED,
+    BALANCED_TEXTURE
   };
 
   struct GpuNUFFTInfo 

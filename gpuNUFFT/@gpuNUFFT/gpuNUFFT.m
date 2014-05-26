@@ -1,12 +1,11 @@
-function [res] = gpuNUFFT(k,w,n,osf,wg,sw,imageDim,sens,varargin)
-% function m = gpuNUFFT(k,w,n,osf,wg,sw,imageDim,sens,varargin)
+function [res] = gpuNUFFT(k,w,osf,wg,sw,imageDim,sens,varargin)
+% function m = gpuNUFFT(k,w,osf,wg,sw,imageDim,sens,varargin)
 %
 %     k -- k-trajectory, scaled -0.5 to 0.5
 %          dims: 3 ... x, y and z
 %                N ... # sample points
 %                nCh ... # channels / coils
 %     w -- k-space weighting, density compensation
-%     n -- image size
 %     osf -- oversampling factor (usually between 1 and 2)
 %     wg -- kernel width (usually 3 to 7)
 %     sw -- sector width to use
@@ -30,13 +29,13 @@ function [res] = gpuNUFFT(k,w,n,osf,wg,sw,imageDim,sens,varargin)
 atomic = true;
 interpolation_type = 0;    
 balance_workload = true;
-if nargin <= 9,
+if nargin <= 8,
         atomic = varargin{1};
-elseif nargin > 9
+elseif nargin > 8
     atomic = varargin{1};
-    if nargin > 10
+    if nargin > 9
         interpolation_type = varargin{2};
-        if nargin > 11
+        if nargin > 10
             balance_workload = varargin{3};
         end
     end
@@ -44,15 +43,15 @@ end
 
 %check types of 
 if ~islogical(atomic)
-    error('gpuNUFFT:usage:atomic','Argument 9 (atomic) has to be of logical type.');
+    error('gpuNUFFT:usage:atomic','Argument 8 (atomic) has to be of logical type.');
 end
 
 if ~isnumeric(interpolation_type)
-    error('gpuNUFFT:usage:interpolation_type','Argument 10 (interpolation type) has to be of numeric type.');
+    error('gpuNUFFT:usage:interpolation_type','Argument 9 (interpolation type) has to be of numeric type.');
 end
 
 if ~islogical(balance_workload)
-    error('gpuNUFFT:usage:balance_workload','Argument 11 (balance_workload) has to be of logical type.');
+    error('gpuNUFFT:usage:balance_workload','Argument 10 (balance_workload) has to be of logical type.');
 end
 
 %check input size of imageDims

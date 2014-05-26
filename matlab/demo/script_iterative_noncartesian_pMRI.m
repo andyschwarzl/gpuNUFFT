@@ -53,7 +53,7 @@ osf =1.25;
 wg = 3;
 sw = 8;
 
-FT = gpuNUFFT(k',w,nx,osf,wg,sw,[nx,ny],smaps,'false');
+FT = gpuNUFFT(k',w,osf,wg,sw,[nx,ny],smaps,false);
 
 noisy_data = squeeze(F * (noisy_im));
 %%

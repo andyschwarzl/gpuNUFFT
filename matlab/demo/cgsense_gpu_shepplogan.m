@@ -4,8 +4,8 @@
 
 clear all; close all; clc;
 
-addpath(genpath('./gpuNUFFT'));
-addpath('./CUDA/bin');
+addpath(genpath('../../gpuNUFFT'));
+addpath('data');
 
 %% Data parameters
 N=160;
@@ -19,7 +19,7 @@ disp_slice=nSl/2;
 maxit = 5;
 alpha = 1e-6;
 tol = 1e-6;
-display = 1;
+display = 0;
 
 %% Load data
 load rawdata_phantom_regridding.mat;
@@ -29,7 +29,7 @@ load rawdata_phantom_regridding.mat;
 osf = 2; wg = 3; sw = 8;
 imwidth = N;
 
-FT = gpuNUFFT(k',w,imwidth,osf,wg,sw,[N,N,nSl],'false');
+FT = gpuNUFFT(k',w,imwidth,osf,wg,sw,[N,N,nSl],[],'true');
 
 F = @(y) inversegrid_singlecoil_gpu(y,FT,nPE,nFE);
 Fh = @(x) regrid_singlecoil_gpu(x,FT);

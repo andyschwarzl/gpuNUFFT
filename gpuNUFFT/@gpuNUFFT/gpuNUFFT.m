@@ -75,7 +75,7 @@ if size(w,1) ~= size(k,2)
 end
 
 % check that sector width fits inside oversampled grid
-if (sum(mod(imageDim*osf/sw,2))~=0)
+if (sum(mod(imageDim*osf,sw))~=0)
     error('gpuNUFFT:init:sector_width','GRID width [%.1f,%.1f,%.1f] (image width * OSR) is no integer multiple of sector width %d',imageDim(1)*osf,imageDim(2)*osf,imageDim(3)*osf,sw);
 end
 

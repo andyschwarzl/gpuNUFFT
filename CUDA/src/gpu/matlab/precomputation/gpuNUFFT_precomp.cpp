@@ -40,7 +40,7 @@ void cleanUp()
 void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 {
 	if (MATLAB_DEBUG)
-		mexPrintf("Starting GRIDDING 3D Precomputation...\n");
+		mexPrintf("Starting gpuNUFFT Precomputation...\n");
 
 	// get cuda context associated to MATLAB 
 	// 
@@ -78,7 +78,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	int kernel_width = getParamField<int>(matParams,"kernel_width");
 	int sector_width = getParamField<int>(matParams,"sector_width");
 	int traj_length = getParamField<int>(matParams,"trajectory_length");
-  int interpolation_type = getParamField<int>(matParams,"interpolation_type");
+  bool use_textures = getParamField<bool>(matParams,"use_textures");
   bool balance_workload = getParamField<bool>(matParams,"balance_workload");
 		
 	if (MATLAB_DEBUG)

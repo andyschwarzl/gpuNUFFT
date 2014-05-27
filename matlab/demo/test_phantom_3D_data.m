@@ -30,7 +30,7 @@ imwidth = imgDim(1);
 %%
 disp('init GPU')
 tic
-FT = gpuNUFFT(k_traj',dens',osf,wg,sw,imgDim,[],false,0,false);
+FT = gpuNUFFT(k_traj',dens',osf,wg,sw,imgDim,[],false,false,true);
 toc
 disp('init CPU')
 tic

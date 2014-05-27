@@ -5,9 +5,9 @@
 #include <stdexcept>
 #include "precomp_kernels.hpp"
 
-void gpuNUFFT::GpuNUFFTOperatorFactory::setInterpolationType(InterpolationType interpolationType)
+void gpuNUFFT::GpuNUFFTOperatorFactory::setUseTextures(bool useTextures)
 {
-  this->interpolationType = interpolationType;
+  this->useTextures = useTextures;
 }
 
 void gpuNUFFT::GpuNUFFTOperatorFactory::setBalanceWorkload(bool balanceWorkload)
@@ -264,23 +264,28 @@ gpuNUFFT::GpuNUFFTOperator* gpuNUFFT::GpuNUFFTOperatorFactory::createNewGpuNUFFT
 {
   if (balanceWorkload)
   {
-    switch(interpolationType)
+    if (useTextures)
     {
-      case TEXTURE_LOOKUP : debug("creating Balanced 1D TextureLookup Operator!\n");return new gpuNUFFT::BalancedTextureGpuNUFFTOperator(kernelWidth,sectorWidth,osf,imgDims,TEXTURE_LOOKUP);
-      case TEXTURE2D_LOOKUP : debug("creating Balanced 2D TextureLookup Operator!\n");return new gpuNUFFT::BalancedTextureGpuNUFFTOperator(kernelWidth,sectorWidth,osf,imgDims,TEXTURE2D_LOOKUP);
-      case TEXTURE3D_LOOKUP : debug("creating Balanced 3D TextureLookup Operator!\n");return new gpuNUFFT::BalancedTextureGpuNUFFTOperator(kernelWidth,sectorWidth,osf,imgDims,TEXTURE3D_LOOKUP);
-      default: debug("creating Balanced GpuNUFFT Operator!\n");return new gpuNUFFT::BalancedGpuNUFFTOperator(kernelWidth,sectorWidth,osf,imgDims);
+      debug("creating Balanced 2D TextureLookup Operator!\n");
+      return new gpuNUFFT::BalancedTextureGpuNUFFTOperator(kernelWidth,sectorWidth,osf,imgDims,TEXTURE2D_LOOKUP);
+    }
+    else
+    {
+      debug("creating Balanced GpuNUFFT Operator!\n");
+      return new gpuNUFFT::BalancedGpuNUFFTOperator(kernelWidth,sectorWidth,osf,imgDims);
     }
   }
 
-  switch(interpolationType)
+  if (useTextures)
   {
-  case TEXTURE_LOOKUP : debug("creating 1D TextureLookup Operator!\n");return new gpuNUFFT::TextureGpuNUFFTOperator(kernelWidth,sectorWidth,osf,imgDims,TEXTURE_LOOKUP);
-  case TEXTURE2D_LOOKUP : debug("creating 2D TextureLookup Operator!\n");return new gpuNUFFT::TextureGpuNUFFTOperator(kernelWidth,sectorWidth,osf,imgDims,TEXTURE2D_LOOKUP);
-  case TEXTURE3D_LOOKUP : debug("creating 3D TextureLookup Operator!\n");return new gpuNUFFT::TextureGpuNUFFTOperator(kernelWidth,sectorWidth,osf,imgDims,TEXTURE3D_LOOKUP);
-  default: debug("creating DEFAULT GpuNUFFT Operator!\n");return new gpuNUFFT::GpuNUFFTOperator(kernelWidth,sectorWidth,osf,imgDims);
+    debug("creating 2D TextureLookup Operator!\n");
+    return new gpuNUFFT::TextureGpuNUFFTOperator(kernelWidth,sectorWidth,osf,imgDims,TEXTURE2D_LOOKUP);
   }
-
+  else
+  {
+    debug("creating DEFAULT GpuNUFFT Operator!\n");
+    return new gpuNUFFT::GpuNUFFTOperator(kernelWidth,sectorWidth,osf,imgDims);
+  }
 }
 
 gpuNUFFT::GpuNUFFTOperator* gpuNUFFT::GpuNUFFTOperatorFactory::createGpuNUFFTOperator(gpuNUFFT::Array<DType>& kSpaceTraj, gpuNUFFT::Array<DType>& densCompData,gpuNUFFT::Array<DType2>& sensData, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, gpuNUFFT::Dimensions& imgDims)

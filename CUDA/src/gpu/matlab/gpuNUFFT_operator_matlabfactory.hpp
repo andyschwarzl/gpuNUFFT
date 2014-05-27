@@ -32,18 +32,18 @@ namespace gpuNUFFT
     {
     }
 
-    GpuNUFFTOperatorMatlabFactory(const InterpolationType interpolationType,const bool useGpu, const bool balanceWorkload) 
-      : GpuNUFFTOperatorFactory(interpolationType,useGpu,balanceWorkload)
+    GpuNUFFTOperatorMatlabFactory(const bool useTextures,const bool useGpu, const bool balanceWorkload) 
+      : GpuNUFFTOperatorFactory(useTextures,useGpu,balanceWorkload)
     {
     }
 
-    GpuNUFFTOperatorMatlabFactory(const InterpolationType interpolationType,const bool useGpu) 
-      : GpuNUFFTOperatorFactory(interpolationType,useGpu)
+    GpuNUFFTOperatorMatlabFactory(const bool useTextures,const bool useGpu) 
+      : GpuNUFFTOperatorFactory(useTextures,useGpu)
     {
     }
 
-    GpuNUFFTOperatorMatlabFactory(const InterpolationType interpolationType) 
-      : GpuNUFFTOperatorFactory(interpolationType)
+    GpuNUFFTOperatorMatlabFactory(const bool useTextures) 
+      : GpuNUFFTOperatorFactory(useTextures)
     {
     }
 

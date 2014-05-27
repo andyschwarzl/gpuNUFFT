@@ -13,12 +13,7 @@ function [res] = gpuNUFFT(k,w,osf,wg,sw,imageDim,sens,varargin)
 %     sens -- coil sensitivity data
 %     varargin 
 %        opt  -- true/false for atomic operation (default true)
-%             -- interpolationType  0,1,2,3 for interpolation type
-%                        0 ... const kernel
-%                        1 ... 1d texture lookup
-%                        2 ... 2d texture lookup
-%                        3 ... 3d texture lookup
-%                        (default 0)
+%             -- true/false for using textures on gpu (default true)
 %             -- true/false for balanced operation (default true)
 %
 %  res -- gpuNUFFT operator
@@ -27,15 +22,15 @@ function [res] = gpuNUFFT(k,w,osf,wg,sw,imageDim,sens,varargin)
 %  F. Knoll, NYU School of Medicine
 %
 atomic = true;
-interpolation_type = 0;    
+use_textures = true;    
 balance_workload = true;
 if nargin <= 8,
-        atomic = varargin{1};
+    atomic = varargin{1};
 elseif nargin > 8
     atomic = varargin{1};
-    if nargin > 9
-        interpolation_type = varargin{2};
-        if nargin > 10
+    if nargin >= 9
+        use_textures = varargin{2};
+        if nargin >= 10
             balance_workload = varargin{3};
         end
     end
@@ -46,8 +41,8 @@ if ~islogical(atomic)
     error('gpuNUFFT:usage:atomic','Argument 8 (atomic) has to be of logical type.');
 end
 
-if ~isnumeric(interpolation_type)
-    error('gpuNUFFT:usage:interpolation_type','Argument 9 (interpolation type) has to be of numeric type.');
+if ~islogical(use_textures)
+    error('gpuNUFFT:usage:use_textures','Argument 9 (textures) has to be of logical type.');
 end
 
 if ~islogical(balance_workload)
@@ -80,7 +75,7 @@ if size(w,1) ~= size(k,2)
 end
 
 % check that sector width fits inside oversampled grid
-if (sum(mod(imageDim*osf/sw,2))~=0)
+if (sum(mod(imageDim*osf,sw))~=0)
     error('gpuNUFFT:init:sector_width','GRID width [%.1f,%.1f,%.1f] (image width * OSR) is no integer multiple of sector width %d',imageDim(1)*osf,imageDim(2)*osf,imageDim(3)*osf,sw);
 end
 
@@ -89,7 +84,7 @@ res.op.params.osr = single(osf);
 res.op.params.kernel_width = uint32(wg);
 res.op.params.sector_width = uint32(sw);
 res.op.params.trajectory_length = uint32(length(k));
-res.op.params.interpolation_type = uint32(interpolation_type);
+res.op.params.use_textures = use_textures;
 res.op.params.balance_workload = balance_workload;
 res.op.params.is2d_processing = imageDim(3) == 0;
 

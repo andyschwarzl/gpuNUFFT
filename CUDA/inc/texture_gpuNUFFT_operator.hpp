@@ -17,7 +17,7 @@ namespace gpuNUFFT
     }
 
     TextureGpuNUFFTOperator(IndType kernelWidth, IndType sectorWidth, DType osf, Dimensions imgDims): 
-     GpuNUFFTOperator(kernelWidth,sectorWidth,osf,imgDims,false,TEXTURE),interpolationType(TEXTURE_LOOKUP)
+    GpuNUFFTOperator(kernelWidth,sectorWidth,osf,imgDims,false,TEXTURE),interpolationType(gpuNUFFT::TEXTURE2D_LOOKUP)
     {
       initKernel();	
     }

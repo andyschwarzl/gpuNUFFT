@@ -133,7 +133,8 @@ gpuNUFFT::GpuNUFFTOperator* gpuNUFFT::GpuNUFFTOperatorMatlabFactory::createGpuNU
 			mexPrintf("returning empty dens array\n");
 		plhs[2] = createDensArray(1);
 	}
-  if (gpuNUFFTOp->getType() != gpuNUFFT::BALANCED)
+  if (gpuNUFFTOp->getType() != gpuNUFFT::BALANCED 
+    && gpuNUFFTOp->getType() != gpuNUFFT::BALANCED_TEXTURE)
   {	
     if (MATLAB_DEBUG)
 			mexPrintf("returning empty processing order array\n");

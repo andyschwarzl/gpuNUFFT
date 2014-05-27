@@ -1,41 +1,62 @@
-function [res] = gpuNUFFT(k,w,n,osf,wg,sw,imageDim,sens,varargin)
-% function m = gpuNUFFT(k,w,n,osf,wg,sw,imageDim,sens,varargin)
+function [res] = gpuNUFFT(k,w,osf,wg,sw,imageDim,sens,varargin)
+% function m = gpuNUFFT(k,w,osf,wg,sw,imageDim,sens,varargin)
 %
 %     k -- k-trajectory, scaled -0.5 to 0.5
 %          dims: 3 ... x, y and z
 %                N ... # sample points
 %                nCh ... # channels / coils
 %     w -- k-space weighting, density compensation
-%     n -- image size
 %     osf -- oversampling factor (usually between 1 and 2)
 %     wg -- kernel width (usually 3 to 7)
 %     sw -- sector width to use
 %     imageDim -- image dimensions [n n n] 
 %     sens -- coil sensitivity data
 %     varargin 
-%        opt  -- 'true'/'false' for atomic operation (default true)
+%        opt  -- true/false for atomic operation (default true)
 %             -- interpolationType  0,1,2,3 for interpolation type
 %                        0 ... const kernel
 %                        1 ... 1d texture lookup
 %                        2 ... 2d texture lookup
 %                        3 ... 3d texture lookup
+%                        (default 0)
+%             -- true/false for balanced operation (default true)
 %
 %  res -- gpuNUFFT operator
 %
 %  A. Schwarzl, Graz University of Technology
 %  F. Knoll, NYU School of Medicine
 %
-interpolation_type = 0;
-if nargin <= 9,
-    atomic = eval(varargin{1});
-elseif nargin > 9
-    atomic = eval(varargin{1});
-    interpolation_type = varargin{2}
+atomic = true;
+interpolation_type = 0;    
+balance_workload = true;
+if nargin <= 8,
+        atomic = varargin{1};
+elseif nargin > 8
+    atomic = varargin{1};
+    if nargin > 9
+        interpolation_type = varargin{2};
+        if nargin > 10
+            balance_workload = varargin{3};
+        end
+    end
+end
+
+%check types of 
+if ~islogical(atomic)
+    error('gpuNUFFT:usage:atomic','Argument 8 (atomic) has to be of logical type.');
+end
+
+if ~isnumeric(interpolation_type)
+    error('gpuNUFFT:usage:interpolation_type','Argument 9 (interpolation type) has to be of numeric type.');
+end
+
+if ~islogical(balance_workload)
+    error('gpuNUFFT:usage:balance_workload','Argument 10 (balance_workload) has to be of logical type.');
 end
 
 %check input size of imageDims
 if (length(imageDim) > 3)
-    error('GRIDDING3D:init:imageDims','Image dimensions too large. Currently supported: 2d, 3d');
+    error('gpuNUFFT:init:imageDims','Image dimensions too large. Currently supported: 2d, 3d');
 end
 
 if (length(imageDim) < 3) 
@@ -48,14 +69,14 @@ res.imageDim = imageDim;
 % adapt k space data dimension
 % transpose to 3 x N x nCh    
 if size(k,1) > size(k,2)
-		warning('GRIDDING3D:init:kspace','k space data passed in wrong dimensions. Expected dimensions are 3 x N x nCh - automatic transposing is applied');
+		warning('gpuNUFFT:init:kspace','k space data passed in wrong dimensions. Expected dimensions are 3 x N x nCh - automatic transposing is applied');
 		k = k';
 end
 
 % convert to single col
 w = w(:);    
 if size(w,1) ~= size(k,2)
-		warning('GRIDDING3D:init:density','density compensation dim does not match k space data dim. k: %s w: %s',num2str(size(k)),num2str(size(w)));
+		warning('gpuNUFFT:init:density','density compensation dim does not match k space data dim. k: %s w: %s',num2str(size(k)),num2str(size(w)));
 end
 
 res.op.params.img_dims = uint32(imageDim);
@@ -64,7 +85,7 @@ res.op.params.kernel_width = uint32(wg);
 res.op.params.sector_width = uint32(sw);
 res.op.params.trajectory_length = uint32(length(k));
 res.op.params.interpolation_type = uint32(interpolation_type);
-res.op.params.balance_workload = true;
+res.op.params.balance_workload = balance_workload;
 res.op.params.is2d_processing = imageDim(3) == 0;
 
 [res.op.dataIndices,res.op.sectorDataCount,res.op.densSorted,res.op.coords,res.op.sectorCenters,res.op.sectorProcessingOrder] = mex_gpuNUFFT_precomp_f(single(k)',single(w)',res.op.params);

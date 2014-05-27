@@ -5,6 +5,7 @@
 #include "gpuNUFFT_operator.hpp"
 #include "balanced_gpuNUFFT_operator.hpp"
 #include "texture_gpuNUFFT_operator.hpp"
+#include "balanced_texture_gpuNUFFT_operator.hpp"
 #include <algorithm>    // std::sort
 #include <vector>       // std::vector
 #include <string>
@@ -89,7 +90,8 @@ namespace gpuNUFFT
     std::vector<IndPair> sortVector(Array<T> assignedSectors, bool descending=false);
 
     Array<IndType> computeSectorDataCount(gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp,gpuNUFFT::Array<IndType> assignedSectors);
-    void computeProcessingOrder(BalancedGpuNUFFTOperator* gpuNUFFTOp);
+    
+    void computeProcessingOrder(GpuNUFFTOperator* gpuNUFFTOp);
 
     Array<IndType> computeSectorCenters(GpuNUFFTOperator *gpuNUFFTOp);
     Array<IndType> computeSectorCenters2D(GpuNUFFTOperator *gpuNUFFTOp);

@@ -108,9 +108,11 @@ SET(GPUNUFFT_INCLUDE ${GPUNUFFT_INC_DIR}/cuda_utils.hpp
 										 ${GPUNUFFT_INC_DIR}/precomp_kernels.hpp
 										 ${GPUNUFFT_INC_DIR}/precomp_utils.hpp
                      ${GPUNUFFT_INC_DIR}/gpuNUFFT_operator.hpp
+										 ${GPUNUFFT_INC_DIR}/balanced_operator.hpp
 										 ${GPUNUFFT_INC_DIR}/texture_gpuNUFFT_operator.hpp
 										 ${GPUNUFFT_INC_DIR}/balanced_gpuNUFFT_operator.hpp
-                     ${GPUNUFFT_INC_DIR}/gpuNUFFT_operator_factory.hpp)
+                     ${GPUNUFFT_INC_DIR}/gpuNUFFT_operator_factory.hpp
+										 ${GPUNUFFT_INC_DIR}/balanced_texture_gpuNUFFT_operator.hpp)
 					 
 SET(MATLAB_HELPER_INCLUDE ${GPUNUFFT_INC_DIR}/matlab_helper.h)
 SET(CONFIG_INCLUDE ${GPUNUFFT_INC_DIR}/config.hpp ${GPUNUFFT_INC_DIR}/cufft_config.hpp)

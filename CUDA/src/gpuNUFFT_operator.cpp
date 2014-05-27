@@ -151,102 +151,30 @@ void gpuNUFFT::GpuNUFFTOperator::forwardConvolution(CufftType*		data_d,
   performForwardConvolution(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,gi_host);
 }
 
-  void gpuNUFFT::GpuNUFFTOperator::initLookupTable()
-  {
-    initConstSymbol("KERNEL",(void*)this->kernel.data,this->kernel.count()*sizeof(DType));
-  }
-  
-  void gpuNUFFT::GpuNUFFTOperator::freeLookupTable()
-  {
-    
-  }
-
-// ----------------------------------------------------------------------------
-// performGpuNUFFTAdj: NUFFT^H
-//
-// GpuNUFFT implementation - interpolation from nonuniform k-space data onto 
-//                           oversampled grid based on optimized gpuNUFFT kernel
-//                           with minimal oversampling ratio (see Beatty et al.)
-//
-// Basic steps: - density compensation
-//              - convolution with interpolation function
-//              - iFFT
-//              - cropping due to oversampling ratio
-//              - apodization correction
-//
-// parameters:
-//	* data		     : input kspace data 
-//  * data_count   : number of samples on trajectory
-//  * n_coils      : number of channels or coils
-//  * crds         : coordinate array on trajectory
-//  * imdata       : output image data
-//  * imdata_count : number of image data points
-//  * grid_width   : size of grid 
-//  * kernel       : precomputed convolution kernel as lookup table
-//  * kernel_count : number of kernel lookup table entries
-//  * sectors      : mapping of start and end points of each sector
-//  * sector_count : number of sectors
-//  * sector_centers: coordinates (x,y,z) of sector centers
-//  * sector_width : width of sector 
-//  * im_width     : dimension of image
-//  * osr          : oversampling ratio
-//  * do_comp      : true, if density compensation has to be done
-//  * density_comp : densiy compensation array
-//  * gpuNUFFT_out : enum indicating how far gpuNUFFT has to be processed
-//  
-void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(gpuNUFFT::Array<DType2> kspaceData, gpuNUFFT::Array<CufftType>& imgData, GpuNUFFTOutput gpuNUFFTOut)
+void gpuNUFFT::GpuNUFFTOperator::initLookupTable()
 {
-  if (DEBUG)
-  {
-    std::cout << "performing gpuNUFFT adjoint!!!" << std::endl;
-    std::cout << "test " << imgData.dim.width << std::endl;
-    std::cout << "dataCount: " << kspaceData.count() << " chnCount: " << kspaceData.dim.channels << std::endl;
-    std::cout << "imgCount: " << imgData.count() << " gridWidth: " << this->getGridWidth() << std::endl;
-    std::cout << "apply density comp: " << this->applyDensComp() << std::endl;
-    std::cout << "apply sens data: " << this->applySensData() << std::endl;
-    std::cout << "test kernel: " << this->kernel.data[3] << std::endl;
-  }
+  initConstSymbol("KERNEL",(void*)this->kernel.data,this->kernel.count()*sizeof(DType));
+}
+  
+void gpuNUFFT::GpuNUFFTOperator::freeLookupTable()
+{
+    
+}
 
-  showMemoryInfo();
-
+void gpuNUFFT::GpuNUFFTOperator::initDeviceMemory(int n_coils)
+{
   int			data_count          = (int)this->kSpaceTraj.count();
-  int			n_coils             = (int)kspaceData.dim.channels;
   IndType imdata_count        = this->imgDims.count();
   int			sector_count        = (int)this->gridSectorDims.count();
-
-  // select data ordered and leave it on gpu
-  DType2* data_d, *data_sorted_d;
-  IndType* data_indices_d;
-
-  if (DEBUG)
-    printf("allocate data of size %d...\n",data_count);
-  allocateDeviceMem<DType2>(&data_d,data_count);
-
-  if (DEBUG)
-    printf("allocate and copy output data of size %d...\n",data_count);
-  allocateDeviceMem<DType2>(&data_sorted_d,data_count);
-  
+    
   if (DEBUG)
     printf("allocate and copy data indices of size %d...\n",dataIndices.count());
   allocateAndCopyToDeviceMem<IndType>(&data_indices_d,dataIndices.data,dataIndices.count());
   
-  DType* density_comp = NULL;
-  if (this->applyDensComp())
-    density_comp = this->dens.data;
-
-  //split and run sectors into blocks
-  //and each data point to one thread inside this block 
-  GpuNUFFTInfo* gi_host = initAndCopyGpuNUFFTInfo();//
-
-  DType2* sens_d;
-  DType* crds_d, *density_comp_d, *deapo_d;
-  CufftType *gdata_d, *imdata_d;
-  IndType* sector_centers_d, *sectors_d;
-
   if (DEBUG)
-    printf("allocate and copy imdata of size %d...\n",imdata_count);
-  allocateAndCopyToDeviceMem<CufftType>(&imdata_d,imgData.data,imdata_count);//Konvention!!!
-
+    printf("allocate and copy data of size %d...\n",data_count);
+  allocateDeviceMem<DType2>(&data_sorted_d,data_count);
+  
   if (DEBUG)
     printf("allocate and copy gdata of size %d...\n",gi_host->grid_width_dim);
   allocateDeviceMem<CufftType>(&gdata_d,gi_host->grid_width_dim);
@@ -294,12 +222,97 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(gpuNUFFT::Array<DType2> kspa
     printf("sector pad width: %d\n",gi_host->sector_pad_width);
 
   //Inverse fft plan and execution
-  cufftHandle fft_plan;
   if (DEBUG)
     printf("creating cufft plan with %d,%d,%d dimensions\n",DEFAULT_VALUE(gi_host->gridDims.z),gi_host->gridDims.y,gi_host->gridDims.x);
   cufftResult res = cufftPlan3d(&fft_plan, (int)DEFAULT_VALUE(gi_host->gridDims.z),(int)gi_host->gridDims.y,(int)gi_host->gridDims.x, CufftTransformType) ;
   if (res != CUFFT_SUCCESS) 
     fprintf(stderr,"error on CUFFT Plan creation!!! %d\n",res);
+}
+
+void gpuNUFFT::GpuNUFFTOperator::freeDeviceMemory(int n_coils)
+{
+  cufftDestroy(fft_plan);
+  // Destroy the cuFFT plan.
+  if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
+    printf("error at thread synchronization 9: %s\n",cudaGetErrorString(cudaGetLastError()));
+  freeLookupTable();
+  freeTotalDeviceMemory(data_indices_d,data_sorted_d,crds_d,gdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop
+  if (n_coils > 1 && deapo_d != NULL)
+    cudaFree(deapo_d);
+  
+  if (this->applySensData())
+    cudaFree(sens_d);
+  
+  showMemoryInfo();
+}
+
+
+// ----------------------------------------------------------------------------
+// performGpuNUFFTAdj: NUFFT^H
+//
+// GpuNUFFT implementation - interpolation from nonuniform k-space data onto 
+//                           oversampled grid based on optimized gpuNUFFT kernel
+//                           with minimal oversampling ratio (see Beatty et al.)
+//
+// Basic steps: - density compensation
+//              - convolution with interpolation function
+//              - iFFT
+//              - cropping due to oversampling ratio
+//              - apodization correction
+//
+// parameters:
+//	* data		     : input kspace data 
+//  * data_count   : number of samples on trajectory
+//  * n_coils      : number of channels or coils
+//  * crds         : coordinate array on trajectory
+//  * imdata       : output image data
+//  * imdata_count : number of image data points
+//  * grid_width   : size of grid 
+//  * kernel       : precomputed convolution kernel as lookup table
+//  * kernel_count : number of kernel lookup table entries
+//  * sectors      : mapping of start and end points of each sector
+//  * sector_count : number of sectors
+//  * sector_centers: coordinates (x,y,z) of sector centers
+//  * sector_width : width of sector 
+//  * im_width     : dimension of image
+//  * osr          : oversampling ratio
+//  * do_comp      : true, if density compensation has to be done
+//  * density_comp : densiy compensation array
+//  * gpuNUFFT_out : enum indicating how far gpuNUFFT has to be processed
+//  
+void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(gpuNUFFT::Array<DType2> kspaceData, gpuNUFFT::Array<CufftType>& imgData, GpuNUFFTOutput gpuNUFFTOut)
+{
+  if (DEBUG)
+  {
+    std::cout << "performing gpuNUFFT adjoint!!!" << std::endl;
+    std::cout << "dataCount: " << kspaceData.count() << " chnCount: " << kspaceData.dim.channels << std::endl;
+    std::cout << "imgCount: " << imgData.count() << " gridWidth: " << this->getGridWidth() << std::endl;
+    std::cout << "apply density comp: " << this->applyDensComp() << std::endl;
+    std::cout << "apply sens data: " << this->applySensData() << std::endl;
+  }
+  showMemoryInfo();
+
+  int			data_count          = (int)this->kSpaceTraj.count();
+  int			n_coils             = (int)kspaceData.dim.channels;
+  IndType imdata_count        = this->imgDims.count();
+  int			sector_count        = (int)this->gridSectorDims.count();
+
+  // select data ordered and leave it on gpu
+  DType2* data_d;
+
+  if (DEBUG)
+    printf("allocate data of size %d...\n",data_count);
+  allocateDeviceMem<DType2>(&data_d,data_count);
+
+  CufftType *imdata_d;
+
+  if (DEBUG)
+    printf("allocate and copy imdata of size %d...\n",imdata_count);
+  allocateAndCopyToDeviceMem<CufftType>(&imdata_d,imgData.data,imdata_count);//Konvention!!!
+
+  gi_host = initAndCopyGpuNUFFTInfo();//
+
+  initDeviceMemory(n_coils);
   int err;
 
   //iterate over coils and compute result
@@ -332,16 +345,8 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(gpuNUFFT::Array<DType2> kspa
         printf("test value at point zero: %f\n",(imgData.data)[0].x);
 
       free(gi_host);
-      // Destroy the cuFFT plan.
-      cufftDestroy(fft_plan);
-      freeLookupTable();
-      cudaThreadSynchronize();
-      freeTotalDeviceMemory(data_d,data_sorted_d,data_indices_d,crds_d,imdata_d,gdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop token
-      if (n_coils > 1)
-        cudaFree(deapo_d);
-      cudaThreadSynchronize();
-
-      showMemoryInfo();
+      freeTotalDeviceMemory(data_d,imdata_d,NULL);
+      freeDeviceMemory(n_coils);
       return;
     }
     if ((cudaThreadSynchronize() != cudaSuccess))
@@ -364,19 +369,11 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(gpuNUFFT::Array<DType2> kspa
       //get output
       copyFromDevice<CufftType>(gdata_d,imgData.data,gi_host->grid_width_dim);
 
-      //free memory
-      if (cufftDestroy(fft_plan) != CUFFT_SUCCESS)
-        printf("error on destroying cufft plan\n");
-
       free(gi_host);
-      // Destroy the cuFFT plan.
-      cufftDestroy(fft_plan);
-      freeLookupTable();
-      cudaThreadSynchronize();
-      freeTotalDeviceMemory(data_d,data_sorted_d,data_indices_d,crds_d,imdata_d,gdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop token
-      if (n_coils > 1)
-        cudaFree(deapo_d);
-      cudaThreadSynchronize();
+      
+      freeTotalDeviceMemory(data_d,imdata_d,NULL);
+      freeDeviceMemory(n_coils);
+      
       printf("last cuda error: %s\n", cudaGetErrorString(cudaGetLastError()));
       return;
     }
@@ -416,21 +413,9 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(gpuNUFFT::Array<DType2> kspa
   }//iterate over coils
   if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
     printf("error: at adj  thread synchronization 11: %s\n",cudaGetErrorString(cudaGetLastError()));
-  // Destroy the cuFFT plan.
-  cufftDestroy(fft_plan);
-
-  freeLookupTable();
-  freeTotalDeviceMemory(data_d,data_sorted_d,data_indices_d,gdata_d,imdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop
-
-  if (this->applyDensComp())
-    cudaFree(density_comp_d);
   
-  if (this->applySensData())
-    cudaFree(sens_d);
-
-  if (n_coils > 1)
-    cudaFree(deapo_d);
-
+  freeTotalDeviceMemory(data_d,imdata_d,NULL);
+  freeDeviceMemory(n_coils);
   if ((cudaThreadSynchronize() != cudaSuccess))
     fprintf(stderr,"error in gpuNUFFT_gpu_adj function: %s\n",cudaGetErrorString(cudaGetLastError()));
   free(gi_host);
@@ -499,7 +484,6 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(gpuNUFFT::Array<DType2> 
   if (DEBUG)
   {
     std::cout << "performing forward gpuNUFFT!!!" << std::endl;
-    std::cout << "test " << this->kSpaceTraj.dim.width << std::endl;
     std::cout << "dataCount: " << kspaceData.count() << " chnCount: " << kspaceData.dim.channels << std::endl;
     std::cout << "imgCount: " << imgData.count() << " gridWidth: " << this->getGridWidth() << std::endl;
   }
@@ -510,79 +494,22 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(gpuNUFFT::Array<DType2> 
   IndType	imdata_count        = this->imgDims.count();
   int			sector_count        = (int)this->gridSectorDims.count();
 
-  GpuNUFFTInfo* gi_host = initAndCopyGpuNUFFTInfo();
-
-  DType2* data_sorted_d;
-  IndType* data_indices_d;
-
-  if (DEBUG)
-    printf("allocate and copy data of size %d...\n",data_count);
-  allocateDeviceMem<DType2>(&data_sorted_d,data_count);
-  
-  if (DEBUG)
-    printf("allocate and copy data indices of size %d...\n",dataIndices.count());
-  allocateAndCopyToDeviceMem<IndType>(&data_indices_d,dataIndices.data,dataIndices.count());
+  gi_host = initAndCopyGpuNUFFTInfo();
 
   //cuda mem allocation
-  DType2 *imdata_d, *sens_d;
-  DType *crds_d, *deapo_d;
-  CufftType *gdata_d, *data_d;
-  IndType* sector_centers_d, *sectors_d;
+  DType2 *imdata_d;
+  CufftType *data_d;
 
   if (DEBUG)
     printf("allocate and copy imdata of size %d...\n",imdata_count);
   allocateDeviceMem<DType2>(&imdata_d,imdata_count);
 
   if (DEBUG)
-    printf("allocate and copy gdata of size %d...\n",gi_host->grid_width_dim );
-  allocateAndSetMem<CufftType>(&gdata_d, gi_host->grid_width_dim,0);
-
-  if (DEBUG)
     printf("allocate and copy data of size %d...\n",data_count);
   allocateDeviceMem<CufftType>(&data_d,data_count);
 
-  if (DEBUG)
-    printf("allocate and copy coords of size %d...\n",getImageDimensionCount()*data_count);
-  allocateAndCopyToDeviceMem<DType>(&crds_d,this->kSpaceTraj.data,getImageDimensionCount()*data_count);
+  initDeviceMemory(n_coils);
 
-  if (DEBUG)
-    printf("allocate and copy kernel in const memory of size %d...\n",this->kernel.count());
-
-  initLookupTable();
-
-  if (DEBUG)
-    printf("allocate and copy sectors of size %d...\n",sector_count+1);
-  allocateAndCopyToDeviceMem<IndType>(&sectors_d,this->sectorDataCount.data,sector_count+1);
-  if (DEBUG)
-    printf("allocate and copy sector_centers of size %d...\n",getImageDimensionCount()*sector_count);
-  allocateAndCopyToDeviceMem<IndType>(&sector_centers_d,(IndType*)this->getSectorCentersData(),getImageDimensionCount()*sector_count);
-  
-  if (this->applySensData())	
-  {
-    if (DEBUG)
-      printf("allocate sens data of size %d...\n",imdata_count);
-    allocateDeviceMem<DType2>(&sens_d,imdata_count);
-  }
-  
-  if (n_coils > 1)
-  {
-    if (DEBUG)
-      printf("allocate and precompute deapofunction of size %d...\n",imdata_count);
-    allocateDeviceMem<DType>(&deapo_d,imdata_count);
-    precomputeDeapodization(deapo_d,gi_host);
-  }
-
-  if (DEBUG)
-    printf("sector pad width: %d\n",gi_host->sector_pad_width);
-
-  //Inverse fft plan and execution
-  cufftHandle fft_plan;
-  if (DEBUG)
-    printf("creating cufft plan with %d,%d,%d dimensions\n",DEFAULT_VALUE(gi_host->gridDims.z),gi_host->gridDims.y,gi_host->gridDims.x);
-  cufftResult res = cufftPlan3d(&fft_plan, (int)DEFAULT_VALUE(gi_host->gridDims.z),(int)gi_host->gridDims.y,(int)gi_host->gridDims.x, CufftTransformType) ;
-
-  if (res != CUFFT_SUCCESS) 
-    printf("error on CUFFT Plan creation!!! %d\n",res);
   int err;
 
   //iterate over coils and compute result
@@ -649,18 +576,9 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(gpuNUFFT::Array<DType2> 
     writeOrderedGPU(data_sorted_d,data_indices_d,data_d,(int)this->kSpaceTraj.count());
     copyFromDevice(data_sorted_d,kspaceData.data + data_coil_offset,data_count);
   }//iterate over coils
-
-  cufftDestroy(fft_plan);
-  // Destroy the cuFFT plan.
-  if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
-    printf("error at thread synchronization 9: %s\n",cudaGetErrorString(cudaGetLastError()));
-  freeLookupTable();
-  freeTotalDeviceMemory(data_d,data_sorted_d,data_indices_d,crds_d,gdata_d,imdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop
-  if (n_coils > 1 && deapo_d != NULL)
-    cudaFree(deapo_d);
   
-  if (this->applySensData())
-    cudaFree(sens_d);
+  freeTotalDeviceMemory(data_d,imdata_d,NULL);
+  freeDeviceMemory(n_coils);
 
   if ((cudaThreadSynchronize() != cudaSuccess))
     fprintf(stderr,"error in performForwardGpuNUFFT function: %s\n",cudaGetErrorString(cudaGetLastError()));

@@ -162,6 +162,27 @@ namespace gpuNUFFT
       gpuNUFFT::GpuNUFFTInfo* gi_host);
     virtual void initLookupTable();
     virtual void freeLookupTable();
+
+  private: 
+    GpuNUFFTInfo* gi_host;
+
+    //GPU Device Members
+    DType2* sens_d;
+    DType* crds_d;
+    DType* density_comp_d;
+    DType* deapo_d;
+    CufftType *gdata_d;
+    IndType* sector_centers_d;
+    IndType* sectors_d;
+    IndType* data_indices_d;
+    DType2* data_sorted_d;
+    
+    cufftHandle fft_plan;
+
+    //
+    void initDeviceMemory(int n_coils);
+    void freeDeviceMemory(int n_coils);
+
   };
 
 }

@@ -69,14 +69,19 @@ res.imageDim = imageDim;
 % adapt k space data dimension
 % transpose to 3 x N x nCh    
 if size(k,1) > size(k,2)
-		warning('gpuNUFFT:init:kspace','k space data passed in wrong dimensions. Expected dimensions are 3 x N x nCh - automatic transposing is applied');
-		k = k';
+	warning('gpuNUFFT:init:kspace','k space data passed in wrong dimensions. Expected dimensions are 3 x N x nCh - automatic transposing is applied');
+	k = k';
 end
 
 % convert to single col
 w = w(:);    
 if size(w,1) ~= size(k,2)
-		warning('gpuNUFFT:init:density','density compensation dim does not match k space data dim. k: %s w: %s',num2str(size(k)),num2str(size(w)));
+    warning('gpuNUFFT:init:density','density compensation dim does not match k space data dim. k: %s w: %s',num2str(size(k)),num2str(size(w)));
+end
+
+% check that sector width fits inside oversampled grid
+if (sum(mod(imageDim*osf/sw,2))~=0)
+    error('gpuNUFFT:init:sector_width','GRID width [%.1f,%.1f,%.1f] (image width * OSR) is no integer multiple of sector width %d',imageDim(1)*osf,imageDim(2)*osf,imageDim(3)*osf,sw);
 end
 
 res.op.params.img_dims = uint32(imageDim);

@@ -29,22 +29,22 @@ namespace gpuNUFFT
   {
   public:
     GpuNUFFTOperatorFactory() 
-      : interpolationType(CONST_LOOKUP),useGpu(true), balanceWorkload(false)
+      : useTextures(true),useGpu(true), balanceWorkload(true)
     {
     }
     
-    GpuNUFFTOperatorFactory(const InterpolationType interpolationType) 
-      : interpolationType(interpolationType), useGpu(true), balanceWorkload(false)
+    GpuNUFFTOperatorFactory(const bool useTextures) 
+      : useTextures(useTextures), useGpu(true), balanceWorkload(true)
     {
     }
 
-    GpuNUFFTOperatorFactory(const InterpolationType interpolationType,const bool useGpu) 
-      : interpolationType(interpolationType), useGpu(useGpu), balanceWorkload(false)
+    GpuNUFFTOperatorFactory(const bool useTextures,const bool useGpu) 
+      : useTextures(useTextures), useGpu(useGpu), balanceWorkload(true)
     {
     }
 
-    GpuNUFFTOperatorFactory(const InterpolationType interpolationType,const bool useGpu, bool balanceWorkload) 
-      : interpolationType(interpolationType), useGpu(useGpu), balanceWorkload(balanceWorkload)
+    GpuNUFFTOperatorFactory(const bool useTextures,const bool useGpu, bool balanceWorkload) 
+      : useTextures(useTextures), useGpu(useGpu), balanceWorkload(balanceWorkload)
     {
     }
 
@@ -62,7 +62,7 @@ namespace gpuNUFFT
 
     GpuNUFFTOperator* loadPrecomputedGpuNUFFTOperator(Array<DType>& kSpaceTraj, Array<IndType>& dataIndices, Array<IndType>& sectorDataCount,gpuNUFFT::Array<IndType2>& sectorProcessingOrder,Array<IndType>& sectorCenters, Array<DType2>& sensData, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, Dimensions& imgDims);
 
-    void setInterpolationType(InterpolationType interpolationType);
+    void setUseTextures(bool useTextures);
 
     void setBalanceWorkload(bool balanceWorkload);
     
@@ -101,7 +101,7 @@ namespace gpuNUFFT
     GpuNUFFTOperator* createNewGpuNUFFTOperator(IndType kernelWidth, IndType sectorWidth, DType osf, Dimensions imgDims);
 
   private:
-    InterpolationType interpolationType;
+    bool useTextures;
 
     bool useGpu;
 

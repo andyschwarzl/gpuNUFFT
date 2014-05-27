@@ -29,7 +29,7 @@ load rawdata_phantom_regridding.mat;
 osf = 2; wg = 3; sw = 8;
 imwidth = N;
 
-FT = gpuNUFFT(k',w,imwidth,osf,wg,sw,[N,N,nSl],[],'true');
+FT = gpuNUFFT(k',w,imwidth,osf,wg,sw,[N,N,nSl],[],true);
 
 F = @(y) inversegrid_singlecoil_gpu(y,FT,nPE,nFE);
 Fh = @(x) regrid_singlecoil_gpu(x,FT);

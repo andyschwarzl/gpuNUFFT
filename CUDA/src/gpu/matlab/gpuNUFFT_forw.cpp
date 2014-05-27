@@ -91,7 +91,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	int kernel_width = getParamField<int>(matParams,"kernel_width");
 	int sector_width = getParamField<int>(matParams,"sector_width");
 	int data_entries = getParamField<int>(matParams,"trajectory_length");
-  int interpolation_type = getParamField<int>(matParams,"interpolation_type");
+  bool use_textures = getParamField<bool>(matParams,"use_textures");
 	bool balance_workload = getParamField<bool>(matParams,"balance_workload");
 
 	gpuNUFFT::Array<DType2> imdataArray;
@@ -106,7 +106,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 		mexPrintf("sector data count: %d\n",sectorDataCountArray.count());
 		mexPrintf("centers count: %d\n",sectorCentersArray.count());
 
-		mexPrintf("passed Params, IM_WIDTH: [%d,%d,%d], IM_COUNT: %d, OSR: %f, KERNEL_WIDTH: %d, SECTOR_WIDTH: %d, DATA_ENTRIES: %d, n_coils: %d, interpolation type: %d\n",imgDims.width,imgDims.height,imgDims.depth,im_count,osr,kernel_width,sector_width,data_entries,n_coils,interpolation_type);
+		mexPrintf("passed Params, IM_WIDTH: [%d,%d,%d], IM_COUNT: %d, OSR: %f, KERNEL_WIDTH: %d, SECTOR_WIDTH: %d, DATA_ENTRIES: %d, n_coils: %d, use textures: %d\n",imgDims.width,imgDims.height,imgDims.depth,im_count,osr,kernel_width,sector_width,data_entries,n_coils,use_textures);
 		size_t free_mem = 0;
 		size_t total_mem = 0;
 		cudaMemGetInfo(&free_mem, &total_mem);
@@ -134,7 +134,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
 	try
 	{
-    gpuNUFFT::GpuNUFFTOperatorMatlabFactory gpuNUFFTFactory(getInterpolationTypeOf(interpolation_type),true,balance_workload);
+    gpuNUFFT::GpuNUFFTOperatorMatlabFactory gpuNUFFTFactory(use_textures,true,balance_workload);
 		gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = gpuNUFFTFactory.loadPrecomputedGpuNUFFTOperator(kSpaceTraj,dataIndicesArray,sectorDataCountArray,sectorProcessingOrderArray,sectorCentersArray,sensArray,kernel_width,sector_width,osr,imgDims);
   
     if (MATLAB_DEBUG)

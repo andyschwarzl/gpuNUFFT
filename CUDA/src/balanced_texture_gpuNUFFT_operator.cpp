@@ -17,7 +17,6 @@ gpuNUFFT::GpuNUFFTInfo* gpuNUFFT::BalancedTextureGpuNUFFTOperator::initAndCopyGp
   return gi_host;
 }
 
-
 void gpuNUFFT::BalancedTextureGpuNUFFTOperator::adjConvolution(DType2* data_d, 
       DType* crds_d, 
       CufftType* gdata_d,
@@ -56,7 +55,7 @@ void gpuNUFFT::BalancedTextureGpuNUFFTOperator::forwardConvolution(CufftType*		d
 void gpuNUFFT::BalancedTextureGpuNUFFTOperator::performGpuNUFFTAdj(gpuNUFFT::Array<DType2> kspaceData, gpuNUFFT::Array<CufftType>& imgData, GpuNUFFTOutput gpuNUFFTOut)
 {
   if (DEBUG)
-    printf("allocate and copy sector processing order of size %d...\n",this->sectorProcessingOrder.count());
+    printf("BTGpuNUFFT: allocate and copy sector processing order of size %d...\n",this->sectorProcessingOrder.count());
   allocateAndCopyToDeviceMem<IndType2>(&sector_processing_order_d,this->sectorProcessingOrder.data,this->sectorProcessingOrder.count());
 
   TextureGpuNUFFTOperator::performGpuNUFFTAdj(kspaceData,imgData,gpuNUFFTOut);
@@ -67,7 +66,7 @@ void gpuNUFFT::BalancedTextureGpuNUFFTOperator::performGpuNUFFTAdj(gpuNUFFT::Arr
 void gpuNUFFT::BalancedTextureGpuNUFFTOperator::performForwardGpuNUFFT(gpuNUFFT::Array<DType2> imgData,gpuNUFFT::Array<CufftType>& kspaceData, GpuNUFFTOutput gpuNUFFTOut)
 {
   if (DEBUG)
-    printf("allocate and copy sector processing order of size %d...\n",this->sectorProcessingOrder.count());
+    printf("BTGpuNUFFT: allocate and copy sector processing order of size %d...\n",this->sectorProcessingOrder.count());
   allocateAndCopyToDeviceMem<IndType2>(&sector_processing_order_d,this->sectorProcessingOrder.data,this->sectorProcessingOrder.count());
   
   TextureGpuNUFFTOperator::performForwardGpuNUFFT(imgData,kspaceData,gpuNUFFTOut);

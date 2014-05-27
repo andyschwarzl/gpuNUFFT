@@ -1529,7 +1529,7 @@ TEST(TestGPUGpuNUFFTConvAnisotropic,GPUTest_20x20x10_osf_15_Balanced)
   imgDims.height = 20;
   imgDims.depth = 10;
 
-  gpuNUFFT::GpuNUFFTOperatorFactory factory(gpuNUFFT::TEXTURE2D_LOOKUP,true,true); 
+  gpuNUFFT::GpuNUFFTOperatorFactory factory(true,true,true); 
   gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
 
   gpuNUFFT::Array<DType2> dataArray;

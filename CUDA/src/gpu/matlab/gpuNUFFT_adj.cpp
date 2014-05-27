@@ -96,7 +96,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	int kernel_width = getParamField<int>(matParams,"kernel_width");
 	int sector_width = getParamField<int>(matParams,"sector_width");	
 	int traj_length = getParamField<int>(matParams,"trajectory_length");
-  int interpolation_type = getParamField<int>(matParams,"interpolation_type");
+  bool use_textures = getParamField<bool>(matParams,"use_textures");
   bool balance_workload = getParamField<bool>(matParams,"balance_workload");		
 
 	if (MATLAB_DEBUG)
@@ -107,7 +107,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 		mexPrintf("centers count: %d\n",sectorCentersArray.count());
 		mexPrintf("dens count: %d\n",density_compArray.count());
 		
-		mexPrintf("passed Params, IM_WIDTH: [%d,%d,%d], OSR: %f, KERNEL_WIDTH: %d, SECTOR_WIDTH: %d dens_count: %d traj_len: %d n coils: %d, interpolation type: %d\n",imgDims.width,imgDims.height,imgDims.depth,osr,kernel_width,sector_width,density_compArray.count(),traj_length,n_coils,interpolation_type);
+		mexPrintf("passed Params, IM_WIDTH: [%d,%d,%d], OSR: %f, KERNEL_WIDTH: %d, SECTOR_WIDTH: %d dens_count: %d traj_len: %d n coils: %d, use textures: %d\n",imgDims.width,imgDims.height,imgDims.depth,osr,kernel_width,sector_width,density_compArray.count(),traj_length,n_coils,use_textures);
 		size_t free_mem = 0;
 		size_t total_mem = 0;
 		cudaMemGetInfo(&free_mem, &total_mem);
@@ -143,7 +143,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
 	try
 	{
-    gpuNUFFT::GpuNUFFTOperatorMatlabFactory gpuNUFFTFactory(getInterpolationTypeOf(interpolation_type),true,balance_workload);
+    gpuNUFFT::GpuNUFFTOperatorMatlabFactory gpuNUFFTFactory(use_textures,true,balance_workload);
 		gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = gpuNUFFTFactory.loadPrecomputedGpuNUFFTOperator(kSpaceTraj,dataIndicesArray,sectorDataCountArray,sectorProcessingOrderArray,sectorCentersArray,density_compArray,sensArray,kernel_width,sector_width,osr,imgDims);
 
     if (MATLAB_DEBUG)

@@ -19,6 +19,123 @@
 //  * sector_centers : coordinates (x,y,z) of sector centers
 //  * temp_gdata     : temporary grid data
 //  * N              : number of threads
+
+__device__ void textureConvolutionFunction2(int sec, int sec_max, int sec_offset, DType2* sdata, DType2* data, DType* crds, CufftType* gdata, IndType* sectors, IndType* sector_centers)
+{
+    int ind, k, i, j,x,y,z;
+
+    DType dx_sqr, dy_sqr, dz_sqr, val, ix, jy, kz;
+
+    __shared__ IndType3 center;
+    center.x = sector_centers[sec * 3];
+    center.y = sector_centers[sec * 3 + 1];
+    center.z = sector_centers[sec * 3 + 2];
+    //Grid Points over threads
+    int data_cnt;
+    data_cnt = sectors[sec]+sec_offset;
+        
+    int s_ind = getIndex(threadIdx.x,threadIdx.y,threadIdx.z,GI.sector_pad_width);
+
+    while (data_cnt < sec_max)
+    {
+      __syncthreads();	
+      __shared__ DType3 data_point; //datapoint shared in every thread
+      data_point.x = crds[data_cnt];
+      data_point.y = crds[data_cnt +GI.data_count];
+      data_point.z = crds[data_cnt +2*GI.data_count];
+
+      // grid this point onto the neighboring cartesian points
+      for (k=threadIdx.z;k<=GI.sector_pad_width; k += blockDim.z)
+      {
+        kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.gridDims.z)) - 0.5f;
+        // scale distance in z direction with x,y dimension
+        dz_sqr = (kz - data_point.z)*GI.aniso_z_scale;
+        dz_sqr *= dz_sqr;
+        j=threadIdx.y;
+        jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.y)) - 0.5f;
+        dy_sqr = jy - data_point.y;
+        dy_sqr *= dy_sqr;
+        i=threadIdx.x;
+
+        ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;
+        dx_sqr = ix - data_point.x;
+        dx_sqr *= dx_sqr;
+
+        val = computeTextureLookup(dx_sqr*GI.radiusSquared_inv,dy_sqr*GI.radiusSquared_inv,dz_sqr*GI.radiusSquared_inv);
+
+        ind = getIndex(i,j,k,GI.sector_pad_width);
+
+        // multiply data by current kernel val 
+        // grid complex or scalar 
+        atomicAdd(&(sdata[ind].x),val * tex1Dfetch(texDATA,data_cnt).x);
+        atomicAdd(&(sdata[ind].y),val * tex1Dfetch(texDATA,data_cnt).y);
+      }//k, for loop over z entries
+      data_cnt = data_cnt + blockDim.x;
+    } //grid points per sector
+      //write shared data to output grid
+    __syncthreads();
+    //int sector_ind_offset = sec * GI.sector_dim;
+    __shared__ int sector_ind_offset;
+    sector_ind_offset  = computeXYZ2Lin(center.x - GI.sector_offset,center.y - GI.sector_offset,center.z - GI.sector_offset,GI.gridDims);
+
+    //each thread writes one position from shared mem to global mem
+    for (int s_ind=threadIdx.x;s_ind<GI.sector_dim; s_ind += blockDim.x)
+    {
+      getCoordsFromIndex(s_ind,&x,&y,&z,GI.sector_pad_width);
+
+      if (isOutlier(x,y,z,center.x,center.y,center.z,GI.gridDims,GI.sector_offset))
+        //calculate opposite index
+        ind = computeXYZ2Lin(calculateOppositeIndex(x,center.x,GI.gridDims.x,GI.sector_offset),
+        calculateOppositeIndex(y,center.y,GI.gridDims.y,GI.sector_offset),
+        calculateOppositeIndex(z,center.z,GI.gridDims.z,GI.sector_offset),
+        GI.gridDims);
+      else
+        ind = sector_ind_offset + computeXYZ2Lin(x,y,z,GI.gridDims);//index in output grid
+
+      atomicAdd(&(gdata[ind].x),sdata[s_ind].x);//Re
+      atomicAdd(&(gdata[ind].y),sdata[s_ind].y);//Im
+
+      //reset shared mem
+      sdata[s_ind].x = (DType)0.0;
+      sdata[s_ind].y = (DType)0.0;
+    }
+}
+
+__global__ void textureConvolutionKernel2(DType2* data, 
+  DType* crds, 
+  CufftType* gdata,
+  IndType* sectors, 
+  IndType* sector_centers,
+  int N
+  )
+{
+  extern __shared__ DType2 sdata[];//externally managed shared memory
+  
+  //init shared memory
+  for (int z=threadIdx.z;z<GI.sector_pad_width; z += blockDim.z)
+  {
+    int y=threadIdx.y;
+    int x=threadIdx.x;
+    int s_ind = getIndex(x,y,z,GI.sector_pad_width) ;
+    sdata[s_ind].x = 0.0f;//Re
+    sdata[s_ind].y = 0.0f;//Im
+  }
+
+  __syncthreads();
+
+  __shared__ int sec;
+  sec = blockIdx.x;
+  while (sec < N)
+  {
+    __shared__ int data_max;
+    data_max = sectors[sec+1];
+    textureConvolutionFunction2(sec,data_max,0,sdata,data,crds,gdata,sectors,sector_centers);
+    __syncthreads();
+    sec = sec+ gridDim.x;
+  }//sec < sector_count	
+}
+
+
 __device__ void textureConvolutionFunction(int* sec, int sec_max, int sec_offset, DType2* sdata, DType2* data, DType* crds, CufftType* gdata, IndType* sectors, IndType* sector_centers)
 {
   //start convolution
@@ -360,18 +477,34 @@ void performTextureConvolution( DType2* data_d,
   long shared_mem_size = (gi_host->sector_dim)*sizeof(DType2);
   int thread_size =THREAD_BLOCK_SIZE;
 
-  dim3 block_dim(thread_size);
-  dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,1));
-  if (DEBUG)
+  if (false)
   {
-    printf("adjoint texture convolution requires %d bytes of shared memory!\n",shared_mem_size);
-    printf("grid dim %d, block dim %d \n",grid_dim.x, block_dim.x); 
+    dim3 block_dim(thread_size);
+    dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,1));
+    if (DEBUG)
+    {
+      printf("adjoint texture convolution requires %d bytes of shared memory!\n",shared_mem_size);
+      printf("grid dim %d, block dim %d \n",grid_dim.x, block_dim.x); 
+    }
+    if (gi_host->is2Dprocessing)
+      textureConvolutionKernel2D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
+    else
+      textureConvolutionKernel<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
   }
-  if (gi_host->is2Dprocessing)
-    textureConvolutionKernel2D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
   else
-    textureConvolutionKernel<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
-
+  {
+    dim3 block_dim(gi_host->sector_pad_width,gi_host->sector_pad_width,2);
+    dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,1));
+    if (DEBUG)
+    {
+      printf("adjoint texture convolution requires %d bytes of shared memory!\n",shared_mem_size);
+      printf("grid dim %d, block dim %d \n",grid_dim.x, block_dim.x); 
+    }
+    if (gi_host->is2Dprocessing)
+      textureConvolutionKernel2D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
+    else
+      textureConvolutionKernel2<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
+  }
   if (DEBUG)
     printf("...finished with: %s\n", cudaGetErrorString(cudaGetLastError()));
 }

@@ -22,8 +22,7 @@
 //  * N              : number of threads
 __device__ void textureConvolutionFunction(DType2* sdata, int sec, int sec_cnt, int sec_max, int sec_offset, DType2* data, DType* crds, CufftType* gdata, IndType* sectors, IndType* sector_centers,DType2* temp_gdata)
 {
-  int ind, k, i, j;
-  __shared__ int max_dim, imin, imax,jmin,jmax,kmin,kmax;
+  int ind, k;
 
   DType dx_sqr, dy_sqr, dz_sqr, val, ix, jy, kz;
 
@@ -36,63 +35,38 @@ __device__ void textureConvolutionFunction(DType2* sdata, int sec, int sec_cnt, 
   int data_cnt;
   data_cnt = sectors[sec] + sec_offset;
 
-  max_dim =  GI.sector_pad_max;		
-
   while (data_cnt < sec_max)
   {
     __shared__ DType3 data_point; //datapoint shared in every thread
     data_point.x = crds[data_cnt];
     data_point.y = crds[data_cnt +GI.data_count];
     data_point.z = crds[data_cnt +2*GI.data_count];
-    // set the boundaries of final dataset for gpuNUFFT this point
-    ix = static_cast<DType>((data_point.x + 0.5) * (GI.gridDims.x) - center.x + GI.sector_offset);
-    set_minmax(&ix, &imin, &imax, max_dim, GI.kernel_radius);
-    jy = static_cast<DType>((data_point.y + 0.5) * (GI.gridDims.y) - center.y + GI.sector_offset);
-    set_minmax(&jy, &jmin, &jmax, max_dim, GI.kernel_radius);
-    // take resolution in x(y) direction to keep isotropic voxel size
-    //kz = static_cast<DType>((data_point.z + 0.5 - GI.aniso_z_shift) * (GI.gridDims.x) - center.z + GI.sector_offset);
-    kz = static_cast<DType>((data_point.z + 0.5) * (GI.gridDims.z) - center.z + GI.sector_offset);
-    set_minmax(&kz, &kmin, &kmax, max_dim, GI.kernel_radius);
-
+    
     // grid this point onto the neighboring cartesian points
-    for (k=threadIdx.z;k<=kmax; k += blockDim.z)
+    for (k=threadIdx.z;k<=GI.sector_pad_width; k += blockDim.z)
     {
-      if (k<=kmax && k>=kmin)
-      {
-        //kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.gridDims.x)) - 0.5f + GI.aniso_z_shift;
-        kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.gridDims.z)) - 0.5f;
-        // scale distance in z direction with x,y dimension
-        dz_sqr = (kz - data_point.z)*GI.aniso_z_scale;
-        dz_sqr *= dz_sqr;
+      kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.gridDims.z)) - 0.5f;
+      // scale distance in z direction with x,y dimension
+      dz_sqr = (kz - data_point.z)*GI.aniso_z_scale;
+      dz_sqr *= dz_sqr;
 
-        j=threadIdx.y;
-        if (j<=jmax && j>=jmin)
-        {
-          jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.y)) - 0.5f;
-          dy_sqr = jy - data_point.y;
-          dy_sqr *= dy_sqr;
-          i=threadIdx.x;
+      jy = static_cast<DType>(threadIdx.y + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.y)) - 0.5f;
+      dy_sqr = jy - data_point.y;
+      dy_sqr *= dy_sqr;
 
-          if (i<=imax && i>=imin)
-          {
-            ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;
-            dx_sqr = ix - data_point.x;
-            dx_sqr *= dx_sqr;
+      ix = static_cast<DType>(threadIdx.x + center.x - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;
+      dx_sqr = ix - data_point.x;
+      dx_sqr *= dx_sqr;
 
-            //get kernel value from texture
-            val = computeTextureLookup(dx_sqr*GI.radiusSquared_inv,dy_sqr*GI.radiusSquared_inv,dz_sqr*GI.radiusSquared_inv);
+      //get kernel value from texture
+      val = computeTextureLookup(dx_sqr*GI.radiusSquared_inv,dy_sqr*GI.radiusSquared_inv,dz_sqr*GI.radiusSquared_inv);
 
-            ind = getIndex(i,j,k,GI.sector_pad_width);
+      ind = getIndex(threadIdx.x,threadIdx.y,k,GI.sector_pad_width);
 
-            // multiply data by current kernel val 
-            // grid complex or scalar 
-            //sdata[ind].x += val * data[data_cnt].x;
-            //sdata[ind].y += val * data[data_cnt].y;
-            sdata[ind].x += val * tex1Dfetch(texDATA,data_cnt).x;
-            sdata[ind].y += val * tex1Dfetch(texDATA,data_cnt).y;
-          } // x
-        } // y
-      } // z
+      // multiply data by current kernel val 
+      // grid complex or scalar
+      sdata[ind].x += val * tex1Dfetch(texDATA,data_cnt).x;
+      sdata[ind].y += val * tex1Dfetch(texDATA,data_cnt).y;
     }//for loop over z entries
     __syncthreads();	
     data_cnt++;
@@ -103,10 +77,7 @@ __device__ void textureConvolutionFunction(DType2* sdata, int sec, int sec_cnt, 
 
   for (k=threadIdx.z;k<GI.sector_pad_width; k += blockDim.z)
   {
-    i=threadIdx.x;
-    j=threadIdx.y;
-
-    int s_ind = getIndex(i,j,k,GI.sector_pad_width) ;//index in shared grid
+    int s_ind = getIndex(threadIdx.x,threadIdx.y,k,GI.sector_pad_width) ;//index in shared grid
     ind = sector_ind_offset + s_ind;//index in temp output grid
 
     temp_gdata[ind].x = sdata[s_ind].x;//Re

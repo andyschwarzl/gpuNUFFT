@@ -41,9 +41,10 @@ __device__ void textureConvolutionFunction(DType2* sdata, int sec, int sec_cnt, 
     data_point.x = crds[data_cnt];
     data_point.y = crds[data_cnt +GI.data_count];
     data_point.z = crds[data_cnt +2*GI.data_count];
+    __syncthreads();
     
     // grid this point onto the neighboring cartesian points
-    for (k=threadIdx.z;k<=GI.sector_pad_width; k += blockDim.z)
+    for (k=threadIdx.z;k<GI.sector_pad_width; k += blockDim.z)
     {
       kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.gridDims.z)) - 0.5f;
       // scale distance in z direction with x,y dimension
@@ -82,7 +83,7 @@ __device__ void textureConvolutionFunction(DType2* sdata, int sec, int sec_cnt, 
 
     temp_gdata[ind].x = sdata[s_ind].x;//Re
     temp_gdata[ind].y = sdata[s_ind].y;//Im
-    __syncthreads();
+    
     sdata[s_ind].x = (DType)0.0;
     sdata[s_ind].y = (DType)0.0;
     __syncthreads();
@@ -108,8 +109,8 @@ __global__ void textureConvolutionKernel(DType2* data,
     int y=threadIdx.y;
     int x=threadIdx.x;
     int s_ind = getIndex(x,y,z,GI.sector_pad_width) ;
-    sdata[s_ind].x = 0.0f;//Re
-    sdata[s_ind].y = 0.0f;//Im
+    //sdata[s_ind].x = (DType)0.0;//Re
+    //sdata[s_ind].y = (DType)0.0;//Im
   }
   __syncthreads();
   //start convolution
@@ -142,8 +143,8 @@ __global__ void balancedTextureConvolutionKernel(DType2* data,
     int y=threadIdx.y;
     int x=threadIdx.x;
     int s_ind = getIndex(x,y,z,GI.sector_pad_width) ;
-    sdata[s_ind].x = 0.0f;//Re
-    sdata[s_ind].y = 0.0f;//Im
+    sdata[s_ind].x = (DType)0.0;//Re
+    sdata[s_ind].y = (DType)0.0;//Im
   }
   __syncthreads();
   //start convolution
@@ -313,7 +314,7 @@ void performTextureConvolution( DType2* data_d,
 
   //TODO third dimension > 1?
   dim3 block_dim(gi_host->sector_pad_width,gi_host->sector_pad_width,1);
-  dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,(gi_host->sector_pad_width)*(gi_host->sector_pad_width)*(1)));
+  dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,1));
   if (DEBUG)
     printf("convolution requires %d bytes of shared memory!\n",shared_mem_size);
 
@@ -352,7 +353,10 @@ void performTextureConvolution( DType2* data_d,
   long shared_mem_size = gi_host->sector_dim*sizeof(DType2);
 
   dim3 block_dim(gi_host->sector_pad_width,gi_host->sector_pad_width,1);
-  dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,(gi_host->sector_pad_width)*(gi_host->sector_pad_width)*(1)));
+  dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,1));
+
+  printf("block dim: %d %d %d, grid dim : %d %d %d\n",block_dim.x,block_dim.y,block_dim.z,grid_dim.x,grid_dim.y,grid_dim.z);
+
   if (DEBUG)
     printf("balanced texture convolution requires %d bytes of shared memory!\n",shared_mem_size);
 

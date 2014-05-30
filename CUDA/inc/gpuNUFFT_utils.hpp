@@ -69,6 +69,19 @@ static DType i0( DType x )
   return (ans);
 }
 
+__inline__ __device__ __host__ uchar2 get_minmax (DType x, int maximum, DType radius)
+{
+  int min = (int) ceil (x - radius);
+  int max = (int) floor (x + radius);
+  //check boundaries
+  if (min < 0) min = 0;
+  if (max >= maximum) max = maximum;
+  if (min > maximum) min = (int)(maximum-2*radius);
+  if (max < 0) max = (int)(2*radius);
+  return make_uchar2(min,max);
+}
+
+
 /* LOADGRID3KERNEL()
 * Loads a radius of the circularly symmetric kernel into a 1-D array, with
 * respect to the kernel radius squared.

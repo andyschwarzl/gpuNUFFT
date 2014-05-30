@@ -626,4 +626,86 @@ void performPadding(DType2* imdata_d,
     paddingKernel<<<grid_dim,block_dim>>>(imdata_d,gdata_d,ind_off,gi_host->im_width_dim);
 }
 
+__global__ void minMaxBoundsKernel(DType* crds, IndType* sectors, IndType* sector_centers,uchar2* minmax_bounds)
+{
+  int sec = blockIdx.x;
+
+  DType ix, jy, kz;
+
+  __shared__ IndType3 center;
+  center.x = sector_centers[sec * 3];
+  center.y = sector_centers[sec * 3 + 1];
+  center.z = sector_centers[sec * 3 + 2];
+  
+  int data_cnt;
+  data_cnt = sectors[sec] + threadIdx.x;
+
+  __shared__ int max_dim;
+  max_dim = GI.sector_pad_max;		
+
+  while (data_cnt < sectors[sec+1])
+  {
+    DType3 data_point; //datapoint shared in every thread
+    data_point.x = crds[data_cnt];
+    data_point.y = crds[data_cnt +GI.data_count];
+    data_point.z = crds[data_cnt +2*GI.data_count];
+
+    // set the boundaries of final dataset for gpuNUFFT this point
+    ix = static_cast<DType>((data_point.x + 0.5) * (GI.gridDims.x) - center.x + GI.sector_offset);
+    minmax_bounds[data_cnt] = get_minmax(ix, max_dim, GI.kernel_radius);
+    
+    jy = static_cast<DType>((data_point.y + 0.5) * (GI.gridDims.y) - center.y + GI.sector_offset);
+    minmax_bounds[data_cnt + GI.data_count] = get_minmax(jy, max_dim, GI.kernel_radius);
+    
+    kz = static_cast<DType>((data_point.z + 0.5) * (GI.gridDims.z) - center.z + GI.sector_offset);
+    minmax_bounds[data_cnt + 2*GI.data_count] = get_minmax(kz, max_dim, GI.kernel_radius);
+    
+    data_cnt = data_cnt + blockDim.x;
+  }
+}
+
+__global__ void minMaxBoundsKernel2D(DType* crds, IndType* sectors, IndType* sector_centers,uchar2* minmax_bounds)
+{
+  int sec = blockIdx.x;
+
+  DType ix, jy;
+
+  __shared__ IndType2 center;
+  center.x = sector_centers[sec * 2];
+  center.y = sector_centers[sec * 2 + 1];
+  
+  int data_cnt;
+  data_cnt = sectors[sec] + threadIdx.x;
+
+  __shared__ int max_dim;
+  max_dim = GI.sector_pad_max;		
+
+  while (data_cnt < sectors[sec+1])
+  {
+    DType2 data_point; //datapoint shared in every thread
+    data_point.x = crds[data_cnt];
+    data_point.y = crds[data_cnt +GI.data_count];
+
+    // set the boundaries of final dataset for gpuNUFFT this point
+    ix = static_cast<DType>((data_point.x + 0.5) * (GI.gridDims.x) - center.x + GI.sector_offset);
+    minmax_bounds[data_cnt] = get_minmax(ix, max_dim, GI.kernel_radius);
+    
+    jy = static_cast<DType>((data_point.y + 0.5) * (GI.gridDims.y) - center.y + GI.sector_offset);
+    minmax_bounds[data_cnt + GI.data_count] = get_minmax(jy, max_dim, GI.kernel_radius);
+    
+    data_cnt = data_cnt + blockDim.x;
+  }
+}
+
+void computeMinMaxBounds(DType* crds_d, IndType* sectors_d, IndType* sector_centers_d,uchar2* minmax_bounds_d, gpuNUFFT::GpuNUFFTInfo* gi_host)
+{
+  dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,1));
+  dim3 block_dim(THREAD_BLOCK_SIZE);
+  if (gi_host->is2Dprocessing)
+    minMaxBoundsKernel2D<<<grid_dim,block_dim>>>(crds_d,sectors_d,sector_centers_d,minmax_bounds_d);
+  else
+    minMaxBoundsKernel<<<grid_dim,block_dim>>>(crds_d,sectors_d,sector_centers_d,minmax_bounds_d);
+}
+
+
 #endif //STD_GPUNUFFT_KERNELS_CU

@@ -128,4 +128,10 @@ void performPadding(DType2* imdata_d,
 void precomputeDeapodization(DType* deapo_d,
   gpuNUFFT::GpuNUFFTInfo* gi_host);
 
+void computeMinMaxBounds(DType* crds_d, 
+  IndType* sectors_d, 
+  IndType* sector_centers_d,
+  uchar2* minmax_bounds_d, 
+  gpuNUFFT::GpuNUFFTInfo* gi_host);
+
 #endif

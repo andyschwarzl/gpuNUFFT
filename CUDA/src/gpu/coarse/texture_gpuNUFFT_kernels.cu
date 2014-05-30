@@ -20,10 +20,9 @@
 //  * sector_centers : coordinates (x,y,z) of sector centers
 //  * temp_gdata     : temporary grid data
 //  * N              : number of threads
-__device__ void textureConvolutionFunction(DType2* sdata, int sec, int sec_cnt, int sec_max, int sec_offset, DType2* data, DType* crds, CufftType* gdata, IndType* sectors, IndType* sector_centers,DType2* temp_gdata)
+__device__ void textureConvolutionFunction(DType2* sdata, int sec, int sec_cnt, int sec_max, int sec_offset, DType2* data, DType* crds, CufftType* gdata, IndType* sectors, IndType* sector_centers,DType2* temp_gdata,uchar2* minmax_bounds)
 {
   int ind, k, i, j;
-  __shared__ int max_dim, imin, imax,jmin,jmax,kmin,kmax;
 
   DType dx_sqr, dy_sqr, dz_sqr, val, ix, jy, kz;
 
@@ -36,28 +35,29 @@ __device__ void textureConvolutionFunction(DType2* sdata, int sec, int sec_cnt, 
   int data_cnt;
   data_cnt = sectors[sec] + sec_offset;
 
-  max_dim =  GI.sector_pad_max;		
-
   while (data_cnt < sec_max)
   {
     __shared__ DType3 data_point; //datapoint shared in every thread
-    data_point.x = crds[data_cnt];
-    data_point.y = crds[data_cnt +GI.data_count];
-    data_point.z = crds[data_cnt +2*GI.data_count];
-    // set the boundaries of final dataset for gpuNUFFT this point
-    ix = static_cast<DType>((data_point.x + 0.5) * (GI.gridDims.x) - center.x + GI.sector_offset);
-    set_minmax(&ix, &imin, &imax, max_dim, GI.kernel_radius);
-    jy = static_cast<DType>((data_point.y + 0.5) * (GI.gridDims.y) - center.y + GI.sector_offset);
-    set_minmax(&jy, &jmin, &jmax, max_dim, GI.kernel_radius);
-    // take resolution in x(y) direction to keep isotropic voxel size
-    //kz = static_cast<DType>((data_point.z + 0.5 - GI.aniso_z_shift) * (GI.gridDims.x) - center.z + GI.sector_offset);
-    kz = static_cast<DType>((data_point.z + 0.5) * (GI.gridDims.z) - center.z + GI.sector_offset);
-    set_minmax(&kz, &kmin, &kmax, max_dim, GI.kernel_radius);
-
-    // grid this point onto the neighboring cartesian points
-    for (k=threadIdx.z;k<=kmax; k += blockDim.z)
+    __shared__ uchar2 i_bound;
+    __shared__ uchar2 j_bound;
+    __shared__ uchar2 k_bound;
+    
+    if (threadIdx.x == 0)
     {
-      if (k<=kmax && k>=kmin)
+      data_point.x = crds[data_cnt];
+      data_point.y = crds[data_cnt +GI.data_count];
+      data_point.z = crds[data_cnt +2*GI.data_count];
+
+      i_bound = minmax_bounds[data_cnt];
+      j_bound = minmax_bounds[data_cnt + GI.data_count];
+      k_bound = minmax_bounds[data_cnt + 2*GI.data_count];
+    }
+    __syncthreads();
+    
+    // grid this point onto the neighboring cartesian points
+    for (k=threadIdx.z;k<=k_bound.y; k += blockDim.z)
+    {
+      if (k<=k_bound.y && k>=k_bound.x)
       {
         //kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.gridDims.x)) - 0.5f + GI.aniso_z_shift;
         kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.gridDims.z)) - 0.5f;
@@ -66,14 +66,14 @@ __device__ void textureConvolutionFunction(DType2* sdata, int sec, int sec_cnt, 
         dz_sqr *= dz_sqr;
 
         j=threadIdx.y;
-        if (j<=jmax && j>=jmin)
+        if (j<=j_bound.y && j>=j_bound.x)
         {
           jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.y)) - 0.5f;
           dy_sqr = jy - data_point.y;
           dy_sqr *= dy_sqr;
           i=threadIdx.x;
 
-          if (i<=imax && i>=imin)
+          if (i<=i_bound.y && i>=i_bound.x)
           {
             ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;
             dx_sqr = ix - data_point.x;
@@ -86,8 +86,6 @@ __device__ void textureConvolutionFunction(DType2* sdata, int sec, int sec_cnt, 
 
             // multiply data by current kernel val 
             // grid complex or scalar 
-            //sdata[ind].x += val * data[data_cnt].x;
-            //sdata[ind].y += val * data[data_cnt].y;
             sdata[ind].x += val * tex1Dfetch(texDATA,data_cnt).x;
             sdata[ind].y += val * tex1Dfetch(texDATA,data_cnt).y;
           } // x
@@ -124,6 +122,7 @@ __global__ void textureConvolutionKernel(DType2* data,
   IndType* sectors, 
   IndType* sector_centers,
   DType2* temp_gdata,
+  uchar2* minmax_bounds,
   int N
   )
 {
@@ -144,7 +143,7 @@ __global__ void textureConvolutionKernel(DType2* data,
   //start convolution
   while (sec < N)
   {
-    textureConvolutionFunction(sdata,sec,sec,sectors[sec+1],0,data,crds,gdata,sectors,sector_centers,temp_gdata);
+    textureConvolutionFunction(sdata,sec,sec,sectors[sec+1],0,data,crds,gdata,sectors,sector_centers,temp_gdata,minmax_bounds);
     __syncthreads();
     sec = sec + gridDim.x;
   }//sec < sector_count
@@ -158,6 +157,7 @@ __global__ void balancedTextureConvolutionKernel(DType2* data,
   IndType2* sector_processing_order,
   IndType* sector_centers,
   DType2* temp_gdata,
+  uchar2* minmax_bounds,
   int N
   )
 {
@@ -179,16 +179,15 @@ __global__ void balancedTextureConvolutionKernel(DType2* data,
   while (sec_cnt < N)
   {
     sec = sector_processing_order[sec_cnt].x;
-    textureConvolutionFunction(sdata,sec,sec_cnt,min(sectors[sec+1],sectors[sec]+sector_processing_order[sec_cnt].y+MAXIMUM_PAYLOAD),sector_processing_order[sec_cnt].y,data,crds,gdata,sectors,sector_centers,temp_gdata);
+    textureConvolutionFunction(sdata,sec,sec_cnt,min(sectors[sec+1],sectors[sec]+sector_processing_order[sec_cnt].y+MAXIMUM_PAYLOAD),sector_processing_order[sec_cnt].y,data,crds,gdata,sectors,sector_centers,temp_gdata,minmax_bounds);
     __syncthreads();
     sec_cnt = sec_cnt + gridDim.x;
   }//sec < sector_count
 }
 
-__device__ void textureConvolutionFunction2D(DType2* sdata, int sec, int sec_cnt, int sec_max, int sec_offset, DType2* data, DType* crds, CufftType* gdata, IndType* sectors, IndType* sector_centers, DType2* temp_gdata)
+__device__ void textureConvolutionFunction2D(DType2* sdata, int sec, int sec_cnt, int sec_max, int sec_offset, DType2* data, DType* crds, CufftType* gdata, IndType* sectors, IndType* sector_centers, DType2* temp_gdata,uchar2* minmax_bounds)
 {
-    int ind, i, j;
-  __shared__ int max_dim, imin, imax,jmin,jmax;
+  int ind, i, j;
 
   DType dx_sqr, dy_sqr, val, ix, jy;
 
@@ -200,21 +199,25 @@ __device__ void textureConvolutionFunction2D(DType2* sdata, int sec, int sec_cnt
   int data_cnt;
   data_cnt = sectors[sec] + sec_offset;
 
-  max_dim =  GI.sector_pad_max;		
   while (data_cnt < sec_max)
   {
     __shared__ DType2 data_point; //datapoint shared in every thread
-    data_point.x = crds[data_cnt];
-    data_point.y = crds[data_cnt +GI.data_count];
-    // set the boundaries of final dataset for gpuNUFFT this point
-    ix = (data_point.x + 0.5f) * (GI.gridDims.x) - center.x + GI.sector_offset;
-    set_minmax(&ix, &imin, &imax, max_dim, GI.kernel_radius);
-    jy = (data_point.y + 0.5f) * (GI.gridDims.y) - center.y + GI.sector_offset;
-    set_minmax(&jy, &jmin, &jmax, max_dim, GI.kernel_radius);
+    __shared__ uchar2 i_bound;
+    __shared__ uchar2 j_bound;
+    
+    if (threadIdx.x == 0)
+    {
+      data_point.x = crds[data_cnt];
+      data_point.y = crds[data_cnt +GI.data_count];
+    
+      i_bound = minmax_bounds[data_cnt];
+      j_bound = minmax_bounds[data_cnt + GI.data_count];
+    }
+    __syncthreads();
 
     // grid this point onto the neighboring cartesian points
     j=threadIdx.y;
-    if (j<=jmax && j>=jmin)
+    if (j<=j_bound.y && j>=j_bound.x)
     {
       jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.y)) - 0.5f;   
       dy_sqr = jy - data_point.y;
@@ -222,7 +225,7 @@ __device__ void textureConvolutionFunction2D(DType2* sdata, int sec, int sec_cnt
 
       i=threadIdx.x;
 
-      if (i<=imax && i>=imin)
+      if (i<=i_bound.y && i>=i_bound.x)
       {
         ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;
         dx_sqr = ix - data_point.x;
@@ -234,8 +237,6 @@ __device__ void textureConvolutionFunction2D(DType2* sdata, int sec, int sec_cnt
 
         // multiply data by current kernel val 
         // grid complex or scalar 
-        //sdata[ind].x += val * data[data_cnt].x;
-        //sdata[ind].y += val * data[data_cnt].y;
         sdata[ind].x += val * tex1Dfetch(texDATA,data_cnt).x;
         sdata[ind].y += val * tex1Dfetch(texDATA,data_cnt).y;
       } // x 	 
@@ -268,6 +269,7 @@ __global__ void textureConvolutionKernel2D(DType2* data,
   IndType* sectors, 
   IndType* sector_centers,
   DType2* temp_gdata,
+  uchar2* minmax_bounds,
   int N
   )
 {
@@ -285,7 +287,7 @@ __global__ void textureConvolutionKernel2D(DType2* data,
   //start convolution
   while (sec < N)
   {
-    textureConvolutionFunction2D(sdata,sec,sec,sectors[sec+1],0,data,crds,gdata,sectors,sector_centers,temp_gdata);
+    textureConvolutionFunction2D(sdata,sec,sec,sectors[sec+1],0,data,crds,gdata,sectors,sector_centers,temp_gdata,minmax_bounds);
     __syncthreads();
     sec = sec + gridDim.x;
   }//sec < sector_count
@@ -298,6 +300,7 @@ __global__ void balancedTextureConvolutionKernel2D(DType2* data,
   IndType2* sector_processing_order,
   IndType* sector_centers,
   DType2* temp_gdata,
+  uchar2* minmax_bounds,
   int N
   )
 {
@@ -317,7 +320,7 @@ __global__ void balancedTextureConvolutionKernel2D(DType2* data,
   while (sec_cnt < N)
   {
     sec = sector_processing_order[sec_cnt].x;
-    textureConvolutionFunction2D(sdata,sec,sec_cnt,min(sectors[sec+1],sectors[sec]+sector_processing_order[sec_cnt].y+MAXIMUM_PAYLOAD),sector_processing_order[sec_cnt].y,data,crds,gdata,sectors,sector_centers,temp_gdata);
+    textureConvolutionFunction2D(sdata,sec,sec_cnt,min(sectors[sec+1],sectors[sec]+sector_processing_order[sec_cnt].y+MAXIMUM_PAYLOAD),sector_processing_order[sec_cnt].y,data,crds,gdata,sectors,sector_centers,temp_gdata,minmax_bounds);
     __syncthreads();
     sec_cnt = sec_cnt + gridDim.x;
   }//sec < sector_count
@@ -337,6 +340,13 @@ void performTextureConvolution( DType2* data_d,
   if (DEBUG)
     printf("allocate temp grid data of size %d...\n",temp_grid_count);
   allocateDeviceMem<DType2>(&temp_gdata_d,temp_grid_count);
+  
+  uchar2* minmax_bounds_d;
+  int minmax_count = gi_host->data_count*3; //TODO 2d/3d
+  if (DEBUG)
+    printf("allocate minmax bounds data of size %d...\n",minmax_count);
+  allocateDeviceMem<uchar2>(&minmax_bounds_d,minmax_count);
+  computeMinMaxBounds(crds_d,sectors_d,sector_centers_d,minmax_bounds_d,gi_host);
 
   long shared_mem_size = gi_host->sector_dim*sizeof(DType2);
 
@@ -347,9 +357,9 @@ void performTextureConvolution( DType2* data_d,
     printf("convolution requires %d bytes of shared memory!\n",shared_mem_size);
 
   if (gi_host->is2Dprocessing)
-    textureConvolutionKernel2D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,temp_gdata_d,gi_host->sector_count);
+    textureConvolutionKernel2D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,temp_gdata_d,minmax_bounds_d,gi_host->sector_count);
   else
-    textureConvolutionKernel<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,temp_gdata_d,gi_host->sector_count);
+    textureConvolutionKernel<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,temp_gdata_d,minmax_bounds_d,gi_host->sector_count);
 
   if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
     printf("error at adj thread synchronization 2: %s\n",cudaGetErrorString(cudaGetLastError()));
@@ -360,6 +370,7 @@ void performTextureConvolution( DType2* data_d,
     printf("error at adj thread synchronization 3: %s\n",cudaGetErrorString(cudaGetLastError()));
 
   freeDeviceMem((void*)temp_gdata_d);
+  freeDeviceMem((void*)minmax_bounds_d);
 }
 
 void performTextureConvolution( DType2* data_d, 
@@ -378,6 +389,13 @@ void performTextureConvolution( DType2* data_d,
     printf("allocate temp grid data of size %d...\n",temp_grid_count);
   allocateDeviceMem<DType2>(&temp_gdata_d,temp_grid_count);
 
+  uchar2* minmax_bounds_d;
+  int minmax_count = gi_host->data_count*3;//TODO 2d/3d
+  if (DEBUG)
+    printf("allocate minmax bounds data of size %d...\n",minmax_count);
+  allocateDeviceMem<uchar2>(&minmax_bounds_d,minmax_count);
+  computeMinMaxBounds(crds_d,sectors_d,sector_centers_d,minmax_bounds_d,gi_host);
+
   long shared_mem_size = gi_host->sector_dim*sizeof(DType2);
 
   dim3 block_dim(gi_host->sector_pad_width,gi_host->sector_pad_width,1);
@@ -386,9 +404,9 @@ void performTextureConvolution( DType2* data_d,
     printf("balanced texture convolution requires %d bytes of shared memory!\n",shared_mem_size);
 
   if (gi_host->is2Dprocessing)
-    balancedTextureConvolutionKernel2D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_processing_order_d,sector_centers_d,temp_gdata_d,gi_host->sectorsToProcess);
+    balancedTextureConvolutionKernel2D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_processing_order_d,sector_centers_d,temp_gdata_d,minmax_bounds_d,gi_host->sectorsToProcess);
   else
-    balancedTextureConvolutionKernel<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_processing_order_d,sector_centers_d,temp_gdata_d,gi_host->sectorsToProcess);
+    balancedTextureConvolutionKernel<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_processing_order_d,sector_centers_d,temp_gdata_d,minmax_bounds_d,gi_host->sectorsToProcess);
 
   if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
     printf("error at adj thread synchronization 2: %s\n",cudaGetErrorString(cudaGetLastError()));
@@ -399,6 +417,7 @@ void performTextureConvolution( DType2* data_d,
     printf("error at adj thread synchronization 3: %s\n",cudaGetErrorString(cudaGetLastError()));
   
   freeDeviceMem((void*)temp_gdata_d);
+  freeDeviceMem((void*)minmax_bounds_d);
 }
 
 

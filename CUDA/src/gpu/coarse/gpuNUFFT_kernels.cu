@@ -648,7 +648,7 @@ __global__ void forwardConvolutionKernel2(CufftType* data,
   CufftType* shared_out_data =(CufftType*) &shared_data[0];  
   CufftType* gdata_cache =(CufftType*) &shared_data[blockDim.x]; 
 
-  __shared__ int sec;
+  int sec;
   sec = blockIdx.x;
 
   //init shared memory

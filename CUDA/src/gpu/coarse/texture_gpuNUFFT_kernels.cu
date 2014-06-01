@@ -332,6 +332,7 @@ void performTextureConvolution( DType2* data_d,
   DType* kernel_d, 
   IndType* sectors_d, 
   IndType* sector_centers_d,
+  uchar2* minmax_bounds_d,
   gpuNUFFT::GpuNUFFTInfo* gi_host
   )
 {
@@ -341,13 +342,6 @@ void performTextureConvolution( DType2* data_d,
     printf("allocate temp grid data of size %d...\n",temp_grid_count);
   allocateDeviceMem<DType2>(&temp_gdata_d,temp_grid_count);
   
-  uchar2* minmax_bounds_d;
-  int minmax_count = gi_host->data_count*3; //TODO 2d/3d
-  if (DEBUG)
-    printf("allocate minmax bounds data of size %d...\n",minmax_count);
-  allocateDeviceMem<uchar2>(&minmax_bounds_d,minmax_count);
-  computeMinMaxBounds(crds_d,sectors_d,sector_centers_d,minmax_bounds_d,gi_host);
-
   long shared_mem_size = gi_host->sector_dim*sizeof(DType2);
 
   //TODO third dimension > 1?
@@ -370,7 +364,6 @@ void performTextureConvolution( DType2* data_d,
     printf("error at adj thread synchronization 3: %s\n",cudaGetErrorString(cudaGetLastError()));
 
   freeDeviceMem((void*)temp_gdata_d);
-  freeDeviceMem((void*)minmax_bounds_d);
 }
 
 void performTextureConvolution( DType2* data_d, 
@@ -380,6 +373,7 @@ void performTextureConvolution( DType2* data_d,
   IndType* sectors_d, 
   IndType2* sector_processing_order_d,
   IndType* sector_centers_d,
+  uchar2* minmax_bounds_d,
   gpuNUFFT::GpuNUFFTInfo* gi_host
   )
 {
@@ -388,16 +382,6 @@ void performTextureConvolution( DType2* data_d,
   if (DEBUG)
     printf("allocate temp grid data of size %d...\n",temp_grid_count);
   allocateDeviceMem<DType2>(&temp_gdata_d,temp_grid_count);
-
-  uchar2* minmax_bounds_d;
-  int minmax_count = gi_host->data_count*3;//TODO 2d/3d
-  if (DEBUG)
-    printf("allocate minmax bounds data of size %d...\n",minmax_count);
-  allocateDeviceMem<uchar2>(&minmax_bounds_d,minmax_count);
-  computeMinMaxBounds(crds_d,sectors_d,sector_centers_d,minmax_bounds_d,gi_host);
-
-  if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
-    printf("error at adj thread synchronization 1 minmax  %s\n",cudaGetErrorString(cudaGetLastError()));
 
   long shared_mem_size = gi_host->sector_dim*sizeof(DType2);
 
@@ -420,7 +404,6 @@ void performTextureConvolution( DType2* data_d,
     printf("error at adj thread synchronization 3: %s\n",cudaGetErrorString(cudaGetLastError()));
   
   freeDeviceMem((void*)temp_gdata_d);
-  freeDeviceMem((void*)minmax_bounds_d);
 }
 
 
@@ -442,6 +425,7 @@ __global__ void textureForwardConvolutionKernel(CufftType* data,
   CufftType* gdata,
   IndType* sectors, 
   IndType* sector_centers,
+  uchar2* minmax_bounds,
   int N)
 {
   extern __shared__ CufftType shared_out_data[];//externally managed shared memory
@@ -456,7 +440,7 @@ __global__ void textureForwardConvolutionKernel(CufftType* data,
   //start convolution
   while (sec < N)
   {
-    int ind, imin, imax, jmin, jmax,kmin,kmax, k, i, j;
+    int ind, k, i, j;
     DType dx_sqr, dy_sqr, dz_sqr, val, ix, jy, kz;
 
     __shared__ IndType3 center;
@@ -477,31 +461,31 @@ __global__ void textureForwardConvolutionKernel(CufftType* data,
       data_point.y = crds[data_cnt + GI.data_count];
       data_point.z = crds[data_cnt + 2*GI.data_count];
 
-      // set the boundaries of final dataset for gpuNUFFT this point
-      ix = (data_point.x + 0.5f) * (GI.gridDims.x) - center.x + GI.sector_offset;
-      set_minmax(&ix, &imin, &imax, GI.sector_pad_max, GI.kernel_radius);
-      jy = (data_point.y + 0.5f) * (GI.gridDims.x) - center.y + GI.sector_offset;
-      set_minmax(&jy, &jmin, &jmax, GI.sector_pad_max, GI.kernel_radius);
-      kz = (data_point.z + 0.5f) * (GI.gridDims.z) - center.z + GI.sector_offset;
-      set_minmax(&kz, &kmin, &kmax, GI.sector_pad_max, GI.kernel_radius);
+      uchar2 i_bound;
+      uchar2 j_bound;
+      uchar2 k_bound;
+    
+      i_bound = minmax_bounds[data_cnt];
+      j_bound = minmax_bounds[data_cnt + GI.data_count];
+      k_bound = minmax_bounds[data_cnt + 2*GI.data_count];
 
       // convolve neighboring cartesian points to this data point
-      k = kmin;
-      while (k<=kmax && k>=kmin)
+      k = k_bound.x;
+      while (k<=k_bound.y)
       {
         kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.gridDims.z)) - 0.5f;//(k - center_z) *width_inv;
         dz_sqr = (kz - data_point.z)*GI.aniso_z_scale;
         dz_sqr *= dz_sqr;
 
-        j=jmin;
-        while (j<=jmax && j>=jmin)
+        j=j_bound.x;
+        while (j<=j_bound.y)
         {
           jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.y)) - 0.5f;   //(j - center_y) *width_inv;
           dy_sqr = jy - data_point.y;
           dy_sqr *= dy_sqr;
 
-          i=imin;								
-          while (i<=imax && i>=imin)
+          i=i_bound.x;								
+          while (i<=i_bound.y)
           {
             ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;// (i - center_x) *width_inv;
             dx_sqr = ix - data_point.x;
@@ -520,8 +504,6 @@ __global__ void textureForwardConvolutionKernel(CufftType* data,
             else
               ind = (sector_ind_offset + computeXYZ2Lin(i,j,k,GI.gridDims));
 
-            //shared_out_data[threadIdx.x].x += gdata[ind].x * val; 
-            //shared_out_data[threadIdx.x].y += gdata[ind].y * val;	
             shared_out_data[threadIdx.x].x += tex1Dfetch(texGDATA,ind).x * val; 
             shared_out_data[threadIdx.x].y += tex1Dfetch(texGDATA,ind).y * val;	
             
@@ -549,6 +531,7 @@ __global__ void textureForwardConvolutionKernel2D(CufftType* data,
   CufftType* gdata,
   IndType* sectors, 
   IndType* sector_centers,
+  uchar2* minmax_bounds,
   int N)
 {
   extern __shared__ CufftType shared_out_data[];//externally managed shared memory
@@ -563,7 +546,7 @@ __global__ void textureForwardConvolutionKernel2D(CufftType* data,
   //start convolution
   while (sec < N)
   {
-    int ind, imin, imax, jmin, jmax, i, j;
+    int ind, i, j;
     DType dx_sqr, dy_sqr, val, ix, jy;
 
     __shared__ IndType2 center;
@@ -582,21 +565,21 @@ __global__ void textureForwardConvolutionKernel2D(CufftType* data,
       data_point.x = crds[data_cnt];
       data_point.y = crds[data_cnt + GI.data_count];
 
-      // set the boundaries of final dataset for gpuNUFFT this point
-      ix = (data_point.x + 0.5f) * (GI.gridDims.x) - center.x + GI.sector_offset;
-      set_minmax(&ix, &imin, &imax, GI.sector_pad_max, GI.kernel_radius);
-      jy = (data_point.y + 0.5f) * (GI.gridDims.x) - center.y + GI.sector_offset;
-      set_minmax(&jy, &jmin, &jmax, GI.sector_pad_max, GI.kernel_radius);
+      uchar2 i_bound;
+      uchar2 j_bound;
+    
+      i_bound = minmax_bounds[data_cnt];
+      j_bound = minmax_bounds[data_cnt + GI.data_count];
 
       // convolve neighboring cartesian points to this data point
-      j=jmin;
-      while (j<=jmax && j>=jmin)
+      j=j_bound.x;
+      while (j<=j_bound.y)
       {
         jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;   //(j - center_y) *width_inv;
         dy_sqr = jy - data_point.y;
         dy_sqr *= dy_sqr;
-        i=imin;								
-        while (i<=imax && i>=imin)
+        i=i_bound.x;								
+        while (i<=i_bound.y)
         {
           ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.gridDims.y)) - 0.5f;// (i - center_x) *width_inv;
           dx_sqr = ix - data_point.x;
@@ -615,8 +598,6 @@ __global__ void textureForwardConvolutionKernel2D(CufftType* data,
           else
             ind = (sector_ind_offset + getIndex2D(i,j,GI.gridDims.x));
 
-          //shared_out_data[threadIdx.x].x += gdata[ind].x * val; 
-          //shared_out_data[threadIdx.x].y += gdata[ind].y * val;
           shared_out_data[threadIdx.x].x += tex1Dfetch(texGDATA,ind).x * val; 
           shared_out_data[threadIdx.x].y += tex1Dfetch(texGDATA,ind).y * val;	
           i++;
@@ -642,6 +623,7 @@ void performTextureForwardConvolution( CufftType*		data_d,
   DType*			kernel_d, 
   IndType*		sectors_d, 
   IndType*		sector_centers_d,
+  uchar2* minmax_bounds_d,
   gpuNUFFT::GpuNUFFTInfo*	gi_host
   )
 {
@@ -654,9 +636,9 @@ void performTextureForwardConvolution( CufftType*		data_d,
   if (DEBUG)
     printf("forward convolution requires %d bytes of shared memory!\n",shared_mem_size);
   if (gi_host->is2Dprocessing)
-    textureForwardConvolutionKernel2D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
+    textureForwardConvolutionKernel2D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,minmax_bounds_d,gi_host->sector_count);
   else
-    textureForwardConvolutionKernel<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
+    textureForwardConvolutionKernel<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,minmax_bounds_d,gi_host->sector_count);
 }
 
 void performTextureForwardConvolution( CufftType*		data_d, 
@@ -666,11 +648,12 @@ void performTextureForwardConvolution( CufftType*		data_d,
   IndType*		sectors_d, 
   IndType2*   sector_processing_order_d,
   IndType*		sector_centers_d,
+  uchar2*     minmax_bounds_d,
   gpuNUFFT::GpuNUFFTInfo*	gi_host
   )
 {
   // balanced version in coarse gridding due to lack of atomic operations not possible
-  performTextureForwardConvolution(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,gi_host);
+  performTextureForwardConvolution(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,minmax_bounds_d,gi_host);
 }
 
 #endif //TEXTURE_GPUNUFFT_KERNELS_CU

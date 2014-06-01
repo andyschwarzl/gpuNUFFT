@@ -28,7 +28,7 @@ void gpuNUFFT::BalancedTextureGpuNUFFTOperator::adjConvolution(DType2* data_d,
   bindTo1DTexture("texDATA",data_d,this->kSpaceTraj.count());
 
   //call balanced texture kernel
-  performTextureConvolution(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_processing_order_d,sector_centers_d,gi_host);
+  performTextureConvolution(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_processing_order_d,sector_centers_d,minmax_bounds_d,gi_host);
 
   unbindTexture("texDATA");
 }
@@ -44,7 +44,7 @@ void gpuNUFFT::BalancedTextureGpuNUFFTOperator::forwardConvolution(CufftType*		d
   bindTo1DTexture("texGDATA",gdata_d,gi_host->grid_width_dim);
 
   //call balanced texture kernel
-  performTextureForwardConvolution(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_processing_order_d,sector_centers_d,gi_host);
+  performTextureForwardConvolution(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_processing_order_d,sector_centers_d,minmax_bounds_d,gi_host);
 
   unbindTexture("texGDATA");
 }

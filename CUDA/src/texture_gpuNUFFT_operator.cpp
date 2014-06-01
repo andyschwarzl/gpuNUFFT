@@ -56,8 +56,8 @@ void gpuNUFFT::TextureGpuNUFFTOperator::adjConvolution(DType2* data_d,
   gpuNUFFT::GpuNUFFTInfo* gi_host)
 {
   bindTo1DTexture("texDATA",data_d,this->kSpaceTraj.count());
-
-  performTextureConvolution(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,gi_host);
+  
+  performTextureConvolution(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,minmax_bounds_d,gi_host);
 
   unbindTexture("texDATA");
 }
@@ -72,7 +72,7 @@ void gpuNUFFT::TextureGpuNUFFTOperator::forwardConvolution(CufftType*		data_d,
 {
   bindTo1DTexture("texGDATA",gdata_d,gi_host->grid_width_dim);
 
-  performTextureForwardConvolution(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,gi_host);
+  performTextureForwardConvolution(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_centers_d,minmax_bounds_d,gi_host);
 
   unbindTexture("texGDATA");
 }
@@ -85,4 +85,44 @@ void gpuNUFFT::TextureGpuNUFFTOperator::initLookupTable()
 void gpuNUFFT::TextureGpuNUFFTOperator::freeLookupTable()
 {
 	freeTexture(getInterpolationTypeName(),kernel_d);
+}
+
+void gpuNUFFT::TextureGpuNUFFTOperator::initMinMaxBounds()
+{
+  int minmax_count = gi_host->data_count*getImageDimensionCount();
+  if (DEBUG)
+    printf("allocate minmax bounds data of size %d...\n",minmax_count);
+  allocateDeviceMem<uchar2>(&minmax_bounds_d,minmax_count);
+  computeMinMaxBounds(crds_d,sectors_d,sector_centers_d,minmax_bounds_d,gi_host);
+
+  if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
+    printf("error at adj thread synchronization minmax %s\n",cudaGetErrorString(cudaGetLastError()));
+}
+
+void gpuNUFFT::TextureGpuNUFFTOperator::freeMinMaxBounds()
+{
+  freeTotalDeviceMemory(minmax_bounds_d,NULL);//NULL as stop token
+}
+
+void gpuNUFFT::TextureGpuNUFFTOperator::performGpuNUFFTAdj(gpuNUFFT::Array<DType2> kspaceData, gpuNUFFT::Array<CufftType>& imgData, GpuNUFFTOutput gpuNUFFTOut)
+{ 
+  //TODO
+  initDeviceMemory(kspaceData.dim.channels);
+
+  initMinMaxBounds();
+
+  GpuNUFFTOperator::performGpuNUFFTAdj(kspaceData,imgData,gpuNUFFTOut);
+
+  freeMinMaxBounds();
+}
+
+void gpuNUFFT::TextureGpuNUFFTOperator::performForwardGpuNUFFT(gpuNUFFT::Array<DType2> imgData,gpuNUFFT::Array<CufftType>& kspaceData, GpuNUFFTOutput gpuNUFFTOut)
+{
+  initDeviceMemory(kspaceData.dim.channels);
+
+  initMinMaxBounds();
+
+  GpuNUFFTOperator::performForwardGpuNUFFT(imgData,kspaceData,gpuNUFFTOut);
+
+  freeMinMaxBounds();
 }

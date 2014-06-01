@@ -27,11 +27,17 @@ namespace gpuNUFFT
     }
 
     virtual OperatorType getType() {return gpuNUFFT::TEXTURE;}
-
+    
+    void performGpuNUFFTAdj(Array<DType2> kspaceData, Array<CufftType>& imgData, GpuNUFFTOutput gpuNUFFTOut = DEAPODIZATION);
+    void performForwardGpuNUFFT(Array<DType2> imgData,Array<CufftType>& kspaceData, GpuNUFFTOutput gpuNUFFTOut = DEAPODIZATION);
+    
   protected:
     void initKernel();
     
 		cudaArray* kernel_d;
+    
+    uchar2* minmax_bounds_d;
+
     InterpolationType interpolationType;
     const char* getInterpolationTypeName();
 
@@ -56,6 +62,9 @@ namespace gpuNUFFT
     
     void initLookupTable();
     void freeLookupTable();
+
+    void initMinMaxBounds();
+    void freeMinMaxBounds();
   };
 }
 

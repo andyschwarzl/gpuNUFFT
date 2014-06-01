@@ -14,7 +14,7 @@ namespace gpuNUFFT
   public:
 
     GpuNUFFTOperator(IndType kernelWidth, IndType sectorWidth, DType osf, Dimensions imgDims, bool loadKernel = true, OperatorType operatorType = DEFAULT): 
-        osf(osf), kernelWidth(kernelWidth), sectorWidth(sectorWidth),imgDims(imgDims),operatorType(operatorType)
+        osf(osf), kernelWidth(kernelWidth), sectorWidth(sectorWidth),imgDims(imgDims),operatorType(operatorType),gpuMemAllocated(false)
         {
           if (loadKernel)
             initKernel();	
@@ -163,10 +163,11 @@ namespace gpuNUFFT
     virtual void initLookupTable();
     virtual void freeLookupTable();
 
-  private: 
     GpuNUFFTInfo* gi_host;
 
     //GPU Device Members
+    bool gpuMemAllocated;
+
     DType2* sens_d;
     DType* crds_d;
     DType* density_comp_d;

@@ -32,6 +32,7 @@ void performTextureConvolution( DType2* data_d,
   DType*			kernel_d, 
   IndType* sectors_d, 
   IndType* sector_centers_d,
+  uchar2* minmax_bounds_d,
   gpuNUFFT::GpuNUFFTInfo* gi_host
   );
 
@@ -43,6 +44,7 @@ void performTextureConvolution( DType2* data_d,
   IndType* sectors_d, 
   IndType2* sector_processing_order_d,
   IndType* sector_centers_d,
+  uchar2* minmax_bounds_d,
   gpuNUFFT::GpuNUFFTInfo* gi_host
   );
 
@@ -72,6 +74,7 @@ void performTextureForwardConvolution( CufftType*		data_d,
   DType*			kernel_d, 
   IndType*		sectors_d, 
   IndType*		sector_centers_d,
+  uchar2*     minmax_bounds_d,
   gpuNUFFT::GpuNUFFTInfo*	gi_host
   );
 
@@ -83,6 +86,7 @@ void performTextureForwardConvolution( CufftType*		data_d,
   IndType*		sectors_d, 
   IndType2*   sector_processing_order_d,
   IndType*		sector_centers_d,
+  uchar2*     minmax_bounds_d,
   gpuNUFFT::GpuNUFFTInfo*	gi_host
   );
 

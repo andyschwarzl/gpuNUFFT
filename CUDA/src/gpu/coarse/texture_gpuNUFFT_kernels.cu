@@ -396,6 +396,9 @@ void performTextureConvolution( DType2* data_d,
   allocateDeviceMem<uchar2>(&minmax_bounds_d,minmax_count);
   computeMinMaxBounds(crds_d,sectors_d,sector_centers_d,minmax_bounds_d,gi_host);
 
+  if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
+    printf("error at adj thread synchronization 1 minmax  %s\n",cudaGetErrorString(cudaGetLastError()));
+
   long shared_mem_size = gi_host->sector_dim*sizeof(DType2);
 
   dim3 block_dim(gi_host->sector_pad_width,gi_host->sector_pad_width,1);

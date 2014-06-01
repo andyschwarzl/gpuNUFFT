@@ -535,8 +535,8 @@ __global__ void forwardConvolutionKernel(CufftType* data,
   sec = blockIdx.x;
 
   //init shared memory
-  shared_out_data[threadIdx.x].x = 0.0f;//Re
-  shared_out_data[threadIdx.x].y = 0.0f;//Im
+  shared_out_data[threadIdx.x].x = (DType)0.0;//Re
+  shared_out_data[threadIdx.x].y = (DType)0.0;//Im
   __syncthreads();
   //start convolution
   while (sec < N)
@@ -652,8 +652,8 @@ __global__ void forwardConvolutionKernel2(CufftType* data,
   sec = blockIdx.x;
 
   //init shared memory
-  shared_out_data[threadIdx.x].x = 0.0f;//Re
-  shared_out_data[threadIdx.x].y = 0.0f;//Im
+  shared_out_data[threadIdx.x].x = (DType)0.0;//Re
+  shared_out_data[threadIdx.x].y = (DType)0.0;//Im
 
   __syncthreads();
   //start convolution
@@ -689,7 +689,7 @@ __global__ void forwardConvolutionKernel2(CufftType* data,
       gdata_cache[ind].x = gdata[grid_index].x;
       gdata_cache[ind].y = gdata[grid_index].y;
     }
-    
+
     __syncthreads();
 
     //Grid Points over Threads
@@ -705,7 +705,7 @@ __global__ void forwardConvolutionKernel2(CufftType* data,
       // set the boundaries of final dataset for gpuNUFFT this point
       ix = (data_point.x + 0.5f) * (GI.gridDims.x) - center.x + GI.sector_offset;
       set_minmax(&ix, &imin, &imax, GI.sector_pad_max, GI.kernel_radius);
-      jy = (data_point.y + 0.5f) * (GI.gridDims.x) - center.y + GI.sector_offset;
+      jy = (data_point.y + 0.5f) * (GI.gridDims.y) - center.y + GI.sector_offset;
       set_minmax(&jy, &jmin, &jmax, GI.sector_pad_max, GI.kernel_radius);
       kz = (data_point.z + 0.5f) * (GI.gridDims.z) - center.z + GI.sector_offset;
       set_minmax(&kz, &kmin, &kmax, GI.sector_pad_max, GI.kernel_radius);
@@ -755,6 +755,7 @@ __global__ void forwardConvolutionKernel2(CufftType* data,
         } //kernel bounds check z 
         k++;
       } // z loop
+
       data[data_cnt].x = shared_out_data[threadIdx.x].x;
       data[data_cnt].y = shared_out_data[threadIdx.x].y;
 
@@ -767,7 +768,6 @@ __global__ void forwardConvolutionKernel2(CufftType* data,
     sec = sec + gridDim.x;
   } //sector check
 }
-
 
 __global__ void forwardConvolutionKernel2D(CufftType* data, 
   DType*     crds, 
@@ -782,8 +782,8 @@ __global__ void forwardConvolutionKernel2D(CufftType* data,
   sec = blockIdx.x;
 
   //init shared memory
-  shared_out_data[threadIdx.x].x = 0.0f;//Re
-  shared_out_data[threadIdx.x].y = 0.0f;//Im
+  shared_out_data[threadIdx.x].x = (DType)0.0;//Re
+  shared_out_data[threadIdx.x].y = (DType)0.0;//Im
   __syncthreads();
   //start convolution
   while (sec < N)
@@ -881,8 +881,8 @@ __global__ void forwardConvolutionKernel22D(CufftType* data,
   sec = blockIdx.x;
 
   //init shared memory
-  shared_out_data[threadIdx.x].x = 0.0f;//Re
-  shared_out_data[threadIdx.x].y = 0.0f;//Im
+  shared_out_data[threadIdx.x].x = (DType)0.0;//Re
+  shared_out_data[threadIdx.x].y = (DType)0.0;//Im
   __syncthreads();
   //start convolution
   while (sec < N)
@@ -995,10 +995,10 @@ void performForwardConvolution( CufftType*		data_d,
     long shared_mem_size = thread_size * sizeof(CufftType);//empiric
 
     dim3 block_dim(thread_size);
-    dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,thread_size));
+    dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,1));
 
     if (DEBUG)
-      printf("convolution requires %d bytes of shared memory!\n",shared_mem_size);
+      printf("forward convolution requires %d bytes of shared memory!\n",shared_mem_size);
     if (gi_host->is2Dprocessing)
       forwardConvolutionKernel2D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
     else
@@ -1010,10 +1010,10 @@ void performForwardConvolution( CufftType*		data_d,
     long shared_mem_size = (thread_size + gi_host->sector_dim) * sizeof(CufftType);
 
     dim3 block_dim(thread_size);
-    dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,thread_size));
+    dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,1));
 
     if (DEBUG)
-      printf("convolution requires %d bytes of shared memory!\n",shared_mem_size);
+      printf("cached forward convolution requires %d bytes of shared memory!\n",shared_mem_size);
     if (gi_host->is2Dprocessing)
       forwardConvolutionKernel22D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
     else

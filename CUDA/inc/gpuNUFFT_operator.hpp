@@ -179,6 +179,12 @@ namespace gpuNUFFT
     
     cufftHandle fft_plan;
 
+    //for timing tests
+    
+    cudaEvent_t start, stop;
+    void startTiming();
+    float stopTiming();
+
     //
     void initDeviceMemory(int n_coils);
     void freeDeviceMemory(int n_coils);

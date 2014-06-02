@@ -601,3 +601,20 @@ gpuNUFFT::Array<CufftType> gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(Ar
 {
   return performForwardGpuNUFFT(imgData,CONVOLUTION);
 }
+
+void gpuNUFFT::GpuNUFFTOperator::startTiming()
+{
+  HANDLE_ERROR( cudaEventCreate(&start) );
+  HANDLE_ERROR( cudaEventCreate(&stop) );
+  HANDLE_ERROR( cudaEventRecord(start, 0) );
+}
+
+float gpuNUFFT::GpuNUFFTOperator::stopTiming()
+{
+  float time;
+
+  HANDLE_ERROR( cudaEventRecord(stop, 0) );
+  HANDLE_ERROR( cudaEventSynchronize(stop) );
+  HANDLE_ERROR( cudaEventElapsedTime(&time, start, stop) );
+  return time;
+}

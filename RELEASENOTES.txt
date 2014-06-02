@@ -7,8 +7,7 @@ Version 2.0.4
 	- Apply sens data on GPU
 	- Automatically export mex-files into gpuNUFFT/@gpuNUFFT/private 
 	  folder
-  - Refactored initialization params of MATLAB Operator
-	- 
+	- Refactored initialization params of MATLAB Operator
 
 ---------------------------------------------------------------------
 Version 2.0.3

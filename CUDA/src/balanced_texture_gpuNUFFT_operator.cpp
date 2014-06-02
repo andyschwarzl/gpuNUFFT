@@ -28,7 +28,9 @@ void gpuNUFFT::BalancedTextureGpuNUFFTOperator::adjConvolution(DType2* data_d,
   bindTo1DTexture("texDATA",data_d,this->kSpaceTraj.count());
 
   //call balanced texture kernel
+  startTiming();
   performTextureConvolution(data_d,crds_d,gdata_d,kernel_d,sectors_d,sector_processing_order_d,sector_centers_d,minmax_bounds_d,gi_host);
+  printf("Balanced Texture Adj convolution time: %.2f\n",stopTiming());
 
   unbindTexture("texDATA");
 }

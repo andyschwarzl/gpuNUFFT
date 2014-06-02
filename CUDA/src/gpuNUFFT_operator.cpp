@@ -245,13 +245,18 @@ void gpuNUFFT::GpuNUFFTOperator::freeDeviceMemory(int n_coils)
   if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
     printf("error at thread synchronization 9: %s\n",cudaGetErrorString(cudaGetLastError()));
   freeLookupTable();
+  
   freeTotalDeviceMemory(data_indices_d,data_sorted_d,crds_d,gdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop
+  
   if (n_coils > 1 && deapo_d != NULL)
     cudaFree(deapo_d);
   
   if (this->applySensData())
     cudaFree(sens_d);
   
+  if (this->applyDensComp())
+    cudaFree(density_comp_d);
+
   showMemoryInfo();
   gpuMemAllocated = false;
 }

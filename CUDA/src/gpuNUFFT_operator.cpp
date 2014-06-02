@@ -300,6 +300,9 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(gpuNUFFT::Array<DType2> kspa
     std::cout << "apply density comp: " << this->applyDensComp() << std::endl;
     std::cout << "apply sens data: " << this->applySensData() << std::endl;
   }
+  if (debugTiming)
+    startTiming();
+
   showMemoryInfo();
 
   int			data_count          = (int)this->kSpaceTraj.count();
@@ -323,6 +326,9 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(gpuNUFFT::Array<DType2> kspa
   initDeviceMemory(n_coils);
   int err;
 
+  if (debugTiming)
+    printf("Memory allocation: %.2f ms\n",stopTiming());
+
   //iterate over coils and compute result
   for (int coil_it = 0; coil_it < n_coils; coil_it++)
   {
@@ -339,7 +345,14 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(gpuNUFFT::Array<DType2> kspa
 
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       printf("error at adj thread synchronization 1: %s\n",cudaGetErrorString(cudaGetLastError()));
+    
+    if (debugTiming)
+      startTiming();
+
     adjConvolution(data_sorted_d,crds_d,gdata_d,NULL,sectors_d,sector_centers_d,gi_host);
+
+    if (debugTiming)
+      printf("Adjoint convolution: %.2f ms\n",stopTiming());
 
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       fprintf(stderr,"error at adj  thread synchronization 2: %s\n",cudaGetErrorString(cudaGetLastError()));
@@ -359,6 +372,10 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(gpuNUFFT::Array<DType2> kspa
     }
     if ((cudaThreadSynchronize() != cudaSuccess))
       fprintf(stderr,"error at adj thread synchronization 3: %s\n",cudaGetErrorString(cudaGetLastError()));
+    
+    if (debugTiming)
+      startTiming();
+
     performFFTShift(gdata_d,INVERSE,getGridDims(),gi_host);
 
     //Inverse FFT
@@ -388,6 +405,9 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(gpuNUFFT::Array<DType2> kspa
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       printf("error at adj thread synchronization 5: %s\n",cudaGetErrorString(cudaGetLastError()));
     performFFTShift(gdata_d,INVERSE,getGridDims(),gi_host);
+    
+    if (debugTiming)
+      printf("iFFT (incl. shift) : %.2f ms\n",stopTiming());
 
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       printf("error at adj thread synchronization 6: %s\n",cudaGetErrorString(cudaGetLastError()));
@@ -496,6 +516,9 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(gpuNUFFT::Array<DType2> 
     std::cout << "imgCount: " << imgData.count() << " gridWidth: " << this->getGridWidth() << std::endl;
   }
   showMemoryInfo();
+  
+  if (debugTiming)
+    startTiming();
 
   int			data_count          = (int)this->kSpaceTraj.count();
   int			n_coils             = (int)kspaceData.dim.channels;
@@ -515,6 +538,9 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(gpuNUFFT::Array<DType2> 
   allocateDeviceMem<CufftType>(&data_d,data_count);
 
   initDeviceMemory(n_coils);
+    
+  if (debugTiming)
+    printf("Memory allocation: %.2f ms\n",stopTiming());
 
   int err;
 
@@ -548,6 +574,9 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(gpuNUFFT::Array<DType2> 
     // resize by oversampling factor and zero pad
     performPadding(imdata_d,gdata_d,gi_host);
 
+    if (debugTiming)
+      startTiming();
+
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       printf("error at thread synchronization 3: %s\n",cudaGetErrorString(cudaGetLastError()));
     // shift image to get correct zero frequency position
@@ -569,10 +598,20 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(gpuNUFFT::Array<DType2> 
 
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       printf("error at thread synchronization 6: %s\n",cudaGetErrorString(cudaGetLastError()));
+
+    if (debugTiming)
+      printf("FFT (incl. shift): %.2f ms\n",stopTiming());
+
+    if (debugTiming)
+      startTiming();
+
     // convolution and resampling to non-standard trajectory
     forwardConvolution(data_d,crds_d,gdata_d,NULL,sectors_d,sector_centers_d,gi_host);
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       printf("error at thread synchronization 7: %s\n",cudaGetErrorString(cudaGetLastError()));
+    
+    if (debugTiming)
+      printf("Forward Convolution: %.2f ms\n",stopTiming());
 
     performFFTScaling(data_d,gi_host->data_count,gi_host);
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))

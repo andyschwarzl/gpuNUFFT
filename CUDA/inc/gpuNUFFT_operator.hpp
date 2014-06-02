@@ -14,7 +14,7 @@ namespace gpuNUFFT
   public:
 
     GpuNUFFTOperator(IndType kernelWidth, IndType sectorWidth, DType osf, Dimensions imgDims, bool loadKernel = true, OperatorType operatorType = DEFAULT): 
-        osf(osf), kernelWidth(kernelWidth), sectorWidth(sectorWidth),imgDims(imgDims),operatorType(operatorType), gpuMemAllocated(false)
+        osf(osf), kernelWidth(kernelWidth), sectorWidth(sectorWidth),imgDims(imgDims),operatorType(operatorType), gpuMemAllocated(false), debugTiming(true)
         {
           if (loadKernel)
             initKernel();	
@@ -165,6 +165,7 @@ namespace gpuNUFFT
 
   private: 
     bool gpuMemAllocated;
+    bool debugTiming;
 
     GpuNUFFTInfo* gi_host;
 

@@ -106,10 +106,11 @@ void gpuNUFFT::TextureGpuNUFFTOperator::freeMinMaxBounds()
 
 void gpuNUFFT::TextureGpuNUFFTOperator::performGpuNUFFTAdj(gpuNUFFT::Array<DType2> kspaceData, gpuNUFFT::Array<CufftType>& imgData, GpuNUFFTOutput gpuNUFFTOut)
 { 
-  //TODO
   initDeviceMemory(kspaceData.dim.channels);
-
+  
+  startTiming();
   initMinMaxBounds();
+  printf("MinMax init time: %.2f ms\n",stopTiming());
 
   GpuNUFFTOperator::performGpuNUFFTAdj(kspaceData,imgData,gpuNUFFTOut);
 

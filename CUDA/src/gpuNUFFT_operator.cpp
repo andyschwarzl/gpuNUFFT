@@ -628,3 +628,4 @@ float gpuNUFFT::GpuNUFFTOperator::stopTiming()
   HANDLE_ERROR( cudaEventElapsedTime(&time, start, stop) );
   return time;
 }
+

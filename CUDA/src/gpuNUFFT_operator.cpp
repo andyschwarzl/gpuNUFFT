@@ -163,6 +163,11 @@ void gpuNUFFT::GpuNUFFTOperator::freeLookupTable()
 
 void gpuNUFFT::GpuNUFFTOperator::initDeviceMemory(int n_coils)
 {
+  if (gpuMemAllocated)
+    return;
+
+  gi_host = initAndCopyGpuNUFFTInfo();//
+
   int			data_count          = (int)this->kSpaceTraj.count();
   IndType imdata_count        = this->imgDims.count();
   int			sector_count        = (int)this->gridSectorDims.count();
@@ -227,10 +232,14 @@ void gpuNUFFT::GpuNUFFTOperator::initDeviceMemory(int n_coils)
   cufftResult res = cufftPlan3d(&fft_plan, (int)DEFAULT_VALUE(gi_host->gridDims.z),(int)gi_host->gridDims.y,(int)gi_host->gridDims.x, CufftTransformType) ;
   if (res != CUFFT_SUCCESS) 
     fprintf(stderr,"error on CUFFT Plan creation!!! %d\n",res);
+  gpuMemAllocated = true;
 }
 
 void gpuNUFFT::GpuNUFFTOperator::freeDeviceMemory(int n_coils)
 {
+  if (!gpuMemAllocated)
+    return;
+
   cufftDestroy(fft_plan);
   // Destroy the cuFFT plan.
   if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
@@ -244,6 +253,7 @@ void gpuNUFFT::GpuNUFFTOperator::freeDeviceMemory(int n_coils)
     cudaFree(sens_d);
   
   showMemoryInfo();
+  gpuMemAllocated = false;
 }
 
 
@@ -309,8 +319,6 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(gpuNUFFT::Array<DType2> kspa
   if (DEBUG)
     printf("allocate and copy imdata of size %d...\n",imdata_count);
   allocateAndCopyToDeviceMem<CufftType>(&imdata_d,imgData.data,imdata_count);//Konvention!!!
-
-  gi_host = initAndCopyGpuNUFFTInfo();//
 
   initDeviceMemory(n_coils);
   int err;
@@ -493,8 +501,6 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(gpuNUFFT::Array<DType2> 
   int			n_coils             = (int)kspaceData.dim.channels;
   IndType	imdata_count        = this->imgDims.count();
   int			sector_count        = (int)this->gridSectorDims.count();
-
-  gi_host = initAndCopyGpuNUFFTInfo();
 
   //cuda mem allocation
   DType2 *imdata_d;

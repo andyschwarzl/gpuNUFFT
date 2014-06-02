@@ -15,7 +15,7 @@ nSl=N;
 nFE=207;
 nCh=8;
 disp_slice=nSl/2;
-useGPU = true;
+useGPU = false;
 %% Reconstruction parameters
 maxit = 5;
 alpha = 1e-6;
@@ -31,9 +31,9 @@ osf = 2; wg = 3; sw = 8;
 imwidth = N;
 
 if (useGPU)
-    FT = gpuNUFFT(k',w,imwidth,osf,wg,sw,[N,N,nSl],[],true);
+    FT = gpuNUFFT(k',w,osf,wg,sw,[N,N,nSl]);
 else
-    FT = NUFFT3D(k(:,1)+1i.*k(:,2), w, 1, 0, [N,N,nSl], 2,1);
+    FT = NUFFT3D(k, w, 1, 0, [N,N,nSl], 2,1);
 end
 F = @(y) inversegrid_singlecoil_gpu(y,FT,nPE,nFE);
 Fh = @(x) regrid_singlecoil_gpu(x,FT);
@@ -77,7 +77,9 @@ compTimeCGSENSE=toc;
 disp(['Time: ', num2str(compTimeCGSENSE), ' s']);  
 
 %% Display
-img_sos=sqrt(sum(abs(img).^2,4));
-figure;
-subplot(1,2,1); imshow(img_sos(:,:,disp_slice),[]); title('Regridding');
-subplot(1,2,2); imshow(abs(img_cgsense(:,:,disp_slice)),[]); title('CGSENSE');
+if (display)
+  img_sos=sqrt(sum(abs(img).^2,4));
+  figure;
+  subplot(1,2,1); imshow(img_sos(:,:,disp_slice),[]); title('Regridding');
+  subplot(1,2,2); imshow(abs(img_cgsense(:,:,disp_slice)),[]); title('CGSENSE');
+end

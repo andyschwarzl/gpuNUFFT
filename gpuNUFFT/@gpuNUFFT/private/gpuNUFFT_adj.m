@@ -46,14 +46,14 @@ end;
 % generate complex output from split vector
 if (a.params.is2d_processing)
   if (nChn > 1)
-    ress = ress(1,:,:,:) + 1i*(ress(2,:,:,:));
+    ress = squeeze(ress(1,:,:,:) + 1i*(ress(2,:,:,:)));
   else
-    ress = ress(1,:,:) + 1i*(ress(2,:,:));
+    ress = squeeze(ress(1,:,:) + 1i*(ress(2,:,:)));
   end
 else
   if (nChn > 1)
-    ress = ress(1,:,:,:,:) + 1i*(ress(2,:,:,:,:));
+    ress = squeeze(ress(1,:,:,:,:) + 1i*(ress(2,:,:,:,:)));
   else
-    ress = ress(1,:,:,:) + 1i.*(ress(2,:,:,:));
+    ress = squeeze(ress(1,:,:,:) + 1i.*(ress(2,:,:,:)));
   end
 end

@@ -50,8 +50,8 @@ if a.verbose
 end
 
 if (nChn > 1)
-    ress(:,:) = ress(1,:,:) + 1i*(ress(2,:,:));
+    ress(:,:) = squeeze(ress(1,:,:) + 1i*(ress(2,:,:)));
 else
-    ress = transpose(ress(1,:) + 1i*(ress(2,:)));
+    ress = squeeze(transpose(ress(1,:) + 1i*(ress(2,:))));
 end
 

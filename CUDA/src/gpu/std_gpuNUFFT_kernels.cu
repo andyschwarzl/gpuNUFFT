@@ -643,9 +643,12 @@ __global__ void minMaxBoundsKernel(DType* crds, IndType* sectors, IndType* secto
     data_cnt = sectors[sec] + threadIdx.x;
 
     __shared__ int max_dim;
-    max_dim = GI.sector_pad_max;		
+    max_dim = GI.sector_pad_max;
 
-    while (data_cnt < sectors[sec+1])
+    __shared__ int sector_max;
+    sector_max = sectors[sec+1];
+
+    while (data_cnt < sector_max)
     {
       DType3 data_point; //datapoint shared in every thread
       data_point.x = crds[data_cnt];
@@ -664,6 +667,7 @@ __global__ void minMaxBoundsKernel(DType* crds, IndType* sectors, IndType* secto
       
       data_cnt = data_cnt + blockDim.x;
     }
+    __syncthreads();
     sec = sec + gridDim.x;
   }
 }
@@ -685,7 +689,10 @@ __global__ void minMaxBoundsKernel2D(DType* crds, IndType* sectors, IndType* sec
     __shared__ int max_dim;
     max_dim = GI.sector_pad_max;		
 
-    while (data_cnt < sectors[sec+1])
+    __shared__ int sector_max;
+    sector_max = sectors[sec+1];
+
+    while (data_cnt < sector_max)
     {
       DType2 data_point; //datapoint shared in every thread
       data_point.x = crds[data_cnt];
@@ -700,7 +707,8 @@ __global__ void minMaxBoundsKernel2D(DType* crds, IndType* sectors, IndType* sec
 
       data_cnt = data_cnt + blockDim.x;
     }
-  sec = sec + gridDim.x;
+    __syncthreads();
+    sec = sec + gridDim.x;
   }
 }
 

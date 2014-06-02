@@ -41,7 +41,7 @@ void cleanUp()
 void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 {
 	if (MATLAB_DEBUG)
-		mexPrintf("Starting Forward GRIDDING 3D Function...\n");
+		mexPrintf("Starting Forward gpuNUFFT Function...\n");
 	
 	// get cuda context associated to MATLAB 
 	int cuDevice = 0;
@@ -158,16 +158,4 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 		mexPrintf("memory usage on device afterwards, free: %lu total: %lu\n",free_mem,total_mem);
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
 

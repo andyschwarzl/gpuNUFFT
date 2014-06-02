@@ -26,10 +26,14 @@ __device__ void textureConvolutionFunction(int* sec, int sec_max, int sec_offset
 
   DType dx_sqr, dy_sqr, dz_sqr, val, ix, jy, kz;
 
-  __shared__ IndType3 center;
-  center.x = sector_centers[sec[threadIdx.x] * 3];
-  center.y = sector_centers[sec[threadIdx.x] * 3 + 1];
-  center.z = sector_centers[sec[threadIdx.x] * 3 + 2];
+  __shared__ IndType3 center; 
+  if (threadIdx.x == 0)
+  {
+    center.x = sector_centers[sec[threadIdx.x] * 3];
+    center.y = sector_centers[sec[threadIdx.x] * 3 + 1];
+    center.z = sector_centers[sec[threadIdx.x] * 3 + 2];
+  }
+  __syncthreads();
 
   //Grid Points over Threads
   int data_cnt = sectors[sec[threadIdx.x]] + threadIdx.x + sec_offset;
@@ -52,19 +56,19 @@ __device__ void textureConvolutionFunction(int* sec, int sec_max, int sec_offset
     
     // grid this point onto its cartesian points neighbors
     k =k_bound.x;
-    while (k<=k_bound.y && k>=k_bound.x)
+    while (k<=k_bound.y)
     {
       kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.gridDims.z)) - 0.5f;//(k - center_z) *width_inv;
       dz_sqr = (kz - data_point.z)*GI.aniso_z_scale;
       dz_sqr *= dz_sqr;
       j=j_bound.x;
-      while (j<=j_bound.y && j>=j_bound.x)
+      while (j<=j_bound.y)
       {
         jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.y)) - 0.5f;   //(j - center_y) *width_inv;
         dy_sqr = jy - data_point.y;
         dy_sqr *= dy_sqr;
         i= i_bound.x;						
-        while (i<=i_bound.y && i>=i_bound.x)
+        while (i<=i_bound.y)
         {
           ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;// (i - center_x) *width_inv;
           dx_sqr = ix - data_point.x;
@@ -205,9 +209,12 @@ __device__ void textureConvolutionFunction2D(DType2* sdata,int* sec, int sec_max
   DType dx_sqr, dy_sqr, val, ix, jy;
 
   __shared__ IndType2 center;
-  center.x = sector_centers[sec[threadIdx.x] * 2];
-  center.y = sector_centers[sec[threadIdx.x] * 2 + 1];
-
+  if (threadIdx.x == 0)
+  {
+    center.x = sector_centers[sec[threadIdx.x] * 2];
+    center.y = sector_centers[sec[threadIdx.x] * 2 + 1];
+  }
+  __syncthreads();
   //Grid Points over Threads
   int data_cnt = sectors[sec[threadIdx.x]] + threadIdx.x + sec_offset;
   //loop over all data points of the current sector, and check if grid position lies inside 
@@ -226,13 +233,13 @@ __device__ void textureConvolutionFunction2D(DType2* sdata,int* sec, int sec_max
     
     // grid this point onto its cartesian points neighbors
     j=j_bound.x;
-    while (j<=j_bound.y && j>=j_bound.x)
+    while (j<=j_bound.y)
     {
       jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.y)) - 0.5f;   //(j - center_y) *width_inv;
       dy_sqr = jy - data_point.y;
       dy_sqr *= dy_sqr;
       i= i_bound.x;						
-      while (i<=i_bound.y && i>=i_bound.x)
+      while (i<=i_bound.y)
       {
         ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;// (i - center_x) *width_inv;
         dx_sqr = ix - data_point.x;
@@ -245,8 +252,6 @@ __device__ void textureConvolutionFunction2D(DType2* sdata,int* sec, int sec_max
 
         // multiply data by current kernel val 
         // grid complex or scalar 
-        //atomicAdd(&(sdata[ind].x),val * data[data_cnt].x);
-        //atomicAdd(&(sdata[ind].y),val * data[data_cnt].y);
         atomicAdd(&(sdata[ind].x),val * tex1Dfetch(texDATA,data_cnt).x);
         atomicAdd(&(sdata[ind].y),val * tex1Dfetch(texDATA,data_cnt).y);
         i++;

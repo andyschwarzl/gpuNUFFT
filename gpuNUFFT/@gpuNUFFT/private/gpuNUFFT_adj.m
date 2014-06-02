@@ -17,7 +17,7 @@ nChn = size(bb,2);
 sens = a.sens;
 if a.sensChn ~= 0 && ...
    a.sensChn ~= nChn
-    warning('GRIDDING3D:adj:sens',['k-Space data dimensions (', num2str(size(bb)), ') do not fit sense data dimensions (', num2str(size(a.sens)), '). Sens data will not be applied after gpuNUFFT. Please pass k-space data in correct dimensions.']);
+    warning('gpuNUFFT:adj:sens',['k-Space data dimensions (', num2str(size(bb)), ') do not fit sense data dimensions (', num2str(size(a.sens)), '). Sens data will not be applied after gpuNUFFT. Please pass k-space data in correct dimensions.']);
    sens = [];
 end
 
@@ -38,15 +38,22 @@ if a.verbose
 end
 
 if a.atomic == true
-    m = mex_gpuNUFFT_adj_atomic_f(single(kspace),(a.dataIndices),single(a.coords),(a.sectorDataCount),(a.sectorProcessingOrder),(a.sectorCenters(:)),single(a.densSorted),single(sens),a.params);
+    ress = mex_gpuNUFFT_adj_atomic_f(single(kspace),(a.dataIndices),single(a.coords),(a.sectorDataCount),(a.sectorProcessingOrder),(a.sectorCenters(:)),single(a.densSorted),single(sens),a.params);
 else
-    m = mex_gpuNUFFT_adj_f(single(kspace),(a.dataIndices),single(a.coords),(a.sectorDataCount),(a.sectorProcessingOrder),(a.sectorCenters(:)),single(a.densSorted),single(sens),a.params);
+    ress = mex_gpuNUFFT_adj_f(single(kspace),(a.dataIndices),single(a.coords),(a.sectorDataCount),(a.sectorProcessingOrder),(a.sectorCenters(:)),single(a.densSorted),single(sens),a.params);
 end;
 
 % generate complex output from split vector
 if (a.params.is2d_processing)
-    ress = squeeze(m(1,:,:,:) + 1i*(m(2,:,:,:)));
+  if (nChn > 1)
+    ress = ress(1,:,:,:) + 1i*(ress(2,:,:,:));
+  else
+    ress = ress(1,:,:) + 1i*(ress(2,:,:));
+  end
 else
-    ress = squeeze(m(1,:,:,:,:) + 1i*(m(2,:,:,:,:)));
+  if (nChn > 1)
+    ress = ress(1,:,:,:,:) + 1i*(ress(2,:,:,:,:));
+  else
+    ress = ress(1,:,:,:) + 1i.*(ress(2,:,:,:));
+  end
 end
-

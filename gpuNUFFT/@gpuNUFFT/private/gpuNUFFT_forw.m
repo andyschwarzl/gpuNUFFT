@@ -35,24 +35,23 @@ end
 sens = a.sens;
 if a.sensChn ~= 0 && ...
    a.sensChn ~= nChn
-    warning('GRIDDING3D:forw:sens',['Image data dimensions (', num2str(size(bb)), ') do not fit sense data dimensions (', num2str(size(a.sens)), '). Sens data will not be applied. Please pass image data in correct dimensions.']);
+    warning('gpuNUFFT:forw:sens',['Image data dimensions (', num2str(size(bb)), ') do not fit sense data dimensions (', num2str(size(a.sens)), '). Sens data will not be applied. Please pass image data in correct dimensions.']);
    sens = [];
 end
 
 if a.atomic == true
-    data = mex_gpuNUFFT_forw_atomic_f(single(bb),(a.dataIndices),single(a.coords),(a.sectorDataCount),(a.sectorProcessingOrder),(a.sectorCenters(:)),single(sens),a.params);
+    ress = mex_gpuNUFFT_forw_atomic_f(single(bb),(a.dataIndices),single(a.coords),(a.sectorDataCount),(a.sectorProcessingOrder),(a.sectorCenters(:)),single(sens),a.params);
 else
-    data = mex_gpuNUFFT_forw_f(single(bb),(a.dataIndices),single(a.coords),(a.sectorDataCount),(a.sectorProcessingOrder),(a.sectorCenters(:)),single(sens),a.params);
+    ress = mex_gpuNUFFT_forw_f(single(bb),(a.dataIndices),single(a.coords),(a.sectorDataCount),(a.sectorProcessingOrder),(a.sectorCenters(:)),single(sens),a.params);
 end
 
 if a.verbose
-    disp(['returned data dimensions:' num2str(size(data))]);
+    disp(['returned data dimensions:' num2str(size(ress))]);
 end
 
 if (nChn > 1)
-    data = squeeze(data(1,:,:) + 1j*(data(2,:,:)));
-    ress(:,:) = data;
+    ress(:,:) = ress(1,:,:) + 1i*(ress(2,:,:));
 else
-    data = transpose(squeeze(data(1,:) + 1j*(data(2,:))));
-    ress = data;
+    ress = transpose(ress(1,:) + 1i*(ress(2,:)));
 end
+

@@ -24,9 +24,11 @@ function [res] = gpuNUFFT(k,w,osf,wg,sw,imageDim,sens,varargin)
 atomic = true;
 use_textures = true;    
 balance_workload = true;
-if nargin <= 8,
-    atomic = varargin{1};
-elseif nargin > 8
+
+if nargin < 7
+    sens = [];
+end
+if nargin >= 8
     atomic = varargin{1};
     if nargin >= 9
         use_textures = varargin{2};

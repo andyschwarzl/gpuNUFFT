@@ -40,9 +40,9 @@ if a.sensChn ~= 0 && ...
 end
 
 if a.atomic == true
-    ress = mex_gpuNUFFT_forw_atomic_f(single(bb),(a.dataIndices),single(a.coords),(a.sectorDataCount),(a.sectorProcessingOrder),(a.sectorCenters(:)),single(sens),a.params);
+    m = mex_gpuNUFFT_forw_atomic_f(single(bb),(a.dataIndices),single(a.coords),(a.sectorDataCount),(a.sectorProcessingOrder),(a.sectorCenters(:)),single(sens),a.params);
 else
-    ress = mex_gpuNUFFT_forw_f(single(bb),(a.dataIndices),single(a.coords),(a.sectorDataCount),(a.sectorProcessingOrder),(a.sectorCenters(:)),single(sens),a.params);
+    m = mex_gpuNUFFT_forw_f(single(bb),(a.dataIndices),single(a.coords),(a.sectorDataCount),(a.sectorProcessingOrder),(a.sectorCenters(:)),single(sens),a.params);
 end
 
 if a.verbose
@@ -50,8 +50,8 @@ if a.verbose
 end
 
 if (nChn > 1)
-    ress(:,:) = squeeze(ress(1,:,:) + 1i*(ress(2,:,:)));
+    ress(:,:) = squeeze(m(1,:,:) + 1i*(m(2,:,:)));
 else
-    ress = squeeze(transpose(ress(1,:) + 1i*(ress(2,:))));
+    ress = squeeze(transpose(m(1,:) + 1i*(m(2,:))));
 end
 

@@ -810,14 +810,13 @@ __global__ void forwardConvolutionKernel2D(CufftType* data,
       // set the boundaries of final dataset for gpuNUFFT this point
       ix = (data_point.x + 0.5f) * (GI.gridDims.x) - center.x + GI.sector_offset;
       set_minmax(&ix, &imin, &imax, GI.sector_pad_max, GI.kernel_radius);
-      jy = (data_point.y + 0.5f) * (GI.gridDims.x) - center.y + GI.sector_offset;
+      jy = (data_point.y + 0.5f) * (GI.gridDims.y) - center.y + GI.sector_offset;
       set_minmax(&jy, &jmin, &jmax, GI.sector_pad_max, GI.kernel_radius);
 
       // convolve neighboring cartesian points to this data point
       j=jmin;
       while (j<=jmax && j>=jmin)
       {
-        jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;   //(j - center_y) *width_inv;
         jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.y)) - 0.5f;   //(j - center_y) *width_inv;
         dy_sqr = (jy - data_point.y)*GI.aniso_y_scale;
         dy_sqr *= dy_sqr;
@@ -838,7 +837,7 @@ __global__ void forwardConvolutionKernel2D(CufftType* data,
 
               // multiply data by current kernel val 
               // grid complex or scalar 
-              if (isOutlier2D(i,j,center.x,center.y,GI.gridDims.x,GI.sector_offset))
+              if (isOutlier2D(i,j,center.x,center.y,GI.gridDims,GI.sector_offset))
                 //calculate opposite index
                 ind = getIndex2D(calculateOppositeIndex(i,center.x,GI.gridDims.x,GI.sector_offset),
                 calculateOppositeIndex(j,center.y,GI.gridDims.y,GI.sector_offset),
@@ -907,7 +906,7 @@ __global__ void forwardConvolutionKernel22D(CufftType* data,
 
       // multiply data by current kernel val 
       // grid complex or scalar 
-      if (isOutlier2D(i,j,center.x,center.y,GI.gridDims.x,GI.sector_offset))
+      if (isOutlier2D(i,j,center.x,center.y,GI.gridDims,GI.sector_offset))
         //calculate opposite index
         grid_index = getIndex2D(calculateOppositeIndex(i,center.x,GI.gridDims.x,GI.sector_offset),
         calculateOppositeIndex(j,center.y,GI.gridDims.y,GI.sector_offset),
@@ -932,14 +931,13 @@ __global__ void forwardConvolutionKernel22D(CufftType* data,
       // set the boundaries of final dataset for gpuNUFFT this point
       ix = (data_point.x + 0.5f) * (GI.gridDims.x) - center.x + GI.sector_offset;
       set_minmax(&ix, &imin, &imax, GI.sector_pad_max, GI.kernel_radius);
-      jy = (data_point.y + 0.5f) * (GI.gridDims.x) - center.y + GI.sector_offset;
+      jy = (data_point.y + 0.5f) * (GI.gridDims.y) - center.y + GI.sector_offset;
       set_minmax(&jy, &jmin, &jmax, GI.sector_pad_max, GI.kernel_radius);
 
       // convolve neighboring cartesian points to this data point
       j=jmin;
       while (j<=jmax && j>=jmin)
       {
-        jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;   //(j - center_y) *width_inv;
         jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.y)) - 0.5f;   //(j - center_y) *width_inv;
         dy_sqr = (jy - data_point.y)*GI.aniso_y_scale;
         dy_sqr *= dy_sqr;

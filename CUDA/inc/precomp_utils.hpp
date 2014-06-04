@@ -56,32 +56,32 @@ __inline__ __device__ __host__ IndType2 computeSectorMapping(DType2 coord, gpuNU
 
 __inline__ __device__ __host__ int computeXYZ2Lin(int x, int y, int z, gpuNUFFT::Dimensions dim)
 {
-  return x + (int)dim.height * (y + (int)dim.width * z);
+  return x + (int)dim.width * (y + (int)dim.height * z);
 }
 
 __inline__ __device__ __host__ int computeXYZ2Lin(int x, int y, int z, IndType3 dim)
 {
-  return x + (int)dim.y * (y + (int)dim.x * z);
+  return x + (int)dim.x * (y + (int)dim.y * z);
 }
 
 __inline__ __device__ __host__ int computeXY2Lin(int x, int y, gpuNUFFT::Dimensions dim)
 {
-  return x + (int)dim.height * y;
+  return x + (int)dim.width * y;
 }
 
 __inline__ __device__ __host__ int computeXY2Lin(int x, int y, IndType3 dim)
 {
-  return x + (int)dim.y * y;
+  return x + (int)dim.x * y;
 }
 
 __inline__ __device__ __host__ int computeInd32Lin(IndType3 sector, gpuNUFFT::Dimensions dim)
 {
-  return (int)(sector.x + dim.height * (sector.y + dim.width * sector.z));
+  return (int)(sector.x + dim.width * (sector.y + dim.height * sector.z));
 }
 
 __inline__ __device__ __host__ int computeInd22Lin(IndType2 sector, gpuNUFFT::Dimensions dim)
 {
-  return (int)(sector.x + dim.height * sector.y);
+  return (int)(sector.x + dim.width * sector.y);
 }
 
 #endif

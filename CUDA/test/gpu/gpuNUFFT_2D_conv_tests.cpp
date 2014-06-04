@@ -893,3 +893,74 @@ TEST(Test2DGPUGpuNUFFTConv,MatlabTest_8SK3w32)
 
 	delete gpuNUFFTOp;
 }
+
+TEST(Test2DGpuNUFFTConv,Test_256x128)
+{
+	//oversampling ratio
+	float osr = DEFAULT_OVERSAMPLING_RATIO;
+	//kernel width
+	int kernel_width = 3;
+
+	//Data
+	int data_entries = 1;
+  DType2* data = (DType2*) calloc(data_entries,sizeof(DType2)); //2* re + im
+	int data_cnt = 0;
+	
+	data[data_cnt].x = 1.0f;
+	data[data_cnt++].y = 0.5f;
+
+	//Coords
+	//Scaled between -0.5 and 0.5
+	//in triplets (x,y,z)
+  DType* coords = (DType*) calloc(2*data_entries,sizeof(DType));//2* x,y
+	int coord_cnt = 0;
+
+	coords[coord_cnt++] = 0.0f;
+	coords[coord_cnt++] = 0.0f;
+	
+	//sectors of data, count and start indices
+	int sector_width = 8;
+	
+	gpuNUFFT::Array<DType> kSpaceData;
+  kSpaceData.data = coords;
+  kSpaceData.dim.length = data_entries;
+
+	gpuNUFFT::Dimensions imgDims(256,128);
+
+  gpuNUFFT::GpuNUFFTOperatorFactory factory; 
+  gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
+
+	gpuNUFFT::Array<DType2> dataArray;
+	dataArray.data = data;
+	dataArray.dim.length = data_entries;
+
+	gpuNUFFT::Array<CufftType> gdataArray;
+	
+	gdataArray = gpuNUFFTOp->performGpuNUFFTAdj(dataArray,gpuNUFFT::CONVOLUTION);
+	//Output Grid
+	CufftType* gdata = gdataArray.data;
+
+  if (DEBUG)
+  {
+	  for (int j=imgDims.height/2-10; j<imgDims.height/2+10; j++)
+	  {
+		  for (int i=imgDims.width/2-10; i<imgDims.width/2+10; i++)
+		  {
+        float dpr = gdata[computeXY2Lin(i,imgDims.height-1-j,imgDims)].x;
+			  float dpi = gdata[computeXY2Lin(i,imgDims.height-1-j,imgDims)].y;
+      
+        printf("%.1f+%.1fi ",dpr,dpi);
+		  }
+		  printf("\n");
+	  }
+  }
+  EXPECT_NEAR(1.0f,gdata[computeXY2Lin(imgDims.width/2,imgDims.height/2,imgDims)].x,epsilon);
+  EXPECT_NEAR(0.5f,gdata[computeXY2Lin(imgDims.width/2,imgDims.height/2,imgDims)].y,epsilon);
+  EXPECT_NEAR(0.45f,gdata[computeXY2Lin(imgDims.width/2-1,imgDims.height/2,imgDims)].x,epsilon);
+
+  free(data);
+	free(coords);
+	free(gdata);
+
+	delete gpuNUFFTOp;
+}

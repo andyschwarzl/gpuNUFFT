@@ -1013,7 +1013,7 @@ __device__ void forwardConvolutionFunction2(int* sec, int sec_max, int sec_offse
     // set the boundaries of final dataset for gpuNUFFT this point
     ix = (data_point.x + 0.5f) * (GI.gridDims.x) - center.x + GI.sector_offset;
     set_minmax(&ix, &imin, &imax, GI.sector_pad_max, GI.kernel_radius);
-    jy = (data_point.y + 0.5f) * (GI.gridDims.x) - center.y + GI.sector_offset;
+    jy = (data_point.y + 0.5f) * (GI.gridDims.y) - center.y + GI.sector_offset;
     set_minmax(&jy, &jmin, &jmax, GI.sector_pad_max, GI.kernel_radius);
     kz = (data_point.z + 0.5f) * (GI.gridDims.z) - center.z + GI.sector_offset;
     set_minmax(&kz, &kmin, &kmax, GI.sector_pad_max, GI.kernel_radius);
@@ -1281,7 +1281,7 @@ __device__ void forwardConvolutionFunction2D(int* sec, int sec_max, int sec_offs
     // set the boundaries of final dataset for gpuNUFFT this point
     ix = (data_point.x + 0.5f) * (GI.gridDims.x) - center.x + GI.sector_offset;
     set_minmax(&ix, &imin, &imax, GI.sector_pad_max, GI.kernel_radius);
-    jy = (data_point.y + 0.5f) * (GI.gridDims.x) - center.y + GI.sector_offset;
+    jy = (data_point.y + 0.5f) * (GI.gridDims.y) - center.y + GI.sector_offset;
     set_minmax(&jy, &jmin, &jmax, GI.sector_pad_max, GI.kernel_radius);
 
     // convolve neighboring cartesian points to this data point

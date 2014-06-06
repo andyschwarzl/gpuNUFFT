@@ -500,7 +500,7 @@ __global__ void forwardDeapodizationKernel(DType2* imdata, DType beta, DType nor
   DType deapo;
   while (t < N) 
   { 
-    getCoordsFromIndex(t, &x, &y, &z, GI.imgDims.x);
+    getCoordsFromIndex(t, &x, &y, &z, GI.imgDims.x,GI.imgDims.y,GI.imgDims.z);
 
     deapo = calculateDeapodizationAt(x,y,z,GI.im_width_offset,GI.grid_width_inv,GI.kernel_width,beta,norm_val);
     //check if deapodization value is valid number

@@ -70,7 +70,7 @@ __device__ void convolutionFunction(DType2* sdata, int sec, int sec_cnt, int sec
             if (j<=jmax && j>=jmin)
             {
               jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.y)) - 0.5f;
-              dy_sqr = jy - data_point.y;
+              dy_sqr = (jy - data_point.y)*GI.aniso_y_scale;
               dy_sqr *= dy_sqr;
               if (dy_sqr < GI.radiusSquared)	
               {
@@ -79,7 +79,7 @@ __device__ void convolutionFunction(DType2* sdata, int sec, int sec_cnt, int sec
                 if (i<=imax && i>=imin)
                 {
                   ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;
-                  dx_sqr = ix - data_point.x;
+                  dx_sqr = (ix - data_point.x)*GI.aniso_x_scale;
                   dx_sqr *= dx_sqr;
                   if (dx_sqr < GI.radiusSquared)	
                   {
@@ -565,7 +565,7 @@ __global__ void forwardConvolutionKernel(CufftType* data,
       // set the boundaries of final dataset for gpuNUFFT this point
       ix = (data_point.x + 0.5f) * (GI.gridDims.x) - center.x + GI.sector_offset;
       set_minmax(&ix, &imin, &imax, GI.sector_pad_max, GI.kernel_radius);
-      jy = (data_point.y + 0.5f) * (GI.gridDims.x) - center.y + GI.sector_offset;
+      jy = (data_point.y + 0.5f) * (GI.gridDims.y) - center.y + GI.sector_offset;
       set_minmax(&jy, &jmin, &jmax, GI.sector_pad_max, GI.kernel_radius);
       kz = (data_point.z + 0.5f) * (GI.gridDims.z) - center.z + GI.sector_offset;
       set_minmax(&kz, &kmin, &kmax, GI.sector_pad_max, GI.kernel_radius);
@@ -583,8 +583,8 @@ __global__ void forwardConvolutionKernel(CufftType* data,
           j=jmin;
           while (j<=jmax && j>=jmin)
           {
-            jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;   //(j - center_y) *width_inv;
-            dy_sqr = jy - data_point.y;
+            jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.y)) - 0.5f;   //(j - center_y) *width_inv;
+            dy_sqr = (jy - data_point.y)*GI.aniso_y_scale;
             dy_sqr *= dy_sqr;
             if (dy_sqr < GI.radiusSquared)	
             {
@@ -592,7 +592,7 @@ __global__ void forwardConvolutionKernel(CufftType* data,
               while (i<=imax && i>=imin)
               {
                 ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;// (i - center_x) *width_inv;
-                dx_sqr = ix - data_point.x;
+                dx_sqr = (ix - data_point.x)*GI.aniso_x_scale;
                 dx_sqr *= dx_sqr;
                 if (dx_sqr < GI.radiusSquared)	
                 {
@@ -714,7 +714,7 @@ __global__ void forwardConvolutionKernel2(CufftType* data,
       k = kmin;
       while (k<=kmax && k>=kmin)
       {
-        kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.gridDims.z)) - 0.5f;//(k - center_z) *width_inv;
+        kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.gridDims.z)) - 0.5f;
         dz_sqr = (kz - data_point.z)*GI.aniso_z_scale;
         dz_sqr *= dz_sqr;
 
@@ -723,16 +723,16 @@ __global__ void forwardConvolutionKernel2(CufftType* data,
           j=jmin;
           while (j<=jmax && j>=jmin)
           {
-            jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;   //(j - center_y) *width_inv;
-            dy_sqr = jy - data_point.y;
+            jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.y)) - 0.5f;
+            dy_sqr = (jy - data_point.y)*GI.aniso_y_scale;
             dy_sqr *= dy_sqr;
             if (dy_sqr < GI.radiusSquared)	
             {
               i=imin;								
               while (i<=imax && i>=imin)
               {
-                ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;// (i - center_x) *width_inv;
-                dx_sqr = ix - data_point.x;
+                ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;
+                dx_sqr = (ix - data_point.x)*GI.aniso_x_scale;
                 dx_sqr *= dx_sqr;
                 if (dx_sqr < GI.radiusSquared)	
                 {

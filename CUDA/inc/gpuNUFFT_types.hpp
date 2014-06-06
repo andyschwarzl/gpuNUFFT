@@ -154,7 +154,9 @@ namespace gpuNUFFT
     int sector_pad_width;
     int sector_pad_max;
     int sector_offset;
-    DType aniso_z_shift;
+
+    DType aniso_x_scale;
+    DType aniso_y_scale;
     DType aniso_z_scale;
 
     DType radiusSquared;

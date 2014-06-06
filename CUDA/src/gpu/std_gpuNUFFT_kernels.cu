@@ -482,12 +482,12 @@ void performFFTShift(CufftType* gdata_d,
   if (gi_host->is2Dprocessing)
     grid_dim = dim3(getOptimalGridDim((long)(gridDims.width*t_width),THREAD_BLOCK_SIZE));
   else
-    grid_dim = dim3(getOptimalGridDim((long)(gridDims.width*gridDims.width),THREAD_BLOCK_SIZE));
+    grid_dim = dim3(getOptimalGridDim((long)(gridDims.width*gridDims.height),THREAD_BLOCK_SIZE));
 
   dim3 block_dim(THREAD_BLOCK_SIZE);
 
   if (gi_host->is2Dprocessing)
-    fftShiftKernel2D<<<grid_dim,block_dim>>>(gdata_d,offset,(int)gridDims.width*t_width);
+    fftShiftKernel2D<<<grid_dim,block_dim>>>(gdata_d,offset,(int)gridDims.height*t_width);
   else
     fftShiftKernel<<<grid_dim,block_dim>>>(gdata_d,offset,(int)gridDims.count()/2);
 }
@@ -500,7 +500,7 @@ __global__ void forwardDeapodizationKernel(DType2* imdata, DType beta, DType nor
   DType deapo;
   while (t < N) 
   { 
-    getCoordsFromIndex(t, &x, &y, &z, GI.imgDims.x);
+    getCoordsFromIndex(t, &x, &y, &z, GI.imgDims.x,GI.imgDims.y,GI.imgDims.z);
 
     deapo = calculateDeapodizationAt(x,y,z,GI.im_width_offset,GI.grid_width_inv,GI.kernel_width,beta,norm_val);
     //check if deapodization value is valid number

@@ -134,7 +134,7 @@ __inline__ __device__ __host__ void getCoordsFromIndex2D(int index, int* x, int*
 __inline__ __device__ __host__ void getCoordsFromIndex2D(int index, int* x, int* y,  int w_x, int w_y)
 {
   *x = index % w_x;
-  *y = (int)(index / w_y);        
+  *y = (int)(index / w_x);        
 }
 
 

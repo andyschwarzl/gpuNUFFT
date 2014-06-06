@@ -72,8 +72,11 @@ gpuNUFFT::GpuNUFFTInfo* gpuNUFFT::GpuNUFFTOperator::initGpuNUFFTInfo()
   gi_host->gridDims.z = this->getGridDims().depth;
   gi_host->gridDims_count = this->getGridDims().width*this->getGridDims().height*DEFAULT_VALUE(this->getGridDims().depth);//s.a.
 
+  //The largest value of the grid dimensions determines the kernel radius (resolution) in k-space units
+  int max_grid_dim = MAX(MAX(this->getGridDims().width,this->getGridDims().height),this->getGridDims().depth);
+
   double kernel_radius = static_cast<double>(this->kernelWidth) / 2.0;
-  double radius = kernel_radius / static_cast<double>(this->getGridDims().width);
+  double radius = kernel_radius / static_cast<double>(max_grid_dim);
 
   DType kernel_width_inv = (DType)1.0 / static_cast<DType>(this->kernelWidth);
 
@@ -102,10 +105,9 @@ gpuNUFFT::GpuNUFFTInfo* gpuNUFFT::GpuNUFFTOperator::initGpuNUFFTInfo()
   gi_host->sector_dim = sector_dim;
   gi_host->sector_offset = sector_offset;
 
-  gi_host->aniso_z_scale = ((DType)this->getGridDims().depth/(DType)this->getGridDims().width);
-
-  double sectorKdim = 1.0 / gridSectorDims.width;
-  gi_host->aniso_z_shift = (DType)(((gridSectorDims.width-gridSectorDims.depth)/2.0)*sectorKdim);
+  gi_host->aniso_x_scale = ((DType)this->getGridDims().width/(DType)max_grid_dim);
+  gi_host->aniso_y_scale = ((DType)this->getGridDims().height/(DType)max_grid_dim);
+  gi_host->aniso_z_scale = ((DType)this->getGridDims().depth/(DType)max_grid_dim);
 
   gi_host->radiusSquared = (DType)radiusSquared;
   gi_host->radiusSquared_inv = (DType)kernelRadius_invSqr;

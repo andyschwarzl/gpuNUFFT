@@ -10,17 +10,17 @@ addpath(genpath('../../../fessler/NUFFT'));
 %% Load data
 load sl2d
 
-verbose = false;
+verbose = true;
 
 %% generate Fourier sampling operator
 osf =2;
 wg = 3;
 sw = 8;
-imwidth = imgDim(1);
-%%
+imgDim = [256,96];
+%
 disp('init gpu op');
 tic
-FT = gpuNUFFT(k_traj',dens,osf,wg,sw,imgDim,[],true,true,true);
+FT = gpuNUFFT(k_traj',dens,osf,wg,sw,imgDim,[],false,false,false);%,[],true,true,true);
 toc
 disp('init cpu op');
 tic
@@ -37,7 +37,7 @@ disp('GPU adj')
 tic
 imgRecon2 = FT'*data_recon;
 toc
-
+%%
 disp('CPU...');
 imgReconCPU = FTCPU'*dataRadial(:);
 disp('CPU fw')

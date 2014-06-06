@@ -62,13 +62,13 @@ __device__ void textureConvolutionFunction(int* sec, int sec_max, int sec_offset
       while (j<=jmax && j>=jmin)
       {
         jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.y)) - 0.5f;   //(j - center_y) *width_inv;
-        dy_sqr = jy - data_point.y;
+        dy_sqr = (jy - data_point.y) * GI.aniso_y_scale;
         dy_sqr *= dy_sqr;
         i= imin;						
         while (i<=imax && i>=imin)
         {
           ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;// (i - center_x) *width_inv;
-          dx_sqr = ix - data_point.x;
+          dx_sqr = (ix - data_point.x)*GI.aniso_x_scale;
           dx_sqr *= dx_sqr;
           //get kernel value
           val = computeTextureLookup(dx_sqr*GI.radiusSquared_inv,dy_sqr*GI.radiusSquared_inv,dz_sqr*GI.radiusSquared_inv);
@@ -77,8 +77,6 @@ __device__ void textureConvolutionFunction(int* sec, int sec_max, int sec_offset
 
           // multiply data by current kernel val 
           // grid complex or scalar 
-          //atomicAdd(&(sdata[ind].x),val * data[data_cnt].x);
-          //atomicAdd(&(sdata[ind].y),val * data[data_cnt].y);
           atomicAdd(&(sdata[ind].x),val * tex1Dfetch(texDATA,data_cnt).x);
           atomicAdd(&(sdata[ind].y),val * tex1Dfetch(texDATA,data_cnt).y);
           i++;
@@ -231,13 +229,13 @@ __device__ void textureConvolutionFunction2D(DType2* sdata,int* sec, int sec_max
     while (j<=jmax && j>=jmin)
     {
       jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.y)) - 0.5f;   //(j - center_y) *width_inv;
-      dy_sqr = jy - data_point.y;
+      dy_sqr = (jy - data_point.y) * GI.aniso_y_scale;
       dy_sqr *= dy_sqr;
       i= imin;						
       while (i<=imax && i>=imin)
       {
         ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;// (i - center_x) *width_inv;
-        dx_sqr = ix - data_point.x;
+        dx_sqr = (ix - data_point.x)*GI.aniso_x_scale;
         dx_sqr *= dx_sqr;
         //get kernel value
         //Calculate Separable Filters 
@@ -246,9 +244,7 @@ __device__ void textureConvolutionFunction2D(DType2* sdata,int* sec, int sec_max
         ind = getIndex2D(i,j,GI.sector_pad_width);
 
         // multiply data by current kernel val 
-        // grid complex or scalar 
-        //atomicAdd(&(sdata[ind].x),val * data[data_cnt].x);
-        //atomicAdd(&(sdata[ind].y),val * data[data_cnt].y);
+        // grid complex or scalar
         atomicAdd(&(sdata[ind].x),val * tex1Dfetch(texDATA,data_cnt).x);
         atomicAdd(&(sdata[ind].y),val * tex1Dfetch(texDATA,data_cnt).y);
         i++;
@@ -467,7 +463,7 @@ __device__ void textureForwardConvolutionFunction(int* sec, int sec_max, int sec
     // set the boundaries of final dataset for gpuNUFFT this point
     ix = (data_point.x + 0.5f) * (GI.gridDims.x) - center.x + GI.sector_offset;
     set_minmax(&ix, &imin, &imax, GI.sector_pad_max, GI.kernel_radius);
-    jy = (data_point.y + 0.5f) * (GI.gridDims.x) - center.y + GI.sector_offset;
+    jy = (data_point.y + 0.5f) * (GI.gridDims.y) - center.y + GI.sector_offset;
     set_minmax(&jy, &jmin, &jmax, GI.sector_pad_max, GI.kernel_radius);
     kz = (data_point.z + 0.5f) * (GI.gridDims.z) - center.z + GI.sector_offset;
     set_minmax(&kz, &kmin, &kmax, GI.sector_pad_max, GI.kernel_radius);
@@ -483,14 +479,14 @@ __device__ void textureForwardConvolutionFunction(int* sec, int sec_max, int sec
       j=jmin;
       while (j<=jmax && j>=jmin)
       {
-        jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;
-        dy_sqr = jy - data_point.y;
+        jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.y)) - 0.5f;
+        dy_sqr = (jy - data_point.y) * GI.aniso_y_scale;
         dy_sqr *= dy_sqr;
         i=imin;								
         while (i<=imax && i>=imin)
         {
           ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;
-          dx_sqr = ix - data_point.x;
+          dx_sqr = (ix - data_point.x)*GI.aniso_x_scale;
           dx_sqr *= dx_sqr;
           
           // get kernel value
@@ -627,21 +623,21 @@ __device__ void textureForwardConvolutionFunction2D(int* sec, int sec_max, int s
     // set the boundaries of final dataset for gpuNUFFT this point
     ix = (data_point.x + 0.5f) * (GI.gridDims.x) - center.x + GI.sector_offset;
     set_minmax(&ix, &imin, &imax, GI.sector_pad_max, GI.kernel_radius);
-    jy = (data_point.y + 0.5f) * (GI.gridDims.x) - center.y + GI.sector_offset;
+    jy = (data_point.y + 0.5f) * (GI.gridDims.y) - center.y + GI.sector_offset;
     set_minmax(&jy, &jmin, &jmax, GI.sector_pad_max, GI.kernel_radius);
 
     // convolve neighboring cartesian points to this data point
     j=jmin;
     while (j<=jmax && j>=jmin)
     {
-      jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;   //(j - center_y) *width_inv;
-      dy_sqr = jy - data_point.y;
+      jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.y)) - 0.5f;   //(j - center_y) *width_inv;
+      dy_sqr = (jy - data_point.y) * GI.aniso_y_scale;
       dy_sqr *= dy_sqr;
       i=imin;								
       while (i<=imax && i>=imin)
       {
         ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;// (i - center_x) *width_inv;
-        dx_sqr = ix - data_point.x;
+        dx_sqr = (ix - data_point.x)*GI.aniso_x_scale;
         dx_sqr *= dx_sqr;
         // get kernel value
         // calc as separable filter

@@ -1,4 +1,4 @@
-function  u = cg_sense_3d(data,F,FH,c,mask,alpha,tol,maxit,display,slice)
+function  u = cg_sense_3d(data,F,FH,c,mask,alpha,tol,maxit,display,slice,useMulticoil)
 % 
 % [u] = cg_sense(data,F,Fh,c,mask,alpha,maxit,display)
 % reconstruct subsampled PMRI data using CG SENSE [1]
@@ -26,7 +26,9 @@ function  u = cg_sense_3d(data,F,FH,c,mask,alpha,tol,maxit,display,slice)
 % Magn Reson Med 46: 638-651 (2001)
 % 
 % =========================================================================
-
+if nargin < 11
+  useMulticoil = false;
+end
 %% set up parameters and operators
 [nx,ny,nz] = size(FH(data(:,:,1,1)));
 nc = size(c,4);
@@ -44,7 +46,7 @@ for ii = 1:nc
 end
 
 % system matrix: F'^T*F' + alpha I
-M  = @(x) applyM(F,FH,c,cbar,x) + alpha*x;
+M  = @(x) applyM(F,FH,c,cbar,x,useMulticoil) + alpha*x;
 
 %% CG iterations
 if matlabCG
@@ -84,13 +86,17 @@ u  = reshape(x,nx,ny,nz);
 % end main function
 
 %% Derivative evaluation
-function y = applyM(F,FH,c,cconj,x)
+function y = applyM(F,FH,c,cconj,x,useMulticoil)
 [nx,ny,nz,nc] = size(c);
 dx = reshape(x,nx,ny,nz);
 
 y  = zeros(nx,ny,nz);
-for ii = 1:nc
-    y = y + cconj(:,:,:,ii).*FH(F(c(:,:,:,ii).*dx));
+if useMulticoil
+  y = sum(FH(F(repmat(dx,[1 1 1 nc]))),4);
+else
+  for ii = 1:nc
+      y = y + cconj(:,:,:,ii).*FH(F(c(:,:,:,ii).*dx));
+  end
 end
 y = y(:);
 % end function applyM

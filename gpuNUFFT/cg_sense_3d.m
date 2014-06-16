@@ -30,10 +30,10 @@ if nargin < 11
   useMulticoil = false;
 end
 %% set up parameters and operators
-[nx,ny,nz] = size(FH(data(:,:,1,1)));
-nc = size(c,4);
+%[nx,ny,nz] = size(FH(data(:,:,1,1)));
+[nx,ny,nz,nc] = size(c);
 
-matlabCG = 0;
+matlabCG = 1;
 
 %% Solve using CG method
 % precompute complex conjugates
@@ -41,8 +41,12 @@ cbar = conj(c);
 
 % right hand side: -K^*residual 
 y  = zeros(nx,ny,nz);
+if useMulticoil
+    y = sum(FH(data),4);
+else
 for ii = 1:nc
     y = y + FH(data(:,:,ii)).*cbar(:,:,:,ii);
+end
 end
 
 % system matrix: F'^T*F' + alpha I

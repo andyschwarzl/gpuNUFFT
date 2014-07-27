@@ -328,7 +328,7 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(gpuNUFFT::Array<DType2> kspa
 
   if (DEBUG)
     printf("allocate and copy imdata of size %d...\n",imdata_count);
-  allocateAndCopyToDeviceMem<CufftType>(&imdata_d,imgData.data,imdata_count);//Konvention!!!
+  allocateDeviceMem<CufftType>(&imdata_d,imdata_count);//Konvention!!!
 
   initDeviceMemory(n_coils);
   int err;

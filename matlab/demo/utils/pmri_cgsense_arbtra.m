@@ -26,8 +26,7 @@ if (nargin < 8)
 end
 
 %% set up parameters and operators
-[nx,ny] = size(FT'*data(:,1));
-nc      = size(c,3);
+[nx,ny,nc] = size(c);
 
 % sampling operator
 F  = @(x) FT*x;

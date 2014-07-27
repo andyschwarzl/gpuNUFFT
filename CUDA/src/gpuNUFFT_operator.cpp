@@ -324,11 +324,18 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(gpuNUFFT::Array<DType2> kspa
     printf("allocate data of size %d...\n",data_count);
   allocateDeviceMem<DType2>(&data_d,data_count);
 
-  CufftType *imdata_d;
+  CufftType *imdata_d, *imdata_sum_d = NULL;
 
   if (DEBUG)
     printf("allocate and copy imdata of size %d...\n",imdata_count);
-  allocateDeviceMem<CufftType>(&imdata_d,imdata_count);//Konvention!!!
+  allocateDeviceMem<CufftType>(&imdata_d,imdata_count);
+
+  if (this->applySensData())
+  {
+    if (DEBUG)
+      printf("allocate and copy temp imdata of size %d...\n",imdata_count);
+    allocateDeviceMem<CufftType>(&imdata_sum_d,imdata_count);
+  }
 
   initDeviceMemory(n_coils);
   int err;
@@ -373,7 +380,7 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(gpuNUFFT::Array<DType2> kspa
         printf("test value at point zero: %f\n",(imgData.data)[0].x);
 
       free(gi_host);
-      freeTotalDeviceMemory(data_d,imdata_d,NULL);
+      freeTotalDeviceMemory(data_d,imdata_d,imdata_sum_d,NULL);
       freeDeviceMemory(n_coils);
       return;
     }
@@ -403,7 +410,7 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(gpuNUFFT::Array<DType2> kspa
 
       free(gi_host);
       
-      freeTotalDeviceMemory(data_d,imdata_d,NULL);
+      freeTotalDeviceMemory(data_d,imdata_d,imdata_sum_d,NULL);
       freeDeviceMemory(n_coils);
       
       printf("last cuda error: %s\n", cudaGetErrorString(cudaGetLastError()));
@@ -438,18 +445,30 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(gpuNUFFT::Array<DType2> kspa
     {
       copyToDevice(this->sens.data + im_coil_offset, sens_d,imdata_count);
       performSensMul(imdata_d,sens_d,gi_host,true);
+      //TODO perform coil summation 
+      performSensSum(imdata_d,imdata_sum_d,gi_host);
+    }
+    else
+    {
+      // get result per coil
+      // no summation is performed in absence of sensitity data
+      copyFromDevice<CufftType>(imdata_d,imgData.data+im_coil_offset,imdata_count);
     }
 
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       printf("error: at adj  thread synchronization 10: %s\n",cudaGetErrorString(cudaGetLastError()));
-
-    //get result
-    copyFromDevice<CufftType>(imdata_d,imgData.data+im_coil_offset,imdata_count);
   }//iterate over coils
+  
+  if (this->applySensData())
+  {
+    // get result of combined coils
+    copyFromDevice<CufftType>(imdata_sum_d,imgData.data,imdata_count);
+  }
+
   if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
     printf("error: at adj  thread synchronization 11: %s\n",cudaGetErrorString(cudaGetLastError()));
   
-  freeTotalDeviceMemory(data_d,imdata_d,NULL);
+  freeTotalDeviceMemory(data_d,imdata_d,imdata_sum_d,NULL);
   freeDeviceMemory(n_coils);
   if ((cudaThreadSynchronize() != cudaSuccess))
     fprintf(stderr,"error in gpuNUFFT_gpu_adj function: %s\n",cudaGetErrorString(cudaGetLastError()));
@@ -470,7 +489,9 @@ gpuNUFFT::Array<CufftType> gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(gpuNUF
   else
   {
     imgData.dim = this->getImageDims();
-    imgData.dim.channels = kspaceData.dim.channels;
+    // if sens data is present a summation over all coils is performed automatically
+    // thus the output only contains one channel
+    imgData.dim.channels = this->applySensData() ? 1 : kspaceData.dim.channels;
     imgData.data = (CufftType*)calloc(imgData.count(),sizeof(CufftType));
   }
   performGpuNUFFTAdj(kspaceData,imgData,gpuNUFFTOut);

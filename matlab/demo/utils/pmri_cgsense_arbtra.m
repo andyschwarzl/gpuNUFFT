@@ -78,7 +78,10 @@ function y = applyM(F,FH,c,cconj,x,useGPU)
 dx = reshape(x,nx,ny);
 y  = zeros(nx,ny);
 if (useGPU)
-   y = sum(FH(F(repmat(dx,[1,1,nc]))),3);
+   %mytemp = FH(F(repmat(dx,[1,1,nc]))); 
+   % full forward/adjoint operator implemented
+   mytemp = F(dx);
+   y = FH(F(dx));
 else
     for i = 1:nc
         y = y + cconj(:,:,i).*FH(F(c(:,:,i).*dx));

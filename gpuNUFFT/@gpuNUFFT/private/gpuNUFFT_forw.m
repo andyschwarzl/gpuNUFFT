@@ -33,10 +33,14 @@ end
 % warning if only single channel data is passed
 % do not pass sens data in this case
 sens = a.sens;
-if a.sensChn ~= 0 && ...
-   a.sensChn ~= nChn
-    warning('gpuNUFFT:forw:sens',['Image data dimensions (', num2str(size(bb)), ') do not fit sense data dimensions (', num2str(size(a.sens)), '). Sens data will not be applied. Please pass image data in correct dimensions.']);
-   sens = [];
+%if a.sensChn ~= 0 && ...
+%   a.sensChn ~= nChn
+%    warning('gpuNUFFT:forw:sens',['Image data dimensions (', num2str(size(bb)), ') do not fit sense data dimensions (', num2str(size(a.sens)), '). Sens data will not be applied. Please pass image data in correct dimensions.']);
+%   sens = [];
+%end
+%TODO
+if a.sensChn ~= 0 
+    nChn = a.sensChn;
 end
 
 if a.atomic == true
@@ -46,7 +50,7 @@ else
 end
 
 if a.verbose
-    disp(['returned data dimensions:' num2str(size(ress))]);
+    disp(['returned data dimensions:' num2str(size(m))]);
 end
 
 if (nChn > 1)

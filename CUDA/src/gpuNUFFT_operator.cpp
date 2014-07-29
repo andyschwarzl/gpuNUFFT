@@ -575,9 +575,16 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(gpuNUFFT::Array<DType2> 
   for (int coil_it = 0; coil_it < n_coils; coil_it++)
   {
     int data_coil_offset = coil_it * data_count;
-    int im_coil_offset = coil_it * (int)imdata_count;//gi_host->width_dim;
-    //reset temp array
-    copyToDevice(imgData.data + im_coil_offset,imdata_d,imdata_count);
+    int im_coil_offset = coil_it * (int)imdata_count;
+
+    if (this->applySensData())
+      // perform automatically "repeating" of input image in case
+      // of existing sensitivity data
+      copyToDevice(imgData.data,imdata_d,imdata_count);
+    else
+      copyToDevice(imgData.data + im_coil_offset,imdata_d,imdata_count);
+
+    //reset temp arrays
     cudaMemset(gdata_d,0, sizeof(CufftType)*gi_host->grid_width_dim);
     cudaMemset(data_d,0, sizeof(CufftType)*data_count);
 
@@ -662,6 +669,7 @@ gpuNUFFT::Array<CufftType> gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(Ar
   gpuNUFFT::Array<CufftType> kspaceData;
   kspaceData.data = (CufftType*)calloc(this->kSpaceTraj.count()*imgData.dim.channels,sizeof(CufftType));
   kspaceData.dim = this->kSpaceTraj.dim;
+  //TODO adapt size of channels depending on sens data
   kspaceData.dim.channels = imgData.dim.channels;
 
   performForwardGpuNUFFT(imgData,kspaceData,gpuNUFFTOut);

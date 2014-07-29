@@ -78,7 +78,10 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     mexPrintf("1st sector center: [%d,%d]\n", sectorCentersArray.data[0],sectorCentersArray.data[1]);
 
 	//Sens array - same dimension as image data
-	gpuNUFFT::Array<DType2>  sensArray = readAndCreateArray<DType2>(prhs,pcount++,0,"sens-data");
+  DType2 *sensData = NULL;
+  int n_coils_sens, sens_count;
+	//gpuNUFFT::Array<DType2>  sensArray = readAndCreateArray<DType2>(prhs,pcount++,0,"sens-data");
+  readMatlabInputArray<DType2>(prhs, pcount++, 2,"sens-data",&sensData, &sens_count,3,&n_coils_sens);
 
 	//Parameters
   const mxArray *matParams = prhs[pcount++];
@@ -94,18 +97,26 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
   bool use_textures = getParamField<bool>(matParams,"use_textures");
 	bool balance_workload = getParamField<bool>(matParams,"balance_workload");
 
+  //Input image data
 	gpuNUFFT::Array<DType2> imdataArray;
 	imdataArray.data = imdata;
 	imdataArray.dim = imgDims;
 	imdataArray.dim.channels = n_coils;
 
+  //Complete Sens data
+  gpuNUFFT::Array<DType2>  sensArray;
+  sensArray.data = sensData;
+  sensArray.dim = imgDims;
+  sensArray.dim.channels = n_coils_sens;
+		
 	if (MATLAB_DEBUG)
 	{
 		mexPrintf("data indices count: %d\n",dataIndicesArray.count());
 		mexPrintf("coords count: %d\n",kSpaceTraj.count());
 		mexPrintf("sector data count: %d\n",sectorDataCountArray.count());
 		mexPrintf("centers count: %d\n",sectorCentersArray.count());
-
+    mexPrintf("sens coils: %d, img coils: %d\n",n_coils_sens,n_coils);
+    
 		mexPrintf("passed Params, IM_WIDTH: [%d,%d,%d], IM_COUNT: %d, OSR: %f, KERNEL_WIDTH: %d, SECTOR_WIDTH: %d, DATA_ENTRIES: %d, n_coils: %d, use textures: %d\n",imgDims.width,imgDims.height,imgDims.depth,im_count,osr,kernel_width,sector_width,data_entries,n_coils,use_textures);
 		size_t free_mem = 0;
 		size_t total_mem = 0;
@@ -113,13 +124,14 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 		mexPrintf("memory usage on device, free: %lu total: %lu\n",free_mem,total_mem);
 	}
    
-	//Output Image
+	//Output: k-space data
+  //multiple channels ico sense
 	CufftType* data;
 	const mwSize n_dims = 3;//2 * data_cnt * ncoils, 2 -> Re + Im
 	mwSize dims_data[n_dims];
 	dims_data[0] =(mwSize)2; // complex 
 	dims_data[1] = (mwSize)data_entries;
-	dims_data[2] = (mwSize)n_coils;
+	dims_data[2] = (mwSize)MAX(n_coils_sens,n_coils);
 
 	plhs[0] = mxCreateNumericArray(n_dims,dims_data,mxSINGLE_CLASS,mxREAL);
 	
@@ -130,7 +142,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	gpuNUFFT::Array<CufftType> dataArray;
 	dataArray.data = data;
 	dataArray.dim.length = data_entries;
-	dataArray.dim.channels = n_coils;
+	dataArray.dim.channels = MAX(n_coils_sens,n_coils);
 
 	try
 	{

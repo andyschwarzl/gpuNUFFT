@@ -101,6 +101,7 @@ if ~isempty(sens)
 			res.op.sensChn = size(sens,4);
 	end
 	res.op.sens = [real(sens(:))'; imag(sens(:))'];
+    res.op.sens = reshape(res.op.sens,[2 imageDim(1)*imageDim(2)*max(1,imageDim(3)) res.op.sensChn]);
 else
 	res.op.sens = sens;
 	res.op.sensChn = 0;

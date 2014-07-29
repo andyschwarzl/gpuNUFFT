@@ -445,7 +445,6 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(gpuNUFFT::Array<DType2> kspa
     {
       copyToDevice(this->sens.data + im_coil_offset, sens_d,imdata_count);
       performSensMul(imdata_d,sens_d,gi_host,true);
-      //TODO perform coil summation 
       performSensSum(imdata_d,imdata_sum_d,gi_host);
     }
     else

@@ -85,7 +85,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	// Sens array	- same dimension as image data
   DType2 *sensData = NULL;
   int n_coils_sens, sens_count;
-  readMatlabInputArray<DType2>(prhs, pcount++, 2,"sens-data",&sensData, &sens_count,3,&n_coils_sens);
+  readMatlabInputArray<DType2>(prhs, pcount++, 0,"sens-data",&sensData, &sens_count,3,&n_coils_sens);
 
 	//Parameters
   const mxArray *matParams = prhs[pcount++];

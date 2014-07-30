@@ -51,8 +51,7 @@ cbar = conj(c);
 y  = zeros(nx,ny);
 
 if (useGPU)
-    rhs = FH(data);
-    y = sum(rhs,3);
+    y = FH(data);
 else
     for i = 1:nc
         y = y + FH(data(:,i)).*cbar(:,:,i);
@@ -78,9 +77,8 @@ function y = applyM(F,FH,c,cconj,x,useGPU)
 dx = reshape(x,nx,ny);
 y  = zeros(nx,ny);
 if (useGPU)
-   %mytemp = FH(F(repmat(dx,[1,1,nc]))); 
    % full forward/adjoint operator implemented
-   mytemp = F(dx);
+   % coil sensitivities are automatically applied
    y = FH(F(dx));
 else
     for i = 1:nc

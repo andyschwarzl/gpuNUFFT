@@ -335,6 +335,7 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(gpuNUFFT::Array<DType2> kspa
     if (DEBUG)
       printf("allocate and copy temp imdata of size %d...\n",imdata_count);
     allocateDeviceMem<CufftType>(&imdata_sum_d,imdata_count);
+    cudaMemset(imdata_sum_d,0,imdata_count*sizeof(CufftType));
   }
 
   initDeviceMemory(n_coils);

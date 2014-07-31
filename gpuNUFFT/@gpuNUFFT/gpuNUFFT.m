@@ -21,7 +21,13 @@ function [res] = gpuNUFFT(k,w,osf,wg,sw,imageDim,sens,varargin)
 %  A. Schwarzl, Graz University of Technology
 %  F. Knoll, NYU School of Medicine
 %
-atomic = true;
+t = gpuDevice;
+if eval(t.ComputeCapability) < 2.0
+    atomic = false;
+else
+    atomic = true;
+end
+
 use_textures = true;    
 balance_workload = true;
 
@@ -101,6 +107,7 @@ if ~isempty(sens)
 			res.op.sensChn = size(sens,4);
 	end
 	res.op.sens = [real(sens(:))'; imag(sens(:))'];
+    res.op.sens = reshape(res.op.sens,[2 imageDim(1)*imageDim(2)*max(1,imageDim(3)) res.op.sensChn]);
 else
 	res.op.sens = sens;
 	res.op.sensChn = 0;

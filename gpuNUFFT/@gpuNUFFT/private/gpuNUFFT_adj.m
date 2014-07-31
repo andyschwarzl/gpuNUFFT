@@ -17,7 +17,7 @@ nChn = size(bb,2);
 sens = a.sens;
 if a.sensChn ~= 0 && ...
    a.sensChn ~= nChn
-    warning('gpuNUFFT:adj:sens',['k-Space data dimensions (', num2str(size(bb)), ') do not fit sense data dimensions (', num2str(size(a.sens)), '). Sens data will not be applied after gpuNUFFT. Please pass k-space data in correct dimensions.']);
+    warning('gpuNUFFT:adj:sens',['Only single channel data passed? Channel count of k-space data (', num2str(nChn), ') does not fit sense data channel count (', num2str(a.sensChn), '). Sens data will not be applied automatically. Please pass k-space data in correct dimensions.']);
    sens = [];
 end
 

@@ -26,8 +26,7 @@ if (nargin < 8)
 end
 
 %% set up parameters and operators
-[nx,ny] = size(FT'*data(:,1));
-nc      = size(c,3);
+[nx,ny,nc] = size(c);
 
 % sampling operator
 F  = @(x) FT*x;
@@ -52,8 +51,7 @@ cbar = conj(c);
 y  = zeros(nx,ny);
 
 if (useGPU)
-    rhs = FH(data);
-    y = sum(rhs,3);
+    y = FH(data);
 else
     for i = 1:nc
         y = y + FH(data(:,i)).*cbar(:,:,i);
@@ -79,7 +77,9 @@ function y = applyM(F,FH,c,cconj,x,useGPU)
 dx = reshape(x,nx,ny);
 y  = zeros(nx,ny);
 if (useGPU)
-   y = sum(FH(F(repmat(dx,[1,1,nc]))),3);
+   % full forward/adjoint operator implemented
+   % coil sensitivities are automatically applied
+   y = FH(F(dx));
 else
     for i = 1:nc
         y = y + cconj(:,:,i).*FH(F(c(:,:,i).*dx));

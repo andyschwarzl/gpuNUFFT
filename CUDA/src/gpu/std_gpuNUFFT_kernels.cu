@@ -161,7 +161,7 @@ void performSensMul(CufftType* imdata_d,
   bool conjugate)
 {
   if (DEBUG)
-    printf("running deapodization with precomputed values\n");
+    printf("perform sensitivity multiplication \n");
 
   dim3 grid_dim(getOptimalGridDim(gi_host->im_width_dim,THREAD_BLOCK_SIZE));
   dim3 block_dim(THREAD_BLOCK_SIZE);
@@ -171,6 +171,31 @@ void performSensMul(CufftType* imdata_d,
     sensMulKernel<<<grid_dim,block_dim>>>(imdata_d,sens_d,gi_host->im_width_dim);
 }
 
+__global__ void sensSumKernel(CufftType* imdata, DType2* imdata_sum, int N)
+{
+  int t = threadIdx.x +  blockIdx.x *blockDim.x;
+
+  while (t < N) 
+  {
+    CufftType data_p = imdata[t]; 
+    imdata_sum[t].x += data_p.x; // Re
+    imdata_sum[t].y += data_p.y; // Im
+    t = t + blockDim.x*gridDim.x;
+  }
+}
+
+void performSensSum(CufftType* imdata_d,
+  CufftType* imdata_sum_d,
+  gpuNUFFT::GpuNUFFTInfo* gi_host)
+{
+  if (DEBUG)
+    printf("perform sens coil summation\n");
+
+  dim3 grid_dim(getOptimalGridDim(gi_host->im_width_dim,THREAD_BLOCK_SIZE));
+  dim3 block_dim(THREAD_BLOCK_SIZE);
+  
+  sensSumKernel<<<grid_dim,block_dim>>>(imdata_d,imdata_sum_d,gi_host->im_width_dim);
+}
 
 __global__ void densityCompensationKernel(DType2* data, DType* density_comp, int N)
 {

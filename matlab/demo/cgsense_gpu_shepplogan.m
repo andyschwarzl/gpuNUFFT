@@ -15,7 +15,7 @@ nSl=N;
 nFE=207;
 nCh=8;
 disp_slice=nSl/2;
-useGPU = false;
+useGPU = true;
 %% Reconstruction parameters
 maxit = 5;
 alpha = 1e-6;
@@ -65,14 +65,24 @@ for ii = 1:nSl
 end
 senseEst=permute(senseEst,[1,2,4,3]);
 disp(['Time: ', num2str(toc), ' s']);
-            
+
+useMulticoil = false;
+
+if (useGPU && useMulticoil)
+    % Operator has to be rebuilt with sensitivities
+    FT = gpuNUFFT(k',w,osf,wg,sw,[N,N,nSl],senseEst);
+    F  = @(y) FT*y;
+    Fh = @(x) FT'*x;
+    rawdata = reshape(rawdata,[nPE*nFE,nCh]);
+end
 %% Image reconstruction with CG SENSE
 disp('-------------------------');
 disp('Starting CG SENSE');
 disp('-------------------------');
 mask = 1;
 tic
-img_cgsense = cg_sense_3d(rawdata,F,Fh,senseEst,mask,alpha,tol,maxit,display,disp_slice);
+
+img_cgsense = cg_sense_3d(rawdata,F,Fh,senseEst,mask,alpha,tol,maxit,display,disp_slice,useMulticoil);
 compTimeCGSENSE=toc;
 disp(['Time: ', num2str(compTimeCGSENSE), ' s']);  
 

@@ -19,7 +19,7 @@ addpath(genpath('./utils'));
 load im1.mat
 load smaps_phantom.mat
 %% generate noisy data
-verbose = false;
+verbose = true;
 acc_factor = 1;
 refL = 0;
 noise_scale = 0.02;
@@ -53,7 +53,7 @@ osf =1.25;
 wg = 3;
 sw = 8;
 
-FT = gpuNUFFT(k',w,osf,wg,sw,[nx,ny],smaps,false);
+FT = gpuNUFFT(k',w,osf,wg,sw,[nx,ny],smaps);
 
 noisy_data = squeeze(F * (noisy_im));
 %%

@@ -97,6 +97,10 @@ void performSensMul(CufftType* imdata_d,
   gpuNUFFT::GpuNUFFTInfo* gi_host,
   bool conjugate);
 
+void performSensSum(CufftType* imdata_d,
+  CufftType* imdata_sum_d,
+  gpuNUFFT::GpuNUFFTInfo* gi_host);
+
 void performFFTShift(CufftType* gdata_d,
   gpuNUFFT::FFTShiftDir shift_dir,
   gpuNUFFT::Dimensions gridDims,

@@ -83,7 +83,9 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	gpuNUFFT::Array<DType> density_compArray = readAndCreateArray<DType>(prhs, pcount++, 0,"density-comp");
 
 	// Sens array	- same dimension as image data
-	gpuNUFFT::Array<DType2>  sensArray = readAndCreateArray<DType2>(prhs,pcount++,0,"sens-data");
+  DType2 *sensData = NULL;
+  int n_coils_sens, sens_count;
+  readMatlabInputArray<DType2>(prhs, pcount++, 0,"sens-data",&sensData, &sens_count,3,&n_coils_sens);
 
 	//Parameters
   const mxArray *matParams = prhs[pcount++];
@@ -106,7 +108,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 		mexPrintf("sector data count: %d\n",sectorDataCountArray.count());
 		mexPrintf("centers count: %d\n",sectorCentersArray.count());
 		mexPrintf("dens count: %d\n",density_compArray.count());
-		
+		mexPrintf("sens coils: %d, img coils: %d\n",n_coils_sens,n_coils);
+    
 		mexPrintf("passed Params, IM_WIDTH: [%d,%d,%d], OSR: %f, KERNEL_WIDTH: %d, SECTOR_WIDTH: %d dens_count: %d traj_len: %d n coils: %d, use textures: %d\n",imgDims.width,imgDims.height,imgDims.depth,osr,kernel_width,sector_width,density_compArray.count(),traj_length,n_coils,use_textures);
 		size_t free_mem = 0;
 		size_t total_mem = 0;
@@ -114,17 +117,35 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 		mexPrintf("memory usage on device, free: %lu total: %lu\n",free_mem,total_mem);
 	}
 	
+  //complete Sens Array
+  gpuNUFFT::Array<DType2>  sensArray;
+  sensArray.data = sensData;
+  sensArray.dim = imgDims;
+  sensArray.dim.channels = n_coils_sens;
+
 	// Allocate Output: Image
 	CufftType* imdata = NULL;
 	const mwSize n_dims = 5;//2 * w * h * d * ncoils, 2 -> Re + Im
+  
 	mwSize dims_im[n_dims];
-	dims_im[0] = (mwSize)2; /* complex */
-	dims_im[1] = (mwSize)imgDims.width;
-	dims_im[2] = (mwSize)imgDims.height;
-	dims_im[3] = (mwSize)MAX(1,imgDims.depth);
-	dims_im[4] = (mwSize)n_coils;
+  mwSize n_dims_curr = 0;
+	dims_im[n_dims_curr++] = (mwSize)2; /* complex */
+	dims_im[n_dims_curr++] = (mwSize)imgDims.width;
+	dims_im[n_dims_curr++] = (mwSize)imgDims.height;
+	
+  // check if 2d or 3d data has to be allocated
+  if (imgDims.depth > 1)
+    dims_im[n_dims_curr++] = (mwSize)imgDims.depth;
+  
+  // if sens data is present a summation over all 
+  // coils is performed automatically
+  // thus only one coil has to be allocated
+  bool applySensData = sens_count > 1;
 
-	plhs[0] = mxCreateNumericArray(n_dims,dims_im,mxSINGLE_CLASS,mxREAL);
+  if (!applySensData)
+	  dims_im[n_dims_curr++] = (mwSize)n_coils;
+
+	plhs[0] = mxCreateNumericArray(n_dims_curr,dims_im,mxSINGLE_CLASS,mxREAL);
 	
   imdata = (CufftType*)mxGetData(plhs[0]);
 	if (imdata == NULL)
@@ -133,7 +154,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	gpuNUFFT::Array<DType2> imdataArray;
 	imdataArray.data = imdata;
 	imdataArray.dim = imgDims;
-	imdataArray.dim.channels = n_coils;
+	imdataArray.dim.channels = applySensData ? 1 : n_coils;
 
 	if (MATLAB_DEBUG)
   {

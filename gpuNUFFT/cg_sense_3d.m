@@ -42,7 +42,7 @@ cbar = conj(c);
 % right hand side: -K^*residual 
 y  = zeros(nx,ny,nz);
 if useMulticoil
-    y = sum(FH(data),4);
+    y = FH(data);
 else
 for ii = 1:nc
     y = y + FH(data(:,:,ii)).*cbar(:,:,:,ii);
@@ -96,7 +96,9 @@ dx = reshape(x,nx,ny,nz);
 
 y  = zeros(nx,ny,nz);
 if useMulticoil
-  y = sum(FH(F(repmat(dx,[1 1 1 nc]))),4);
+  % full forward/adjoint operator
+  % sensitivities are automatically applied
+  y = FH(F(dx));
 else
   for ii = 1:nc
       y = y + cconj(:,:,:,ii).*FH(F(c(:,:,:,ii).*dx));

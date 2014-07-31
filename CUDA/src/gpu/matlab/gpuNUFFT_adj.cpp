@@ -133,13 +133,15 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	dims_im[n_dims_curr++] = (mwSize)imgDims.width;
 	dims_im[n_dims_curr++] = (mwSize)imgDims.height;
 	
+  // check if 2d or 3d data has to be allocated
   if (imgDims.depth > 1)
     dims_im[n_dims_curr++] = (mwSize)imgDims.depth;
   
   // if sens data is present a summation over all 
   // coils is performed automatically
-  // TODO size check??? 
-  bool applySensData = sensArray.count() > 1;
+  // thus only one coil has to be allocated
+  bool applySensData = sens_count > 1;
+
   if (!applySensData)
 	  dims_im[n_dims_curr++] = (mwSize)n_coils;
 

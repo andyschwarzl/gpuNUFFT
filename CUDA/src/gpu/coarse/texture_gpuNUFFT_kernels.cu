@@ -20,7 +20,7 @@
 //  * sector_centers : coordinates (x,y,z) of sector centers
 //  * temp_gdata     : temporary grid data
 //  * N              : number of threads
-__device__ void textureConvolutionFunction(DType2* sdata, int sec, int sec_cnt, int sec_max, int sec_offset, DType2* data, DType* crds, CufftType* gdata, IndType* sectors, IndType* sector_centers,DType2* temp_gdata)
+__device__ void textureConvolutionFunction(DType* sdata_split, int sec, int sec_cnt, int sec_max, int sec_offset, DType2* data, DType* crds, CufftType* gdata, IndType* sectors, IndType* sector_centers,DType2* temp_gdata)
 {
   int ind, k, i, j;
   __shared__ int max_dim, imin, imax,jmin,jmax,kmin,kmax;
@@ -86,10 +86,10 @@ __device__ void textureConvolutionFunction(DType2* sdata, int sec, int sec_cnt, 
 
             // multiply data by current kernel val 
             // grid complex or scalar 
-            //sdata[ind].x += val * data[data_cnt].x;
-            //sdata[ind].y += val * data[data_cnt].y;
-            sdata[ind].x += val * tex1Dfetch(texDATA,data_cnt).x;
-            sdata[ind].y += val * tex1Dfetch(texDATA,data_cnt).y;
+            //sdata_split[ind].x += val * data[data_cnt].x;
+            //sdata_split[ind].y += val * data[data_cnt].y;
+            sdata_split[ind] += val * tex1Dfetch(texDATA,data_cnt).x;
+            sdata_split[ind+GI.sector_dim] += val * tex1Dfetch(texDATA,data_cnt).y;
           } // x
         } // y
       } // z
@@ -109,11 +109,11 @@ __device__ void textureConvolutionFunction(DType2* sdata, int sec, int sec_cnt, 
     int s_ind = getIndex(i,j,k,GI.sector_pad_width) ;//index in shared grid
     ind = sector_ind_offset + s_ind;//index in temp output grid
 
-    temp_gdata[ind].x = sdata[s_ind].x;//Re
-    temp_gdata[ind].y = sdata[s_ind].y;//Im
+    temp_gdata[ind].x = sdata_split[s_ind];//Re
+    temp_gdata[ind].y = sdata_split[s_ind+GI.sector_dim];//Im
     __syncthreads();
-    sdata[s_ind].x = (DType)0.0;
-    sdata[s_ind].y = (DType)0.0;
+    sdata_split[s_ind] = (DType)0.0;
+    sdata_split[s_ind+GI.sector_dim] = (DType)0.0;
     __syncthreads();
   }
 }
@@ -127,7 +127,7 @@ __global__ void textureConvolutionKernel(DType2* data,
   int N
   )
 {
-  extern __shared__ DType2 sdata[];//externally managed shared memory
+  extern __shared__ DType sdata_split[];//externally managed shared memory
 
   int sec;
   sec = blockIdx.x;
@@ -137,14 +137,14 @@ __global__ void textureConvolutionKernel(DType2* data,
     int y=threadIdx.y;
     int x=threadIdx.x;
     int s_ind = getIndex(x,y,z,GI.sector_pad_width) ;
-    sdata[s_ind].x = 0.0f;//Re
-    sdata[s_ind].y = 0.0f;//Im
+    sdata_split[s_ind] = 0.0f;//Re
+    sdata_split[s_ind+GI.sector_dim] = 0.0f;//Im
   }
   __syncthreads();
   //start convolution
   while (sec < N)
   {
-    textureConvolutionFunction(sdata,sec,sec,sectors[sec+1],0,data,crds,gdata,sectors,sector_centers,temp_gdata);
+    textureConvolutionFunction(sdata_split,sec,sec,sectors[sec+1],0,data,crds,gdata,sectors,sector_centers,temp_gdata);
     __syncthreads();
     sec = sec + gridDim.x;
   }//sec < sector_count
@@ -161,7 +161,7 @@ __global__ void balancedTextureConvolutionKernel(DType2* data,
   int N
   )
 {
-  extern __shared__ DType2 sdata[];//externally managed shared memory
+  extern __shared__ DType sdata_split[];//externally managed shared memory
 
   int sec_cnt = blockIdx.x;
   int sec;
@@ -171,21 +171,21 @@ __global__ void balancedTextureConvolutionKernel(DType2* data,
     int y=threadIdx.y;
     int x=threadIdx.x;
     int s_ind = getIndex(x,y,z,GI.sector_pad_width) ;
-    sdata[s_ind].x = 0.0f;//Re
-    sdata[s_ind].y = 0.0f;//Im
+    sdata_split[s_ind] = 0.0f;//Re
+    sdata_split[s_ind+GI.sector_dim] = 0.0f;//Im
   }
   __syncthreads();
   //start convolution
   while (sec_cnt < N)
   {
     sec = sector_processing_order[sec_cnt].x;
-    textureConvolutionFunction(sdata,sec,sec_cnt,min(sectors[sec+1],sectors[sec]+sector_processing_order[sec_cnt].y+MAXIMUM_PAYLOAD),sector_processing_order[sec_cnt].y,data,crds,gdata,sectors,sector_centers,temp_gdata);
+    textureConvolutionFunction(sdata_split,sec,sec_cnt,min(sectors[sec+1],sectors[sec]+sector_processing_order[sec_cnt].y+MAXIMUM_PAYLOAD),sector_processing_order[sec_cnt].y,data,crds,gdata,sectors,sector_centers,temp_gdata);
     __syncthreads();
     sec_cnt = sec_cnt + gridDim.x;
   }//sec < sector_count
 }
 
-__device__ void textureConvolutionFunction2D(DType2* sdata, int sec, int sec_cnt, int sec_max, int sec_offset, DType2* data, DType* crds, CufftType* gdata, IndType* sectors, IndType* sector_centers, DType2* temp_gdata)
+__device__ void textureConvolutionFunction2D(DType* sdata_split, int sec, int sec_cnt, int sec_max, int sec_offset, DType2* data, DType* crds, CufftType* gdata, IndType* sectors, IndType* sector_centers, DType2* temp_gdata)
 {
     int ind, i, j;
   __shared__ int max_dim, imin, imax,jmin,jmax;
@@ -234,10 +234,10 @@ __device__ void textureConvolutionFunction2D(DType2* sdata, int sec, int sec_cnt
 
         // multiply data by current kernel val 
         // grid complex or scalar 
-        //sdata[ind].x += val * data[data_cnt].x;
-        //sdata[ind].y += val * data[data_cnt].y;
-        sdata[ind].x += val * tex1Dfetch(texDATA,data_cnt).x;
-        sdata[ind].y += val * tex1Dfetch(texDATA,data_cnt).y;
+        //sdata_split[ind].x += val * data[data_cnt].x;
+        //sdata_split[ind].y += val * data[data_cnt].y;
+        sdata_split[ind] += val * tex1Dfetch(texDATA,data_cnt).x;
+        sdata_split[ind+GI.sector_dim] += val * tex1Dfetch(texDATA,data_cnt).y;
       } // x 	 
     } // y 
     __syncthreads();	
@@ -254,12 +254,12 @@ __device__ void textureConvolutionFunction2D(DType2* sdata, int sec, int sec_cnt
   int s_ind = getIndex2D(i,j,GI.sector_pad_width) ;//index in shared grid
   ind = sector_ind_offset + s_ind;//index in temp output grid
 
-  temp_gdata[ind].x = sdata[s_ind].x;//Re
-  temp_gdata[ind].y = sdata[s_ind].y;//Im
+  temp_gdata[ind].x = sdata_split[s_ind];//Re
+  temp_gdata[ind].y = sdata_split[s_ind+GI.sector_dim];//Im
 
   __syncthreads();
-  sdata[s_ind].x = (DType)0.0;
-  sdata[s_ind].y = (DType)0.0;
+  sdata_split[s_ind] = (DType)0.0;
+  sdata_split[s_ind+GI.sector_dim] = (DType)0.0;
 }
 
 __global__ void textureConvolutionKernel2D(DType2* data, 
@@ -271,7 +271,7 @@ __global__ void textureConvolutionKernel2D(DType2* data,
   int N
   )
 {
-  extern __shared__ DType2 sdata[];//externally managed shared memory
+  extern __shared__ DType sdata_split[];//externally managed shared memory
 
   int sec;
   sec = blockIdx.x;
@@ -279,13 +279,13 @@ __global__ void textureConvolutionKernel2D(DType2* data,
   int y=threadIdx.y;
   int x=threadIdx.x;
   int s_ind = getIndex2D(x,y,GI.sector_pad_width) ;
-  sdata[s_ind].x = 0.0f;//Re
-  sdata[s_ind].y = 0.0f;//Im
+  sdata_split[s_ind] = 0.0f;//Re
+  sdata_split[s_ind+GI.sector_dim] = 0.0f;//Im
   __syncthreads();
   //start convolution
   while (sec < N)
   {
-    textureConvolutionFunction2D(sdata,sec,sec,sectors[sec+1],0,data,crds,gdata,sectors,sector_centers,temp_gdata);
+    textureConvolutionFunction2D(sdata_split,sec,sec,sectors[sec+1],0,data,crds,gdata,sectors,sector_centers,temp_gdata);
     __syncthreads();
     sec = sec + gridDim.x;
   }//sec < sector_count
@@ -301,7 +301,7 @@ __global__ void balancedTextureConvolutionKernel2D(DType2* data,
   int N
   )
 {
-  extern __shared__ DType2 sdata[];//externally managed shared memory
+  extern __shared__ DType sdata_split[];//externally managed shared memory
   
   int sec_cnt = blockIdx.x;
   int sec;
@@ -310,14 +310,14 @@ __global__ void balancedTextureConvolutionKernel2D(DType2* data,
   int y=threadIdx.y;
   int x=threadIdx.x;
   int s_ind = getIndex2D(x,y,GI.sector_pad_width) ;
-  sdata[s_ind].x = 0.0f;//Re
-  sdata[s_ind].y = 0.0f;//Im
+  sdata_split[s_ind] = 0.0f;//Re
+  sdata_split[s_ind+GI.sector_dim] = 0.0f;//Im
   __syncthreads();
   //start convolution
   while (sec_cnt < N)
   {
     sec = sector_processing_order[sec_cnt].x;
-    textureConvolutionFunction2D(sdata,sec,sec_cnt,min(sectors[sec+1],sectors[sec]+sector_processing_order[sec_cnt].y+MAXIMUM_PAYLOAD),sector_processing_order[sec_cnt].y,data,crds,gdata,sectors,sector_centers,temp_gdata);
+    textureConvolutionFunction2D(sdata_split,sec,sec_cnt,min(sectors[sec+1],sectors[sec]+sector_processing_order[sec_cnt].y+MAXIMUM_PAYLOAD),sector_processing_order[sec_cnt].y,data,crds,gdata,sectors,sector_centers,temp_gdata);
     __syncthreads();
     sec_cnt = sec_cnt + gridDim.x;
   }//sec < sector_count

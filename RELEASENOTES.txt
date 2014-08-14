@@ -1,4 +1,12 @@
 -----------------------------------------------------------------------
+Version 2.0.6
+----------------------------------------------------------------------
+	- Automatic coil summation is performed in adjoint gridding 
+	  operation when gpuNUFFT operator is initialized with 
+	  coil sensitivities. Moreover, an automatic expansion 
+	  to the coil dimensions is performed in the forward operation. 
+	  
+-----------------------------------------------------------------------
 Version 2.0.5
 ----------------------------------------------------------------------
 	- Varying dimensions in all directions, e.g. 3d grids with 

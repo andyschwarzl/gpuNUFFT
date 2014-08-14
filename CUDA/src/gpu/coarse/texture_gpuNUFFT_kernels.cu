@@ -422,14 +422,14 @@ __global__ void textureForwardConvolutionKernel(CufftType* data,
   IndType* sector_centers,
   int N)
 {
-  extern __shared__ CufftType shared_out_data[];//externally managed shared memory
+  extern __shared__ DType sdata_split[];//externally managed shared memory
 
   __shared__ int sec;
   sec = blockIdx.x;
 
   //init shared memory
-  shared_out_data[threadIdx.x].x = 0.0f;//Re
-  shared_out_data[threadIdx.x].y = 0.0f;//Im
+  sdata_split[threadIdx.x] = 0.0f;//Re
+  sdata_split[threadIdx.x+blockDim.x] = 0.0f;//Im
   __syncthreads();
   //start convolution
   while (sec < N)
@@ -500,8 +500,8 @@ __global__ void textureForwardConvolutionKernel(CufftType* data,
 
             //shared_out_data[threadIdx.x].x += gdata[ind].x * val; 
             //shared_out_data[threadIdx.x].y += gdata[ind].y * val;	
-            shared_out_data[threadIdx.x].x += tex1Dfetch(texGDATA,ind).x * val; 
-            shared_out_data[threadIdx.x].y += tex1Dfetch(texGDATA,ind).y * val;	
+            sdata_split[threadIdx.x] += tex1Dfetch(texGDATA,ind).x * val; 
+            sdata_split[threadIdx.x+blockDim.x] += tex1Dfetch(texGDATA,ind).y * val;	
             
             i++;
           } // x loop
@@ -509,13 +509,13 @@ __global__ void textureForwardConvolutionKernel(CufftType* data,
         } // y loop
         k++;
       } // z loop
-      data[data_cnt].x = shared_out_data[threadIdx.x].x;
-      data[data_cnt].y = shared_out_data[threadIdx.x].y;
+      data[data_cnt].x = sdata_split[threadIdx.x];
+      data[data_cnt].y = sdata_split[threadIdx.x+blockDim.x];
 
       data_cnt = data_cnt + blockDim.x;
 
-      shared_out_data[threadIdx.x].x = (DType)0.0;//Re
-      shared_out_data[threadIdx.x].y = (DType)0.0;//Im
+      sdata_split[threadIdx.x] = (DType)0.0;//Re
+      sdata_split[threadIdx.x+blockDim.x] = (DType)0.0;//Im
     } //data points per sector
     __syncthreads();
     sec = sec + gridDim.x;
@@ -529,14 +529,14 @@ __global__ void textureForwardConvolutionKernel2D(CufftType* data,
   IndType* sector_centers,
   int N)
 {
-  extern __shared__ CufftType shared_out_data[];//externally managed shared memory
+  extern __shared__ DType sdata_split[];//externally managed shared memory
 
   __shared__ int sec;
   sec = blockIdx.x;
 
   //init shared memory
-  shared_out_data[threadIdx.x].x = 0.0f;//Re
-  shared_out_data[threadIdx.x].y = 0.0f;//Im
+  sdata_split[threadIdx.x] = 0.0f;//Re
+  sdata_split[threadIdx.x+blockDim.x] = 0.0f;//Im
   __syncthreads();
   //start convolution
   while (sec < N)
@@ -595,19 +595,19 @@ __global__ void textureForwardConvolutionKernel2D(CufftType* data,
 
           //shared_out_data[threadIdx.x].x += gdata[ind].x * val; 
           //shared_out_data[threadIdx.x].y += gdata[ind].y * val;
-          shared_out_data[threadIdx.x].x += tex1Dfetch(texGDATA,ind).x * val; 
-          shared_out_data[threadIdx.x].y += tex1Dfetch(texGDATA,ind).y * val;	
+          sdata_split[threadIdx.x] += tex1Dfetch(texGDATA,ind).x * val; 
+          sdata_split[threadIdx.x+blockDim.x] += tex1Dfetch(texGDATA,ind).y * val;	
           i++;
         } // x loop
         j++;
       } // y loop
-      data[data_cnt].x = shared_out_data[threadIdx.x].x;
-      data[data_cnt].y = shared_out_data[threadIdx.x].y;
+      data[data_cnt].x = sdata_split[threadIdx.x];
+      data[data_cnt].y = sdata_split[threadIdx.x+blockDim.x];
 
       data_cnt = data_cnt + blockDim.x;
 
-      shared_out_data[threadIdx.x].x = (DType)0.0;//Re
-      shared_out_data[threadIdx.x].y = (DType)0.0;//Im
+      sdata_split[threadIdx.x] = (DType)0.0;//Re
+      sdata_split[threadIdx.x+blockDim.x] = (DType)0.0;//Im
     } //data points per sector
     __syncthreads();
     sec = sec + gridDim.x;

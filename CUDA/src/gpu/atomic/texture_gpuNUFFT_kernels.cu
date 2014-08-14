@@ -19,7 +19,7 @@
 //  * sector_centers : coordinates (x,y,z) of sector centers
 //  * temp_gdata     : temporary grid data
 //  * N              : number of threads
-__device__ void textureConvolutionFunction(int* sec, int sec_max, int sec_offset, DType2* sdata, DType2* data, DType* crds, CufftType* gdata, IndType* sectors, IndType* sector_centers)
+__device__ void textureConvolutionFunction(int* sec, int sec_max, int sec_offset, DType* sdata_split, DType2* data, DType* crds, CufftType* gdata, IndType* sectors, IndType* sector_centers)
 {
   //start convolution
   int ind, k, i, j, x, y, z;
@@ -77,8 +77,8 @@ __device__ void textureConvolutionFunction(int* sec, int sec_max, int sec_offset
 
           // multiply data by current kernel val 
           // grid complex or scalar 
-          atomicAdd(&(sdata[ind].x),val * tex1Dfetch(texDATA,data_cnt).x);
-          atomicAdd(&(sdata[ind].y),val * tex1Dfetch(texDATA,data_cnt).y);
+          atomicAdd(&(sdata_split[ind]),val * tex1Dfetch(texDATA,data_cnt).x);
+          atomicAdd(&(sdata_split[ind+blockDim.x]),val * tex1Dfetch(texDATA,data_cnt).y);
           i++;
         } // x 	 
         j++;
@@ -108,12 +108,12 @@ __device__ void textureConvolutionFunction(int* sec, int sec_max, int sec_offset
     else
       ind = sector_ind_offset + computeXYZ2Lin(x,y,z,GI.gridDims);//index in output grid
 
-    atomicAdd(&(gdata[ind].x),sdata[s_ind].x);//Re
-    atomicAdd(&(gdata[ind].y),sdata[s_ind].y);//Im
+    atomicAdd(&(gdata[ind].x),sdata_split[s_ind]);//Re
+    atomicAdd(&(gdata[ind].y),sdata_split[s_ind + GI.sector_dim]);//Im
 
     //reset shared mem
-    sdata[s_ind].x = (DType)0.0;
-    sdata[s_ind].y = (DType)0.0;
+    sdata_split[s_ind] = (DType)0.0;
+    sdata_split[s_ind + GI.sector_dim] = (DType)0.0;
   }
 }
 
@@ -125,13 +125,13 @@ __global__ void textureConvolutionKernel(DType2* data,
   int N
   )
 {
-  extern __shared__ DType2 sdata[];//externally managed shared memory
+  extern __shared__ DType sdata_split[];//externally managed shared memory
   
   //init shared memory
   for (int s_ind=threadIdx.x;s_ind<GI.sector_dim; s_ind+= blockDim.x)
   {
-    sdata[s_ind].x = (DType)0.0;//Re
-    sdata[s_ind].y = (DType)0.0;//Im
+    sdata_split[s_ind] = (DType)0.0;//Re
+    sdata_split[s_ind + GI.sector_dim] = (DType)0.0;//Im
   }
   __syncthreads();
 
@@ -141,7 +141,7 @@ __global__ void textureConvolutionKernel(DType2* data,
   {
     __shared__ int data_max;
     data_max = sectors[sec[threadIdx.x]+1];
-    textureConvolutionFunction(sec,data_max,0,sdata,data,crds,gdata,sectors,sector_centers);
+    textureConvolutionFunction(sec,data_max,0,sdata_split,data,crds,gdata,sectors,sector_centers);
     __syncthreads();
     sec[threadIdx.x] = sec[threadIdx.x]+ gridDim.x;
   }//sec < sector_count	
@@ -156,13 +156,13 @@ __global__ void balancedTextureConvolutionKernel(DType2* data,
   int N
   )
 {
-  extern __shared__ DType2 sdata[];//externally managed shared memory
+  extern __shared__ DType sdata_split[];//externally managed shared memory
 
   //init shared memory
   for (int s_ind=threadIdx.x;s_ind<GI.sector_dim; s_ind+= blockDim.x)
   {
-    sdata[s_ind].x = (DType)0.0;//Re
-    sdata[s_ind].y = (DType)0.0;//Im
+    sdata_split[s_ind] = (DType)0.0;//Re
+    sdata_split[s_ind + GI.sector_dim] = (DType)0.0;//Im
   }
   __syncthreads();
 
@@ -174,7 +174,7 @@ __global__ void balancedTextureConvolutionKernel(DType2* data,
     sec[threadIdx.x] = sector_processing_order[sec_cnt].x;
     __shared__ int data_max;
     data_max = min(sectors[sec[threadIdx.x]+1],sectors[sec[threadIdx.x]] + threadIdx.x + sector_processing_order[sec_cnt].y+MAXIMUM_PAYLOAD);
-    textureConvolutionFunction(sec,data_max,sector_processing_order[sec_cnt].y,sdata,data,crds,gdata,sectors,sector_centers);
+    textureConvolutionFunction(sec,data_max,sector_processing_order[sec_cnt].y,sdata_split,data,crds,gdata,sectors,sector_centers);
     __syncthreads();
     sec_cnt = sec_cnt + gridDim.x;
   }//sec < sector_count	
@@ -196,7 +196,7 @@ __global__ void balancedTextureConvolutionKernel(DType2* data,
 //  * sector_centers : coordinates (x,y,z) of sector centers
 //  * temp_gdata     : temporary grid data
 //  * N              : number of threads
-__device__ void textureConvolutionFunction2D(DType2* sdata,int* sec, int sec_max, int sec_offset, DType2* data, DType* crds, CufftType* gdata,IndType* sectors, IndType* sector_centers)
+__device__ void textureConvolutionFunction2D(DType* sdata_split,int* sec, int sec_max, int sec_offset, DType2* data, DType* crds, CufftType* gdata,IndType* sectors, IndType* sector_centers)
 {
   //start convolution
   int ind, i, j, x, y;
@@ -245,8 +245,8 @@ __device__ void textureConvolutionFunction2D(DType2* sdata,int* sec, int sec_max
 
         // multiply data by current kernel val 
         // grid complex or scalar
-        atomicAdd(&(sdata[ind].x),val * tex1Dfetch(texDATA,data_cnt).x);
-        atomicAdd(&(sdata[ind].y),val * tex1Dfetch(texDATA,data_cnt).y);
+        atomicAdd(&(sdata_split[ind]),val * tex1Dfetch(texDATA,data_cnt).x);
+        atomicAdd(&(sdata_split[ind+blockDim.x]),val * tex1Dfetch(texDATA,data_cnt).y);
         i++;
       } // x 	 
       j++;
@@ -273,12 +273,12 @@ __device__ void textureConvolutionFunction2D(DType2* sdata,int* sec, int sec_max
     else
       ind = sector_ind_offset + computeXY2Lin(x,y,GI.gridDims);//index in output grid
 
-    atomicAdd(&(gdata[ind].x),sdata[s_ind].x);//Re
-    atomicAdd(&(gdata[ind].y),sdata[s_ind].y);//Im
+    atomicAdd(&(gdata[ind].x),sdata_split[s_ind]);//Re
+    atomicAdd(&(gdata[ind].y),sdata_split[s_ind + GI.sector_dim]);//Im
     
     //reset shared mem
-    sdata[s_ind].x = (DType)0.0;
-    sdata[s_ind].y = (DType)0.0;
+    sdata_split[s_ind] = (DType)0.0;
+    sdata_split[s_ind + GI.sector_dim] = (DType)0.0;
   }
 }
 __global__ void textureConvolutionKernel2D(DType2* data, 
@@ -289,13 +289,13 @@ __global__ void textureConvolutionKernel2D(DType2* data,
   int N
   )
 {
-  extern __shared__ DType2 sdata[];//externally managed shared memory
+  extern __shared__ DType sdata_split[];//externally managed shared memory
   
   //init shared memory
   for (int s_ind=threadIdx.x;s_ind<GI.sector_dim; s_ind+= blockDim.x)
   {
-    sdata[s_ind].x = (DType)0.0;//Re
-    sdata[s_ind].y = (DType)0.0;//Im
+    sdata_split[s_ind] = (DType)0.0;//Re
+    sdata_split[s_ind + GI.sector_dim] = (DType)0.0;//Im
   }
   __syncthreads();
 
@@ -305,7 +305,7 @@ __global__ void textureConvolutionKernel2D(DType2* data,
   {
     __shared__ int data_max;
     data_max = sectors[sec[threadIdx.x]+1];
-    textureConvolutionFunction2D(sdata,sec,data_max,0,data,crds,gdata,sectors,sector_centers);
+    textureConvolutionFunction2D(sdata_split,sec,data_max,0,data,crds,gdata,sectors,sector_centers);
     __syncthreads();
     sec[threadIdx.x] = sec[threadIdx.x]+ gridDim.x;
   }//sec < sector_count	
@@ -320,13 +320,13 @@ __global__ void balancedTextureConvolutionKernel2D(DType2* data,
   int N
   )
 {
-  extern __shared__ DType2 sdata[];//externally managed shared memory
+  extern __shared__ DType sdata_split[];//externally managed shared memory
   
   //init shared memory
   for (int s_ind=threadIdx.x;s_ind<GI.sector_dim; s_ind+= blockDim.x)
   {
-    sdata[s_ind].x = (DType)0.0;//Re
-    sdata[s_ind].y = (DType)0.0;//Im
+    sdata_split[s_ind] = (DType)0.0;//Re
+    sdata_split[s_ind + GI.sector_dim] = (DType)0.0;//Im
   }
   __syncthreads();
 
@@ -338,7 +338,7 @@ __global__ void balancedTextureConvolutionKernel2D(DType2* data,
     sec[threadIdx.x] = sector_processing_order[sec_cnt].x; 
     __shared__ int data_max;
     data_max = min(sectors[sec[threadIdx.x]+1],sectors[sec[threadIdx.x]] + threadIdx.x + sector_processing_order[sec_cnt].y + MAXIMUM_PAYLOAD);
-    textureConvolutionFunction2D(sdata,sec,data_max,sector_processing_order[sec_cnt].y,data,crds,gdata,sectors,sector_centers);
+    textureConvolutionFunction2D(sdata_split,sec,data_max,sector_processing_order[sec_cnt].y,data,crds,gdata,sectors,sector_centers);
     __syncthreads();
     sec_cnt = sec_cnt+ gridDim.x;
   }//sec < sector_count	
@@ -415,7 +415,7 @@ void performTextureConvolution( DType2* data_d,
 //  * sector_centers : coordinates (x,y,z) of sector centers
 //  * N              : number of threads
 
-__device__ void textureForwardConvolutionFunction(int* sec, int sec_max, int sec_offset, DType2* sdata, CufftType* gdata_cache, DType2* data, DType* crds, CufftType* gdata, IndType* sectors, IndType* sector_centers)
+__device__ void textureForwardConvolutionFunction(int* sec, int sec_max, int sec_offset, DType* sdata_split, DType* gdata_cache, DType2* data, DType* crds, CufftType* gdata, IndType* sectors, IndType* sector_centers)
 {
   int ind, imin, imax, jmin, jmax,kmin,kmax, k, i, j;
   DType dx_sqr, dy_sqr, dz_sqr, val, ix, jy, kz;
@@ -444,8 +444,8 @@ __device__ void textureForwardConvolutionFunction(int* sec, int sec_max, int sec
     else
       grid_index = (sector_ind_offset + computeXYZ2Lin(i,j,k,GI.gridDims));
 
-    gdata_cache[ind].x = tex1Dfetch(texGDATA,grid_index).x;
-    gdata_cache[ind].y = tex1Dfetch(texGDATA,grid_index).y;
+    gdata_cache[ind] = tex1Dfetch(texGDATA,grid_index).x;
+    gdata_cache[ind+blockDim.x] = tex1Dfetch(texGDATA,grid_index).y;
   }
     
   __syncthreads();
@@ -494,8 +494,8 @@ __device__ void textureForwardConvolutionFunction(int* sec, int sec_max, int sec
 
           ind = getIndex(i,j,k,GI.sector_pad_width);
 
-          sdata[threadIdx.x].x += gdata_cache[ind].x * val; 
-          sdata[threadIdx.x].y += gdata_cache[ind].y * val;									
+          sdata_split[threadIdx.x] += gdata_cache[ind] * val; 
+          sdata_split[threadIdx.x+blockDim.x] += gdata_cache[ind+blockDim.x] * val;									
 
           i++;
         } // x loop
@@ -503,13 +503,13 @@ __device__ void textureForwardConvolutionFunction(int* sec, int sec_max, int sec
       } // y loop
       k++;
     } // z loop
-    atomicAdd(&(data[data_cnt].x),sdata[threadIdx.x].x);
-    atomicAdd(&(data[data_cnt].y),sdata[threadIdx.x].y);
+    atomicAdd(&(data[data_cnt].x),sdata_split[threadIdx.x]);
+    atomicAdd(&(data[data_cnt].y),sdata_split[threadIdx.x+blockDim.x]);
 
     data_cnt = data_cnt + blockDim.x;
 
-    sdata[threadIdx.x].x = (DType)0.0;//Re
-    sdata[threadIdx.x].y = (DType)0.0;//Im
+    sdata_split[threadIdx.x] = (DType)0.0;//Re
+    sdata_split[threadIdx.x+blockDim.x] = (DType)0.0;//Im
   } //data points per sector
 }
 
@@ -520,16 +520,16 @@ __global__ void textureForwardConvolutionKernel(CufftType* data,
   IndType* sector_centers,
   int N)
 {
-  extern __shared__ CufftType shared[];//externally managed shared memory
-  CufftType* shared_out_data =(CufftType*) &shared[0];  
-  CufftType* gdata_cache =(CufftType*) &shared[blockDim.x]; 
+  extern __shared__ DType sdata_split[];//externally managed shared memory
+  DType* shared_out_data =(DType*) &sdata_split[0];  
+  DType* gdata_cache =(DType*) &sdata_split[2*blockDim.x]; 
 
   __shared__ int sec[THREAD_BLOCK_SIZE];
   sec[threadIdx.x]= blockIdx.x;
   
   //init shared memory
-  shared_out_data[threadIdx.x].x = (DType)0.0;//Re
-  shared_out_data[threadIdx.x].y = (DType)0.0;//Im
+  shared_out_data[threadIdx.x] = (DType)0.0;//Re
+  shared_out_data[threadIdx.x+blockDim.x] = (DType)0.0;//Im
 
   __syncthreads();
   //start convolution
@@ -552,16 +552,16 @@ __global__ void balancedTextureForwardConvolutionKernel(CufftType* data,
   IndType* sector_centers,
   int N)
 {
-  extern __shared__ CufftType shared[];//externally managed shared memory
-  CufftType* shared_out_data =(CufftType*) &shared[0];  
-  CufftType* gdata_cache =(CufftType*) &shared[blockDim.x]; 
+  extern __shared__ DType sdata_split[];//externally managed shared memory
+  DType* shared_out_data =(DType*) &sdata_split[0];  
+  DType* gdata_cache =(DType*) &sdata_split[2*blockDim.x]; 
   
   int sec_cnt = blockIdx.x;
   __shared__ int sec[THREAD_BLOCK_SIZE];
 
   //init shared memory
-  shared_out_data[threadIdx.x].x = (DType)0.0;//Re
-  shared_out_data[threadIdx.x].y = (DType)0.0;//Im
+  shared_out_data[threadIdx.x] = (DType)0.0;//Re
+  shared_out_data[threadIdx.x+blockDim.x] = (DType)0.0;//Im
 
   __syncthreads();
   //start convolution
@@ -577,7 +577,7 @@ __global__ void balancedTextureForwardConvolutionKernel(CufftType* data,
   } //sector check
 }
 
-__device__ void textureForwardConvolutionFunction2D(int* sec, int sec_max, int sec_offset, DType2* sdata, CufftType* gdata_cache, DType2* data, DType* crds, CufftType* gdata, IndType* sectors, IndType* sector_centers)
+__device__ void textureForwardConvolutionFunction2D(int* sec, int sec_max, int sec_offset, DType* sdata_split, DType* gdata_cache, DType2* data, DType* crds, CufftType* gdata, IndType* sectors, IndType* sector_centers)
 {
   int ind, imin, imax, jmin, jmax, i, j;
   DType dx_sqr, dy_sqr, val, ix, jy;
@@ -606,8 +606,8 @@ __device__ void textureForwardConvolutionFunction2D(int* sec, int sec_max, int s
     else
       grid_index = (sector_ind_offset + getIndex2D(i,j,GI.gridDims.x));
 
-    gdata_cache[ind].x = tex1Dfetch(texGDATA,grid_index).x;
-    gdata_cache[ind].y = tex1Dfetch(texGDATA,grid_index).y;
+    gdata_cache[ind] = tex1Dfetch(texGDATA,grid_index).x;
+    gdata_cache[ind+blockDim.x] = tex1Dfetch(texGDATA,grid_index).y;
   }
   __syncthreads();
 
@@ -645,19 +645,19 @@ __device__ void textureForwardConvolutionFunction2D(int* sec, int sec_max, int s
    
         ind = getIndex2D(i,j,GI.sector_pad_width);
 
-        sdata[threadIdx.x].x += gdata_cache[ind].x * val; 
-        sdata[threadIdx.x].y += gdata_cache[ind].y * val;									
+        sdata_split[threadIdx.x] += gdata_cache[ind] * val; 
+        sdata_split[threadIdx.x+blockDim.x] += gdata_cache[ind+blockDim.x] * val;									
         i++;
       } // x loop
     j++;
     } // y loop
-    atomicAdd(&(data[data_cnt].x),sdata[threadIdx.x].x);
-    atomicAdd(&(data[data_cnt].y),sdata[threadIdx.x].y);
+    atomicAdd(&(data[data_cnt].x),sdata_split[threadIdx.x]);
+    atomicAdd(&(data[data_cnt].y),sdata_split[threadIdx.x+blockDim.x]);
 
     data_cnt = data_cnt + blockDim.x;
 
-    sdata[threadIdx.x].x = (DType)0.0;//Re
-    sdata[threadIdx.x].y = (DType)0.0;//Im
+    sdata_split[threadIdx.x] = (DType)0.0;//Re
+    sdata_split[threadIdx.x+blockDim.x] = (DType)0.0;//Im
   } //data points per sector
 }
 
@@ -668,16 +668,16 @@ __global__ void textureForwardConvolutionKernel2D(CufftType* data,
   IndType* sector_centers,
   int N)
 {
-  extern __shared__ CufftType shared[];//externally managed shared memory
-  CufftType* shared_out_data =(CufftType*) &shared[0];  
-  CufftType* gdata_cache =(CufftType*) &shared[blockDim.x]; 
+  extern __shared__ DType sdata_split[];//externally managed shared memory
+  DType* shared_out_data =(DType*) &sdata_split[0];  
+  DType* gdata_cache =(DType*) &sdata_split[2*blockDim.x]; 
 
   __shared__ int sec[THREAD_BLOCK_SIZE];
   sec[threadIdx.x]= blockIdx.x;
 
   //init shared memory
-  shared_out_data[threadIdx.x].x = (DType)0.0;//Re
-  shared_out_data[threadIdx.x].y = (DType)0.0;//Im
+  shared_out_data[threadIdx.x] = (DType)0.0;//Re
+  shared_out_data[threadIdx.x+blockDim.x] = (DType)0.0;//Im
   __syncthreads();
   //start convolution
   while (sec[threadIdx.x] < N)
@@ -700,16 +700,16 @@ __global__ void balancedTextureForwardConvolutionKernel2D(CufftType* data,
   IndType* sector_centers,
   int N)
 {
-  extern __shared__ CufftType shared[];//externally managed shared memory
-  CufftType* shared_out_data =(CufftType*) &shared[0];  
-  CufftType* gdata_cache =(CufftType*) &shared[blockDim.x]; 
+  extern __shared__ DType sdata_split[];//externally managed shared memory
+  DType* shared_out_data =(DType*) &sdata_split[0];  
+  DType* gdata_cache =(DType*) &sdata_split[2*blockDim.x]; 
 
   int sec_cnt= blockIdx.x;
   __shared__ int sec[THREAD_BLOCK_SIZE];
   
   //init shared memory
-  shared_out_data[threadIdx.x].x = (DType)0.0;//Re
-  shared_out_data[threadIdx.x].y = (DType)0.0;//Im
+  shared_out_data[threadIdx.x] = (DType)0.0;//Re
+  shared_out_data[threadIdx.x+blockDim.x] = (DType)0.0;//Im
   __syncthreads();
   //start convolution
   while (sec_cnt < N)

@@ -78,7 +78,7 @@ __device__ void textureConvolutionFunction(int* sec, int sec_max, int sec_offset
           // multiply data by current kernel val 
           // grid complex or scalar 
           atomicAdd(&(sdata_split[ind]),val * tex1Dfetch(texDATA,data_cnt).x);
-          atomicAdd(&(sdata_split[ind+blockDim.x]),val * tex1Dfetch(texDATA,data_cnt).y);
+          atomicAdd(&(sdata_split[ind+GI.sector_dim]),val * tex1Dfetch(texDATA,data_cnt).y);
           i++;
         } // x 	 
         j++;
@@ -246,7 +246,7 @@ __device__ void textureConvolutionFunction2D(DType* sdata_split,int* sec, int se
         // multiply data by current kernel val 
         // grid complex or scalar
         atomicAdd(&(sdata_split[ind]),val * tex1Dfetch(texDATA,data_cnt).x);
-        atomicAdd(&(sdata_split[ind+blockDim.x]),val * tex1Dfetch(texDATA,data_cnt).y);
+        atomicAdd(&(sdata_split[ind+GI.sector_dim]),val * tex1Dfetch(texDATA,data_cnt).y);
         i++;
       } // x 	 
       j++;

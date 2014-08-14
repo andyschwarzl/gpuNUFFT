@@ -21,12 +21,12 @@ function [res] = gpuNUFFT(k,w,osf,wg,sw,imageDim,sens,varargin)
 %  A. Schwarzl, Graz University of Technology
 %  F. Knoll, NYU School of Medicine
 %
-t = gpuDevice;
-if eval(t.ComputeCapability) < 2.0
-    atomic = false;
-else
-    atomic = true;
-end
+%t = gpuDevice;
+%if eval(t.ComputeCapability) < 2.0
+%    atomic = false;
+%else
+%    atomic = true;
+%end
 
 use_textures = true;    
 balance_workload = true;

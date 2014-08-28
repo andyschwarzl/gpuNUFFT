@@ -10,6 +10,27 @@
 
 #define MIN(X,Y) ((X) < (Y) ? (X) : (Y))
 
+/**
+* @file
+* \brief Collection of helper functions to allow access to MATLAB data pointers. 
+*
+*/
+
+/** \brief Load MATLAB input array and check expected dimensions.
+* 
+* Basic helper to convert MATLAB input array pointer to array of expected dimensions.
+* If the input data pointer does not consist of the expected dimensions a mex error
+* reported. 
+*
+* @param prhs                MATLAB input array pointer
+* @param input_index         Index to access inside prhs
+* @param highest_varying_dim Highest varying dimension of data array, e.g. 2 for 2xN array
+* @param name                Name of parameter for debugging issues
+* @param data                Output data pointer
+* @param data_entries        Output amount of array elements
+* @param max_nd              Maximum number of dimensions, 3 for MxNxO array
+* @param n_coils             Output amount of coils
+*/
 template <typename TType>
 void readMatlabInputArray(const mxArray *prhs[], int input_index, int highest_varying_dim, const char* name,TType** data, int* data_entries, int max_nd, int* n_coils)
 {
@@ -80,6 +101,17 @@ void readMatlabInputArray(const mxArray *prhs[], int input_index, int highest_va
 	}
 }
 
+/** \brief Load MATLAB input array and check expected dimensions.
+* 
+* Basic helper to convert MATLAB input array pointer to array of expected dimensions.
+* 
+* @param prhs                MATLAB input array pointer
+* @param input_index         Index to access inside prhs
+* @param highest_varying_dim Highest varying dimension of data array, e.g. 2 for 2xN array
+* @param name                Name of parameter for debugging issues
+* @param data                Output data pointer
+* @param data_entries        Output amount of array elements
+*/
 template <typename TType>
 void readMatlabInputArray(const mxArray *prhs[], int input_index, int highest_varying_dim, const char* name,TType** data, int* data_entries)
 {
@@ -87,6 +119,20 @@ void readMatlabInputArray(const mxArray *prhs[], int input_index, int highest_va
 	readMatlabInputArray<TType>(prhs, input_index, highest_varying_dim,name,data, data_entries,2,&dummy);
 }
 
+/** \brief Load MATLAB input array and return gpuNUFFT::Array 
+*
+* The MATLAB data pointer is only checked by the highest varying dimension. 
+* The Dimensions of the returned Array are only defined by the total length of 
+* array data. 
+*
+* @param prhs                MATLAB input array pointer
+* @param input_index         Index to access inside prhs
+* @param highest_varying_dim Highest varying dimension of data array, e.g. 2 for 2xN array
+* @param name                Name of parameter for debugging issues
+* @return New created gpuNUFFT::Array referencing to the passed MATLAB data
+* 
+* @see gpuNUFFT::Dimensions
+*/
 template <typename TType>
 gpuNUFFT::Array<TType> readAndCreateArray(const mxArray *prhs[], int input_index, int highest_varying_dim, const char* name)
 {
@@ -100,6 +146,12 @@ gpuNUFFT::Array<TType> readAndCreateArray(const mxArray *prhs[], int input_index
 	return dataArray;
 }
 
+/** \brief Helper function to load a parameter from a MATLAB parameter struct
+*
+* @param params    Raw array pointer to the parameter struct array
+* @param fieldname Name of the parameter that has to be read out
+* @return value of parameter 
+*/
 template <typename TType>
 inline TType getParamField(const mxArray* params, const char* fieldname)
 {
@@ -114,6 +166,12 @@ inline TType getParamField(const mxArray* params, const char* fieldname)
 	}
 }
 
+/** \brief Helper method to evaluate the size of a parameter field in a MATLAB struct 
+*
+* @param params    Raw array pointer to the parameter struct array
+* @param fieldname Name of the parameter that has to be read out
+* @return gpuNUFFT::Dimensions of parameter field
+*/
 inline gpuNUFFT::Dimensions getDimensionsFromParamField(const mxArray* params, const char* fieldname)
 {
 	const mxArray* data = mxGetField(params, 0, fieldname);
@@ -125,6 +183,11 @@ inline gpuNUFFT::Dimensions getDimensionsFromParamField(const mxArray* params, c
 	return dim;
 }
 
+/** \brief Helper method to map the Interpolation Type parameter from int to the gpuNUFFT::InterpolationType enum 
+*
+* @param fieldname Name of the parameter that has to be read out
+* @return gpuNUFFT::InterpolationType
+*/
 inline gpuNUFFT::InterpolationType getInterpolationTypeOf(int val)
 {
   switch (val)

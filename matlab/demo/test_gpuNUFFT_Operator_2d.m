@@ -28,35 +28,23 @@ osf = 1.25;
 wg = 3;
 sw = 8;
 
-% cartesian Trajectory
-[x,y] = meshgrid(rho,rho);
-k_traj_cart = [x(:)'; y(:)'];
-w = ones(size(x));
-w = w(:);
-FT = gpuNUFFT(k_traj_cart,w(:),osf,wg,sw,[nPE nPE],[],false);
-%% generate Fourier sampling operator
-%FT = gpuNUFFT(k, 1, 1, 0, [nPE,nFE], 2);
-k_traj = [real(k(:))'; imag(k(:))'];
-
-%%
 % density compensation
 w = repmat(abs(rho), [1, numSpokes]);
-%%
-tic
+
+%% generate Fourier sampling operators
+k_traj = [real(k(:))'; imag(k(:))'];
+
 FT = gpuNUFFT(k_traj,w(:),osf,wg,sw,[nPE nPE],[],false);
-toc
 FTCPU = NUFFT(k_traj(1,:)+1i*k_traj(2,:), w(:), 1, 0, [nPE nPE], 2);
 %% generate radial data
 display(['inverse gpuNUFFT: ']);
-tic
+
 dataRadial = inversegrid_multicoil_gpu(img,FT,2*nPE,numSpokes);
-toc
+
 dataRadialCPU = inversegrid_multicoil(img,FTCPU,2*nPE,numSpokes);
 %% recon
 display(['gpuNUFFT: ']);
-tic
 imgRegrid_kb_dc = regrid_multicoil_gpu(reshape(dataRadial,[size(k),n_chn]),FT);
-toc
 
 imgRegridCPU = regrid_multicoil(reshape(dataRadial,[size(k),n_chn]),FTCPU);
 %% show results
@@ -70,9 +58,9 @@ recon_sos_resCPU = recon_sos_dcCPU(:,:);
 figure;
 subplot(121);
 imshow(abs(recon_sos_res(:,:)),[]);
-title('gpuNUFFT dc sos');
+title('gpuNUFFT sos');
 
 subplot(122);
 imshow(abs(recon_sos_resCPU(:,:)),[]);
-title('gpuNUFFT CPU');
+title('NUFFT CPU sos');
     

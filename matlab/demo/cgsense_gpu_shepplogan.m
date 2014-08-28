@@ -65,7 +65,7 @@ for ii = 1:nSl
 end
 senseEst=permute(senseEst,[1,2,4,3]);
 disp(['Time: ', num2str(toc), ' s']);
-
+regrid_singlecoil_gpu
 useMulticoil = false;
 
 if (useGPU && useMulticoil)

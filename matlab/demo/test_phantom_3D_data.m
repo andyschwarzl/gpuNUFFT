@@ -6,7 +6,6 @@ close all; clc;
 addpath data
 addpath(genpath('../../gpuNUFFT'));
 addpath(genpath('../../../fessler/NUFFT'));
-addpath(genpath('../utils'));
 addpath(genpath('utils'));
 %% Load data
 load sl3d64
@@ -14,23 +13,21 @@ N = imgDim(1);
 N3D = imgDim(3);
 useGPU = true;
 %% generate Fourier sampling operator
+% here Cartesian sampling is loaded 
+
 osf = 2;
 wg = 3;
 sw = 8;
 imwidth = N;
-R = 2;
+R = 1;
 k_traj = k_traj(1:R:end,:);
 dataRadial=dataRadial(1:R:end,:);
 dens = dens(1:R:end);
-%% debug
-%imwidth = N;
-imgDim = [64,64,32];
-N3D = imgDim(3);
-imwidth = imgDim(1);
+
 %%
 disp('init GPU')
 tic
-FT = gpuNUFFT(k_traj',dens',osf,wg,sw,imgDim,[],false,false,true);
+FT = gpuNUFFT(k_traj',dens',osf,wg,sw,imgDim);
 toc
 disp('init CPU')
 tic

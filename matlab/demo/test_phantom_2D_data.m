@@ -5,7 +5,7 @@ close all; clc;
 %% add bin to path
 addpath data
 addpath(genpath('../../gpuNUFFT'));
-addpath(genpath('../utils'));
+addpath(genpath('./utils'));
 addpath(genpath('../../../fessler/NUFFT'));
 %% Load data
 load sl2d
@@ -16,11 +16,11 @@ verbose = true;
 osf =2;
 wg = 3;
 sw = 8;
-imgDim = [256,96];
+imgDim = [256,256];
 %
 disp('init gpu op');
 tic
-FT = gpuNUFFT(k_traj',dens,osf,wg,sw,imgDim,[],false,false,false);%,[],true,true,true);
+FT = gpuNUFFT(k_traj',dens,osf,wg,sw,imgDim);
 toc
 disp('init cpu op');
 tic

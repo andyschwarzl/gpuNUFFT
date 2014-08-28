@@ -8,3 +8,5 @@ function img = regrid_multicoil(data, FT)
 for ii = 1:nCh
     img(:,:,:,ii) = FT'*data(:,:,ii);
 end
+
+img = squeeze(img);

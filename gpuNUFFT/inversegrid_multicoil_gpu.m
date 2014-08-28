@@ -1,12 +1,12 @@
-function data = inversegrid_multicoil_gpu(img, FT, nIntl, nRO)
+function data = inversegrid_multicoil_gpu(img, FT, nIntl,nRO)
 % 
-% Inverse gridding wrapper for multicoil data
-% 
+% Inverse gpuNUFFT gridding wrapper for multicoil data
 
-[~,~,~,nCh]=size(img);
-data=single(zeros(nIntl*nRO,nCh));
-for ii = 1:nCh
-    data(:,ii) = FT*img(:,:,:,ii);
-    fprintf('.');
+if (length(size(img))>3)
+    [nx,ny,nz,nCh]=size(img);
+else
+    [nx,ny,nCh]=size(img);
 end
+
+data = FT * img;
 data=reshape(data,nIntl,nRO,nCh);

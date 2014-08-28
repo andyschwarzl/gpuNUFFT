@@ -141,6 +141,8 @@ if(GEN_TESTS)
 	endif(GEN_ATOMIC)
 endif(GEN_TESTS)
 
+ADD_SUBDIRECTORY(doc)
+
 #CREATE zip Archive using JAVA in order to deploy project patch
 if (GEN_ZIP)
 	find_package(Java)

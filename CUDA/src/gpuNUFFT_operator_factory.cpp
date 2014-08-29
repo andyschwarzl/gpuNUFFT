@@ -130,7 +130,7 @@ gpuNUFFT::Array<IndType> gpuNUFFT::GpuNUFFTOperatorFactory::assignSectors(gpuNUF
         DType2 coord;
         coord.x = kSpaceTraj.data[cCnt];
         coord.y = kSpaceTraj.data[cCnt + coordCnt];
-        IndType2 mappedSector = computeSectorMapping(coord,gpuNUFFTOp->getGridSectorDims());
+        IndType2 mappedSector = computeSectorMapping(coord,gpuNUFFTOp->getGridDims(),gpuNUFFTOp->getSectorWidth());
         //linearize mapped sector
         sector = computeInd22Lin(mappedSector,gpuNUFFTOp->getGridSectorDims());		
       }
@@ -140,7 +140,7 @@ gpuNUFFT::Array<IndType> gpuNUFFT::GpuNUFFTOperatorFactory::assignSectors(gpuNUF
         coord.x = kSpaceTraj.data[cCnt];
         coord.y = kSpaceTraj.data[cCnt + coordCnt];
         coord.z = kSpaceTraj.data[cCnt + 2*coordCnt];
-        IndType3 mappedSector = computeSectorMapping(coord,gpuNUFFTOp->getGridSectorDims());
+        IndType3 mappedSector = computeSectorMapping(coord,gpuNUFFTOp->getGridDims(),gpuNUFFTOp->getSectorWidth());
         //linearize mapped sector
         sector = computeInd32Lin(mappedSector,gpuNUFFTOp->getGridSectorDims());		
       }

@@ -371,13 +371,18 @@ __global__ void composeOutputKernel(DType2* temp_gdata, CufftType* gdata, IndTyp
         calculateOppositeIndex(y,center.y,GI.gridDims.y,GI.sector_offset),
         calculateOppositeIndex(z,center.z,GI.gridDims.z,GI.sector_offset),
         GI.gridDims);
+        
+        gdata[ind].x += temp_gdata[s_ind].x;//Re
+        gdata[ind].y += temp_gdata[s_ind].y;//Im  
       }
       else
+      {
         ind = (sector_ind_offset + computeXYZ2Lin(x,y,z,GI.gridDims));
-
-      gdata[ind].x += temp_gdata[s_ind].x;//Re
-      gdata[ind].y += temp_gdata[s_ind].y;//Im			
-    }
+      
+        gdata[ind].x += temp_gdata[s_ind].x;//Re
+        gdata[ind].y += temp_gdata[s_ind].y;//Im			
+      }
+     }
   }
 }
 

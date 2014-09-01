@@ -231,7 +231,7 @@ TEST(TestGPUGpuNUFFTConv,KernelCall1SectorArbSW)
     imgDims.height = im_width;
     imgDims.depth = im_width;
 
-    gpuNUFFT::GpuNUFFTOperatorFactory factory(true,false); 
+    gpuNUFFT::GpuNUFFTOperatorFactory factory(true,true); 
     gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
 
     gpuNUFFT::Array<DType2> dataArray;

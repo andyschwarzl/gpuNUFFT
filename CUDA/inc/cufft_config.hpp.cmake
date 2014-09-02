@@ -4,6 +4,14 @@
 #include "config.hpp"
 #include "cufft.h"
 
+/**
+ * @file 
+ * \brief Definition of types and function pointers used for CUFFT calls. 
+ * 
+ * Depends on CMAKE build parameter GPU_DOUBLE_PREC
+ * 
+ */
+
 #ifdef GPU_DOUBLE_PREC
 	static cufftType_t CufftTransformType = CUFFT_Z2Z;
 	

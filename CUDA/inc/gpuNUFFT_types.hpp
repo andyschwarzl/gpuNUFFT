@@ -5,15 +5,21 @@
 #include <iostream>
 #include "config.hpp"
 
-#define DEFAULT_VALUE(a) ((a == 0) ? 1 : a)
-
-#define MAXIMUM_PAYLOAD 256
-
 /**
  * @file 
  * \brief Definition of gpuNUFFT defined types
  * 
  */
+
+/** \brief Default value of 1 if param is zero. */
+#define DEFAULT_VALUE(a) ((a == 0) ? 1 : a)
+
+/**
+ * \brief Maximum allowed amount of data samples per sector if load balancing is set to true
+ * 
+ * @see gpuNUFFT::BalancedOperator
+ */
+#define MAXIMUM_PAYLOAD 256
 
 namespace gpuNUFFT
 {

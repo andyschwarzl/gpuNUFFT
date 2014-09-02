@@ -4,6 +4,14 @@
 #define CONFIG_H
 #include "cufft.h"
 
+/**
+ * @file 
+ * \brief Definition of types used in gpuNUFFT 
+ * 
+ * Depends on CMAKE build parameters MATLAB_DEBUG, DEBUG, GPU_DOUBLE_PREC
+ * 
+ */
+
 #define MATLAB_DEBUG @MATLAB_DEBUG@
 #define DEBUG @DEBUG@
 

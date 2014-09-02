@@ -1,3 +1,4 @@
+@WARNING@
 #ifndef CUFFT_CONFIG_H
 #define CUFFT_CONFIG_H
 #include "config.hpp"

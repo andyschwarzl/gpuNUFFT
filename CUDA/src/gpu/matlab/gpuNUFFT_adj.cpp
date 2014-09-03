@@ -21,23 +21,32 @@
 #include "gpuNUFFT_operator_matlabfactory.hpp"
 
 /** 
- * MEX file cleanup to reset CUDA Device 
+ * \brief MEX file cleanup to reset CUDA Device 
 **/
 void cleanUp() 
 {
 	cudaDeviceReset();
 }
 
-/*
-  MATLAB Wrapper for NUFFT^H Operation
+/** 
+  * @file 
+  * \brief MATLAB Wrapper for adjoint (NUFFT^H) Operation
+  */
 
-	From MATLAB doc:
-	Arguments
-	nlhs Number of expected output mxArrays
-	plhs Array of pointers to the expected output mxArrays
-	nrhs Number of input mxArrays
-	prhs Array of pointers to the input mxArrays. Do not modify any prhs values in your MEX-file. Changing the data in these read-only mxArrays can produce undesired side effects.
-*/
+/**
+  * \brief MATLAB Wrapper for adjoint (NUFFT^H) Operation
+  *
+  * Loads and converts all parameters arrays and passes 
+  * them to the MatlabGpuNUFFTOperatorFactory in order to
+  * obtain an operator instance. 
+  *
+	* From MATLAB doc:
+	* Arguments
+  * nlhs Number of expected output mxArrays
+	* plhs Array of pointers to the expected output mxArrays
+	* nrhs Number of input mxArrays
+	* prhs Array of pointers to the input mxArrays. Do not modify any prhs values in your MEX-file. Changing the data in these read-only mxArrays can produce undesired side effects.
+  */
 void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 {
 	if (MATLAB_DEBUG)

@@ -31,6 +31,7 @@
 
 	typedef unsigned int IndType;
 	
+  /** \brief Combined 2-tuple (x,y) of IndType */
 	typedef
 	struct IndType2 { IndType x;
 	                  IndType y;
@@ -38,6 +39,7 @@
       IndType2(IndType x, IndType y): x(x),y(y){}
 	} IndType2;
 
+  /** \brief Combined 3-tuple (x,y,z) of IndType */
 	typedef 
   struct IndType3 {	 IndType x;
 								 IndType y;

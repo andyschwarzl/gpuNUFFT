@@ -21,6 +21,8 @@
  */
 #define MAXIMUM_PAYLOAD 256
 
+/** \brief gpuNUFFT related classes
+  */
 namespace gpuNUFFT
 {
   /**\brief Pair implementation of IndType 

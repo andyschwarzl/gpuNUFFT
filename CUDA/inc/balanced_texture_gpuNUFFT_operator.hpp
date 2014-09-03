@@ -7,6 +7,17 @@
 
 namespace gpuNUFFT
 {
+  /**
+    * \brief GpuNUFFTOperator with load balancing and texture memory lookup
+    * 
+    * Changes the behaviour of the default GpuNUFFTOperator by balancing the 
+    * work load by sector to a maximum amount of samples per sector (MAXIMUM_PAYLOAD). 
+    * Thus, sectors with a high density of data points are split into multiple ones,
+    * which are processed in parallel. 
+    * 
+    * Furthermore, the kernel interpolation is performed by using gpu texture memory. 
+    *
+    */
   class BalancedTextureGpuNUFFTOperator : public TextureGpuNUFFTOperator, public BalancedOperator
   {
   public:

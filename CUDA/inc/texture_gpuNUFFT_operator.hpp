@@ -6,6 +6,13 @@
 
 namespace gpuNUFFT
 {
+    /**
+    * \brief GpuNUFFTOperator with texture memory lookup
+    * 
+    * Changes the behaviour of the default GpuNUFFTOperator by using gpu texture memory 
+    * in the kernel interpolation step. 
+    *
+    */
   class TextureGpuNUFFTOperator : public GpuNUFFTOperator
   {
   public:

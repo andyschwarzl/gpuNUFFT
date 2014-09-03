@@ -16,15 +16,14 @@
 
 namespace gpuNUFFT
 {
-  // GpuNUFFTOperatorFactory
-  // 
-  // Manages the initialization of the GpuNUFFT Operator.
-  // Distinguishes between two cases:
-  //
-  // * new calculation of "data - sector" mapping, sorting etc.
-  //  
-  // * reuse of previously calculated mapping
-  // 
+  /** \brief Manages the initialization of the GpuNUFFT Operator.
+   * 
+   * Distinguishes between two cases:
+   *
+   * - new calculation of "data - sector" mapping, sorting etc.
+   *  
+   * - reuse of previously calculated mapping
+   */ 
   class GpuNUFFTOperatorFactory
   {
   public:

@@ -5,6 +5,11 @@
 
 namespace gpuNUFFT
 {
+  /**
+    * \brief Interface defined for balanced gpuNUFFT Operators
+    * 
+    * Adds sector processing order getter and setter. 
+    */
   class BalancedOperator
   {
 	  public:

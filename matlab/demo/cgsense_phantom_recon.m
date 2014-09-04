@@ -2,7 +2,7 @@
 clear all; close all; clc; clear classes;
 
 addpath(genpath('./utils'));
-addpath(genpath('../gpuNUFFT'));
+addpath(genpath('../../gpuNUFFT'));
 
 %% Data parameters
 N=160;

@@ -1,4 +1,4 @@
-function  u = cg_sense_3d(data,F,FH,c,mask,alpha,tol,maxit,display,slice,useMulticoil)
+function  u = cg_sense_3d(data,FT,c,mask,alpha,tol,maxit,display,slice,useMulticoil)
 % 
 % [u] = cg_sense(data,F,Fh,c,mask,alpha,maxit,display)
 % reconstruct subsampled PMRI data using CG SENSE [1]
@@ -26,7 +26,7 @@ function  u = cg_sense_3d(data,F,FH,c,mask,alpha,tol,maxit,display,slice,useMult
 % Magn Reson Med 46: 638-651 (2001)
 % 
 % =========================================================================
-if nargin < 11
+if nargin < 10
   useMulticoil = false;
 end
 %% set up parameters and operators
@@ -42,15 +42,15 @@ cbar = conj(c);
 % right hand side: -K^*residual 
 y  = zeros(nx,ny,nz);
 if useMulticoil
-    y = FH(data);
+    y = FT'*data;
 else
 for ii = 1:nc
-    y = y + FH(data(:,:,ii)).*cbar(:,:,:,ii);
+    y = y + FT*(data(:,:,ii)).*cbar(:,:,:,ii);
 end
 end
 
 % system matrix: F'^T*F' + alpha I
-M  = @(x) applyM(F,FH,c,cbar,x,useMulticoil) + alpha*x;
+M  = @(x) applyM(FT,c,cbar,x,useMulticoil) + alpha*x;
 
 %% CG iterations
 if matlabCG
@@ -90,7 +90,7 @@ u  = reshape(x,nx,ny,nz);
 % end main function
 
 %% Derivative evaluation
-function y = applyM(F,FH,c,cconj,x,useMulticoil)
+function y = applyM(FT,c,cconj,x,useMulticoil)
 [nx,ny,nz,nc] = size(c);
 dx = reshape(x,nx,ny,nz);
 
@@ -98,7 +98,7 @@ y  = zeros(nx,ny,nz);
 if useMulticoil
   % full forward/adjoint operator
   % sensitivities are automatically applied
-  y = FH(F(dx));
+  y = FT'*(FT*dx);
 else
   for ii = 1:nc
       y = y + cconj(:,:,:,ii).*FH(F(c(:,:,:,ii).*dx));

@@ -68,3 +68,12 @@ The compiled CUDA-mexfiles will appear in the bin directory and are also copied
 automatically into the gpuNUFFT/@gpuNUFFT/private directory . Include the gpuNUFFT
 directory into the matlab search path, in order to run the provided demo example.
 
+
+-------------------------------------------------------------------------------
+Doc:
+-------------------------------------------------------------------------------
+To generate the source code documentation run 
+
+    > make doc
+
+in the build directory. 

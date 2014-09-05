@@ -3,6 +3,7 @@
 
 #include "gpuNUFFT_utils.hpp"
 
+/** \brief CPU implementation of gridding */
 void gpuNUFFT_cpu(DType* data, 
 				DType* crds, 
 				DType* gdata,

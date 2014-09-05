@@ -13,16 +13,12 @@
 
 namespace gpuNUFFT
 {
-  // GpuNUFFTOperatorMatlabFactory
-  // decorates GpuNUFFTOperatorFactory
-  //
-  // Manages the initialization of the GpuNUFFT Operator.
-  // Distinguishes between two cases:
-  //
-  // * new calculation of "data - sector" mapping, sorting etc.
-  //  
-  // * reuse of previously calculated mapping
-  // 
+  /** \brief GpuNUFFTOperatorFactory Decorator
+   *
+   * Takes care of proper array initialization for MATLAB 
+   * output arrays.  
+   * 
+   */
   class GpuNUFFTOperatorMatlabFactory : public GpuNUFFTOperatorFactory
   {
   public:
@@ -55,7 +51,6 @@ namespace gpuNUFFT
 
   protected:
 
-    //abstract methods from GpuNUFFTOperatorFactory
     Array<IndType> initDataIndices(GpuNUFFTOperator* gpuNUFFTOp, IndType coordCnt);
     Array<DType> initCoordsData(GpuNUFFTOperator* gpuNUFFTOp, IndType coordCnt);
     Array<IndType> initSectorCenters(GpuNUFFTOperator* gpuNUFFTOp, IndType sectorCnt);

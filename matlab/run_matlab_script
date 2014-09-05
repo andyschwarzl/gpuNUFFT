@@ -1,2 +1,0 @@
-matlab -nojvm -nosplash -r test_gpuNUFFT_Operator_script
-

@@ -9,6 +9,13 @@
 #include "gpuNUFFT_operator.hpp"
 #include <stdarg.h>
 
+/**
+ * @file 
+ * \brief Util functions for CUDA memory and texture management. 
+ *
+ * 
+ */
+
 #define MIN(X,Y) ((X) < (Y) ? (X) : (Y))
 #define MAX(X,Y) ((X) >= (Y) ? (X) : (Y))
 
@@ -20,23 +27,41 @@
   exit( EXIT_FAILURE ); \
   }}\
 
+/** \brief Allocation of device memory of the given extent for the defined type. 
+ * 
+ * @param device_ptr device pointer
+ * @param num_elements amount of elements of size TypeName
+ */
 template<typename TypeName>
 inline void allocateDeviceMem(TypeName** device_ptr, IndType num_elements)
 {
   HANDLE_ERROR(cudaMalloc(device_ptr,num_elements*sizeof(TypeName)));
 }
 
+/** \brief Free of device memory.*/
 inline void freeDeviceMem(void* device_ptr)
 {
   HANDLE_ERROR(cudaFree(device_ptr));
 }
 
+/** \brief CUDA memcpy call to copy data from host to device
+ * 
+ * @param host_ptr      host data pointer 
+ * @param device_ptr    device pointer
+ * @param num_elements  amount of elements of size TypeName
+ */
 template<typename TypeName>
 inline void copyToDevice(TypeName* host_ptr, TypeName* device_ptr, IndType num_elements)
 {
   HANDLE_ERROR(cudaMemcpy(device_ptr, host_ptr,num_elements*sizeof(TypeName),cudaMemcpyHostToDevice ));
 }
 
+/** \brief CUDA memory allocation and memcpy call to copy data from host to device
+ * 
+ * @param host_ptr      host data pointer 
+ * @param device_ptr    device pointer
+ * @param num_elements  amount of elements of size TypeName
+ */
 template<typename TypeName>
 inline void allocateAndCopyToDeviceMem(TypeName** device_ptr, TypeName* host_ptr, IndType num_elements)
 {
@@ -44,6 +69,12 @@ inline void allocateAndCopyToDeviceMem(TypeName** device_ptr, TypeName* host_ptr
   copyToDevice<TypeName>(host_ptr,*device_ptr,num_elements);
 }
 
+/** \brief CUDA memory allocation call and initialization with given scalar value
+ * 
+ * @param device_ptr    device pointer
+ * @param num_elements  amount of elements of size TypeName
+ * @param value         Scalar value to initialize elements with
+ */
 template<typename TypeName>
 inline void allocateAndSetMem(TypeName** device_ptr, IndType num_elements,int value)
 {
@@ -51,12 +82,24 @@ inline void allocateAndSetMem(TypeName** device_ptr, IndType num_elements,int va
   HANDLE_ERROR(cudaMemset(*device_ptr,value,num_elements*sizeof(TypeName)));
 }
 
+/** \brief Copy CUDA memory from device to host
+ * 
+ * @param device_ptr    device pointer
+ * @param host_ptr      host pointer
+ * @param num_elements  amount of elements of size TypeName
+ */
 template<typename TypeName>
 inline void copyFromDevice(TypeName* device_ptr, TypeName* host_ptr, IndType num_elements)
 {
   HANDLE_ERROR(cudaMemcpy(host_ptr, device_ptr,num_elements*sizeof(TypeName),cudaMemcpyDeviceToHost ));
 }
 
+/** \brief Free variable list of device pointers. Use NULL as stopping element
+ *
+ * e.g.: freeTotalDeviceMemory(ptr1*, ptr2*,NULL);
+ * 
+ * @param ptr Device pointer list   
+ */
 inline void freeTotalDeviceMemory(void* ptr,...)
 {
   va_list list;
@@ -79,24 +122,21 @@ inline void freeTotalDeviceMemory(void* ptr,...)
   va_end(list);
 }
 
-/*__device__ inline float atomicFloatAdd(float* address, float value)
+/** \brief Compute optimal grid dimensions for given thread count
+ * 
+ * @param N problem size
+ * @param thread_count count of threads used
+ */
+inline dim3 getOptimalGridDim(long N, long thread_count)
 {
-float old = value;  
-float ret=atomicExch(address, 0.0f);
-float new_old=ret+old;
-while ((old = atomicExch(address, new_old))!=0.0f)
-{
-new_old = atomicExch(address, 0.0f);
-new_old += old;
-}
-return ret;
-}*/
-
-inline dim3 getOptimalGridDim(long im_dim, long thread_count)
-{
-  return dim3(MIN((im_dim+thread_count-1)/thread_count,128*128));//128*128 empiric, max is 256*256 = 65536
+  return dim3(MIN((N+thread_count-1)/thread_count,128*128));//128*128 empiric, max is 256*256 = 65536
 }
 
+/** \brief Debug short device memory information (free/total) to stream if DEBUG flag is set to true. 
+ * 
+ * @param force always print output
+ * @param stream output stream 
+ */
 inline void showMemoryInfo(bool force, FILE* stream)
 {
   size_t free_mem = 0;
@@ -106,27 +146,63 @@ inline void showMemoryInfo(bool force, FILE* stream)
     fprintf(stream,"memory usage, free: %lu total: %lu\n",free_mem,total_mem);
 }
 
+/** \brief Debug short device memory information (free/total) to stdout if DEBUG flag is set to true. 
+ * 
+ * @param force always print output
+ */
 inline void showMemoryInfo(bool force)
 {
   showMemoryInfo(force,stdout);
 }	
 
+/** \brief Debug short device memory information (free/total) to stream if DEBUG flag is set to true. 
+ */
 inline void showMemoryInfo()
 {
   showMemoryInfo(false);
 }
 
-// prototypes
-// for function
+// CUDA kernel prototypes for function
 // implementations that have to reside in cu file
+
+/** \brief Initialize constant symbol on device
+ * 
+ * CUDA Kernel function prototype. 
+ * 
+ * @param symbol Const symbol name
+ */
 void initConstSymbol(const char* symbol, const void* src, IndType count);
 
+/** \brief Initialize texture memory on device
+ * 
+ * CUDA Kernel function prototype. 
+ * 
+ * @param symbol Texture symbol name
+ */
 void initTexture(const char* symbol, cudaArray** devicePtr, gpuNUFFT::Array<DType> hostTexture);
 
+/** \brief Bind to 1-d texture on device
+ * 
+ * CUDA Kernel function prototype. 
+ * 
+ * @param symbol Texture symbol name
+ */
 void bindTo1DTexture(const char* symbol, void* devicePtr, IndType count);
 
+/** \brief Unbind from device texture
+ * 
+ * CUDA Kernel function prototype. 
+ * 
+ * @param symbol Texture symbol name
+ */
 void unbindTexture(const char* symbol);
 
+/** \brief Free texture memory on device
+ * 
+ * CUDA Kernel function prototype. 
+ * 
+ * @param symbol Texture symbol name
+ */
 void freeTexture(const char* symbol,cudaArray* devicePtr);
 
 #endif

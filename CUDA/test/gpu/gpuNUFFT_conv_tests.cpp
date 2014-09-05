@@ -187,6 +187,101 @@ TEST(TestGPUGpuNUFFTConv,KernelCall1Sector)
     EXPECT_EQ(1, 1);
 }
 
+TEST(TestGPUGpuNUFFTConv,KernelCall1SectorArbSW)
+{
+  int kernel_width = 3;
+
+  //Image
+  int im_width = 10;
+
+  //Data
+  int data_entries = 2;
+  DType2* data = (DType2*) calloc(data_entries,sizeof(DType2)); //2* re + im
+  data[0].x = 1;
+  data[0].y = 1;
+  data[1].x = 1;
+  data[1].y = 1;
+
+  //Coords
+  //Scaled between -0.5 and 0.5
+  //in triplets (x,y,z)
+  DType* coords = (DType*) calloc(3*data_entries,sizeof(DType));//3* x,y,z
+  coords[0] = 0; // x
+  coords[1] = 0.4;
+  coords[2] = 0; // y
+  coords[3] = 0; 
+  coords[4] = 0; // z 
+  coords[5] = 0;
+
+  //oversampling ratio
+  float osr = DEFAULT_OVERSAMPLING_RATIO;
+
+  //Output Grid
+
+  // sectors of data, count and start indices
+  // different sector widths, some no integer multiple of im_width 
+  for (int sector_width =2; sector_width<=10; sector_width++)
+  {
+    gpuNUFFT::Array<DType> kSpaceData;
+    kSpaceData.data = coords;
+    kSpaceData.dim.length = data_entries;
+
+    gpuNUFFT::Dimensions imgDims;
+    imgDims.width = im_width;
+    imgDims.height = im_width;
+    imgDims.depth = im_width;
+
+    gpuNUFFT::GpuNUFFTOperatorFactory factory(true,true); 
+    gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
+
+    gpuNUFFT::Array<DType2> dataArray;
+    dataArray.data = data;
+    dataArray.dim.length = data_entries;
+
+    gpuNUFFT::Array<CufftType> gdataArray;
+
+    gdataArray = gpuNUFFTOp->performGpuNUFFTAdj(dataArray,gpuNUFFT::CONVOLUTION);
+    //Output Grid
+    CufftType* gdata = gdataArray.data;
+
+    int center_slice = im_width / 2.0;
+
+    if (DEBUG)
+      for (int j=0; j<im_width; j++)
+      {
+        for (int i=0; i<im_width; i++)
+          printf("%.4f ",gdata[get3DC2lin(i,j,center_slice,im_width)].x);
+        printf("\n");
+      }
+
+      if (DEBUG) printf("test %f \n",gdata[4].x);
+      int index = get3DC2lin(5,5,5,im_width);
+      if (DEBUG) printf("index to test %d\n",index);
+      EXPECT_EQ(index,555);
+      EXPECT_NEAR(1.0f,gdata[index].x,epsilon);
+      EXPECT_NEAR(0.4502,gdata[get3DC2lin(5,4,center_slice,im_width)].x,epsilon*10.0f);
+      EXPECT_NEAR(0.4502,gdata[get3DC2lin(4,5,center_slice,im_width)].x,epsilon*10.0f);
+      EXPECT_NEAR(0.4502,gdata[get3DC2lin(5,6,center_slice,im_width)].x,epsilon*10.0f);
+
+      EXPECT_NEAR(0.2027,gdata[get3DC2lin(6,6,center_slice,im_width)].x,epsilon*10.0f);
+      EXPECT_NEAR(0.2027,gdata[get3DC2lin(4,4,center_slice,im_width)].x,epsilon*10.0f);
+      EXPECT_NEAR(0.2027,gdata[get3DC2lin(4,6,center_slice,im_width)].x,epsilon*10.0f);
+
+      EXPECT_NEAR(0.4502,gdata[get3DC2lin(9,4,center_slice,im_width)].x,epsilon*10.0f);
+      EXPECT_NEAR(0.4502,gdata[get3DC2lin(8,5,center_slice,im_width)].x,epsilon*10.0f);
+      EXPECT_NEAR(0.4502,gdata[get3DC2lin(9,6,center_slice,im_width)].x,epsilon*10.0f);
+
+      EXPECT_NEAR(0.2027,gdata[get3DC2lin(8,6,center_slice,im_width)].x,epsilon*10.0f);
+      EXPECT_NEAR(0.2027,gdata[get3DC2lin(8,4,center_slice,im_width)].x,epsilon*10.0f);
+      EXPECT_NEAR(0.2027,gdata[get3DC2lin(0,6,center_slice,im_width)].x,epsilon*10.0f);
+      
+      free(gdata);
+
+      delete gpuNUFFTOp;
+    }
+    free(data);
+    free(coords);
+}
 
 TEST(TestGPUGpuNUFFTConv,GPUTest_1SectorKernel5)
 {

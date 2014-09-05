@@ -77,3 +77,5 @@ To generate the source code documentation run
     > make doc
 
 in the build directory. 
+
+*Note: Requires doxygen to be installed.*

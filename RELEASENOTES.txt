@@ -5,7 +5,14 @@ Version 2.0.6
 	  operation when gpuNUFFT operator is initialized with 
 	  coil sensitivities. Moreover, an automatic expansion 
 	  to the coil dimensions is performed in the forward operation. 
-	  
+	
+	- Support for arbitrary sector widths. Thus, there is no longer
+	  the need that the grid dimensions are exact integer multiples 
+	  of the sector width. Moreover, this means that 
+	  the oversampling ratio can now be tuned to the limit since 
+	  this has always had a direct impact on the total grid 
+	  dimensions. 
+
 -----------------------------------------------------------------------
 Version 2.0.5
 ----------------------------------------------------------------------

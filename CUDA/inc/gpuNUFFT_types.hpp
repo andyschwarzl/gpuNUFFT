@@ -143,6 +143,15 @@ namespace gpuNUFFT
   }
 
   };
+  
+  /** \brief Array container consisting of raw data, which is expected to be allocated
+   * on the GPU, and gpuNUFFT::Dimensions descriptor.
+   *
+   */
+  template <typename T>
+  struct GpuArray : Array<T> 
+  {
+  };
 
   /** \brief Type used for texture interpolation on GPU
    * 

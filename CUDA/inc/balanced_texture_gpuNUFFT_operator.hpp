@@ -40,6 +40,8 @@ namespace gpuNUFFT
 
     // OPERATIONS
     void performGpuNUFFTAdj(Array<DType2> kspaceData, Array<CufftType>& imgData, GpuNUFFTOutput gpuNUFFTOut = DEAPODIZATION);
+    void performGpuNUFFTAdj(GpuArray<DType2> kspaceData_gpu, GpuArray<CufftType>& imgData_gpu, GpuNUFFTOutput gpuNUFFTOut = DEAPODIZATION);
+
     void performForwardGpuNUFFT(Array<DType2> imgData,Array<CufftType>& kspaceData, GpuNUFFTOutput gpuNUFFTOut = DEAPODIZATION);
     
     //Getter and Setter for Processing Order

@@ -41,7 +41,7 @@ namespace gpuNUFFT
         osf(osf), kernelWidth(kernelWidth), sectorWidth(sectorWidth),imgDims(imgDims),operatorType(operatorType), gpuMemAllocated(false), debugTiming(DEBUG)
     {
       if (loadKernel)
-        initKernel();	
+        initKernel();
 
       sectorDims.width = sectorWidth;
       sectorDims.height = sectorWidth;
@@ -57,39 +57,39 @@ namespace gpuNUFFT
     friend class GpuNUFFTOperatorFactory;
 
     // SETTER 
-    void setOsf(DType osf)			{this->osf = osf;}
+    void setOsf(DType osf)      {this->osf = osf;}
 
-    void setKSpaceTraj(Array<DType> kSpaceTraj)				{this->kSpaceTraj = kSpaceTraj;}
-    void setSectorCenters(Array<IndType> sectorCenters)		{this->sectorCenters = sectorCenters;}
-    void setSectorDataCount(Array<IndType> sectorDataCount)	{this->sectorDataCount = sectorDataCount;}
-    void setDataIndices(Array<IndType> dataIndices)			{this->dataIndices = dataIndices;}
-    void setSens(Array<DType2> sens)						{this->sens = sens;}
-    void setDens(Array<DType> dens)							{this->dens = dens;}
+    void setKSpaceTraj(Array<DType> kSpaceTraj)               {this->kSpaceTraj = kSpaceTraj;}
+    void setSectorCenters(Array<IndType> sectorCenters)       {this->sectorCenters = sectorCenters;}
+    void setSectorDataCount(Array<IndType> sectorDataCount)   {this->sectorDataCount = sectorDataCount;}
+    void setDataIndices(Array<IndType> dataIndices)           {this->dataIndices = dataIndices;}
+    void setSens(Array<DType2> sens)                          {this->sens = sens;}
+    void setDens(Array<DType> dens)                           {this->dens = dens;}
 
-    void setImageDims(Dimensions dims)						{this->imgDims = dims;}
-    void setGridSectorDims(Dimensions dims)						{this->gridSectorDims = dims;}
+    void setImageDims(Dimensions dims)                        {this->imgDims = dims;}
+    void setGridSectorDims(Dimensions dims)                   {this->gridSectorDims = dims;}
 
     // GETTER
-    Array<DType>  getKSpaceTraj()	{return this->kSpaceTraj;}
+    Array<DType>  getKSpaceTraj()     {return this->kSpaceTraj;}
 
-    Array<DType2>	getSens()			{return this->sens;}
-    Array<DType>	getDens()			{return this->dens;}
-    Array<DType>    getKernel()			{return this->kernel;}
+    Array<DType2>  getSens()          {return this->sens;}
+    Array<DType>  getDens()           {return this->dens;}
+    Array<DType>    getKernel()       {return this->kernel;}
     Array<IndType>  getSectorDataCount(){return this->sectorDataCount;}
 
-    IndType getKernelWidth()		{return this->kernelWidth;}
-    IndType getSectorWidth()		{return this->sectorWidth;}
+    IndType getKernelWidth()    {return this->kernelWidth;}
+    IndType getSectorWidth()    {return this->sectorWidth;}
 
     Dimensions getImageDims() {return this->imgDims;}
-    Dimensions getGridDims() {return this->imgDims * osf;}
+    Dimensions getGridDims()  {return this->imgDims * osf;}
 
-    Dimensions getGridSectorDims() {return this->gridSectorDims;}
-    Dimensions getSectorDims() {return this->sectorDims;}
+    Dimensions getGridSectorDims()  {return this->gridSectorDims;}
+    Dimensions getSectorDims()      {return this->sectorDims;}
 
     Array<IndType> getSectorCenters() {return this->sectorCenters;}
-    IndType* getSectorCentersData() {return reinterpret_cast<IndType*>(this->sectorCenters.data);}
+    IndType* getSectorCentersData()   {return reinterpret_cast<IndType*>(this->sectorCenters.data);}
 
-    Array<IndType>  getDataIndices()		{return this->dataIndices;}
+    Array<IndType>  getDataIndices()  {return this->dataIndices;}
 
     bool is2DProcessing() {return this->imgDims.depth == 0;}
     bool is3DProcessing() {return !is2DProcessing();}
@@ -130,6 +130,19 @@ namespace gpuNUFFT
       */
     virtual void     performGpuNUFFTAdj(Array<DType2> kspaceData, Array<CufftType>& imgData, GpuNUFFTOutput gpuNUFFTOut = DEAPODIZATION);
     
+    /** \brief Perform Adjoint gridding operation on kspaceData already residing in GPU memory 
+     *
+     * This may be the case in iterative reconstructions, when k-Space and image
+     * data is already residing on the GPU.
+     *
+     *
+     * @param k-space data 
+     * @param preallocated image data array
+     * @param Stop gridding operation after gpuNUFFT::GpuNUFFTOutput 
+     * @return Regridded Image
+     */
+    virtual void     performGpuNUFFTAdj(GpuArray<DType2> kspaceData_gpu, GpuArray<CufftType>& imgData_gpu, GpuNUFFTOutput gpuNUFFTOut = DEAPODIZATION);
+    
     /** \brief Perform Adjoint gridding operation on given kspaceData 
       *
       * @param k-space data 
@@ -150,7 +163,7 @@ namespace gpuNUFFT
       * Basic steps: - apodization correction
       *              - zero padding with osf
       *              - FFT
-      *							 - convolution and resampling
+      *               - convolution and resampling
       *
       * The memory for the output array is allocated automatically but has to be freed 
       * manually. 
@@ -301,12 +314,12 @@ namespace gpuNUFFT
     /** \brief Virtual forward convolution call, which can be used by sub-classes to add behaviour to the gridding steps
      *
      */
-    virtual void forwardConvolution(CufftType*		data_d, 
-      DType*			crds_d, 
-      CufftType*		gdata_d,
-      DType*			kernel_d, 
-      IndType*		sectors_d, 
-      IndType*		sector_centers_d,
+    virtual void forwardConvolution(CufftType*    data_d, 
+      DType*      crds_d, 
+      CufftType*    gdata_d,
+      DType*      kernel_d, 
+      IndType*    sectors_d, 
+      IndType*    sector_centers_d,
       gpuNUFFT::GpuNUFFTInfo* gi_host);
 
     /** \brief Virtual method to allow different methods of generation of the lookup table

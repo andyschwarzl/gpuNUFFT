@@ -184,6 +184,17 @@ namespace gpuNUFFT
       */
     virtual void     performForwardGpuNUFFT(Array<DType2> imgData,Array<CufftType>& kspaceData, GpuNUFFTOutput gpuNUFFTOut = DEAPODIZATION);
     
+    /** \brief Perform forward gridding operation on kspaceData already residing in GPU memory
+     *
+     * This may be the case in iterative reconstructions, when k-Space and image
+     * data is already residing on the GPU.
+     * 
+     * @param image data 
+     * @param Stop gridding operation after gpuNUFFT::GpuNUFFTOutput 
+     * @return k-space data
+     */
+    virtual void     performForwardGpuNUFFT(GpuArray<DType2> imgData_gpu,GpuArray<CufftType>& kspaceData_gpu, GpuNUFFTOutput gpuNUFFTOut = DEAPODIZATION);
+    
     /** \brief Perform forward gridding operation on given kspaceData 
       * 
       * The memory for the output array is allocated automatically but has to be freed 

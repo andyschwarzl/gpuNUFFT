@@ -697,19 +697,11 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(GpuArray<DType2> imgData
   int      sector_count        = (int)this->gridSectorDims.count();
 
   //cuda mem allocation
-  DType2 *imdata_d;
-  CufftType *data_d;
-
-  if (DEBUG)
-    printf("allocate and copy imdata of size %d...\n",imdata_count);
-  allocateDeviceMem<DType2>(&imdata_d,imdata_count);
-
-  if (DEBUG)
-    printf("allocate and copy data of size %d...\n",data_count);
-  allocateDeviceMem<CufftType>(&data_d,data_count);
-
   initDeviceMemory(n_coils);
-    
+  
+  DType2 *imdata_d = NULL;
+  CufftType *data_d = NULL;
+
   if (debugTiming)
     printf("Memory allocation: %.2f ms\n",stopTiming());
 
@@ -720,13 +712,15 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(GpuArray<DType2> imgData
   {
     int data_coil_offset = coil_it * data_count;
     int im_coil_offset = coil_it * (int)imdata_count;
+    
+    data_d = kspaceData_gpu.data + data_coil_offset;
 
     if (this->applySensData())
       // perform automatically "repeating" of input image in case
       // of existing sensitivity data
-      copyToDevice(imgData.data,imdata_d,imdata_count);
+      imdata_d = imgData_gpu.data;
     else
-      copyToDevice(imgData.data + im_coil_offset,imdata_d,imdata_count);
+      imdata_d = imgData_gpu.data + im_coil_offset;
 
     //reset temp arrays
     cudaMemset(gdata_d,0, sizeof(CufftType)*gi_host->grid_width_dim);
@@ -797,16 +791,14 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(GpuArray<DType2> imgData
     
     //write result in correct order back into output array
     writeOrderedGPU(data_sorted_d,data_indices_d,data_d,(int)this->kSpaceTraj.count());
-    copyFromDevice(data_sorted_d,kspaceData.data + data_coil_offset,data_count);
+    copyDeviceToDevice(data_sorted_d,data_d, data_count);
   }//iterate over coils
   
-  freeTotalDeviceMemory(data_d,imdata_d,NULL);
   freeDeviceMemory(n_coils);
 
   if ((cudaThreadSynchronize() != cudaSuccess))
     fprintf(stderr,"error in performForwardGpuNUFFT function: %s\n",cudaGetErrorString(cudaGetLastError()));
   free(gi_host);
-  
 }
 
 // ----------------------------------------------------------------------------

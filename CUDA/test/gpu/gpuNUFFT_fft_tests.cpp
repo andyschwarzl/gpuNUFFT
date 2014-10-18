@@ -448,7 +448,7 @@ TEST(TestForwardBackward,Test64)
 	gpuNUFFT::Array<CufftType> kSpace = gpuNUFFTOp->performForwardGpuNUFFT(imgArray);
 	
 	printf("contrast %f \n",kSpace.data[0].x/kSpace.data[1].x);
-
+  EXPECT_NEAR(data[0].x/data[1].x,5.0,epsilon);
 	free(data);
 	free(coords);
 	free(gdata);
@@ -797,16 +797,12 @@ TEST(TestForwardBackward,Test_GpuArray)
 	//Perform FT^H Operation
 	gpuNUFFTOp->performGpuNUFFTAdj(dataArray_gpu, imgArray_gpu);
 	
-	//Output Image
-  gpuNUFFT::Array<CufftType> imgArray; 
-  imgArray.dim = imgDims;
-  imgArray.data = (CufftType*)malloc(imgDims.count()*sizeof(CufftType));
-  copyFromDevice(imgArray_gpu.data,imgArray.data,imgArray.count());
-	
 	//Perform FT Operation
-	gpuNUFFT::Array<CufftType> kSpace = gpuNUFFTOp->performForwardGpuNUFFT(imgArray);
+  gpuNUFFTOp->performForwardGpuNUFFT(imgArray_gpu,dataArray_gpu);
+	copyFromDevice(dataArray_gpu.data,data,data_entries);
 	
-	printf("contrast %f \n",kSpace.data[0].x/kSpace.data[1].x);
+	printf("contrast %f \n",data[0].x/data[1].x);
+  EXPECT_NEAR(data[0].x/data[1].x,5.0,epsilon);
 
 	free(data);
 	free(coords);

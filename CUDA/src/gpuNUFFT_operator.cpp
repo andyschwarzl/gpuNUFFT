@@ -125,7 +125,6 @@ gpuNUFFT::GpuNUFFTInfo* gpuNUFFT::GpuNUFFTOperator::initAndCopyGpuNUFFTInfo()
 
   initConstSymbol("GI",gi_host,sizeof(gpuNUFFT::GpuNUFFTInfo));
 
-  //free(gi_host);
   if (DEBUG)
     printf("...done!\n");
   return gi_host;
@@ -237,11 +236,12 @@ void gpuNUFFT::GpuNUFFTOperator::initDeviceMemory(int n_coils)
   gpuMemAllocated = true;
 }
 
-void gpuNUFFT::GpuNUFFTOperator::freeDeviceMemory(int n_coils)
+void gpuNUFFT::GpuNUFFTOperator::freeDeviceMemory()
 {
   if (!gpuMemAllocated)
     return;
-
+  
+  free(gi_host);
   cufftDestroy(fft_plan);
   // Destroy the cuFFT plan.
   if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
@@ -250,7 +250,7 @@ void gpuNUFFT::GpuNUFFTOperator::freeDeviceMemory(int n_coils)
   
   freeTotalDeviceMemory(data_indices_d,data_sorted_d,crds_d,gdata_d,sectors_d,sector_centers_d,NULL);//NULL as stop
   
-  if (n_coils > 1 && deapo_d != NULL)
+  if (deapo_d != NULL)
     cudaFree(deapo_d);
   
   if (this->applySensData())
@@ -339,9 +339,7 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(gpuNUFFT::GpuArray<DType2> k
       //get output
       copyDeviceToDevice<CufftType>(gdata_d,imgData_gpu.data,gi_host->grid_width_dim);
 
-      free(gi_host);
       freeTotalDeviceMemory(imdata_sum_d,NULL);
-      freeDeviceMemory(n_coils);
       return;
     }
     if ((cudaThreadSynchronize() != cudaSuccess))
@@ -367,11 +365,8 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(gpuNUFFT::GpuArray<DType2> k
         printf("stopping output after FFT step\n");
       //get output
       copyDeviceToDevice<CufftType>(gdata_d,imgData_gpu.data,gi_host->grid_width_dim);
-
-      free(gi_host);
       
       freeTotalDeviceMemory(imdata_sum_d,NULL);
-      freeDeviceMemory(n_coils);
       
       printf("last cuda error: %s\n", cudaGetErrorString(cudaGetLastError()));
       return;
@@ -432,10 +427,9 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(gpuNUFFT::GpuArray<DType2> k
   //move memory management into constructor/destructor of GpuNUFFT Operator!!! 
   //
   freeTotalDeviceMemory(imdata_sum_d,NULL);
-  freeDeviceMemory(n_coils);
+
   if ((cudaThreadSynchronize() != cudaSuccess))
     fprintf(stderr,"error in gpuNUFFT_gpu_adj function: %s\n",cudaGetErrorString(cudaGetLastError()));
-  free(gi_host);
 }
 
 // ----------------------------------------------------------------------------
@@ -554,9 +548,7 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(gpuNUFFT::Array<DType2> kspa
       if (DEBUG)
         printf("test value at point zero: %f\n",(imgData.data)[0].x);
 
-      free(gi_host);
       freeTotalDeviceMemory(data_d,imdata_d,imdata_sum_d,NULL);
-      freeDeviceMemory(n_coils);
       return;
     }
     if ((cudaThreadSynchronize() != cudaSuccess))
@@ -583,10 +575,7 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(gpuNUFFT::Array<DType2> kspa
       //get output
       copyFromDevice<CufftType>(gdata_d,imgData.data,gi_host->grid_width_dim);
 
-      free(gi_host);
-      
       freeTotalDeviceMemory(data_d,imdata_d,imdata_sum_d,NULL);
-      freeDeviceMemory(n_coils);
       
       printf("last cuda error: %s\n", cudaGetErrorString(cudaGetLastError()));
       return;
@@ -643,10 +632,9 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(gpuNUFFT::Array<DType2> kspa
     printf("error: at adj  thread synchronization 11: %s\n",cudaGetErrorString(cudaGetLastError()));
   
   freeTotalDeviceMemory(data_d,imdata_d,imdata_sum_d,NULL);
-  freeDeviceMemory(n_coils);
+
   if ((cudaThreadSynchronize() != cudaSuccess))
     fprintf(stderr,"error in gpuNUFFT_gpu_adj function: %s\n",cudaGetErrorString(cudaGetLastError()));
-  free(gi_host);
 }
 
 gpuNUFFT::Array<CufftType> gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(gpuNUFFT::Array<DType2> kspaceData, GpuNUFFTOutput gpuNUFFTOut)
@@ -794,11 +782,8 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(GpuArray<DType2> imgData
     copyDeviceToDevice(data_sorted_d,data_d, data_count);
   }//iterate over coils
   
-  freeDeviceMemory(n_coils);
-
   if ((cudaThreadSynchronize() != cudaSuccess))
     fprintf(stderr,"error in performForwardGpuNUFFT function: %s\n",cudaGetErrorString(cudaGetLastError()));
-  free(gi_host);
 }
 
 // ----------------------------------------------------------------------------
@@ -955,11 +940,9 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(gpuNUFFT::Array<DType2> 
   }//iterate over coils
   
   freeTotalDeviceMemory(data_d,imdata_d,NULL);
-  freeDeviceMemory(n_coils);
 
   if ((cudaThreadSynchronize() != cudaSuccess))
     fprintf(stderr,"error in performForwardGpuNUFFT function: %s\n",cudaGetErrorString(cudaGetLastError()));
-  free(gi_host);
 }
 
 gpuNUFFT::Array<CufftType> gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(Array<DType2> imgData,GpuNUFFTOutput gpuNUFFTOut)

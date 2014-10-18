@@ -38,7 +38,9 @@ namespace gpuNUFFT
       * @param operatorType Overwrite defalt operator type
       */
     GpuNUFFTOperator(IndType kernelWidth, IndType sectorWidth, DType osf, Dimensions imgDims, bool loadKernel = true, OperatorType operatorType = DEFAULT): 
-        osf(osf), kernelWidth(kernelWidth), sectorWidth(sectorWidth),imgDims(imgDims),operatorType(operatorType), gpuMemAllocated(false), debugTiming(DEBUG)
+        osf(osf), kernelWidth(kernelWidth), sectorWidth(sectorWidth),imgDims(imgDims),operatorType(operatorType), gpuMemAllocated(false), debugTiming(DEBUG),
+        sens_d(NULL),crds_d(NULL),density_comp_d(NULL),deapo_d(NULL),gdata_d(NULL),sector_centers_d(NULL),sectors_d(NULL),
+        data_indices_d(NULL),data_sorted_d(NULL)
     {
       if (loadKernel)
         initKernel();
@@ -52,6 +54,7 @@ namespace gpuNUFFT
     ~GpuNUFFTOperator()
     {
       free(this->kernel.data);
+      freeDeviceMemory();
     }
 
     friend class GpuNUFFTOperatorFactory;
@@ -391,7 +394,7 @@ namespace gpuNUFFT
     void initDeviceMemory(int n_coils);
 
     /** \brief Function to free the neccessary device memory used by the GriddingOperator. */
-    void freeDeviceMemory(int n_coils);
+    void freeDeviceMemory();
 
   };
 

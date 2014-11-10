@@ -86,7 +86,7 @@ end
 
 % check that sector width fits inside oversampled grid
 if (sum(mod(imageDim*osf,sw))~=0)
-    printf('GRID width [%.1f,%.1f,%.1f] (image width * OSR) is no integer multiple of sector width %d.\nTry to use integer multiples for best performance.',imageDim(1)*osf,imageDim(2)*osf,imageDim(3)*osf,sw);
+    warning('gpuNUFFT:init:oversampling','GRID width [%.1f,%.1f,%.1f] (image width * OSR) is no integer multiple of sector width %d.\nTry to use integer multiples for best performance.',imageDim(1)*osf,imageDim(2)*osf,imageDim(3)*osf,sw)
 end
 
 res.op.params.img_dims = uint32(imageDim);

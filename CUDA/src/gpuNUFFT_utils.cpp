@@ -48,9 +48,18 @@ void load1DKernel(DType *kernTab,long kernel_entries, int kernel_width, DType os
   /* load table */
   for (i=1; i<kernel_entries-1; i++)	
   {
-    rsqr = (double)sqrt(i/(double)(kernel_entries-1));//*(i/(float)(size-1));
-    kernTab[i] = static_cast<DType>(kernel(rsqr,kernel_width,osr)); /* kernel table for radius squared */
-    //assert(kernTab[i]!=kernTab[i]); //check is NaN
+    //dirty fix for kw 1 -> something
+    //like nearest neighbor 
+    if (kernel_width == 1)
+    {
+      kernTab[i] = 1.0f; 
+    }
+    else
+    {
+      rsqr = (double)sqrt(i/(double)(kernel_entries-1));//*(i/(float)(size-1));
+      kernTab[i] = static_cast<DType>(kernel(rsqr,kernel_width,osr)); /* kernel table for radius squared */
+    }
+//    assert(!isnan(kernTab[i])); //check is NaN
   }
 
   /* ensure center point is 1 */

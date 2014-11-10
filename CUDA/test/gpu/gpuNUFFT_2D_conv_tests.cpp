@@ -8,6 +8,85 @@
 
 #define get2DC2lin(_x,_y,_width) ((_x) + (_width) *(_y))
 
+TEST(Test2DConv,KernelCall1Sector)
+{
+	//oversampling ratio
+	float osr = 1.0;
+
+	float kernel_width = 1;
+	
+  long kernel_entries = calculateGrid3KernelSize(osr, kernel_width/2.0f);
+  std::cout << "Kernel entries: " << kernel_entries << std::endl;
+  
+  DType *kern = (DType*) calloc(kernel_entries,sizeof(DType));
+  load1DKernel(kern,kernel_entries,kernel_width,osr);
+
+  for (int i=0; i<kernel_entries; i++)
+    std::cout << " ["<<i<<"]" << kern[i] << std::endl;
+  free(kern);
+
+	//Image
+	int im_width = 10;
+
+	//Data
+	int data_entries = 1;
+    DType2* data = (DType2*) calloc(data_entries,sizeof(DType2)); //2* re + im
+	data[0].x = 1;
+	data[0].y = 1;
+
+	//Coords
+	//Scaled between -0.5 and 0.5
+	//in triplets (x,y)
+    DType* coords = (DType*) calloc(2*data_entries,sizeof(DType));//2* x,y
+	coords[0] = 0.2; //should result in 7,7 center
+	coords[1] = 0.151;
+
+
+	//Output Grid
+  
+	//sectors of data, count and start indices
+	int sector_width = 5;
+
+	gpuNUFFT::Array<DType> kSpaceData;
+    kSpaceData.data = coords;
+    kSpaceData.dim.length = data_entries;
+
+	gpuNUFFT::Dimensions imgDims(im_width,im_width);
+
+  gpuNUFFT::GpuNUFFTOperatorFactory factory(false,false,false);
+  gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
+
+	gpuNUFFT::Array<DType2> dataArray;
+	dataArray.data = data;
+	dataArray.dim.length = data_entries;
+
+	gpuNUFFT::Array<CufftType> gdataArray;
+	
+	gdataArray = gpuNUFFTOp->performGpuNUFFTAdj(dataArray,gpuNUFFT::CONVOLUTION);
+	//Output Grid
+	CufftType* gdata = gdataArray.data;
+
+	  for (int j=0; j<im_width; j++)
+	  {
+		  for (int i=0; i<im_width; i++)
+			  printf("%.4f ",gdata[get2DC2lin(i,j,im_width)].x);
+		  printf("\n");
+	  }
+  if (DEBUG)
+	  printf("test %f \n",gdata[4].x);
+	int index = get2DC2lin(5,5,im_width);
+	if (DEBUG) 
+    printf("index to test %d\n",index);
+
+	free(data);
+	free(coords);
+	free(gdata);
+
+	delete gpuNUFFTOp;
+
+	EXPECT_EQ(1, 1);
+}
+
 TEST(Test2DGPUGpuNUFFTConv,KernelCall1Sector)
 {
 	int kernel_width = 3;

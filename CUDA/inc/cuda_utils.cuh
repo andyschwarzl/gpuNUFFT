@@ -77,6 +77,7 @@ __inline__ __device__ float computeTextureLookup(float x, float y, float z)
 #endif
 
 // From NVIDIA devtalk
+#ifdef GPU_DOUBLE_PREC
 __inline__ __device__ double atomicAdd(double* address, double val)
 {
   unsigned long long int* address_as_ull = (unsigned long long int*) address;
@@ -88,5 +89,6 @@ __inline__ __device__ double atomicAdd(double* address, double val)
   while (assumed != old);
   return __longlong_as_double(old);
 }
+#endif
 
 #endif

@@ -10,8 +10,12 @@ set(GPU_CU_SOURCES	${CMAKE_CURRENT_SOURCE_DIR}/coarse_gpuNUFFT.cu
 					#${CMAKE_CURRENT_SOURCE_DIR}/../std_gpuNUFFT_kernels.cu
 									 )
 
-SET(CUDA_NVCC_FLAGS "-arch;sm_11;--ptxas-options=-v")
-									 
+if(GPU_DOUBLE_PREC)
+  SET(CUDA_NVCC_FLAGS "-arch;sm_13;--ptxas-options=-v")
+else(GPU_DOUBLE_PREC)
+  SET(CUDA_NVCC_FLAGS "-arch;sm_11;--ptxas-options=-v")
+endif(GPU_DOUBLE_PREC)
+
 if(WIN32)
     CUDA_ADD_LIBRARY(${GRID_LIB_NAME} ${GPU_CU_SOURCES} ${GPU_GPUNUFFT_SOURCES} ${GPUNUFFT_INCLUDE} ${GPUNUFFT_INC_DIR}/cufft_config.hpp)
 else(WIN32)

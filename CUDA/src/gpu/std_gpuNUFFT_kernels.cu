@@ -25,11 +25,11 @@ void bindTo1DTexture(const char* symbol, void* devicePtr, IndType count)
 {
   if (std::string("texDATA").compare(symbol)==0)
   {
-    HANDLE_ERROR (cudaBindTexture(NULL,texDATA, devicePtr,count*sizeof(DType2)));
+    HANDLE_ERROR (cudaBindTexture(NULL,texDATA, devicePtr,count*sizeof(float2)));
   }
   else if (std::string("texGDATA").compare(symbol)==0)
   {
-    HANDLE_ERROR (cudaBindTexture(NULL,texGDATA, devicePtr,count*sizeof(CufftType)));
+    HANDLE_ERROR (cudaBindTexture(NULL,texGDATA, devicePtr,count*sizeof(cufftComplex)));
   }
 }
 
@@ -40,7 +40,7 @@ void initTexture(const char* symbol, cudaArray** devicePtr, gpuNUFFT::Array<DTyp
   {
     HANDLE_ERROR (cudaMallocArray (devicePtr, &texKERNEL.channelDesc, hostTexture.dim.width, 1));
     HANDLE_ERROR (cudaBindTextureToArray (texKERNEL, *devicePtr));
-    HANDLE_ERROR(cudaMemcpyToArray(*devicePtr, 0, 0, hostTexture.data, sizeof(DType)*hostTexture.count(), cudaMemcpyHostToDevice));
+    HANDLE_ERROR(cudaMemcpyToArray(*devicePtr, 0, 0, hostTexture.data, sizeof(float)*hostTexture.count(), cudaMemcpyHostToDevice));
     
     texKERNEL.filterMode = cudaFilterModePoint;
     texKERNEL.normalized = true;
@@ -50,7 +50,7 @@ void initTexture(const char* symbol, cudaArray** devicePtr, gpuNUFFT::Array<DTyp
   {
     HANDLE_ERROR (cudaMallocArray (devicePtr, &texKERNEL2D.channelDesc, hostTexture.dim.width, hostTexture.dim.height));
     HANDLE_ERROR (cudaBindTextureToArray (texKERNEL2D, *devicePtr));
-    HANDLE_ERROR(cudaMemcpyToArray(*devicePtr, 0, 0, hostTexture.data, sizeof(DType)*hostTexture.count(), cudaMemcpyHostToDevice));
+    HANDLE_ERROR(cudaMemcpyToArray(*devicePtr, 0, 0, hostTexture.data, sizeof(float)*hostTexture.count(), cudaMemcpyHostToDevice));
     
     texKERNEL2D.filterMode = cudaFilterModeLinear;
     texKERNEL2D.normalized = true;
@@ -66,7 +66,7 @@ void initTexture(const char* symbol, cudaArray** devicePtr, gpuNUFFT::Array<DTyp
     copyparams.extent=volumesize; 
     copyparams.dstArray=*devicePtr; 
     copyparams.kind=cudaMemcpyHostToDevice; 
-    copyparams.srcPtr= make_cudaPitchedPtr((void*)hostTexture.data,sizeof(DType)*hostTexture.dim.width,hostTexture.dim.height,hostTexture.dim.depth); 
+    copyparams.srcPtr= make_cudaPitchedPtr((void*)hostTexture.data,sizeof(float)*hostTexture.dim.width,hostTexture.dim.height,hostTexture.dim.depth); 
 
     HANDLE_ERROR(cudaMemcpy3D(&copyparams)); 
     HANDLE_ERROR (cudaBindTextureToArray (texKERNEL3D, *devicePtr));

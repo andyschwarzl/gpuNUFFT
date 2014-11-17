@@ -38,7 +38,7 @@ TEST(OperatorFactoryTest,TestInit)
 	imgDims.width = imageWidth;
 	imgDims.height = imageWidth;
 	imgDims.depth = imageWidth;
-  gpuNUFFT::GpuNUFFTOperatorFactory factory;
+  gpuNUFFT::GpuNUFFTOperatorFactory factory(false,false,false);
 	gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(kSpaceTraj, kernelWidth, sectorWidth, osf, imgDims);
 
 	EXPECT_TRUE(gpuNUFFTOp != NULL);
@@ -103,7 +103,7 @@ TEST(OperatorFactoryTest,TestInvalidArgumentInit)
 	imgDims.depth = imageWidth;
 
 	EXPECT_THROW({
-    gpuNUFFT::GpuNUFFTOperatorFactory factory;
+    gpuNUFFT::GpuNUFFTOperatorFactory factory(false,false,false);
 	gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(kSpaceTraj, kernelWidth, sectorWidth, osf, imgDims);
 	},std::invalid_argument);
 }
@@ -127,7 +127,7 @@ TEST(OperatorFactoryTest,Test2DInit)
     kSpaceTraj.dim.length = coordCnt;
 
 	gpuNUFFT::Dimensions imgDims(imageWidth,imageWidth);
-  gpuNUFFT::GpuNUFFTOperatorFactory factory;
+  gpuNUFFT::GpuNUFFTOperatorFactory factory(false,false,false);
 	gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(kSpaceTraj, kernelWidth, sectorWidth, osf, imgDims);
 
 	EXPECT_TRUE(gpuNUFFTOp != NULL);

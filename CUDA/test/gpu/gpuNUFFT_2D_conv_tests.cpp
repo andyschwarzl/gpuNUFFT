@@ -121,7 +121,8 @@ TEST(Test2DGPUGpuNUFFTConv,KernelCall1Sector)
 
 	gpuNUFFT::Dimensions imgDims(im_width,im_width);
 
-    gpuNUFFT::GpuNUFFTOperatorFactory factory; gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
+  gpuNUFFT::GpuNUFFTOperatorFactory factory(false,true,true);
+  gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
 
 	gpuNUFFT::Array<DType2> dataArray;
 	dataArray.data = data;
@@ -197,7 +198,8 @@ TEST(Test2DGPUGpuNUFFTConv,GPUTest_1SectorKernel5)
 
 	gpuNUFFT::Dimensions imgDims(im_width,im_width);
 	
-    gpuNUFFT::GpuNUFFTOperatorFactory factory; gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
+  gpuNUFFT::GpuNUFFTOperatorFactory factory(false,true,true);
+  gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
 
 	gpuNUFFT::Array<DType2> dataArray;
 	dataArray.data = data;
@@ -292,7 +294,8 @@ TEST(Test2DGPUGpuNUFFTConv,GPUTest_2SectorsKernel3nData)
 
 	gpuNUFFT::Dimensions imgDims(im_width,im_width);
 	
-    gpuNUFFT::GpuNUFFTOperatorFactory factory; gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
+  gpuNUFFT::GpuNUFFTOperatorFactory factory(false,true,true);
+  gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
 
 	gpuNUFFT::Array<DType2> dataArray;
 	dataArray.data = data;
@@ -391,7 +394,8 @@ TEST(Test2DGPUGpuNUFFTConv,GPUTest_8SectorsKernel3nData)
 
 	gpuNUFFT::Dimensions imgDims(im_width,im_width);
 	
-    gpuNUFFT::GpuNUFFTOperatorFactory factory; gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
+  gpuNUFFT::GpuNUFFTOperatorFactory factory(false,true,true);
+  gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
 
 	gpuNUFFT::Array<DType2> dataArray;
 	dataArray.data = data;
@@ -488,7 +492,8 @@ TEST(Test2DGPUGpuNUFFTConv,GPUTest_8SectorsKernel4nData)
 
 	gpuNUFFT::Dimensions imgDims(im_width,im_width);
 	
-    gpuNUFFT::GpuNUFFTOperatorFactory factory; gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
+  gpuNUFFT::GpuNUFFTOperatorFactory factory(false,true,true); 
+  gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
 
 	gpuNUFFT::Array<DType2> dataArray;
 	dataArray.data = data;
@@ -584,7 +589,8 @@ TEST(Test2DGPUGpuNUFFTConv,GPUTest_8SectorsKernel5nData)
 
 	gpuNUFFT::Dimensions imgDims(im_width,im_width);
 
-    gpuNUFFT::GpuNUFFTOperatorFactory factory; gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
+  gpuNUFFT::GpuNUFFTOperatorFactory factory(false,true,true); 
+  gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
 
 	gpuNUFFT::Array<DType2> dataArray;
 	dataArray.data = data;
@@ -679,7 +685,8 @@ TEST(Test2DGPUGpuNUFFTConv,GPUTest_8SectorsKernel3nDataw120)
 
 	gpuNUFFT::Dimensions imgDims(im_width,im_width);
 
-    gpuNUFFT::GpuNUFFTOperatorFactory factory; gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
+  gpuNUFFT::GpuNUFFTOperatorFactory factory(false,true,true);
+  gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
 
 	gpuNUFFT::Array<DType2> dataArray;
 	dataArray.data = data;
@@ -758,7 +765,8 @@ TEST(Test2DGPUGpuNUFFTConv,GPUTest_FactorTwoTest)
 
 	gpuNUFFT::Dimensions imgDims(im_width,im_width);
 
-    gpuNUFFT::GpuNUFFTOperatorFactory factory; gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
+  gpuNUFFT::GpuNUFFTOperatorFactory factory(false,true,true);
+  gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
 
 	gpuNUFFT::Array<DType2> dataArray;
 	dataArray.data = data;
@@ -840,7 +848,8 @@ TEST(Test2DGPUGpuNUFFTConv,GPUTest_8SectorsKernel3nDataw32)
 
 	gpuNUFFT::Dimensions imgDims(im_width,im_width);
 
-    gpuNUFFT::GpuNUFFTOperatorFactory factory; gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
+  gpuNUFFT::GpuNUFFTOperatorFactory factory(false,true,true);
+  gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
 
 	gpuNUFFT::Array<DType2> dataArray;
 	dataArray.data = data;
@@ -929,7 +938,8 @@ TEST(Test2DGPUGpuNUFFTConv,MatlabTest_8SK3w32)
 
 	gpuNUFFT::Dimensions imgDims(im_width,im_width);
 
-    gpuNUFFT::GpuNUFFTOperatorFactory factory; gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
+  gpuNUFFT::GpuNUFFTOperatorFactory factory(false,true,true);
+  gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
 
 	gpuNUFFT::Array<DType2> dataArray;
 	dataArray.data = data;
@@ -1006,7 +1016,7 @@ TEST(Test2DGpuNUFFTConv,Test_256x128)
 
 	gpuNUFFT::Dimensions imgDims(256,128);
 
-  gpuNUFFT::GpuNUFFTOperatorFactory factory; 
+  gpuNUFFT::GpuNUFFTOperatorFactory factory(false,true,true); 
   gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
 
 	gpuNUFFT::Array<DType2> dataArray;

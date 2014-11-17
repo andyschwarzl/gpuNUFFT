@@ -7,12 +7,12 @@ __constant__ gpuNUFFT::GpuNUFFTInfo GI;
 
 __constant__ DType KERNEL[5000];
 
-texture<DType,1,cudaReadModeElementType> texKERNEL;
-texture<DType,2,cudaReadModeElementType> texKERNEL2D;
-texture<DType,3,cudaReadModeElementType> texKERNEL3D;
+texture<float,1,cudaReadModeElementType> texKERNEL;
+texture<float,2,cudaReadModeElementType> texKERNEL2D;
+texture<float,3,cudaReadModeElementType> texKERNEL3D;
 
-texture<DType2> texDATA;
-texture<CufftType> texGDATA;
+texture<float2> texDATA;
+texture<cufftComplex> texGDATA;
 
 __inline__ __device__ DType compute1DTextureLookup(DType x, DType y)
 {

@@ -1,6 +1,8 @@
 #ifndef TEXTURE_GPUNUFFT_OPERATOR_H_INCLUDED
 #define TEXTURE_GPUNUFFT_OPERATOR_H_INCLUDED
 
+#include <typeinfo>
+#include <stdexcept>
 #include "gpuNUFFT_types.hpp"
 #include "gpuNUFFT_operator.hpp"
 
@@ -20,12 +22,18 @@ namespace gpuNUFFT
     TextureGpuNUFFTOperator(IndType kernelWidth, IndType sectorWidth, DType osf, Dimensions imgDims,InterpolationType interpolationType): 
     GpuNUFFTOperator(kernelWidth,sectorWidth,osf,imgDims,false,TEXTURE),interpolationType(interpolationType)
     {
+      if (typeid(DType) == typeid(double))
+        throw std::runtime_error("Double precision textures are not supported yet!"); 
+
       initKernel();	
     }
 
     TextureGpuNUFFTOperator(IndType kernelWidth, IndType sectorWidth, DType osf, Dimensions imgDims): 
     GpuNUFFTOperator(kernelWidth,sectorWidth,osf,imgDims,false,TEXTURE),interpolationType(gpuNUFFT::TEXTURE2D_LOOKUP)
     {
+      if (typeid(DType)==typeid(double))
+        throw std::runtime_error("Double precision textures are not supported yet!"); 
+
       initKernel();	
     }
 

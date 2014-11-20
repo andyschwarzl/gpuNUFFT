@@ -455,3 +455,139 @@ TEST(TestForwardBackward,Test64)
 
   delete gpuNUFFTOp;
 }
+
+class TestFFT : public ::testing::Test
+{
+ public:
+  static void SetUpTestCase()
+  {
+    
+  }
+  virtual void SetUp() {
+    gpuNUFFT::Dimensions dims(16,16,6);
+
+    // row major
+    for (unsigned slice = 0; slice < dims.depth; slice++)
+      for (unsigned row = 0; row < dims.height; ++row)
+        for (unsigned column = 0; column < dims.width; ++column)
+        {
+          CufftType val;
+          val.x = computeXYZ2Lin(column, row, slice, dims);
+          val.y = 0;
+          data.push_back(val);
+        }
+  }
+  static std::vector<CufftType> data;
+};
+
+std::vector<CufftType> TestFFT::data;
+
+TEST_F(TestFFT,Test8)
+{
+  int kernel_width = 3;
+	float osf = 1.25;//oversampling ratio
+	int sector_width = 8;
+	
+	gpuNUFFT::Dimensions imgDims;
+	imgDims.width = 8;
+	imgDims.height = 8;
+   
+  //Input data array, complex values
+	gpuNUFFT::Array<CufftType> dataArray;
+	dataArray.data = &data[0];
+	dataArray.dim = imgDims;
+
+  CufftType* data_d;
+  allocateAndCopyToDeviceMem<CufftType>(&data_d,dataArray.data,dataArray.count());
+
+  gpuNUFFT::GpuNUFFTInfo gi_host;
+
+  gi_host.is2Dprocessing = true;
+  gi_host.gridDims.x = imgDims.width;
+  gi_host.gridDims.y = imgDims.height;
+
+  initConstSymbol("GI",&gi_host,sizeof(gpuNUFFT::GpuNUFFTInfo));
+
+  printf("Input:\n");
+  for (int j=0; j<imgDims.height; j++)
+	{
+		for (int i=0; i<imgDims.width; i++)
+      printf("%3.0f ",dataArray.data[computeXY2Lin(i,j,imgDims)].x);
+			//printf("%3.0f ",dataArray.data[computeXY2Lin(i,imgDims.width-1-j,imgDims)].x);
+		printf("\n");
+	}
+  printf("########################################################################:\n");
+  
+  performFFTShift(data_d,gpuNUFFT::FORWARD,imgDims,&gi_host);
+
+  copyFromDevice(data_d,dataArray.data,dataArray.count());
+
+  //if (DEBUG) 
+  //{
+      printf("Output:\n");
+      for (int j=0; j<imgDims.height; j++)
+	    {
+		    for (int i=0; i<imgDims.width; i++)
+          printf("%3.0f ",dataArray.data[computeXY2Lin(i,j,imgDims)].x);
+			    //printf("%3.0f ",dataArray.data[computeXY2Lin(i,imgDims.width-1-j,imgDims)].x);
+		    printf("\n");
+	    }
+  //}
+
+  cudaFree(data_d);
+}
+
+TEST_F(TestFFT,Test9)
+{
+  int kernel_width = 3;
+	float osf = 1.25;//oversampling ratio
+	int sector_width = 8;
+	
+	gpuNUFFT::Dimensions imgDims;
+	imgDims.width = 9;
+	imgDims.height = 9;
+   
+  //Input data array, complex values
+	gpuNUFFT::Array<CufftType> dataArray;
+	dataArray.data = &data[0];
+	dataArray.dim = imgDims;
+
+  CufftType* data_d;
+  allocateAndCopyToDeviceMem<CufftType>(&data_d,dataArray.data,dataArray.count());
+
+  gpuNUFFT::GpuNUFFTInfo gi_host;
+
+  gi_host.is2Dprocessing = true;
+  gi_host.gridDims.x = imgDims.width;
+  gi_host.gridDims.y = imgDims.height;
+
+  initConstSymbol("GI",&gi_host,sizeof(gpuNUFFT::GpuNUFFTInfo));
+
+  printf("Input:\n");
+  for (int j=0; j<imgDims.height; j++)
+	{
+		for (int i=0; i<imgDims.width; i++)
+			//printf("%3.0f ",dataArray.data[computeXY2Lin(i,imgDims.width-1-j,imgDims)].x);
+      printf("%3.0f ",dataArray.data[computeXY2Lin(i,j,imgDims)].x);
+		printf("\n");
+	}
+  printf("########################################################################:\n");
+  
+  performFFTShift(data_d,gpuNUFFT::FORWARD,imgDims,&gi_host);
+
+  copyFromDevice(data_d,dataArray.data,dataArray.count());
+
+  //if (DEBUG) 
+  //{
+      printf("Output:\n");
+      for (int j=0; j<imgDims.height; j++)
+	    {
+		    for (int i=0; i<imgDims.width; i++)
+			    printf("%3.0f ",dataArray.data[computeXY2Lin(i,j,imgDims)].x);
+        //printf("%3.0f ",dataArray.data[computeXY2Lin(i,imgDims.width-1-j,imgDims)].x);
+		    printf("\n");
+	    }
+  //}
+
+  cudaFree(data_d);
+}

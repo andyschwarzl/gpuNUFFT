@@ -461,11 +461,9 @@ class TestFFT : public ::testing::Test
  public:
   static void SetUpTestCase()
   {
-    
-  }
-  virtual void SetUp() {
     gpuNUFFT::Dimensions dims(16,16,6);
 
+    data.clear();
     // row major
     for (unsigned slice = 0; slice < dims.depth; slice++)
       for (unsigned row = 0; row < dims.height; ++row)
@@ -477,17 +475,35 @@ class TestFFT : public ::testing::Test
           data.push_back(val);
         }
   }
+  static const int kernel_width = 3;
+	static const float osf = 1.25;//oversampling ratio
+	static const int sector_width = 8;
   static std::vector<CufftType> data;
 };
 
 std::vector<CufftType> TestFFT::data;
-
-TEST_F(TestFFT,Test8)
+  
+void debug(const char* title, std::vector<CufftType> data, gpuNUFFT::Dimensions imgDims)
 {
-  int kernel_width = 3;
-	float osf = 1.25;//oversampling ratio
-	int sector_width = 8;
-	
+
+  //if (DEBUG) 
+  //{
+  printf("%s:\n",title);
+  for (int k=0; k<std::max((int)imgDims.depth,1); k++)
+  {
+    for (int j=0; j<imgDims.height; j++)
+    {
+      for (int i=0; i<imgDims.width; i++)
+        printf("%3.0f ",data[computeXYZ2Lin(i,j,k,imgDims)].x);
+      printf("\n");
+    }
+    printf("---------------------------------------------------\n");
+  }
+  //}
+}
+
+TEST_F(TestFFT,Test8x8)
+{
 	gpuNUFFT::Dimensions imgDims;
 	imgDims.width = 8;
 	imgDims.height = 8;
@@ -508,41 +524,31 @@ TEST_F(TestFFT,Test8)
 
   initConstSymbol("GI",&gi_host,sizeof(gpuNUFFT::GpuNUFFTInfo));
 
-  printf("Input:\n");
-  for (int j=0; j<imgDims.height; j++)
-	{
-		for (int i=0; i<imgDims.width; i++)
-      printf("%3.0f ",dataArray.data[computeXY2Lin(i,j,imgDims)].x);
-			//printf("%3.0f ",dataArray.data[computeXY2Lin(i,imgDims.width-1-j,imgDims)].x);
-		printf("\n");
-	}
-  printf("########################################################################:\n");
+  debug("Input:",data,imgDims);
   
   performFFTShift(data_d,gpuNUFFT::FORWARD,imgDims,&gi_host);
 
-  copyFromDevice(data_d,dataArray.data,dataArray.count());
+  std::vector<CufftType> result(imgDims.count());
+  copyFromDevice(data_d, &result[0], dataArray.count());
 
-  //if (DEBUG) 
-  //{
-      printf("Output:\n");
-      for (int j=0; j<imgDims.height; j++)
-	    {
-		    for (int i=0; i<imgDims.width; i++)
-          printf("%3.0f ",dataArray.data[computeXY2Lin(i,j,imgDims)].x);
-			    //printf("%3.0f ",dataArray.data[computeXY2Lin(i,imgDims.width-1-j,imgDims)].x);
-		    printf("\n");
-	    }
-  //}
+  debug("Output FFTSHIFT(data):",result,imgDims);
+  
+  performFFTShift(data_d,gpuNUFFT::INVERSE,imgDims,&gi_host);
+  copyFromDevice(data_d, &result[0], dataArray.count());
+
+  debug("Output IFFTSHIFT(FFTSHIFT(data)):",result,imgDims);
+  
+  for (int i=0; i < imgDims.count(); i++)
+  {
+    EXPECT_NEAR(data[i].x,result[i].x,epsilon);
+    EXPECT_NEAR(data[i].y,result[i].y,epsilon);
+  }
 
   cudaFree(data_d);
 }
 
-TEST_F(TestFFT,Test9)
+TEST_F(TestFFT,Test9x9)
 {
-  int kernel_width = 3;
-	float osf = 1.25;//oversampling ratio
-	int sector_width = 8;
-	
 	gpuNUFFT::Dimensions imgDims;
 	imgDims.width = 9;
 	imgDims.height = 9;
@@ -563,31 +569,168 @@ TEST_F(TestFFT,Test9)
 
   initConstSymbol("GI",&gi_host,sizeof(gpuNUFFT::GpuNUFFTInfo));
 
-  printf("Input:\n");
-  for (int j=0; j<imgDims.height; j++)
-	{
-		for (int i=0; i<imgDims.width; i++)
-			//printf("%3.0f ",dataArray.data[computeXY2Lin(i,imgDims.width-1-j,imgDims)].x);
-      printf("%3.0f ",dataArray.data[computeXY2Lin(i,j,imgDims)].x);
-		printf("\n");
-	}
-  printf("########################################################################:\n");
+  debug("Input:",data,imgDims);
   
   performFFTShift(data_d,gpuNUFFT::FORWARD,imgDims,&gi_host);
 
-  copyFromDevice(data_d,dataArray.data,dataArray.count());
+  std::vector<CufftType> result(imgDims.count());
+  copyFromDevice(data_d, &result[0], dataArray.count());
 
-  //if (DEBUG) 
-  //{
-      printf("Output:\n");
-      for (int j=0; j<imgDims.height; j++)
-	    {
-		    for (int i=0; i<imgDims.width; i++)
-			    printf("%3.0f ",dataArray.data[computeXY2Lin(i,j,imgDims)].x);
-        //printf("%3.0f ",dataArray.data[computeXY2Lin(i,imgDims.width-1-j,imgDims)].x);
-		    printf("\n");
-	    }
-  //}
+  debug("Output FFTSHIFT(data):",result,imgDims);
+
+  performFFTShift(data_d,gpuNUFFT::INVERSE,imgDims,&gi_host);
+  copyFromDevice(data_d, &result[0], dataArray.count());
+
+  debug("Output IFFTSHIFT(FFTSHIFT(data)):",result,imgDims);
+  
+  for (int i=0; i < imgDims.count(); i++)
+  {
+    EXPECT_NEAR(data[i].x,result[i].x,epsilon);
+    EXPECT_NEAR(data[i].y,result[i].y,epsilon);
+  }
+
+  cudaFree(data_d);
+}
+
+TEST_F(TestFFT,Test9x11)
+{
+	gpuNUFFT::Dimensions imgDims;
+	imgDims.width = 9;
+	imgDims.height = 11;
+   
+  //Input data array, complex values
+	gpuNUFFT::Array<CufftType> dataArray;
+	dataArray.data = &data[0];
+	dataArray.dim = imgDims;
+
+  CufftType* data_d;
+  allocateAndCopyToDeviceMem<CufftType>(&data_d,dataArray.data,dataArray.count());
+
+  gpuNUFFT::GpuNUFFTInfo gi_host;
+
+  gi_host.is2Dprocessing = true;
+  gi_host.gridDims.x = imgDims.width;
+  gi_host.gridDims.y = imgDims.height;
+
+  initConstSymbol("GI",&gi_host,sizeof(gpuNUFFT::GpuNUFFTInfo));
+
+  debug("Input:",data,imgDims);
+  
+  performFFTShift(data_d,gpuNUFFT::FORWARD,imgDims,&gi_host);
+
+  std::vector<CufftType> result(imgDims.count());
+  copyFromDevice(data_d, &result[0], dataArray.count());
+
+  debug("Output FFTSHIFT(data):",result,imgDims);
+
+  performFFTShift(data_d,gpuNUFFT::INVERSE,imgDims,&gi_host);
+  copyFromDevice(data_d, &result[0], dataArray.count());
+
+  debug("Output IFFTSHIFT(FFTSHIFT(data)):",result,imgDims);
+
+  for (int i=0; i < imgDims.count(); i++)
+  {
+    EXPECT_NEAR(data[i].x,result[i].x,epsilon);
+    EXPECT_NEAR(data[i].y,result[i].y,epsilon);
+  }
+
+  cudaFree(data_d);
+}
+
+TEST_F(TestFFT,Test4x4x4)
+{
+	gpuNUFFT::Dimensions imgDims;
+	imgDims.width = 4;
+	imgDims.height = 4;
+	imgDims.depth = 4;
+   
+  //Input data array, complex values
+	gpuNUFFT::Array<CufftType> dataArray;
+	dataArray.data = &data[0];
+	dataArray.dim = imgDims;
+
+  CufftType* data_d;
+  allocateAndCopyToDeviceMem<CufftType>(&data_d,dataArray.data,dataArray.count());
+
+  gpuNUFFT::GpuNUFFTInfo gi_host;
+
+  gi_host.is2Dprocessing = false;
+
+  gi_host.gridDims.x = imgDims.width;
+  gi_host.gridDims.y = imgDims.height;
+  gi_host.gridDims.z = imgDims.depth;
+
+  initConstSymbol("GI",&gi_host,sizeof(gpuNUFFT::GpuNUFFTInfo));
+
+  debug("Input:", data, imgDims);
+  
+  performFFTShift(data_d, gpuNUFFT::FORWARD, imgDims, &gi_host);
+
+  std::vector<CufftType> result(imgDims.count());
+  copyFromDevice(data_d, &result[0], dataArray.count());
+
+  debug("Output FFTSHIFT(data):",result,imgDims);
+
+  performFFTShift(data_d,gpuNUFFT::INVERSE,imgDims,&gi_host);
+  copyFromDevice(data_d, &result[0], dataArray.count());
+
+  debug("Output IFFTSHIFT(FFTSHIFT(data)):",result,imgDims);
+
+
+  for (int i=0; i < imgDims.count(); i++)
+  {
+    EXPECT_NEAR(data[i].x,result[i].x,epsilon);
+    EXPECT_NEAR(data[i].y,result[i].y,epsilon);
+  }
+
+  cudaFree(data_d);
+}
+
+TEST_F(TestFFT,Test8x11x4)
+{
+	gpuNUFFT::Dimensions imgDims;
+	imgDims.width = 8;
+	imgDims.height = 11;
+	imgDims.depth = 4;
+   
+  //Input data array, complex values
+	gpuNUFFT::Array<CufftType> dataArray;
+	dataArray.data = &data[0];
+	dataArray.dim = imgDims;
+
+  CufftType* data_d;
+  allocateAndCopyToDeviceMem<CufftType>(&data_d,dataArray.data,dataArray.count());
+
+  gpuNUFFT::GpuNUFFTInfo gi_host;
+
+  gi_host.is2Dprocessing = false;
+
+  gi_host.gridDims.x = imgDims.width;
+  gi_host.gridDims.y = imgDims.height;
+  gi_host.gridDims.z = imgDims.depth;
+
+  initConstSymbol("GI",&gi_host,sizeof(gpuNUFFT::GpuNUFFTInfo));
+
+  debug("Input:", data, imgDims);
+  
+  performFFTShift(data_d, gpuNUFFT::FORWARD, imgDims, &gi_host);
+
+  std::vector<CufftType> result(imgDims.count());
+  copyFromDevice(data_d, &result[0], dataArray.count());
+
+  debug("Output FFTSHIFT(data):",result,imgDims);
+
+  performFFTShift(data_d,gpuNUFFT::INVERSE,imgDims,&gi_host);
+  copyFromDevice(data_d, &result[0], dataArray.count());
+
+  debug("Output IFFTSHIFT(FFTSHIFT(data)):",result,imgDims);
+
+
+  for (int i=0; i < imgDims.count(); i++)
+  {
+    EXPECT_NEAR(data[i].x,result[i].x,epsilon);
+    EXPECT_NEAR(data[i].y,result[i].y,epsilon);
+  }
 
   cudaFree(data_d);
 }

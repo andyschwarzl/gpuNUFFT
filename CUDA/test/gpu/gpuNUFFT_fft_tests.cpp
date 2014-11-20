@@ -485,21 +485,20 @@ std::vector<CufftType> TestFFT::data;
   
 void debug(const char* title, std::vector<CufftType> data, gpuNUFFT::Dimensions imgDims)
 {
-
-  //if (DEBUG) 
-  //{
-  printf("%s:\n",title);
-  for (int k=0; k<std::max((int)imgDims.depth,1); k++)
+  if (DEBUG) 
   {
-    for (int j=0; j<imgDims.height; j++)
+    printf("%s:\n",title);
+    for (int k=0; k<std::max((int)imgDims.depth,1); k++)
     {
-      for (int i=0; i<imgDims.width; i++)
-        printf("%3.0f ",data[computeXYZ2Lin(i,j,k,imgDims)].x);
-      printf("\n");
+      for (int j=0; j<imgDims.height; j++)
+      {
+        for (int i=0; i<imgDims.width; i++)
+          printf("%3.0f ",data[computeXYZ2Lin(i,j,k,imgDims)].x);
+        printf("\n");
+      }
+      printf("---------------------------------------------------\n");
     }
-    printf("---------------------------------------------------\n");
   }
-  //}
 }
 
 TEST_F(TestFFT,Test8x8)

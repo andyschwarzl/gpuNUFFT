@@ -29,14 +29,13 @@ kw = 3; %1 also possible and ideal for uniform cartesian
 sw = 8;
 imwidth = N;
 
-FT = gpuNUFFT(k',w,osf,kw,sw,[N,N],[],false);
+FT = gpuNUFFT(k',w,osf,kw,sw,[N,N],[]);
 FTCPU = NUFFT(k(1,:) + 1i*k(2,:),w,1,0,[N,N],2);
 
 run_demo(v,FT,FTCPU,x,y,N,'Smooth ');
 %% non smooth recon
-k = k_nonsmooth;
 kw = 3; %nonsmooth
-FT = gpuNUFFT(k',w,osf,kw,sw,[N,N],[],false);
-FTCPU = NUFFT(k(1,:) + 1i*k(2,:),w,1,0,[N,N],2);
+FT = gpuNUFFT(k_nonsmooth',w,osf,kw,sw,[N,N],[]);
+FTCPU = NUFFT(k_nonsmooth(1,:) + 1i*k_nonsmooth(2,:),w,1,0,[N,N],2);
 
 run_demo(v,FT,FTCPU,x,y,N,'Non-smooth ');

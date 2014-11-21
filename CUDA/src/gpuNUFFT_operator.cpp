@@ -87,7 +87,7 @@ gpuNUFFT::GpuNUFFTInfo* gpuNUFFT::GpuNUFFTOperator::initGpuNUFFTInfo()
   if (DEBUG)
     printf("radius rel. to grid width %f\n",radius);
 
-  gpuNUFFT::Dimensions sectorPadDims = sectorDims + 2*(int)(floor(this->kernelWidth / (DType)2.0));
+  gpuNUFFT::Dimensions sectorPadDims = sectorDims + 2*(int)(ceil(this->kernelWidth / (DType)2.0));
 
   int sector_pad_width = (int)sectorPadDims.width;
   int sector_dim = (int)sectorPadDims.count();

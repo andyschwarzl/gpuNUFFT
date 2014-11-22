@@ -14,7 +14,7 @@ k = [col(x)'; col(y)'];
 
 %non-smooth version
 [x_ns,y_ns] = meshgrid(linspace(-0.5,0.5,N),linspace(-0.5,0.5,N));
-k_nonsmooth = [col(x)'; col(y)'];
+k_nonsmooth = [col(x_ns)'; col(y_ns)'];
 
 v = linspace(0,1,N);
 v = 1i*(v'*v);

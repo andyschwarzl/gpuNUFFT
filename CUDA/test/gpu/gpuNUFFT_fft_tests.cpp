@@ -459,6 +459,10 @@ TEST(TestForwardBackward,Test64)
 class TestFFT : public ::testing::Test
 {
  public:
+  TestFFT()
+  {
+    osf = 1.25;//oversampling ratio
+  }
   static void SetUpTestCase()
   {
     gpuNUFFT::Dimensions dims(16,16,6);
@@ -476,7 +480,7 @@ class TestFFT : public ::testing::Test
         }
   }
   static const int kernel_width = 3;
-	static const float osf = 1.25;//oversampling ratio
+	float osf;//oversampling ratio
 	static const int sector_width = 8;
   static std::vector<CufftType> data;
 };

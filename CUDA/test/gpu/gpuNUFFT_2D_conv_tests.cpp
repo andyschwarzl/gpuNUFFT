@@ -13,7 +13,7 @@ TEST(Test2DConv,KernelCall1Sector)
 	//oversampling ratio
 	float osr = 1.0;
 
-	float kernel_width = 1;
+	float kernel_width = 3;
 	
   long kernel_entries = calculateGrid3KernelSize(osr, kernel_width/2.0f);
   std::cout << "Kernel entries: " << kernel_entries << std::endl;
@@ -21,39 +21,46 @@ TEST(Test2DConv,KernelCall1Sector)
   DType *kern = (DType*) calloc(kernel_entries,sizeof(DType));
   load1DKernel(kern,kernel_entries,kernel_width,osr);
 
-  for (int i=0; i<kernel_entries; i++)
+ /* for (int i=0; i<kernel_entries; i++)
     std::cout << " ["<<i<<"]" << kern[i] << std::endl;
   free(kern);
-
+  */
 	//Image
-	int im_width = 10;
+	int im_width = 16;
 
 	//Data
-	int data_entries = 1;
+	int data_entries = im_width*im_width;
     DType2* data = (DType2*) calloc(data_entries,sizeof(DType2)); //2* re + im
 	data[0].x = 1;
 	data[0].y = 1;
-
+  data[data_entries-1].x = 1;
+	data[data_entries-1].y = 1;
+  int N = im_width * im_width;
 	//Coords
 	//Scaled between -0.5 and 0.5
 	//in triplets (x,y)
     DType* coords = (DType*) calloc(2*data_entries,sizeof(DType));//2* x,y
-	coords[0] = 0.2; //should result in 7,7 center
-	coords[1] = 0.151;
+  for (int j=0; j<im_width; j++)
+    for (int i=0; i<im_width; i++)
+    {
+      coords[i+im_width*(j)] = -0.5 + (DType)i/(DType)(im_width-1);
+      coords[i+im_width*(j)+N] = -0.5 + (DType)j/(DType)(im_width-1);
+      std::cout << "x : " << coords[i+j*im_width] << std::endl;
+    }
 
 
 	//Output Grid
   
 	//sectors of data, count and start indices
-	int sector_width = 5;
+	int sector_width = 4;
 
 	gpuNUFFT::Array<DType> kSpaceData;
-    kSpaceData.data = coords;
-    kSpaceData.dim.length = data_entries;
+  kSpaceData.data = coords;
+  kSpaceData.dim.length = data_entries;
 
 	gpuNUFFT::Dimensions imgDims(im_width,im_width);
 
-  gpuNUFFT::GpuNUFFTOperatorFactory factory(false,false,false);
+  gpuNUFFT::GpuNUFFTOperatorFactory factory(false,true,false);
   gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
 
 	gpuNUFFT::Array<DType2> dataArray;
@@ -69,7 +76,14 @@ TEST(Test2DConv,KernelCall1Sector)
 	  for (int j=0; j<im_width; j++)
 	  {
 		  for (int i=0; i<im_width; i++)
-			  printf("%.4f ",gdata[get2DC2lin(i,j,im_width)].x);
+			  printf("%4.0f ",gdata[get2DC2lin(i,j,im_width)].x);
+		  printf("\n");
+	  }
+    printf("----------------------------------------------------------------------\n");
+    for (int j=0; j<im_width; j++)
+	  {
+		  for (int i=0; i<im_width; i++)
+			  printf("%4.0f ",gdata[get2DC2lin(i,j,im_width)].y);
 		  printf("\n");
 	  }
   if (DEBUG)

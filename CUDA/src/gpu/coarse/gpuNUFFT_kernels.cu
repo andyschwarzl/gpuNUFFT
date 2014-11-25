@@ -215,28 +215,27 @@ __device__ void convolutionFunction2D(DType2* sdata, int sec, int sec_cnt, int s
       data_point.x = crds[data_cnt];
       data_point.y = crds[data_cnt +GI.data_count];
       // set the boundaries of final dataset for gpuNUFFT this point
-      ix = (data_point.x + 0.5f) * (GI.gridDims.x) - center.x + GI.sector_offset;
+      ix = (data_point.x * (DType)GI.gridDims.x) + (0.5 * (DType)(GI.gridDims.x-1)) /*- 1.0*/ - (DType)center.x + (DType)GI.sector_offset;
       set_minmax(&ix, &imin, &imax, max_dim, GI.kernel_radius);
-      jy = (data_point.y + 0.5f) * (GI.gridDims.y) - center.y + GI.sector_offset;
+      jy = (data_point.y * (DType)GI.gridDims.y) + (0.5 * (DType)(GI.gridDims.y-1)) /*- 1.0*/ - (DType)center.y + (DType)GI.sector_offset;
       set_minmax(&jy, &jmin, &jmax, max_dim, GI.kernel_radius);
-
       // grid this point onto the neighboring cartesian points
       j=threadIdx.y;
       if (j<=jmax && j>=jmin)
       {
-        jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.y)) - 0.5f;   
+        jy = static_cast<DType>((DType)j + (DType)center.y - (DType)GI.sector_offset) / static_cast<DType>(GI.gridDims.y - 1) - 0.5f;   
         dy_sqr = (jy - data_point.y)*GI.aniso_y_scale;
         dy_sqr *= dy_sqr;
-        if (dy_sqr < GI.radiusSquared)	
+        if (dy_sqr <= GI.radiusSquared)	
         {
           i=threadIdx.x;
 
           if (i<=imax && i>=imin)
           {
-            ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;
+            ix = static_cast<DType>((DType)i + (DType)center.x - (DType)GI.sector_offset) / static_cast<DType>(GI.gridDims.x - 1) - 0.5f;
             dx_sqr = (ix - data_point.x)*GI.aniso_x_scale;
             dx_sqr *= dx_sqr;
-            if (dx_sqr < GI.radiusSquared)	
+            if (dx_sqr <= GI.radiusSquared)	
             {
               //get kernel value
               //Calculate Separable Filters 
@@ -352,7 +351,7 @@ __global__ void composeOutputKernel(DType2* temp_gdata, CufftType* gdata, IndTyp
     center.z = sector_centers[sec * 3 + 2];
     __shared__ int sector_ind_offset;
 
-    sector_ind_offset = computeXYZ2Lin(center.x - GI.sector_offset,center.y - GI.sector_offset,center.z - GI.sector_offset,GI.gridDims);
+    sector_ind_offset = computeXYZ2Lin((int)center.x - GI.sector_offset,(int)center.y - GI.sector_offset,(int)center.z - GI.sector_offset,GI.gridDims);
 
     __shared__ int sector_grid_offset;
     sector_grid_offset = sec_cnt * GI.sector_dim;
@@ -402,7 +401,7 @@ __global__ void composeOutputKernel2D(DType2* temp_gdata, CufftType* gdata, IndT
     center.x = sector_centers[sec * 2];
     center.y = sector_centers[sec * 2 + 1];
     __shared__ int sector_ind_offset;
-    sector_ind_offset = computeXY2Lin(center.x - GI.sector_offset,center.y - GI.sector_offset,GI.gridDims);
+    sector_ind_offset = computeXY2Lin((int)center.x - GI.sector_offset,(int)center.y - GI.sector_offset,GI.gridDims);
     __shared__ int sector_grid_offset;
     sector_grid_offset = sec_cnt * GI.sector_dim;
     //write data from temp grid to overall output grid
@@ -900,7 +899,7 @@ __global__ void forwardConvolutionKernel22D(CufftType* data,
     center.y = sector_centers[sec * 2 + 1];
 
     __shared__ int sector_ind_offset;
-    sector_ind_offset = computeXY2Lin(center.x - GI.sector_offset,center.y - GI.sector_offset,GI.gridDims);
+    sector_ind_offset = computeXY2Lin((int)center.x - (int)GI.sector_offset,(int)center.y - (int)GI.sector_offset,GI.gridDims);
 
      // init sector cache 
     // preload sector grid data into cache
@@ -934,27 +933,33 @@ __global__ void forwardConvolutionKernel22D(CufftType* data,
       data_point.y = crds[data_cnt + GI.data_count];
 
       // set the boundaries of final dataset for gpuNUFFT this point
-      ix = (data_point.x + 0.5f) * (GI.gridDims.x) - center.x + GI.sector_offset;
+      /*
+      ix = (data_point.x + 0.5f) * ((int)GI.gridDims.x) - (int)center.x + GI.sector_offset;
       set_minmax(&ix, &imin, &imax, GI.sector_pad_max, GI.kernel_radius);
-      jy = (data_point.y + 0.5f) * (GI.gridDims.y) - center.y + GI.sector_offset;
+      jy = (data_point.y + 0.5f) * ((int)GI.gridDims.y) - (int)center.y + GI.sector_offset;
       set_minmax(&jy, &jmin, &jmax, GI.sector_pad_max, GI.kernel_radius);
-
+      */
+      ix = (data_point.x * (DType)GI.gridDims.x) + (0.5 * (DType)(GI.gridDims.x-1)) /*- 1.0*/ - (DType)center.x + (DType)GI.sector_offset;
+      set_minmax(&ix, &imin, &imax, GI.sector_pad_max, GI.kernel_radius);
+      jy = (data_point.y * (DType)GI.gridDims.y) + (0.5 * (DType)(GI.gridDims.y-1)) /*- 1.0*/ - (DType)center.y + (DType)GI.sector_offset;
+      set_minmax(&jy, &jmin, &jmax, GI.sector_pad_max, GI.kernel_radius);
+      
       // convolve neighboring cartesian points to this data point
       j=jmin;
       while (j<=jmax && j>=jmin)
       {
-        jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.y)) - 0.5f;   //(j - center_y) *width_inv;
+        jy = static_cast<DType>((DType)j + (DType)center.y - (DType)GI.sector_offset) / static_cast<DType>(((int)GI.gridDims.y - 1)) - 0.5f;   //(j - center_y) *width_inv;
         dy_sqr = (jy - data_point.y)*GI.aniso_y_scale;
         dy_sqr *= dy_sqr;
-        if (dy_sqr < GI.radiusSquared)	
+        if (dy_sqr <= GI.radiusSquared)	
         {
           i=imin;								
           while (i<=imax && i>=imin)
           {
-            ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;// (i - center_x) *width_inv;
+            ix = static_cast<DType>((DType)i + (DType)center.x - (DType)GI.sector_offset) / static_cast<DType>(((int)GI.gridDims.x -1)) - 0.5f;// (i - center_x) *width_inv;
             dx_sqr = (ix - data_point.x)*GI.aniso_x_scale;
             dx_sqr *= dx_sqr;
-            if (dx_sqr < GI.radiusSquared)	
+            if (dx_sqr <= GI.radiusSquared)	
             {
               // get kernel value
               // calc as separable filter

@@ -173,7 +173,7 @@ gpuNUFFT::Array<IndType> gpuNUFFT::GpuNUFFTOperatorFactory::computeSectorDataCou
 
 inline IndType gpuNUFFT::GpuNUFFTOperatorFactory::computeSectorCenter(IndType var, IndType sectorWidth)
 {
-  return (IndType)(var*sectorWidth + std::floor(static_cast<DType>(sectorWidth) / (DType)2.0));
+  return (IndType)((int)var*(int)sectorWidth + (int)std::floor(static_cast<DType>(sectorWidth) / (DType)2.0));
 }
 
 void gpuNUFFT::GpuNUFFTOperatorFactory::debug(const std::string& message)

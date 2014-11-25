@@ -99,11 +99,11 @@ __inline__ __device__ __host__ void set_minmax (DType *x, int *min, int *max, in
   *min = (int) ceil (*x - radius);
   *max = (int) floor (*x + radius);
   //check boundaries
-  if (*min < 0) *min = 0;
+  if (*min < 0.0) *min = 0.0;
+  if (*max < 0.0) *max = 0.0;
   if (*max >= maximum) *max = maximum;
   //if (*x >= (DType)maximum) *x = (DType)(maximum-radius);
   if (*min >= (DType)maximum) *min = (int)(maximum-2*radius);
-
 }
 
 long calculateGrid3KernelSize();

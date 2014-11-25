@@ -3,6 +3,7 @@
 
 #include "cuda_utils.hpp"
 #include "gpuNUFFT_operator.hpp"
+#include "gpuNUFFT_utils.hpp"
 #include <cmath>
 
 /** 
@@ -30,9 +31,11 @@ __inline__ __device__ __host__ IndType computeSectorMapping(DType coord, IndType
   */
 __inline__ __device__ __host__ IndType computeSectorMapping(DType coord, IndType gridDim, DType sectorWidth)
 {
-  int sector = (int)std::floor((coord + 0.5) * gridDim / sectorWidth);
-  if (sector >= (int)std::ceil(gridDim/sectorWidth)) 
-    sector = (int)(std::ceil(gridDim/sectorWidth) -1);
+  //int sector = (int)std::floor((int)((coord + 0.5) * ((int)gridDim - 1))/ sectorWidth);
+  int sector = (int)std::floor(round(coord * (DType)(gridDim-1) + 0.5 * (DType)(gridDim-1)) / sectorWidth);
+
+  if (sector >= (int)std::ceil((DType)(gridDim-1)/sectorWidth)) 
+    sector = (int)(std::ceil((DType)(gridDim-1)/sectorWidth) -1);
   if (sector < 0)
     sector = 0;
   return sector;

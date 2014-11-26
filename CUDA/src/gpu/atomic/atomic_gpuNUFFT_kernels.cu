@@ -79,11 +79,11 @@ __global__ void convolutionKernel3( DType2* data,
       //			DType3 data_point; //datapoint shared in every thread
       DType3 data_point = coord_cache[c_ind - reload_count*CACHE_SIZE];
       // set the boundaries of final dataset for gpuNUFFT this point
-      ix = (data_point.x + 0.5f) * (GI.gridDims.x) - center.x + GI.sector_offset;
+      ix = mapKSpaceToGrid(data_point.x,GI.gridDims.x,center.x,GI.sector_offset);
       set_minmax(&ix, &imin, &imax, GI.sector_pad_max, GI.kernel_radius);
-      jy = (data_point.y + 0.5f) * (GI.gridDims.y) - center.y + GI.sector_offset;
+      jy = mapKSpaceToGrid(data_point.y,GI.gridDims.y,center.y,GI.sector_offset);
       set_minmax(&jy, &jmin, &jmax, GI.sector_pad_max, GI.kernel_radius);
-      kz = (data_point.z + 0.5f) * (GI.gridDims.z) - center.z + GI.sector_offset;
+      kz = mapKSpaceToGrid(data_point.z,GI.gridDims.z,center.z,GI.sector_offset);
       set_minmax(&kz, &kmin, &kmax, GI.sector_pad_max, GI.kernel_radius);
 
       // grid this point onto the neighboring cartesian points
@@ -95,17 +95,17 @@ __global__ void convolutionKernel3( DType2* data,
           && (j<=jmax && j>=jmin)
           && (i<=imax && i>=imin))
         {
-          kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.gridDims.z)) - 0.5f;//(k - center_z) *width_inv;
+          kz = mapGridToKSpace(k,GI.gridDims.z,center.z,GI.sector_offset);
           dz_sqr = (kz - data_point.z)*GI.aniso_z_scale;
           dz_sqr *= dz_sqr;
           if (dz_sqr < GI.radiusSquared)
           {
-            jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.y)) - 0.5f;   //(j - center_y) *width_inv;
+            jy = mapGridToKSpace(j,GI.gridDims.y,center.y,GI.sector_offset);
             dy_sqr = (jy - data_point.y) * GI.aniso_y_scale;
             dy_sqr *= dy_sqr;
             if (dy_sqr < GI.radiusSquared)	
             {
-              ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;// (i - center_x) *width_inv;
+              ix = mapGridToKSpace(i,GI.gridDims.x,center.x,GI.sector_offset);
               dx_sqr = (ix - data_point.x)*GI.aniso_x_scale;
               dx_sqr *= dx_sqr;
               if (dx_sqr < GI.radiusSquared)	
@@ -176,11 +176,11 @@ __device__ void convolutionFunction4(int sec, int sec_max, int sec_offset, DType
 
       __syncthreads();	
       // set the boundaries of final dataset for gpuNUFFT this point
-      ix = static_cast<DType>((data_point.x + 0.5) * (GI.gridDims.x) - center.x + GI.sector_offset);
+      ix = mapKSpaceToGrid(data_point.x,GI.gridDims.x,center.x,GI.sector_offset);
       set_minmax(&ix, &imin, &imax, max_dim, GI.kernel_radius);
-      jy = static_cast<DType>((data_point.y + 0.5) * (GI.gridDims.y) - center.y + GI.sector_offset);
+      jy = mapKSpaceToGrid(data_point.y,GI.gridDims.y,center.y,GI.sector_offset);
       set_minmax(&jy, &jmin, &jmax, max_dim, GI.kernel_radius);
-      kz = static_cast<DType>((data_point.z + 0.5) * (GI.gridDims.z) - center.z + GI.sector_offset);
+      kz = mapKSpaceToGrid(data_point.z,GI.gridDims.z,center.z,GI.sector_offset);
       set_minmax(&kz, &kmin, &kmax, max_dim, GI.kernel_radius);
       
       // grid this point onto the neighboring cartesian points
@@ -188,7 +188,7 @@ __device__ void convolutionFunction4(int sec, int sec_max, int sec_offset, DType
       {
         if (k<=kmax && k>=kmin)
         {
-          kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.gridDims.z)) - 0.5f;
+          kz = mapGridToKSpace(k,GI.gridDims.z,center.z,GI.sector_offset);
           // scale distance in z direction with x,y dimension
           dz_sqr = (kz - data_point.z)*GI.aniso_z_scale;
           dz_sqr *= dz_sqr;
@@ -197,7 +197,7 @@ __device__ void convolutionFunction4(int sec, int sec_max, int sec_offset, DType
             j=threadIdx.y;
             if (j<=jmax && j>=jmin)
             {
-              jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.y)) - 0.5f;
+              jy = mapGridToKSpace(j,GI.gridDims.y,center.y,GI.sector_offset);
               dy_sqr = (jy - data_point.y) * GI.aniso_y_scale;
               dy_sqr *= dy_sqr;
               if (dy_sqr < GI.radiusSquared)	
@@ -206,7 +206,7 @@ __device__ void convolutionFunction4(int sec, int sec_max, int sec_offset, DType
 
                 if (i<=imax && i>=imin)
                 {
-                  ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;
+                  ix = mapGridToKSpace(i,GI.gridDims.x,center.x,GI.sector_offset);
                   dx_sqr = (ix - data_point.x)*GI.aniso_x_scale;
                   dx_sqr *= dx_sqr;
                   if (dx_sqr < GI.radiusSquared)	
@@ -332,18 +332,18 @@ __device__ void convolutionFunction2(int* sec, int sec_max, int sec_offset, DTyp
       data_point.z = crds[data_cnt +2*GI.data_count];
 
       // set the boundaries of final dataset for gpuNUFFT this point
-      ix = (data_point.x + 0.5f) * (GI.gridDims.x) - center.x + GI.sector_offset;
+      ix = mapKSpaceToGrid(data_point.x,GI.gridDims.x,center.x,GI.sector_offset);
       set_minmax(&ix, &imin, &imax, GI.sector_pad_max, GI.kernel_radius);
-      jy = (data_point.y + 0.5f) * (GI.gridDims.y) - center.y + GI.sector_offset;
+      jy = mapKSpaceToGrid(data_point.y,GI.gridDims.y,center.y,GI.sector_offset);
       set_minmax(&jy, &jmin, &jmax, GI.sector_pad_max, GI.kernel_radius);
-      kz = (data_point.z + 0.5f) * (GI.gridDims.z) - center.z + GI.sector_offset;
+      kz = mapKSpaceToGrid(data_point.z,GI.gridDims.z,center.z,GI.sector_offset);
       set_minmax(&kz, &kmin, &kmax, GI.sector_pad_max, GI.kernel_radius);
 
       // grid this point onto its cartesian points neighbors
       k =kmin;
       while (k<=kmax && k>=kmin)
       {
-        kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.gridDims.z)) - 0.5f;//(k - center_z) *width_inv;
+        kz = mapGridToKSpace(k,GI.gridDims.z,center.z,GI.sector_offset);
         dz_sqr = (kz - data_point.z)*GI.aniso_z_scale;
         dz_sqr *= dz_sqr;
         if (dz_sqr < GI.radiusSquared)
@@ -351,7 +351,7 @@ __device__ void convolutionFunction2(int* sec, int sec_max, int sec_offset, DTyp
           j=jmin;
           while (j<=jmax && j>=jmin)
           {
-            jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.y)) - 0.5f;   //(j - center_y) *width_inv;
+            jy = mapGridToKSpace(j,GI.gridDims.y,center.y,GI.sector_offset);
             dy_sqr = (jy - data_point.y) * GI.aniso_y_scale;
             dy_sqr *= dy_sqr;
             if (dy_sqr < GI.radiusSquared)	
@@ -359,7 +359,7 @@ __device__ void convolutionFunction2(int* sec, int sec_max, int sec_offset, DTyp
               i= imin;						
               while (i<=imax && i>=imin)
               {
-                ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;// (i - center_x) *width_inv;
+                ix = mapGridToKSpace(i,GI.gridDims.x,center.x,GI.sector_offset);
                 dx_sqr = (ix - data_point.x)*GI.aniso_x_scale;
                 dx_sqr *= dx_sqr;
                 if (dx_sqr < GI.radiusSquared)	
@@ -504,16 +504,16 @@ __device__ void convolutionFunction2D(DType2* sdata,int* sec, int sec_max, int s
       data_point.y = crds[data_cnt +GI.data_count];
 
       // set the boundaries of final dataset for gpuNUFFT this point
-      ix = (data_point.x + 0.5f) * (GI.gridDims.x) - center.x + GI.sector_offset;
+      ix = mapKSpaceToGrid(data_point.x,GI.gridDims.x,center.x,GI.sector_offset);
       set_minmax(&ix, &imin, &imax, GI.sector_pad_max, GI.kernel_radius);
-      jy = (data_point.y + 0.5f) * (GI.gridDims.y) - center.y + GI.sector_offset;
+      jy = mapKSpaceToGrid(data_point.y,GI.gridDims.y,center.y,GI.sector_offset);
       set_minmax(&jy, &jmin, &jmax, GI.sector_pad_max, GI.kernel_radius);
 
       // grid this point onto its cartesian points neighbors
       j=jmin;
       while (j<=jmax && j>=jmin)
       {
-        jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.y)) - 0.5f;   //(j - center_y) *width_inv;
+        jy = mapGridToKSpace(j,GI.gridDims.y,center.y,GI.sector_offset);
         dy_sqr = (jy - data_point.y) * GI.aniso_y_scale;
         dy_sqr *= dy_sqr;
         if (dy_sqr < GI.radiusSquared)	
@@ -521,7 +521,7 @@ __device__ void convolutionFunction2D(DType2* sdata,int* sec, int sec_max, int s
           i= imin;						
           while (i<=imax && i>=imin)
           {
-            ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;// (i - center_x) *width_inv;
+            ix = mapGridToKSpace(i,GI.gridDims.x,center.x,GI.sector_offset);
             dx_sqr = (ix - data_point.x)*GI.aniso_x_scale;
             dx_sqr *= dx_sqr;
             if (dx_sqr < GI.radiusSquared)	
@@ -664,18 +664,18 @@ __global__ void convolutionKernel( DType2* data,
       data_point.z = crds[data_cnt +2*GI.data_count];
 
       // set the boundaries of final dataset for gpuNUFFT this point
-      ix = (data_point.x + 0.5f) * (GI.gridDims.x) - center.x + GI.sector_offset;
+      ix = mapKSpaceToGrid(data_point.x,GI.gridDims.x,center.x,GI.sector_offset);
       set_minmax(&ix, &imin, &imax, GI.sector_pad_max, GI.kernel_radius);
-      jy = (data_point.y + 0.5f) * (GI.gridDims.y) - center.y + GI.sector_offset;
+      jy = mapKSpaceToGrid(data_point.y,GI.gridDims.y,center.y,GI.sector_offset);
       set_minmax(&jy, &jmin, &jmax, GI.sector_pad_max, GI.kernel_radius);
-      kz = (data_point.z + 0.5f) * (GI.gridDims.z) - center.z + GI.sector_offset;
+      kz = mapKSpaceToGrid(data_point.z,GI.gridDims.z,center.z,GI.sector_offset);
       set_minmax(&kz, &kmin, &kmax, GI.sector_pad_max, GI.kernel_radius);
 
       // convolve neighboring cartesian points to this data point
       k = kmin;
       while (k<=kmax && k>=kmin)
       {
-        kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.gridDims.z)) - 0.5f;//(k - center_z) *width_inv;
+        kz = mapGridToKSpace(k,GI.gridDims.z,center.z,GI.sector_offset);
         dz_sqr = (kz - data_point.z)*GI.aniso_z_scale;
         dz_sqr *= dz_sqr;
 
@@ -684,7 +684,7 @@ __global__ void convolutionKernel( DType2* data,
           j=jmin;
           while (j<=jmax && j>=jmin)
           {
-            jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.y)) - 0.5f;   //(j - center_y) *width_inv;
+            jy = mapGridToKSpace(j,GI.gridDims.y,center.y,GI.sector_offset);
             dy_sqr = (jy - data_point.y) * GI.aniso_y_scale;
             dy_sqr *= dy_sqr;
             if (dy_sqr < GI.radiusSquared)	
@@ -692,7 +692,7 @@ __global__ void convolutionKernel( DType2* data,
               i=imin;								
               while (i<=imax && i>=imin)
               {
-                ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;// (i - center_x) *width_inv;
+                ix = mapGridToKSpace(i,GI.gridDims.x,center.x,GI.sector_offset);
                 dx_sqr = (ix - data_point.x)*GI.aniso_x_scale;
                 dx_sqr *= dx_sqr;
                 if (dx_sqr < GI.radiusSquared)	
@@ -890,18 +890,18 @@ __global__ void forwardConvolutionKernel( CufftType* data,
       data_point.z = crds[data_cnt +2*GI.data_count];
 
       // set the boundaries of final dataset for gpuNUFFT this point
-      ix = (data_point.x + 0.5f) * (GI.gridDims.x) - center.x + GI.sector_offset;
+      ix = mapKSpaceToGrid(data_point.x,GI.gridDims.x,center.x,GI.sector_offset);
       set_minmax(&ix, &imin, &imax, GI.sector_pad_max, GI.kernel_radius);
-      jy = (data_point.y + 0.5f) * (GI.gridDims.y) - center.y + GI.sector_offset;
+      jy = mapKSpaceToGrid(data_point.y,GI.gridDims.y,center.y,GI.sector_offset);
       set_minmax(&jy, &jmin, &jmax, GI.sector_pad_max, GI.kernel_radius);
-      kz = (data_point.z + 0.5f) * (GI.gridDims.z) - center.z + GI.sector_offset;
+      kz = mapKSpaceToGrid(data_point.z,GI.gridDims.z,center.z,GI.sector_offset);
       set_minmax(&kz, &kmin, &kmax, GI.sector_pad_max, GI.kernel_radius);
 
       // convolve neighboring cartesian points to this data point
       k = kmin;			
       while (k<=kmax && k>=kmin)
       {
-        kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.gridDims.z)) - 0.5f;
+        kz = mapGridToKSpace(k,GI.gridDims.z,center.z,GI.sector_offset);
         dz_sqr = (kz - data_point.z)*GI.aniso_z_scale;
         dz_sqr *= dz_sqr;
 
@@ -910,7 +910,7 @@ __global__ void forwardConvolutionKernel( CufftType* data,
           j=jmin;
           while (j<=jmax && j>=jmin)
           {
-            jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.y)) - 0.5f;
+            jy = mapGridToKSpace(j,GI.gridDims.y,center.y,GI.sector_offset);
             dy_sqr = (jy - data_point.y) * GI.aniso_y_scale;
             dy_sqr *= dy_sqr;
             if (dy_sqr < GI.radiusSquared)	
@@ -918,7 +918,7 @@ __global__ void forwardConvolutionKernel( CufftType* data,
               i=imin;								
               while (i<=imax && i>=imin)
               {
-                ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;
+                ix = mapGridToKSpace(i,GI.gridDims.x,center.x,GI.sector_offset);
                 dx_sqr = (ix - data_point.x)*GI.aniso_x_scale;
                 dx_sqr *= dx_sqr;
                 if (dx_sqr < GI.radiusSquared)	
@@ -1011,18 +1011,18 @@ __device__ void forwardConvolutionFunction2(int* sec, int sec_max, int sec_offse
     data_point.z = crds[data_cnt + 2*GI.data_count];
 
     // set the boundaries of final dataset for gpuNUFFT this point
-    ix = (data_point.x + 0.5f) * (GI.gridDims.x) - center.x + GI.sector_offset;
+    ix = mapKSpaceToGrid(data_point.x,GI.gridDims.x,center.x,GI.sector_offset);
     set_minmax(&ix, &imin, &imax, GI.sector_pad_max, GI.kernel_radius);
-    jy = (data_point.y + 0.5f) * (GI.gridDims.y) - center.y + GI.sector_offset;
+    jy = mapKSpaceToGrid(data_point.y,GI.gridDims.y,center.y,GI.sector_offset);
     set_minmax(&jy, &jmin, &jmax, GI.sector_pad_max, GI.kernel_radius);
-    kz = (data_point.z + 0.5f) * (GI.gridDims.z) - center.z + GI.sector_offset;
+    kz = mapKSpaceToGrid(data_point.z,GI.gridDims.z,center.z,GI.sector_offset);
     set_minmax(&kz, &kmin, &kmax, GI.sector_pad_max, GI.kernel_radius);
 
     // convolve neighboring cartesian points to this data point
     k = kmin;
     while (k<=kmax && k>=kmin)
     {
-      kz = static_cast<DType>((k + center.z - GI.sector_offset)) / static_cast<DType>((GI.gridDims.z)) - 0.5f;//(k - center_z) *width_inv;
+      kz = mapGridToKSpace(k,GI.gridDims.z,center.z,GI.sector_offset);
       dz_sqr = (kz - data_point.z)*GI.aniso_z_scale;
       dz_sqr *= dz_sqr;
 
@@ -1031,7 +1031,7 @@ __device__ void forwardConvolutionFunction2(int* sec, int sec_max, int sec_offse
         j=jmin;
         while (j<=jmax && j>=jmin)
         {
-          jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.y)) - 0.5f;   //(j - center_y) *width_inv;
+          jy = mapGridToKSpace(j,GI.gridDims.y,center.y,GI.sector_offset);
           dy_sqr = (jy - data_point.y) * GI.aniso_y_scale;
           dy_sqr *= dy_sqr;
           if (dy_sqr < GI.radiusSquared)	
@@ -1039,7 +1039,7 @@ __device__ void forwardConvolutionFunction2(int* sec, int sec_max, int sec_offse
             i=imin;								
             while (i<=imax && i>=imin)
             {
-              ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;// (i - center_x) *width_inv;
+              ix = mapGridToKSpace(i,GI.gridDims.x,center.x,GI.sector_offset);
               dx_sqr = (ix - data_point.x)*GI.aniso_x_scale;
               dx_sqr *= dx_sqr;
               if (dx_sqr < GI.radiusSquared)	
@@ -1176,16 +1176,16 @@ __global__ void forwardConvolutionKernel2D( CufftType* data,
       data_point.y = crds[data_cnt +GI.data_count];
 
       // set the boundaries of final dataset for gpuNUFFT this point
-      ix = (data_point.x + 0.5f) * (GI.gridDims.x) - center.x + GI.sector_offset;
+      ix = mapKSpaceToGrid(data_point.x,GI.gridDims.x,center.x,GI.sector_offset);
       set_minmax(&ix, &imin, &imax, GI.sector_pad_max, GI.kernel_radius);
-      jy = (data_point.y + 0.5f) * (GI.gridDims.y) - center.y + GI.sector_offset;
+      jy = mapKSpaceToGrid(data_point.y,GI.gridDims.y,center.y,GI.sector_offset);
       set_minmax(&jy, &jmin, &jmax, GI.sector_pad_max, GI.kernel_radius);
 
       // convolve neighboring cartesian points to this data point
       j=jmin;
       while (j<=jmax && j>=jmin)
       {
-        jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.y)) - 0.5f;
+        jy = mapGridToKSpace(j,GI.gridDims.y,center.y,GI.sector_offset);
         dy_sqr = (jy - data_point.y) * GI.aniso_y_scale;
         dy_sqr *= dy_sqr;
         if (dy_sqr < GI.radiusSquared)	
@@ -1193,7 +1193,7 @@ __global__ void forwardConvolutionKernel2D( CufftType* data,
           i=imin;								
           while (i<=imax && i>=imin)
           {
-            ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;
+            ix = mapGridToKSpace(i,GI.gridDims.x,center.x,GI.sector_offset);
             dx_sqr = (ix - data_point.x)*GI.aniso_x_scale;
             dx_sqr *= dx_sqr;
             if (dx_sqr < GI.radiusSquared)	
@@ -1279,16 +1279,16 @@ __device__ void forwardConvolutionFunction2D(int* sec, int sec_max, int sec_offs
     data_point.y = crds[data_cnt + GI.data_count];
 
     // set the boundaries of final dataset for gpuNUFFT this point
-    ix = (data_point.x + 0.5f) * (GI.gridDims.x) - center.x + GI.sector_offset;
+    ix = mapKSpaceToGrid(data_point.x,GI.gridDims.x,center.x,GI.sector_offset);
     set_minmax(&ix, &imin, &imax, GI.sector_pad_max, GI.kernel_radius);
-    jy = (data_point.y + 0.5f) * (GI.gridDims.y) - center.y + GI.sector_offset;
+    jy = mapKSpaceToGrid(data_point.y,GI.gridDims.y,center.y,GI.sector_offset);
     set_minmax(&jy, &jmin, &jmax, GI.sector_pad_max, GI.kernel_radius);
 
     // convolve neighboring cartesian points to this data point
     j=jmin;
     while (j<=jmax && j>=jmin)
     {
-      jy = static_cast<DType>(j + center.y - GI.sector_offset) / static_cast<DType>((GI.gridDims.y)) - 0.5f;   //(j - center_y) *width_inv;
+      jy = mapGridToKSpace(j,GI.gridDims.y,center.y,GI.sector_offset);
       dy_sqr = (jy - data_point.y) * GI.aniso_y_scale;
       dy_sqr *= dy_sqr;
       if (dy_sqr < GI.radiusSquared)	
@@ -1296,7 +1296,7 @@ __device__ void forwardConvolutionFunction2D(int* sec, int sec_max, int sec_offs
         i=imin;								
         while (i<=imax && i>=imin)
         {
-          ix = static_cast<DType>(i + center.x - GI.sector_offset) / static_cast<DType>((GI.gridDims.x)) - 0.5f;// (i - center_x) *width_inv;
+          ix = mapGridToKSpace(i,GI.gridDims.x,center.x,GI.sector_offset);
           dx_sqr = (ix - data_point.x)*GI.aniso_x_scale;
           dx_sqr *= dx_sqr;
           if (dx_sqr < GI.radiusSquared)	

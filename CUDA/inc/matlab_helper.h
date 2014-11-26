@@ -34,7 +34,7 @@
 template <typename TType>
 void readMatlabInputArray(const mxArray *prhs[], int input_index, int highest_varying_dim, const char* name,TType** data, int* data_entries, int max_nd, int* n_coils)
 {
-	int nd = mxGetNumberOfDimensions(prhs[input_index]); /* get coordinate dimensions */
+	int nd = (int)mxGetNumberOfDimensions(prhs[input_index]); /* get coordinate dimensions */
 	
 	if (MATLAB_DEBUG)
 		mexPrintf("number of dims %d\n",nd);
@@ -52,7 +52,7 @@ void readMatlabInputArray(const mxArray *prhs[], int input_index, int highest_va
 	else if (max_nd == 3 && nd == 3)
 	{
 		//multiple coil data passed
-		*n_coils = dims[2];
+		*n_coils = (int)dims[2];
 		if (MATLAB_DEBUG)
 			mexPrintf("number of coils %d\n",*n_coils);
 	}
@@ -74,7 +74,7 @@ void readMatlabInputArray(const mxArray *prhs[], int input_index, int highest_va
 		mexPrintf("\n");
 	}
 	
-	*data_entries = dims[1];
+	*data_entries = (int)dims[1];
 
 	const mxArray *matlabData;
     matlabData = prhs[input_index];

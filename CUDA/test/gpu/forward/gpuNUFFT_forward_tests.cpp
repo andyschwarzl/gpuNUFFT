@@ -73,7 +73,7 @@ TEST(TestGPUGpuNUFFTForwardConv,KernelCall1Sector)
   dataArray = gpuNUFFTOp->performForwardGpuNUFFT(im_dataArray);
 
   if (DEBUG)
-    for (int j=0; j<dataArray.count(); j++)
+    for (unsigned j=0; j<dataArray.count(); j++)
     {
       printf("%.4f %.4f \n",dataArray.data[j].x,dataArray.data[j].y);
     }
@@ -115,7 +115,7 @@ TEST(TestGPUGpuNUFFTForwardConv,KernelCall1Sector2Channels)
 
   im_dataArray.data = (DType2*) calloc(im_dataArray.count(),sizeof(DType2));
 
-  for (int x=0;x<im_dataArray.count();x++)
+  for (unsigned x=0;x<im_dataArray.count();x++)
   {
     im_dataArray.data[x].x = 1.0f;
     im_dataArray.data[x].y = 1.0f;
@@ -145,7 +145,7 @@ TEST(TestGPUGpuNUFFTForwardConv,KernelCall1Sector2Channels)
   {
     std::cout << "result count : " << dataArray.count() << std::endl;
 
-    for (int j=0; j<dataArray.count(); j++)
+    for (unsigned j=0; j<dataArray.count(); j++)
     {
       printf("%.4f %.4f \n",dataArray.data[j].x,dataArray.data[j].y);
     }

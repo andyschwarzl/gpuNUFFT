@@ -26,9 +26,9 @@ TEST(OperatorFactoryTest,TestInit)
 	
 	// Coords as StructureOfArrays
 	// i.e. first x-vals, then y-vals and z-vals
-	DType coords[coordCnt*3] = {-0.5,-0.3,-0.1, 0.1, 0.3, 0.5,//x
-	                            -0.5,-0.5,   0,   0, 0.5, 0.45,//y
-	                            -0.33,-0.16666,   0,   0, -0.23, 0.45};//z
+	DType coords[coordCnt*3] = {(DType)-0.5,(DType)-0.3,(DType)-0.1, (DType)0.1, (DType)0.3, (DType)0.5,//x
+	                            (DType)-0.5,(DType)-0.5,   0,   0, (DType)0.5, (DType)0.45,//y
+	                            (DType)-0.33,(DType)-0.16666,   0,   0, (DType)-0.23, (DType)0.45};//z
 
 	gpuNUFFT::Array<DType> kSpaceTraj;
     kSpaceTraj.data = coords;
@@ -48,7 +48,7 @@ TEST(OperatorFactoryTest,TestInit)
 
 	gpuNUFFT::Array<IndType> sectorDataCount = gpuNUFFTOp->getSectorDataCount();
 	IndType sectorDataCountExpected[29] = {0,1,1,1,1,1,1,1,1,2,3,3,3,3,5,5,5,5,5,5,5,5,5,5,5,5,5,6,6};
-	for (int i=0; i<sectorDataCount.count(); i++)
+	for (unsigned i=0; i<sectorDataCount.count(); i++)
 	{	
 		EXPECT_EQ(sectorDataCountExpected[i],sectorDataCount.data[i]);
 	}
@@ -65,7 +65,7 @@ TEST(OperatorFactoryTest,TestInit)
 	gpuNUFFT::Array<IndType> dataIndices = gpuNUFFTOp->getDataIndices();
 	IndType expectedSecIndexSorted[6] = {0,4,1,2,3,5};
 	
-	for (int i=0; i<dataIndices.count(); i++)
+	for (unsigned i=0; i<dataIndices.count(); i++)
 	{	
 		EXPECT_EQ(expectedSecIndexSorted[i],dataIndices.data[i]);
 	}
@@ -88,9 +88,9 @@ TEST(OperatorFactoryTest,TestInvalidArgumentInit)
 	
 	// Coords as StructureOfArrays
 	// i.e. first x-vals, then y-vals and z-vals
-	DType coords[coordCnt*3] = {-0.5,-0.3,-0.1, 0.1, 0.3, 0.5,//x
-	                            -0.5,-0.5,   0,   0, 0.5, 0.45,//y
-	                            -0.33,-0.16666,   0,   0, -0.23, 0.45};//z
+	DType coords[coordCnt*3] = {(DType)-0.5,(DType)-0.3,(DType)-0.1, (DType)0.1, (DType)0.3, (DType)0.5,//x
+	                            (DType)-0.5,(DType)-0.5,   0,   0, (DType)0.5, (DType)0.45,//y
+	                            (DType)-0.33,(DType)-0.16666,   0,   0, (DType)-0.23, (DType)0.45};//z
 
 	gpuNUFFT::Array<DType> kSpaceTraj;
     kSpaceTraj.data = coords;
@@ -119,8 +119,8 @@ TEST(OperatorFactoryTest,Test2DInit)
 	
 	// Coords as StructureOfArrays
 	// i.e. first x-vals, then y-vals and z-vals
-	DType coords[coordCnt*2] = {-0.5,-0.3,-0.1, 0.1, 0.3, 0.5,//x
-								-0.5,-0.5,   0,   0, 0.5, 0.45};//y}
+	DType coords[coordCnt*2] = {(DType)-0.5,(DType)-0.3,(DType)-0.1, (DType)0.1, (DType)0.3, (DType)0.5,//x
+								(DType)-0.5,(DType)-0.5,   0,   0, (DType)0.5, (DType)0.45};//y}
 
 	gpuNUFFT::Array<DType> kSpaceTraj;
     kSpaceTraj.data = coords;
@@ -138,7 +138,7 @@ TEST(OperatorFactoryTest,Test2DInit)
 
 	gpuNUFFT::Array<IndType> sectorDataCount = gpuNUFFTOp->getSectorDataCount();
 	IndType sectorDataCountExpected[11] = {0,2,2,2,2,4,4,4,4,6,6};
-	for (int i=0; i<sectorDataCount.count(); i++)
+	for (unsigned i=0; i<sectorDataCount.count(); i++)
 	{	
 		EXPECT_EQ(sectorDataCountExpected[i],sectorDataCount.data[i]);
 	}

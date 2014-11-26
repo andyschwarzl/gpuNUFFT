@@ -17,20 +17,27 @@ TEST(TestDeapo, 2D)
   DType beta = (DType)BETA(kernel_width,osr);
 
   DType test = calculateDeapodizationValue(0, grid_width_inv, kernel_width, beta);
-  std::cout << "Deapo at 0: " << test << std::endl;
+  if (DEBUG)
+    std::cout << "Deapo at 0: " << test << std::endl;
 
   test = calculateDeapodizationValue(128, grid_width_inv, kernel_width, beta);
-  std::cout << "Deapo at 128: " << test << std::endl;
+  if (DEBUG)
+    std::cout << "Deapo at 128: " << test << std::endl;
+  EXPECT_NEAR(test,0.115882,epsilon);
 
   test = calculateDeapodizationValue(-128, grid_width_inv, kernel_width, beta);
-  std::cout << "Deapo at -128: " << test << std::endl;
+  if (DEBUG)
+    std::cout << "Deapo at -128: " << test << std::endl;
+  EXPECT_NEAR(test,0.115882,epsilon);
 
   test = calculateDeapodizationValue(256, grid_width_inv, kernel_width, beta);
-  std::cout << "Deapo at 256: " << test << std::endl;
+  if (DEBUG)
+    std::cout << "Deapo at 256: " << test << std::endl;
 
   int max_ind = (int)(grid_width * osr);
   test = calculateDeapodizationValue(max_ind, grid_width_inv, kernel_width, beta);
-  std::cout << "Deapo at " << max_ind << " : " << test << std::endl;
+  if (DEBUG)
+    std::cout << "Deapo at " << max_ind << " : " << test << std::endl;
 }
 
 TEST(TestDeapo, 2Dind)
@@ -57,15 +64,18 @@ TEST(TestDeapo, 2Dind)
   getCoordsFromIndex2D(t, &x, &y, grid_width,grid_width);
 
   DType deapo = calculateDeapodizationAt2D(x,y,width_offset,grid_width_inv,kernel_width,beta,norm_val*norm_val);
-  std::cout << "Deapo at 0/0: " << deapo << std::endl;
+  if (DEBUG)
+    std::cout << "Deapo at 0/0: " << deapo << std::endl;
 
   deapo = calculateDeapodizationAt2D(128,128,width_offset,grid_width_inv,kernel_width,beta,norm_val*norm_val);
-  std::cout << "Deapo at 128/128: " << deapo << std::endl;
+  if (DEBUG)
+    std::cout << "Deapo at 128/128: " << deapo << std::endl;
 
   
   getCoordsFromIndex2D(grid_width*grid_width-1, &x, &y, grid_width,grid_width);
   deapo = calculateDeapodizationAt2D(x,y,width_offset,grid_width_inv,kernel_width,beta,norm_val*norm_val);
-  std::cout << "Deapo at " << x << "/" << y << " : " << deapo << std::endl;
+  if (DEBUG)
+    std::cout << "Deapo at " << x << "/" << y << " : " << deapo << std::endl;
 }
 
 TEST(TestGPUGpuNUFFTDeapo,KernelCall1Sector)

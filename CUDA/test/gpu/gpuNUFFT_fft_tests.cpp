@@ -33,11 +33,11 @@ void debugGrid(int* data,IndType3 gridDims)
 {
   if (DEBUG) 
   {
-    for (int k=0; k<gridDims.z; k++)
+    for (unsigned k=0; k<gridDims.z; k++)
     {
-      for (int j=0; j<gridDims.y; j++)
+      for (unsigned j=0; j<gridDims.y; j++)
 	    {
-		    for (int i=0; i<gridDims.x; i++)
+		    for (unsigned i=0; i<gridDims.x; i++)
 			    printf("%d ",data[computeXYZ2Lin(i,gridDims.x-1-j,k,gridDims)]);
 		    printf("\n");
 	    }
@@ -474,8 +474,8 @@ class TestFFT : public ::testing::Test
         for (unsigned column = 0; column < dims.width; ++column)
         {
           CufftType val;
-          val.x = computeXYZ2Lin(column, row, slice, dims);
-          val.y = 0;
+          val.x = (DType)computeXYZ2Lin(column, row, slice, dims);
+          val.y = (DType)0.0;
           data.push_back(val);
         }
   }
@@ -492,11 +492,11 @@ void debug(const char* title, std::vector<CufftType> data, gpuNUFFT::Dimensions 
   if (DEBUG) 
   {
     printf("%s:\n",title);
-    for (int k=0; k<std::max((int)imgDims.depth,1); k++)
+    for (unsigned k=0; k<std::max(imgDims.depth,1u); k++)
     {
-      for (int j=0; j<imgDims.height; j++)
+      for (unsigned j=0; j<imgDims.height; j++)
       {
-        for (int i=0; i<imgDims.width; i++)
+        for (unsigned i=0; i<imgDims.width; i++)
           printf("%3.0f ",data[computeXYZ2Lin(i,j,k,imgDims)].x);
         printf("\n");
       }
@@ -541,7 +541,7 @@ TEST_F(TestFFT,Test8x8)
 
   debug("Output IFFTSHIFT(FFTSHIFT(data)):",result,imgDims);
   
-  for (int i=0; i < imgDims.count(); i++)
+  for (unsigned i=0; i < imgDims.count(); i++)
   {
     EXPECT_NEAR(data[i].x,result[i].x,epsilon);
     EXPECT_NEAR(data[i].y,result[i].y,epsilon);
@@ -586,7 +586,7 @@ TEST_F(TestFFT,Test9x9)
 
   debug("Output IFFTSHIFT(FFTSHIFT(data)):",result,imgDims);
   
-  for (int i=0; i < imgDims.count(); i++)
+  for (unsigned i=0; i < imgDims.count(); i++)
   {
     EXPECT_NEAR(data[i].x,result[i].x,epsilon);
     EXPECT_NEAR(data[i].y,result[i].y,epsilon);
@@ -631,7 +631,7 @@ TEST_F(TestFFT,Test9x11)
 
   debug("Output IFFTSHIFT(FFTSHIFT(data)):",result,imgDims);
 
-  for (int i=0; i < imgDims.count(); i++)
+  for (unsigned i=0; i < imgDims.count(); i++)
   {
     EXPECT_NEAR(data[i].x,result[i].x,epsilon);
     EXPECT_NEAR(data[i].y,result[i].y,epsilon);
@@ -680,7 +680,7 @@ TEST_F(TestFFT,Test4x4x4)
   debug("Output IFFTSHIFT(FFTSHIFT(data)):",result,imgDims);
 
 
-  for (int i=0; i < imgDims.count(); i++)
+  for (unsigned i=0; i < imgDims.count(); i++)
   {
     EXPECT_NEAR(data[i].x,result[i].x,epsilon);
     EXPECT_NEAR(data[i].y,result[i].y,epsilon);
@@ -729,7 +729,7 @@ TEST_F(TestFFT,Test8x11x4)
   debug("Output IFFTSHIFT(FFTSHIFT(data)):",result,imgDims);
 
 
-  for (int i=0; i < imgDims.count(); i++)
+  for (unsigned i=0; i < imgDims.count(); i++)
   {
     EXPECT_NEAR(data[i].x,result[i].x,epsilon);
     EXPECT_NEAR(data[i].y,result[i].y,epsilon);

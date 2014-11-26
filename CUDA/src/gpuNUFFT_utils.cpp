@@ -57,7 +57,7 @@ void load1DKernel(DType *kernTab,long kernel_entries, int kernel_width, DType os
     else
     {
       rsqr = (double)sqrt(i/(double)(kernel_entries-1));//*(i/(float)(size-1));
-      kernTab[i] = static_cast<DType>(kernel(rsqr,kernel_width,osr)); /* kernel table for radius squared */
+      kernTab[i] = static_cast<DType>((DType)kernel((DType)rsqr,kernel_width,osr)); /* kernel table for radius squared */
     }
 //    assert(!isnan(kernTab[i])); //check is NaN
   }

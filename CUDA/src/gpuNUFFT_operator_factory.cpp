@@ -130,7 +130,7 @@ gpuNUFFT::Array<IndType> gpuNUFFT::GpuNUFFTOperatorFactory::assignSectors(gpuNUF
         DType2 coord;
         coord.x = kSpaceTraj.data[cCnt];
         coord.y = kSpaceTraj.data[cCnt + coordCnt];
-        IndType2 mappedSector = computeSectorMapping(coord,gpuNUFFTOp->getGridDims(),gpuNUFFTOp->getSectorWidth());
+        IndType2 mappedSector = computeSectorMapping(coord,gpuNUFFTOp->getGridDims(),(DType)gpuNUFFTOp->getSectorWidth());
         //linearize mapped sector
         sector = computeInd22Lin(mappedSector,gpuNUFFTOp->getGridSectorDims());		
       }
@@ -140,7 +140,7 @@ gpuNUFFT::Array<IndType> gpuNUFFT::GpuNUFFTOperatorFactory::assignSectors(gpuNUF
         coord.x = kSpaceTraj.data[cCnt];
         coord.y = kSpaceTraj.data[cCnt + coordCnt];
         coord.z = kSpaceTraj.data[cCnt + 2*coordCnt];
-        IndType3 mappedSector = computeSectorMapping(coord,gpuNUFFTOp->getGridDims(),gpuNUFFTOp->getSectorWidth());
+        IndType3 mappedSector = computeSectorMapping(coord,gpuNUFFTOp->getGridDims(),(DType)gpuNUFFTOp->getSectorWidth());
         //linearize mapped sector
         sector = computeInd32Lin(mappedSector,gpuNUFFTOp->getGridSectorDims());		
       }
@@ -327,7 +327,7 @@ gpuNUFFT::GpuNUFFTOperator* gpuNUFFT::GpuNUFFTOperatorFactory::createGpuNUFFTOpe
   else
   {
     //sort kspace data coords
-    for (int i=0; i<coordCnt;i++)
+    for (unsigned i=0; i<coordCnt;i++)
     {
       trajSorted.data[i] = kSpaceTraj.data[assignedSectorsAndIndicesSorted[i].first];
       trajSorted.data[i + 1*coordCnt] = kSpaceTraj.data[assignedSectorsAndIndicesSorted[i].first + 1*coordCnt];

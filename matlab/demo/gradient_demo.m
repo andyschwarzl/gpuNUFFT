@@ -6,10 +6,11 @@ addpath(genpath('../../gpuNUFFT'));
 addpath(genpath('../../../fessler/NUFFT'));
 
 %% Data parameters
-N=256;
+N=70;
 
 %smooth version
 [x,y] = meshgrid(linspace(-0.5,0.5-1/N,N),linspace(-0.5,0.5-1/N,N));
+offset = 1/(2*(N-1));
 k = [col(x)'; col(y)'];
 
 %non-smooth version
@@ -18,6 +19,12 @@ k_nonsmooth = [col(x_ns)'; col(y_ns)'];
 
 v = linspace(0,1,N);
 v = 1i*(v'*v);
+
+% test psf
+% v = zeros(size(v));
+% %v(9,9) = 1i;
+%  v(N/2,N/2) = 1i;
+
 figure,imshow(imag(v));title('test input');
 figure,surf(x,y,imag(v));title('test input');
 
@@ -28,14 +35,25 @@ osf = 2;
 kw = 3; %1 also possible and ideal for uniform cartesian 
 sw = 5;
 imwidth = N;
-
-FT = gpuNUFFT(k',w,osf,kw,sw,[N,N],[],false,false,false);
+FT = gpuNUFFT(k',w,osf,kw,sw,[N,N],[]);
 FTCPU = NUFFT(k(1,:) + 1i*k(2,:),w,1,0,[N,N],2);
 
 run_demo(v,FT,FTCPU,x,y,N,'Smooth ');
 %% non smooth recon
-kw = 3; %nonsmooth
-FT = gpuNUFFT(k_nonsmooth',w,osf,kw,sw,[N,N],[],false,false,false);
+FT = gpuNUFFT(k_nonsmooth',w,osf,kw,sw,[N,N],[]);
 FTCPU = NUFFT(k_nonsmooth(1,:) + 1i*k_nonsmooth(2,:),w,1,0,[N,N],2);
 
 run_demo(v,FT,FTCPU,x_ns,y_ns,N,'Non-smooth ');
+
+%% smooth shifted
+k_shift = k + offset;
+FT = gpuNUFFT(k_shift',w,osf,kw,sw,[N,N],[]);
+FTCPU = NUFFT(k_shift(1,:) + 1i*k_shift(2,:),w,1,0,[N,N],2);
+
+run_demo(v,FT,FTCPU,x,y,N,'Smooth shifted ');
+%% non smooth shifted
+k_nonsmooth_shift = k_nonsmooth + offset;
+FT = gpuNUFFT(k_nonsmooth_shift',w,osf,kw,sw,[N,N],[]);
+FTCPU = NUFFT(k_nonsmooth_shift(1,:) + 1i*k_nonsmooth_shift(2,:),w,1,0,[N,N],2);
+
+run_demo(v,FT,FTCPU,x_ns,y_ns,N,'Non-smooth shifted ');

@@ -97,6 +97,10 @@ void unbindTexture(const char* symbol)
   {
     HANDLE_ERROR(cudaUnbindTexture(texDATA));    
   }
+  else if (std::string("texGDATA").compare(symbol)==0)
+  {
+    HANDLE_ERROR(cudaUnbindTexture(texGDATA));    
+  }
 }
 
 

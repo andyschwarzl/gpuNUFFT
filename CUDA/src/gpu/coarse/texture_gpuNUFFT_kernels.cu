@@ -422,7 +422,7 @@ __global__ void textureForwardConvolutionKernel(CufftType* data,
 {
   extern __shared__ CufftType shared_out_data[];//externally managed shared memory
 
-  __shared__ int sec;
+  int sec;
   sec = blockIdx.x;
 
   //init shared memory
@@ -529,7 +529,7 @@ __global__ void textureForwardConvolutionKernel2D(CufftType* data,
 {
   extern __shared__ CufftType shared_out_data[];//externally managed shared memory
 
-  __shared__ int sec;
+  int sec;
   sec = blockIdx.x;
 
   //init shared memory
@@ -583,7 +583,7 @@ __global__ void textureForwardConvolutionKernel2D(CufftType* data,
 
           // multiply data by current kernel val 
           // grid complex or scalar 
-          if (isOutlier2D(i,j,center.x,center.y,GI.gridDims.x,GI.sector_offset))
+          if (isOutlier2D(i,j,center.x,center.y,GI.gridDims,GI.sector_offset))
             //calculate opposite index
             ind = getIndex2D(calculateOppositeIndex(i,center.x,GI.gridDims.x,GI.sector_offset),
             calculateOppositeIndex(j,center.y,GI.gridDims.y,GI.sector_offset),
@@ -591,8 +591,6 @@ __global__ void textureForwardConvolutionKernel2D(CufftType* data,
           else
             ind = (sector_ind_offset + getIndex2D(i,j,GI.gridDims.x));
 
-          //shared_out_data[threadIdx.x].x += gdata[ind].x * val; 
-          //shared_out_data[threadIdx.x].y += gdata[ind].y * val;
           shared_out_data[threadIdx.x].x += tex1Dfetch(texGDATA,ind).x * val; 
           shared_out_data[threadIdx.x].y += tex1Dfetch(texGDATA,ind).y * val;	
           i++;

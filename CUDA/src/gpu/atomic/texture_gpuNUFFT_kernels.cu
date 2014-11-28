@@ -598,7 +598,7 @@ __device__ void textureForwardConvolutionFunction2D(int* sec, int sec_max, int s
 
     // multiply data by current kernel val 
     // grid complex or scalar 
-    if (isOutlier2D(i,j,center.x,center.y,GI.gridDims.x,GI.sector_offset))
+    if (isOutlier2D(i,j,center.x,center.y,GI.gridDims,GI.sector_offset))
       //calculate opposite index
       grid_index = getIndex2D(calculateOppositeIndex(i,center.x,GI.gridDims.x,GI.sector_offset),
       calculateOppositeIndex(j,center.y,GI.gridDims.y,GI.sector_offset),

@@ -24,8 +24,8 @@ ref_img = (ifft2(reshape((ref_k),[N N])));
 
 %% Compare results
 figure;
-h1=subplot(1,2,1); imshow(log(abs(reshape(test,[N N]))),[]); title([demoTitlePrefix 'kspace gpuNUFFT']);colorbar;
-h2=subplot(1,2,2); imshow(log(abs(reshape(test2,[N N]))),[]); title([demoTitlePrefix 'kspace NUFFT']);colorbar;
+h1=subplot(1,2,1); imshow(abs(reshape(test,[N N])),[]); title([demoTitlePrefix 'kspace gpuNUFFT']);colorbar;
+h2=subplot(1,2,2); imshow(abs(reshape(test2,[N N])),[]); title([demoTitlePrefix 'kspace NUFFT']);colorbar;
 linkaxes([h1 h2]);
 
 figure;

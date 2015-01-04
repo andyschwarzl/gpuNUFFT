@@ -1,4 +1,4 @@
-%% Reconstruction of 3D radial vibe data
+%% Forward-Backward gradient test
 clear all; 
 close all; clc; clear classes;
 
@@ -40,12 +40,12 @@ atomic = true;
 textures = false;
 loadbalancing = false;
 
-FT = gpuNUFFT(k',w,osf,kw,sw,[N,N],[],atomic,textures,loadbalancing);
+FT = gpuNUFFT(k,w,osf,kw,sw,[N,N],[],atomic,textures,loadbalancing);
 FTCPU = NUFFT(k(1,:) + 1i*k(2,:),w,1,0,[N,N],2);
 
 run_demo(v,FT,FTCPU,x,y,N,'Smooth ');
 %% non smooth recon
-FT = gpuNUFFT(k_nonsmooth',w,osf,kw,sw,[N,N],[],atomic,textures,loadbalancing);
+FT = gpuNUFFT(k_nonsmooth,w,osf,kw,sw,[N,N],[],atomic,textures,loadbalancing);
 FTCPU = NUFFT(k_nonsmooth(1,:) + 1i*k_nonsmooth(2,:),w,1,0,[N,N],2);
 
 run_demo(v,FT,FTCPU,x_ns,y_ns,N,'Non-smooth ');

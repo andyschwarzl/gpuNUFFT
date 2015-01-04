@@ -67,12 +67,13 @@ TEST(TestGPUGpuNUFFTForwardConv,KernelCall1Sector)
   imgDims.depth = im_width;
 
   //gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = new gpuNUFFT::GpuNUFFTOperator(kernel_width,sector_width,osr);
-  gpuNUFFT::GpuNUFFTOperatorFactory factory; gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
+  gpuNUFFT::GpuNUFFTOperatorFactory factory(false,true,true); 
+  gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
 
   dataArray = gpuNUFFTOp->performForwardGpuNUFFT(im_dataArray);
 
   if (DEBUG)
-    for (int j=0; j<dataArray.count(); j++)
+    for (unsigned j=0; j<dataArray.count(); j++)
     {
       printf("%.4f %.4f \n",dataArray.data[j].x,dataArray.data[j].y);
     }
@@ -114,7 +115,7 @@ TEST(TestGPUGpuNUFFTForwardConv,KernelCall1Sector2Channels)
 
   im_dataArray.data = (DType2*) calloc(im_dataArray.count(),sizeof(DType2));
 
-  for (int x=0;x<im_dataArray.count();x++)
+  for (unsigned x=0;x<im_dataArray.count();x++)
   {
     im_dataArray.data[x].x = 1.0f;
     im_dataArray.data[x].y = 1.0f;
@@ -135,7 +136,8 @@ TEST(TestGPUGpuNUFFTForwardConv,KernelCall1Sector2Channels)
   imgDims.height = im_dataArray.dim.height;
   imgDims.depth  = im_dataArray.dim.depth;
 
-  gpuNUFFT::GpuNUFFTOperatorFactory factory; gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
+  gpuNUFFT::GpuNUFFTOperatorFactory factory(false,true,true); 
+  gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
 
   dataArray = gpuNUFFTOp->performForwardGpuNUFFT(im_dataArray);
 
@@ -143,7 +145,7 @@ TEST(TestGPUGpuNUFFTForwardConv,KernelCall1Sector2Channels)
   {
     std::cout << "result count : " << dataArray.count() << std::endl;
 
-    for (int j=0; j<dataArray.count(); j++)
+    for (unsigned j=0; j<dataArray.count(); j++)
     {
       printf("%.4f %.4f \n",dataArray.data[j].x,dataArray.data[j].y);
     }

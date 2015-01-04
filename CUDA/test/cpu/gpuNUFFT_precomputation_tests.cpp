@@ -18,7 +18,7 @@
 
 IndType computeSectorCountPerDimension(IndType dim, IndType sectorWidth)
 {
-	return std::ceil(static_cast<DType>(dim) / sectorWidth);
+	return (IndType)std::ceil(static_cast<DType>(dim) / sectorWidth);
 }
 
 gpuNUFFT::Dimensions computeSectorCountPerDimension(gpuNUFFT::Dimensions dim, IndType sectorWidth)
@@ -109,9 +109,9 @@ TEST(PrecomputationTest, ComputeSectorRanges) {
 
 	DType* sectorRange = (DType*)malloc((sectorDims.width +1) * sizeof(DType));
 	//linspace in range from -0.5 to 0.5
-	for (int i=0; i <= sectorDims.width; i++)
+	for (unsigned i=0; i <= sectorDims.width; i++)
 	{
-		sectorRange[i] = -0.5 + i*(static_cast<DType>(1.0) / (sectorDims.width));
+		sectorRange[i] = (DType)-0.5 + (DType)i*(static_cast<DType>(1.0) / (sectorDims.width));
     if (DEBUG)
 		  printf("%5.4f ",sectorRange[i]);
 		EXPECT_NEAR(sectorRange[i],expected[i],EPS);
@@ -131,7 +131,7 @@ TEST(PrecomputationTest, AssignSectors1D) {
 	
 	// Coords as StructureOfArrays
 	// i.e. first x-vals, then y-vals and z-vals
-	DType coords[coordCnt] = {-0.5,-0.3,-0.1, 0.1, 0.3, 0.5};//x
+	DType coords[coordCnt] = {(DType)-0.5,(DType)-0.3,(DType)-0.1, (DType)0.1, (DType)0.3, (DType)0.5};//x
 
 	gpuNUFFT::Array<DType> kSpaceData;
     kSpaceData.data = coords;
@@ -144,13 +144,13 @@ TEST(PrecomputationTest, AssignSectors1D) {
 
 	gpuNUFFT::Dimensions sectorDims = computeSectorCountPerDimension(gridDim,sectorWidth);
 
-	DType expected[4] = {-0.5000,-0.16666,0.16666,0.5000};
+	DType expected[4] = {(DType)-0.5000,(DType)-0.16666,(DType)0.16666,(DType)0.5000};
 
 	DType* sectorRange = (DType*)malloc((sectorDims.width +1) * sizeof(DType));
 	//linspace in range from -0.5 to 0.5
-	for (int i=0; i <= sectorDims.width; i++)
+	for (unsigned i=0; i <= sectorDims.width; i++)
 	{
-		sectorRange[i] = -0.5 + i*(static_cast<DType>(1.0) / (sectorDims.width));
+		sectorRange[i] = (DType)-0.5 + (DType)i*(static_cast<DType>(1.0) / (sectorDims.width));
 		if (DEBUG)
       printf("%5.4f ",sectorRange[i]);
 		EXPECT_NEAR(sectorRange[i],expected[i],EPS);
@@ -164,7 +164,7 @@ TEST(PrecomputationTest, AssignSectors1D) {
 		DType x = kSpaceData.data[cCnt];
     if (DEBUG)
 		  std::cout << "processing x var: " << x << std::endl;
-		IndType sector = std::floor(static_cast<float>(x + 0.5) * sectorDims.width);
+		IndType sector = (IndType)std::floor(static_cast<DType>(x + 0.5) * sectorDims.width);
 		if (sector == sectorDims.width) 
 			sector--;
     if (DEBUG)
@@ -184,7 +184,7 @@ TEST(PrecomputationTest, AssignSectors1DOnBorders) {
 	
 	// Coords as StructureOfArrays
 	// i.e. first x-vals, then y-vals and z-vals
-	DType coords[coordCnt] = {-0.5,-0.1666,0.1666,0.5};//x
+	DType coords[coordCnt] = {(DType)-0.5,(DType)-0.1666,(DType)0.1666,(DType)0.5};//x
 
 	gpuNUFFT::Array<DType> kSpaceData;
     kSpaceData.data = coords;
@@ -197,13 +197,13 @@ TEST(PrecomputationTest, AssignSectors1DOnBorders) {
 
 	gpuNUFFT::Dimensions sectorDims= computeSectorCountPerDimension(gridDim,sectorWidth);
 
-	DType expected[4] = {-0.5000,-0.16666,0.16666,0.5000};
+	DType expected[4] = {(DType)-0.5000,(DType)-0.16666,(DType)0.16666,(DType)0.5000};
 
 	DType* sectorRange = (DType*)malloc((sectorDims.width +1) * sizeof(DType));
 	//linspace in range from -0.5 to 0.5
-	for (int i=0; i <= sectorDims.width; i++)
+	for (unsigned i=0; i <= sectorDims.width; i++)
 	{
-		sectorRange[i] = -0.5 + i*(static_cast<DType>(1.0) / (sectorDims.width));
+		sectorRange[i] = (DType)-0.5 + (DType)i*(static_cast<DType>(1.0) / (sectorDims.width));
 		if (DEBUG)
       printf("%5.4f ",sectorRange[i]);
 		EXPECT_NEAR(sectorRange[i],expected[i],EPS);
@@ -217,7 +217,7 @@ TEST(PrecomputationTest, AssignSectors1DOnBorders) {
 		DType x = kSpaceData.data[cCnt];
     if (DEBUG)
 		  std::cout << "processing x var: " << x << std::endl;
-		IndType sector = std::round(static_cast<float>(x + 0.5) * sectorDims.width);
+		IndType sector = (IndType)std::round(static_cast<DType>(x + 0.5) * sectorDims.width);
 		if (sector == sectorDims.width) 
 			sector--;
 		if (DEBUG)
@@ -238,8 +238,8 @@ TEST(PrecomputationTest, AssignSectors2D) {
 	
 	// Coords as StructureOfArrays
 	// i.e. first x-vals, then y-vals and z-vals
-	DType coords[coordCnt*2] = {-0.5,-0.3,-0.1, 0.1, 0.3, 0.5,//x
-	                            -0.5,-0.5,   0,   0, 0.5, 0.45};//y
+	DType coords[coordCnt*2] = {(DType)-0.5,(DType)-0.3,(DType)-0.1, (DType)0.1, (DType)0.3, (DType)0.5,//x
+	                            (DType)-0.5,(DType)-0.5,   0,   0, (DType)0.5, (DType)0.45};//y
 
 	gpuNUFFT::Array<DType> kSpaceData;
     kSpaceData.data = coords;
@@ -252,13 +252,13 @@ TEST(PrecomputationTest, AssignSectors2D) {
 
 	gpuNUFFT::Dimensions sectorDims= computeSectorCountPerDimension(gridDim,sectorWidth);
 
-	DType expected[4] = {-0.5000,-0.16666,0.16666,0.5000};
+	DType expected[4] = {(DType)-0.5000,(DType)-0.16666,(DType)0.16666,(DType)0.5000};
 
 	DType* sectorRange = (DType*)malloc((sectorDims.width +1) * sizeof(DType));
 	//linspace in range from -0.5 to 0.5
-	for (int i=0; i <= sectorDims.width; i++)
+	for (unsigned i=0; i <= sectorDims.width; i++)
 	{
-		sectorRange[i] = -0.5 + i*(static_cast<DType>(1.0) / (sectorDims.width));
+		sectorRange[i] = (DType)-0.5 + (DType)i*(static_cast<DType>(1.0) / (sectorDims.width));
 		EXPECT_NEAR(sectorRange[i],expected[i],EPS);
 	}
 	if (DEBUG) std::cout << std::endl;
@@ -274,11 +274,11 @@ TEST(PrecomputationTest, AssignSectors2D) {
     if (DEBUG)
 		  std::cout << "processing x var: " << coord.x << " y: " << coord.y << std::endl;
 
-		IndType x_sector = std::floor(static_cast<float>(coord.x + 0.5) * sectorDims.width);
+		IndType x_sector = (IndType)std::floor(static_cast<float>(coord.x + 0.5) * sectorDims.width);
 		if (x_sector == sectorDims.width) 
 			x_sector--;
 
-		IndType y_sector = std::floor(static_cast<float>(coord.y + 0.5) * sectorDims.height);
+		IndType y_sector = (IndType)std::floor(static_cast<float>(coord.y + 0.5) * sectorDims.height);
 		if (y_sector == sectorDims.height) 
 			y_sector--;
     if (DEBUG)
@@ -298,9 +298,9 @@ TEST(PrecomputationTest, AssignSectors3D_16x16x16_15) {
 	
 	// Coords as StructureOfArrays
 	// i.e. first x-vals, then y-vals and z-vals
-	DType coords[coordCnt*3] = {-0.5,-0.3,-0.1, 0.1, 0.3, 0.5,//x
-	                            -0.5,-0.5,   0,   0, 0.5, 0.45,//y
-	                            -0.33,-0.16666,   0,   0, -0.23, 0.45};//z
+	DType coords[coordCnt*3] = {(DType)-0.5,(DType)-0.3,(DType)-0.1, (DType)0.1, (DType)0.3, (DType)0.5,//x
+	                            (DType)-0.5,(DType)-0.5,   0,   0, (DType)0.5, (DType)0.45,//y
+	                            (DType)-0.33,(DType)-0.16666,   0,   0, (DType)-0.23, (DType)0.45};//z
 
 	gpuNUFFT::Array<DType> kSpaceData;
   kSpaceData.data = coords;
@@ -313,13 +313,13 @@ TEST(PrecomputationTest, AssignSectors3D_16x16x16_15) {
 
 	gpuNUFFT::Dimensions sectorDims= computeSectorCountPerDimension(gridDim,sectorWidth);
 
-	DType expected[4] = {-0.5000,-0.16666,0.16666,0.5000};
+	DType expected[4] = {(DType)-0.5000,(DType)-0.16666,(DType)0.16666,(DType)0.5000};
 
 	DType* sectorRange = (DType*)malloc((sectorDims.width +1) * sizeof(DType));
 	//linspace in range from -0.5 to 0.5
-	for (int i=0; i <= sectorDims.width; i++)
+	for (unsigned i=0; i <= sectorDims.width; i++)
 	{
-		sectorRange[i] = -0.5 + i*(static_cast<DType>(1.0) / (sectorDims.width));
+		sectorRange[i] = (DType)-0.5 + (DType)i*(static_cast<DType>(1.0) / (sectorDims.width));
 		EXPECT_NEAR(sectorRange[i],expected[i],EPS);
 	}
 	if (DEBUG) std::cout << std::endl;
@@ -366,9 +366,9 @@ TEST(PrecomputationTest, AssignSectors3D_20x20x10) {
 	
 	// Coords as StructureOfArrays
 	// i.e. first x-vals, then y-vals and z-vals
-	DType coords[coordCnt*3] = {-0.5,-0.3,-0.1, 0.1, 0.3, 0.5,//x
-	                            -0.5,-0.5,   0,   0, 0.5, 0.45,//y
-	                            -0.33,-0.16666,-0.08,0,0.08, 0.45};//z
+	DType coords[coordCnt*3] = {(DType)-0.5,(DType)-0.3,(DType)-0.1, (DType)0.1, (DType)0.3, (DType)0.5,//x
+	                            (DType)-0.5,(DType)-0.5,   0,   0, (DType)0.5, (DType)0.45,//y
+	                            (DType)-0.33,(DType)-0.16666,(DType)-0.08,0,(DType)0.08, (DType)0.45};//z
 
 	gpuNUFFT::Array<DType> kSpaceData;
   kSpaceData.data = coords;
@@ -380,15 +380,15 @@ TEST(PrecomputationTest, AssignSectors3D_20x20x10) {
 
 	DType* sectorRange = (DType*)malloc((sectorDims.width +1) * sizeof(DType));
 	//linspace in range from -0.5 to 0.5
-	for (int i=0; i <= sectorDims.width; i++)
+	for (unsigned i=0; i <= sectorDims.width; i++)
 	{
-		sectorRange[i] = -0.5 + i*(static_cast<DType>(1.0) / (sectorDims.width));
+		sectorRange[i] = (DType)-0.5 + (DType)i*(static_cast<DType>(1.0) / (sectorDims.width));
 		EXPECT_NEAR(sectorRange[i],expected[i],EPS);
 	}
 	
 	IndType expectedSec[6] = {0,0,9,26,31,31};
 
-	for (int cCnt = 0; cCnt < coordCnt; cCnt++)
+	for (unsigned cCnt = 0; cCnt < coordCnt; cCnt++)
 	{
 		DType3 coord;
 		coord.x = kSpaceData.data[cCnt];
@@ -428,9 +428,9 @@ TEST(PrecomputationTest, AssignSectors3D_20x20x10_15) {
 	
 	// Coords as StructureOfArrays
 	// i.e. first x-vals, then y-vals and z-vals
-	DType coords[coordCnt*3] = {-0.5,-0.3,-0.1, 0.1, 0.3, 0.5,//x
-	                            -0.5,-0.5,   0,   0, 0.5, 0.45,//y
-	                            -0.33,-0.16666,-0.08,0,0.08, 0.45};//z
+	DType coords[coordCnt*3] = {(DType)-0.5,(DType)-0.3,(DType)-0.1, (DType)0.1, (DType)0.3, (DType)0.5,//x
+	                            (DType)-0.5,(DType)-0.5,   0,   0, (DType)0.5, (DType)0.45,//y
+	                            (DType)-0.33,(DType)-0.16666,(DType)-0.08,0,(DType)0.08, (DType)0.45};//z
 
 	gpuNUFFT::Array<DType> kSpaceData;
   kSpaceData.data = coords;
@@ -438,13 +438,13 @@ TEST(PrecomputationTest, AssignSectors3D_20x20x10_15) {
 
 	gpuNUFFT::Dimensions sectorDims= computeSectorCountPerDimension(gridDim,sectorWidth);
 
-  DType expected[7] = {-0.5000,-0.3333,-0.1666,0,0.1666,0.3333,0.5000};
+  DType expected[7] = {(DType)-0.5000,(DType)-0.3333,(DType)-0.1666,0,(DType)0.1666,(DType)0.3333,(DType)0.5000};
 
 	DType* sectorRange = (DType*)malloc((sectorDims.width +1) * sizeof(DType));
 	//linspace in range from -0.5 to 0.5
-	for (int i=0; i <= sectorDims.width; i++)
+	for (unsigned i=0; i <= sectorDims.width; i++)
 	{
-		sectorRange[i] = -0.5 + i*(static_cast<DType>(1.0) / (sectorDims.width));
+		sectorRange[i] = (DType)-0.5 + (DType)i*(static_cast<DType>(1.0) / (sectorDims.width));
 		EXPECT_NEAR(sectorRange[i],expected[i],EPS);
 	}
 	
@@ -535,9 +535,9 @@ TEST(PrecomputationTest, AssignSectors3DSorted) {
 	
 	// Coords as StructureOfArrays
 	// i.e. first x-vals, then y-vals and z-vals
-	DType coords[coordCnt*3] = {-0.5,-0.3,-0.1, 0.1, 0.3, 0.5,//x
-	                            -0.5,-0.5,   0,   0, 0.5, 0.45,//y
-	                            -0.33,-0.16666,   0,   0, -0.23, 0.45};//z
+	DType coords[coordCnt*3] = {(DType)-0.5,(DType)-0.3,(DType)-0.1, (DType)0.1, (DType)0.3, (DType)0.5,//x
+	                            (DType)-0.5,(DType)-0.5,   0,   0, (DType)0.5, (DType)0.45,//y
+	                            (DType)-0.33,(DType)-0.16666,   0,   0, (DType)-0.23, (DType)0.45};//z
 
 	gpuNUFFT::Array<DType> kSpaceData;
     kSpaceData.data = coords;
@@ -577,7 +577,7 @@ TEST(PrecomputationTest, AssignSectors3DSorted) {
 	
 	DType coords_sorted[coordCnt*3];
 
-	for (int i=0; i<assignedSectors.count();i++)
+	for (unsigned i=0; i<assignedSectors.count();i++)
 	{
 		//compare index
 		EXPECT_EQ(expectedSecIndexSorted[i],secVector[i].first);
@@ -588,7 +588,7 @@ TEST(PrecomputationTest, AssignSectors3DSorted) {
 	}
 
   if (DEBUG)
-	  for (int i=0;i<kSpaceData.count();i++)
+	  for (unsigned i=0;i<kSpaceData.count();i++)
 	  {
 		  std::cout << " x: "  << coords_sorted[i] << " y: " << coords_sorted[i+ 1*coordCnt] << " z:" << coords_sorted[i+ 2*coordCnt] << std::endl;
 	  }
@@ -605,9 +605,9 @@ TEST(PrecomputationTest, ComputeDataIndices) {
 	
 	// Coords as StructureOfArrays
 	// i.e. first x-vals, then y-vals and z-vals
-	DType coords[coordCnt*3] = {-0.5,-0.3,-0.1, 0.1, 0.3, 0.5,//x
-	                            -0.5,-0.5,   0,   0, 0.5, 0.45,//y
-	                            -0.33,-0.16666,   0,   0, -0.23, 0.45};//z
+	DType coords[coordCnt*3] = {(DType)-0.5,(DType)-0.3,(DType)-0.1, (DType)0.1, (DType)0.3, (DType)0.5,//x
+	                            (DType)-0.5,(DType)-0.5,   0,   0, (DType)0.5, (DType)0.45,//y
+	                            (DType)-0.33,(DType)-0.16666,   0,   0, (DType)-0.23, (DType)0.45};//z
 
 	gpuNUFFT::Array<DType> kSpaceData;
     kSpaceData.data = coords;
@@ -663,7 +663,7 @@ TEST(PrecomputationTest, ComputeDataIndices) {
 	IndType sectorDataCount[29] = {0,1,1,1,1,1,1,1,1,2,3,3,3,3,5,5,5,5,5,5,5,5,5,5,5,5,5,6,6};
 	
 	dataIndices.push_back(0);
-	for (int i=0; i<=sectorDims.count(); i++)
+	for (unsigned i=0; i<=sectorDims.count(); i++)
 	{	
 		while (cnt < coordCnt && i == secVector[cnt].second)
 			cnt++;
@@ -706,14 +706,14 @@ TEST(PrecomputationTest, ComputeSectorCenters) {
 			for (IndType x=0;x<sectorDims.width;x++)
 			{
 				IndType3 center;
-				center.x = x*sectorWidth +  std::floor(static_cast<DType>(sectorWidth) / (DType)2.0);
-				center.y = y*sectorWidth +  std::floor(static_cast<DType>(sectorWidth) / (DType)2.0);
-				center.z = z*sectorWidth +  std::floor(static_cast<DType>(sectorWidth) / (DType)2.0);
+				center.x = x*sectorWidth +  (IndType)std::floor(static_cast<DType>(sectorWidth) / (DType)2.0);
+				center.y = y*sectorWidth +  (IndType)std::floor(static_cast<DType>(sectorWidth) / (DType)2.0);
+				center.z = z*sectorWidth +  (IndType)std::floor(static_cast<DType>(sectorWidth) / (DType)2.0);
 				sectorCenters.data[computeXYZ2Lin(x,y,z,sectorDims)] = center;
 			}
 
   if (DEBUG)
-	  for (int i=0; i<sectorDims.count(); i++)
+	  for (unsigned i=0; i<sectorDims.count(); i++)
 	  {
 		  std::cout << " x: " << sectorCenters.data[i].x << " y: " << sectorCenters.data[i].y << " z: " << sectorCenters.data[i].z << std::endl;
 	  }
@@ -744,7 +744,7 @@ TEST(PrecomputationTest, AnisotropicComputeSectorDim) {
 
 	IndType sectorDim = computeTotalSectorCount(gridDim,sectorWidth);
 	 
-	IndType expected = 16*16*14*osr*osr*osr;
+	IndType expected = (IndType)16*16*14*osr*osr*osr;
 	EXPECT_EQ(expected,sectorDim);	
 
 	gpuNUFFT::Dimensions sectorDims = computeSectorCountPerDimension(gridDim,sectorWidth);
@@ -777,14 +777,14 @@ TEST(PrecomputationTest, AnisotropicComputeSectorCenters) {
       for (IndType x=0;x<sectorDims.width;x++)
 			{
 				IndType3 center;
-				center.x = x*sectorWidth +  std::floor(static_cast<DType>(sectorWidth) / (DType)2.0);
-				center.y = y*sectorWidth +  std::floor(static_cast<DType>(sectorWidth) / (DType)2.0);
-				center.z = z*sectorWidth +  std::floor(static_cast<DType>(sectorWidth) / (DType)2.0);
+				center.x = x*sectorWidth +  (IndType)std::floor(static_cast<DType>(sectorWidth) / (DType)2.0);
+				center.y = y*sectorWidth +  (IndType)std::floor(static_cast<DType>(sectorWidth) / (DType)2.0);
+				center.z = z*sectorWidth +  (IndType)std::floor(static_cast<DType>(sectorWidth) / (DType)2.0);
         sectorCenters.data[computeXYZ2Lin(x,y,z,sectorDims)] = center;
 			}
 
   if (DEBUG)
-	  for (int i=0; i<sectorDims.count(); i++)
+	  for (unsigned i=0; i<sectorDims.count(); i++)
 	  {
 		  std::cout << " x: " << sectorCenters.data[i].x << " y: " << sectorCenters.data[i].y << " z: " << sectorCenters.data[i].z << std::endl;
 	  }
@@ -876,9 +876,9 @@ TEST(IndexComputationTest, TestGetCoordsFromIndex_4x4x2)
   int x, y, z;
   int expected[N*3];
   int cnt =0;
-  for (int z=0;z<gridDims.z;z++)
-    for (int y=0;y<gridDims.y;y++)
-      for (int x=0;x<gridDims.x;x++)
+  for (unsigned z=0;z<gridDims.z;z++)
+    for (unsigned y=0;y<gridDims.y;y++)
+      for (unsigned x=0;x<gridDims.x;x++)
       {
         expected[cnt*3]=x;
         expected[cnt*3+1]=y;

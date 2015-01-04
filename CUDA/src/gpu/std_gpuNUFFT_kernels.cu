@@ -25,11 +25,11 @@ void bindTo1DTexture(const char* symbol, void* devicePtr, IndType count)
 {
   if (std::string("texDATA").compare(symbol)==0)
   {
-    HANDLE_ERROR (cudaBindTexture(NULL,texDATA, devicePtr,count*sizeof(DType2)));
+    HANDLE_ERROR (cudaBindTexture(NULL,texDATA, devicePtr,count*sizeof(float2)));
   }
   else if (std::string("texGDATA").compare(symbol)==0)
   {
-    HANDLE_ERROR (cudaBindTexture(NULL,texGDATA, devicePtr,count*sizeof(CufftType)));
+    HANDLE_ERROR (cudaBindTexture(NULL,texGDATA, devicePtr,count*sizeof(cufftComplex)));
   }
 }
 
@@ -40,7 +40,7 @@ void initTexture(const char* symbol, cudaArray** devicePtr, gpuNUFFT::Array<DTyp
   {
     HANDLE_ERROR (cudaMallocArray (devicePtr, &texKERNEL.channelDesc, hostTexture.dim.width, 1));
     HANDLE_ERROR (cudaBindTextureToArray (texKERNEL, *devicePtr));
-    HANDLE_ERROR(cudaMemcpyToArray(*devicePtr, 0, 0, hostTexture.data, sizeof(DType)*hostTexture.count(), cudaMemcpyHostToDevice));
+    HANDLE_ERROR(cudaMemcpyToArray(*devicePtr, 0, 0, hostTexture.data, sizeof(float)*hostTexture.count(), cudaMemcpyHostToDevice));
     
     texKERNEL.filterMode = cudaFilterModePoint;
     texKERNEL.normalized = true;
@@ -50,7 +50,7 @@ void initTexture(const char* symbol, cudaArray** devicePtr, gpuNUFFT::Array<DTyp
   {
     HANDLE_ERROR (cudaMallocArray (devicePtr, &texKERNEL2D.channelDesc, hostTexture.dim.width, hostTexture.dim.height));
     HANDLE_ERROR (cudaBindTextureToArray (texKERNEL2D, *devicePtr));
-    HANDLE_ERROR(cudaMemcpyToArray(*devicePtr, 0, 0, hostTexture.data, sizeof(DType)*hostTexture.count(), cudaMemcpyHostToDevice));
+    HANDLE_ERROR(cudaMemcpyToArray(*devicePtr, 0, 0, hostTexture.data, sizeof(float)*hostTexture.count(), cudaMemcpyHostToDevice));
     
     texKERNEL2D.filterMode = cudaFilterModeLinear;
     texKERNEL2D.normalized = true;
@@ -66,7 +66,7 @@ void initTexture(const char* symbol, cudaArray** devicePtr, gpuNUFFT::Array<DTyp
     copyparams.extent=volumesize; 
     copyparams.dstArray=*devicePtr; 
     copyparams.kind=cudaMemcpyHostToDevice; 
-    copyparams.srcPtr= make_cudaPitchedPtr((void*)hostTexture.data,sizeof(DType)*hostTexture.dim.width,hostTexture.dim.height,hostTexture.dim.depth); 
+    copyparams.srcPtr= make_cudaPitchedPtr((void*)hostTexture.data,sizeof(float)*hostTexture.dim.width,hostTexture.dim.height,hostTexture.dim.depth); 
 
     HANDLE_ERROR(cudaMemcpy3D(&copyparams)); 
     HANDLE_ERROR (cudaBindTextureToArray (texKERNEL3D, *devicePtr));
@@ -96,6 +96,10 @@ void unbindTexture(const char* symbol)
   else if (std::string("texDATA").compare(symbol)==0)
   {
     HANDLE_ERROR(cudaUnbindTexture(texDATA));    
+  }
+  else if (std::string("texGDATA").compare(symbol)==0)
+  {
+    HANDLE_ERROR(cudaUnbindTexture(texGDATA));    
   }
 }
 
@@ -356,6 +360,43 @@ __global__ void fftShiftKernel(CufftType* gdata, IndType3 offset, int N)
   }
 }
 
+__global__ void fftShiftKernel(CufftType* gdata, CufftType* outdata, IndType3 offset, int N)
+{
+  int t = threadIdx.x +  blockIdx.x *blockDim.x;
+  int x, y, z, x_opp, y_opp, z_opp, ind_opp;
+  while (t < N) 
+  { 
+    getCoordsFromIndex(t, &x, &y, &z, GI.gridDims.x,GI.gridDims.y,GI.gridDims.z);
+    //calculate "opposite" coord pair
+    x_opp = (x + offset.x) % GI.gridDims.x;
+    y_opp = (y + offset.y) % GI.gridDims.y;
+    z_opp = (z + offset.z) % GI.gridDims.z;
+    ind_opp = computeXYZ2Lin(x_opp,y_opp,z_opp,GI.gridDims);
+
+    outdata[t] = gdata[ind_opp];
+
+    t = t + blockDim.x*gridDim.x;
+  }
+}
+
+__global__ void fftShiftKernel2D(CufftType* gdata, CufftType* outdata, IndType3 offset, int N)
+{
+  int t = threadIdx.x +  blockIdx.x *blockDim.x;
+  int x, y, x_opp, y_opp, ind_opp;
+  while (t < N) 
+  { 
+    getCoordsFromIndex2D(t, &x, &y, GI.gridDims.x,GI.gridDims.y);
+    //calculate "opposite" coord pair
+    x_opp = (x + offset.x) % GI.gridDims.x;
+    y_opp = (y + offset.y) % GI.gridDims.y;
+    ind_opp = computeXY2Lin(x_opp,y_opp,GI.gridDims);
+
+    outdata[t] = gdata[ind_opp];
+
+    t = t + blockDim.x*gridDim.x;
+  }
+}
+
 __global__ void fftShiftKernel2D(CufftType* gdata, IndType3 offset, int N)
 {
   int t = threadIdx.x +  blockIdx.x *blockDim.x;
@@ -477,31 +518,19 @@ void performCrop(CufftType* gdata_d,
     cropKernel<<<grid_dim,block_dim>>>(gdata_d,imdata_d,ind_off,gi_host->im_width_dim);
 }
 
-void performFFTShift(CufftType* gdata_d,
+void performInPlaceFFTShift(CufftType* gdata_d,
   gpuNUFFT::FFTShiftDir shift_dir,
   gpuNUFFT::Dimensions gridDims,
+  IndType3 offset,
   gpuNUFFT::GpuNUFFTInfo* gi_host)
 {
-  IndType3 offset;
-  int t_width = 0;
+  int t_width = (int)offset.x;
   if (shift_dir == gpuNUFFT::FORWARD)
   {
-    offset.x = (int)ceil((DType)(gridDims.width / (DType)2.0));
-    offset.y = (int)ceil((DType)(gridDims.height / (DType)2.0));
-    offset.z = (int)ceil((DType)(gridDims.depth / (DType)2.0));
     if (gridDims.width % 2)
     {
       t_width = (int)offset.x - 1;
     }
-    else 
-      t_width = (int)offset.x;
-  }
-  else
-  {
-    offset.x = (int)floor((DType)(gridDims.width / (DType)2.0));
-    offset.y = (int)floor((DType)(gridDims.height / (DType)2.0));
-    offset.z = (int)floor((DType)(gridDims.depth / (DType)2.0));
-    t_width = (int)offset.x;
   }
   dim3 grid_dim;
   if (gi_host->is2Dprocessing)
@@ -512,9 +541,62 @@ void performFFTShift(CufftType* gdata_d,
   dim3 block_dim(THREAD_BLOCK_SIZE);
 
   if (gi_host->is2Dprocessing)
-    fftShiftKernel2D<<<grid_dim,block_dim>>>(gdata_d,offset,(int)gridDims.height*t_width);
+    fftShiftKernel2D<<<grid_dim,block_dim>>>(gdata_d,offset,(int)gridDims.height * t_width);
   else
     fftShiftKernel<<<grid_dim,block_dim>>>(gdata_d,offset,(int)gridDims.count()/2);
+}
+
+void performOutOfPlaceFFTShift(CufftType* gdata_d,
+  gpuNUFFT::FFTShiftDir shift_dir,
+  gpuNUFFT::Dimensions gridDims,
+  IndType3 offset,
+  gpuNUFFT::GpuNUFFTInfo* gi_host)
+{
+  dim3 grid_dim;
+  if (gi_host->is2Dprocessing)
+    grid_dim = dim3(getOptimalGridDim((long)(gridDims.width*gridDims.height),THREAD_BLOCK_SIZE));
+  else
+    grid_dim = dim3(getOptimalGridDim((long)(gridDims.width*gridDims.height*gridDims.depth),THREAD_BLOCK_SIZE));
+
+  dim3 block_dim(THREAD_BLOCK_SIZE);
+
+  CufftType *copy_gdata_d;
+  allocateDeviceMem(&copy_gdata_d,gridDims.count());
+  cudaMemcpy(copy_gdata_d,gdata_d,gridDims.count()*sizeof(CufftType),cudaMemcpyDeviceToDevice);
+
+  if (gi_host->is2Dprocessing)
+    fftShiftKernel2D<<<grid_dim,block_dim>>>(copy_gdata_d,gdata_d,offset,(int)gridDims.count());
+  else
+    fftShiftKernel<<<grid_dim,block_dim>>>(copy_gdata_d,gdata_d,offset,(int)gridDims.count());
+
+  cudaFree(copy_gdata_d);
+}
+
+void performFFTShift(CufftType* gdata_d,
+  gpuNUFFT::FFTShiftDir shift_dir,
+  gpuNUFFT::Dimensions gridDims,
+  gpuNUFFT::GpuNUFFTInfo* gi_host)
+{
+  IndType3 offset;
+  if (shift_dir == gpuNUFFT::FORWARD)
+  {
+    offset.x = (int)ceil((DType)(gridDims.width / (DType)2.0));
+    offset.y = (int)ceil((DType)(gridDims.height / (DType)2.0));
+    offset.z = (int)ceil((DType)(gridDims.depth / (DType)2.0));
+  }
+  else
+  {
+    offset.x = (int)floor((DType)(gridDims.width / (DType)2.0));
+    offset.y = (int)floor((DType)(gridDims.height / (DType)2.0));
+    offset.z = (int)floor((DType)(gridDims.depth / (DType)2.0));
+  }
+  
+  if (gridDims.width % 2 || 
+      gridDims.height % 2 ||
+      gridDims.depth % 2)
+    performOutOfPlaceFFTShift(gdata_d,shift_dir,gridDims,offset,gi_host);
+  else
+    performInPlaceFFTShift(gdata_d,shift_dir,gridDims,offset,gi_host);
 }
 
 __global__ void forwardDeapodizationKernel(DType2* imdata, DType beta, DType norm_val, int N)

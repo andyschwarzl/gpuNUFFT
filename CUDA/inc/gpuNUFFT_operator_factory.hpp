@@ -81,7 +81,7 @@ namespace gpuNUFFT
       * @param useGpu Flag to indicate gpu usage for precomputation       
       * @param balanceWorkload Flag to indicate load balancing       
       */
-    GpuNUFFTOperatorFactory(const bool useTextures,const bool useGpu, bool balanceWorkload) 
+    GpuNUFFTOperatorFactory(const bool useTextures, const bool useGpu, bool balanceWorkload) 
       : useTextures(useTextures), useGpu(useGpu), balanceWorkload(balanceWorkload)
     {
     }

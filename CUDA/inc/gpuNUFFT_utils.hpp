@@ -100,10 +100,10 @@ __inline__ __device__ __host__ void set_minmax (DType *x, int *min, int *max, in
   *max = (int) floor (*x + radius);
   //check boundaries
   if (*min < 0) *min = 0;
+  if (*max < 0) *max = 0;
   if (*max >= maximum) *max = maximum;
   //if (*x >= (DType)maximum) *x = (DType)(maximum-radius);
   if (*min >= (DType)maximum) *min = (int)(maximum-2*radius);
-
 }
 
 long calculateGrid3KernelSize();
@@ -178,6 +178,18 @@ __inline__ __device__ __host__ void getCoordsFromIndex2D(int index, int* x, int*
 {
   *x = index % w_x;
   *y = (int)(index / w_x);        
+}
+
+/** \brief Compute relative grid position of the passed k-space data point. */
+inline __device__ DType mapKSpaceToGrid(DType pos, IndType gridDim, IndType sectorCenter, int sectorOffset)
+{
+  return (pos * (DType)gridDim) + ((DType)0.5 * ((DType)gridDim /*-1*/)) - (DType)sectorCenter + (DType)sectorOffset;
+}
+
+/** \brief Compute relative k space position of the passed grid position. */
+inline __device__ DType mapGridToKSpace(int gridPos, IndType gridDim, IndType sectorCenter, int sectorOffset)
+{
+  return static_cast<DType>((DType)gridPos + (DType)sectorCenter - (DType)sectorOffset) / static_cast<DType>((DType)gridDim/* - 1*/) - (DType)0.5;   
 }
 
 /** \brief Evaluate whether position (x,y,z) inside the defined sector located at (center_x,center_y,center_z) lies outside the grid defined by (width,width,width).  */

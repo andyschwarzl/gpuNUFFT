@@ -4,7 +4,7 @@
 
 #include "gtest/gtest.h"
 
-#define epsilon 0.0001f
+#define epsilon 0.001f
 
 #define get3DC2lin(_x,_y,_z,_width) 2*((_x) + (_width) * ( (_y) + (_z) * (_width)))
 

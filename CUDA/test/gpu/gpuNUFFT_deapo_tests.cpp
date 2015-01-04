@@ -8,6 +8,76 @@
 
 #define get3DC2lin(_x,_y,_z,_width) ((_x) + (_width) * ( (_y) + (_z) * (_width)))
 
+TEST(TestDeapo, 2D)
+{
+  int grid_width = 256;
+  DType grid_width_inv = (DType)1.0 / grid_width;
+  int kernel_width = 3;
+  DType osr = 1.0;
+  DType beta = (DType)BETA(kernel_width,osr);
+
+  DType test = calculateDeapodizationValue(0, grid_width_inv, kernel_width, beta);
+  if (DEBUG)
+    std::cout << "Deapo at 0: " << test << std::endl;
+
+  test = calculateDeapodizationValue(128, grid_width_inv, kernel_width, beta);
+  if (DEBUG)
+    std::cout << "Deapo at 128: " << test << std::endl;
+  EXPECT_NEAR(test,0.115882,epsilon);
+
+  test = calculateDeapodizationValue(-128, grid_width_inv, kernel_width, beta);
+  if (DEBUG)
+    std::cout << "Deapo at -128: " << test << std::endl;
+  EXPECT_NEAR(test,0.115882,epsilon);
+
+  test = calculateDeapodizationValue(256, grid_width_inv, kernel_width, beta);
+  if (DEBUG)
+    std::cout << "Deapo at 256: " << test << std::endl;
+
+  int max_ind = (int)(grid_width * osr);
+  test = calculateDeapodizationValue(max_ind, grid_width_inv, kernel_width, beta);
+  if (DEBUG)
+    std::cout << "Deapo at " << max_ind << " : " << test << std::endl;
+}
+
+TEST(TestDeapo, 2Dind)
+{
+  int x = 0;
+  int y = 0;
+  int t = 0;
+
+  int grid_width = 256;
+  
+  IndType3 width_offset; 
+  width_offset.x = (int)(floor(grid_width / 2.0));
+  width_offset.y = (int)(floor(grid_width / 2.0));
+
+  DType3 grid_width_inv; 
+  grid_width_inv.x = (DType)1.0 / grid_width;
+  grid_width_inv.y = (DType)1.0 / grid_width;
+
+  int kernel_width = 3;
+  DType osr = 1.0;
+  DType beta = (DType)BETA(kernel_width,osr);
+  DType norm_val = calculateDeapodizationValue(0, grid_width_inv.x, kernel_width, beta);
+
+  getCoordsFromIndex2D(t, &x, &y, grid_width,grid_width);
+
+  DType deapo = calculateDeapodizationAt2D(x,y,width_offset,grid_width_inv,kernel_width,beta,norm_val*norm_val);
+  if (DEBUG)
+    std::cout << "Deapo at 0/0: " << deapo << std::endl;
+
+  deapo = calculateDeapodizationAt2D(128,128,width_offset,grid_width_inv,kernel_width,beta,norm_val*norm_val);
+  if (DEBUG)
+    std::cout << "Deapo at 128/128: " << deapo << std::endl;
+
+  
+  getCoordsFromIndex2D(grid_width*grid_width-1, &x, &y, grid_width,grid_width);
+  deapo = calculateDeapodizationAt2D(x,y,width_offset,grid_width_inv,kernel_width,beta,norm_val*norm_val);
+  if (DEBUG)
+    std::cout << "Deapo at " << x << "/" << y << " : " << deapo << std::endl;
+}
+
 TEST(TestGPUGpuNUFFTDeapo,KernelCall1Sector)
 {
 	int kernel_width = 3;
@@ -43,7 +113,8 @@ TEST(TestGPUGpuNUFFTDeapo,KernelCall1Sector)
 	imgDims.height = im_width;
 	imgDims.depth = im_width;
 
-    gpuNUFFT::GpuNUFFTOperatorFactory factory; gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
+  gpuNUFFT::GpuNUFFTOperatorFactory factory(false,true,true); 
+  gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
 
 	gpuNUFFT::Array<DType2> dataArray;
 	dataArray.data = data;
@@ -114,7 +185,8 @@ TEST(TestGPUGpuNUFFTDeapo,KernelCall1Sector2Coils)
 	imgDims.height = im_width;
 	imgDims.depth = im_width;
 
-    gpuNUFFT::GpuNUFFTOperatorFactory factory; gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
+  gpuNUFFT::GpuNUFFTOperatorFactory factory(false,true,true); 
+  gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(kSpaceData,kernel_width,sector_width,osr,imgDims);
 
 	gpuNUFFT::Array<DType2> dataArray;
 	dataArray.data = data;

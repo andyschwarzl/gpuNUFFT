@@ -3,6 +3,8 @@
 #include <iostream>
 #include <cmath>
 #include <stdexcept>
+#include <functional>
+#include <algorithm>
 #include "precomp_kernels.hpp"
 
 void gpuNUFFT::GpuNUFFTOperatorFactory::setUseTextures(bool useTextures)

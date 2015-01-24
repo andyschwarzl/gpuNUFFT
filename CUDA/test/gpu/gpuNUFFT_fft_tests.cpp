@@ -736,7 +736,8 @@ TEST_F(TestFFT,Test8x11x4)
   }
 
   cudaFree(data_d);
-=======
+}
+
 TEST(TestForwardBackward,Test_GpuArray)
 {
   //Test the same as above but use GpuArray data structure  

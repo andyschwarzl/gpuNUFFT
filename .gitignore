@@ -43,5 +43,7 @@ inc/*config.hpp
 *.mat
 tmp/
 *.swp
+*.hdr
+*.cfl
 
 matlab/demo/results/

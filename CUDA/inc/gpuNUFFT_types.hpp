@@ -86,10 +86,10 @@ namespace gpuNUFFT
   IndType height ;
   IndType depth  ;
 
-  IndType length; //1D case 
-
   IndType channels ;
   IndType frames ;
+  
+  IndType length; //1D case 
 
   /** \brief Compute total count of array length 
    * 

@@ -38,9 +38,9 @@ namespace gpuNUFFT
       * @param operatorType Overwrite defalt operator type
       */
     GpuNUFFTOperator(IndType kernelWidth, IndType sectorWidth, DType osf, Dimensions imgDims, bool loadKernel = true, OperatorType operatorType = DEFAULT): 
-        osf(osf), kernelWidth(kernelWidth), sectorWidth(sectorWidth),imgDims(imgDims),operatorType(operatorType), gpuMemAllocated(false), debugTiming(DEBUG),
-        sens_d(NULL),crds_d(NULL),density_comp_d(NULL),deapo_d(NULL),gdata_d(NULL),sector_centers_d(NULL),sectors_d(NULL),
-        data_indices_d(NULL),data_sorted_d(NULL)
+      operatorType(operatorType),osf(osf), kernelWidth(kernelWidth), sectorWidth(sectorWidth),imgDims(imgDims), gpuMemAllocated(false), debugTiming(DEBUG),
+      sens_d(NULL),crds_d(NULL),density_comp_d(NULL),deapo_d(NULL),gdata_d(NULL),sector_centers_d(NULL),sectors_d(NULL),
+      data_indices_d(NULL),data_sorted_d(NULL)
     {
       if (loadKernel)
         initKernel();

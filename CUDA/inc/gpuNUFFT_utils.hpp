@@ -60,28 +60,7 @@
 
 /**
  * \brief Modified Kaiser Bessel function of zero-th order. */
-static DType i0( DType x )
-{
-  DType ax = fabs(x);
-  DType ans;
-  DType y;
-
-  if (ax < (DType)3.75f) 
-  {
-    y=x/3.75f,y=y*y;
-    ans=1.0f+y*(3.5156229f+y*(3.0899424f+y*(1.2067492f
-      +y*(0.2659732f+y*(0.360768e-1f+y*0.45813e-2f)))));
-  } 
-  else 
-  {
-    y=3.75f/ax;
-    ans=(exp(ax)/sqrt(ax))*(0.39894228f+y*(0.1328592e-1f
-      +y*(0.225319e-2f+y*(-0.157565e-2f+y*(0.916281e-2f
-      +y*(-0.2057706e-1f+y*(0.2635537e-1f+y*(-0.1647633e-1f
-      +y*0.392377e-2f))))))));
-  }
-  return (ans);
-}
+DType i0( DType x );
 
 /*  KERNEL 
 *	Summary: Allocates the 3D spherically symmetric kaiser-bessel function 

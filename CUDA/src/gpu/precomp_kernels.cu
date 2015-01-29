@@ -138,7 +138,7 @@ void sortArrays(gpuNUFFT::GpuNUFFTOperator* gpuNUFFTOp,
   allocateDeviceMem<DType>(&trajSorted_d,gpuNUFFTOp->getImageDimensionCount()*coordCnt);
 
   //Assigned sorted sectors and data indices and result
-  allocateAndCopyToDeviceMem<gpuNUFFT::IndPair>(&assignedSectorsAndIndicesSorted_d,assignedSectorsAndIndicesSorted.data(),coordCnt);
+  allocateAndCopyToDeviceMem<gpuNUFFT::IndPair>(&assignedSectorsAndIndicesSorted_d,&assignedSectorsAndIndicesSorted[0],coordCnt);
   allocateDeviceMem<IndType>(&assignedSectors_d,coordCnt);	 
   allocateDeviceMem<IndType>(&dataIndices_d,coordCnt);	 
 

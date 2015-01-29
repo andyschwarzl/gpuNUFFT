@@ -95,7 +95,7 @@ gpuNUFFT::GpuNUFFTInfo* gpuNUFFT::GpuNUFFTOperator::initGpuNUFFTInfo()
 
   gi_host->grid_width_inv.x = (DType)1.0 / static_cast<DType>(this->getGridDims().width);
   gi_host->grid_width_inv.y = (DType)1.0 / static_cast<DType>(this->getGridDims().height);
-  gi_host->grid_width_inv.z = (DType)1.0 / static_cast<DType>(this->getGridDims().depth);
+  gi_host->grid_width_inv.z = (DType)1.0 / DEFAULT_VALUE(static_cast<DType>(this->getGridDims().depth));
   gi_host->kernel_widthInvSquared = kernel_width_inv * kernel_width_inv;
   gi_host->osr = this->osf;
 

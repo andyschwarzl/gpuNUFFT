@@ -303,6 +303,7 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(gpuNUFFT::GpuArray<DType2> k
   for (int coil_it = 0; coil_it < n_coils; coil_it++)
   {
     int im_coil_offset = coil_it * (int)imdata_count;//gi_host->width_dim;
+    int data_coil_offset = coil_it * data_count;
 
     //Set pointer relative to existing gpu data
     if (!this->applySensData())
@@ -312,7 +313,7 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(gpuNUFFT::GpuArray<DType2> k
 
     cudaMemset(gdata_d,0, sizeof(CufftType)*gi_host->grid_width_dim);
     //expect data to reside already in GPU memory
-    selectOrderedGPU(kspaceData_gpu.data,data_indices_d,data_sorted_d,data_count);
+    selectOrderedGPU(kspaceData_gpu.data+data_coil_offset,data_indices_d,data_sorted_d,data_count);
 
     if (this->applyDensComp())
       performDensityCompensation(data_sorted_d,density_comp_d,gi_host);

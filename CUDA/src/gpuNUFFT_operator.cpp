@@ -282,7 +282,6 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(gpuNUFFT::GpuArray<DType2> k
   int     data_count          = (int)this->kSpaceTraj.count();
   int     n_coils             = (int)kspaceData_gpu.dim.channels;
   IndType imdata_count        = this->imgDims.count();
-  int     sector_count        = (int)this->gridSectorDims.count();
 
   CufftType *imdata_sum_d = NULL;
   CufftType *imdata_d = imgData_gpu.data;
@@ -303,7 +302,6 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(gpuNUFFT::GpuArray<DType2> k
   //iterate over coils and compute result
   for (int coil_it = 0; coil_it < n_coils; coil_it++)
   {
-    int data_coil_offset = coil_it * data_count;
     int im_coil_offset = coil_it * (int)imdata_count;//gi_host->width_dim;
 
     //Set pointer relative to existing gpu data
@@ -351,7 +349,7 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(gpuNUFFT::GpuArray<DType2> k
     performFFTShift(gdata_d,INVERSE,getGridDims(),gi_host);
 
     //Inverse FFT
-    if (err=pt2CufftExec(fft_plan, gdata_d, gdata_d, CUFFT_INVERSE) != CUFFT_SUCCESS)
+    if ((err=pt2CufftExec(fft_plan, gdata_d, gdata_d, CUFFT_INVERSE)) != CUFFT_SUCCESS)
     {
       fprintf(stderr,"cufft has failed at adj with err %i \n",err);
       showMemoryInfo(true,stderr);
@@ -483,7 +481,6 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(gpuNUFFT::Array<DType2> kspa
   int     data_count          = (int)this->kSpaceTraj.count();
   int     n_coils             = (int)kspaceData.dim.channels;
   IndType imdata_count        = this->imgDims.count();
-  int     sector_count        = (int)this->gridSectorDims.count();
 
   // select data ordered and leave it on gpu
   DType2* data_d;
@@ -560,7 +557,7 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(gpuNUFFT::Array<DType2> kspa
     performFFTShift(gdata_d,INVERSE,getGridDims(),gi_host);
 
     //Inverse FFT
-    if (err=pt2CufftExec(fft_plan, gdata_d, gdata_d, CUFFT_INVERSE) != CUFFT_SUCCESS)
+    if ((err=pt2CufftExec(fft_plan, gdata_d, gdata_d, CUFFT_INVERSE)) != CUFFT_SUCCESS)
     {
       fprintf(stderr,"cufft has failed at adj with err %i \n",err);
       showMemoryInfo(true,stderr);
@@ -682,7 +679,6 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(GpuArray<DType2> imgData
   int      data_count          = (int)this->kSpaceTraj.count();
   int      n_coils             = (int)kspaceData_gpu.dim.channels;
   IndType  imdata_count        = this->imgDims.count();
-  int      sector_count        = (int)this->gridSectorDims.count();
 
   //cuda mem allocation
   initDeviceMemory(n_coils);
@@ -749,7 +745,7 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(GpuArray<DType2> imgData
       printf("error at thread synchronization 4: %s\n",cudaGetErrorString(cudaGetLastError()));
     // eventually free imdata_d
     // Forward FFT to kspace domain
-    if (err=pt2CufftExec(fft_plan, gdata_d, gdata_d, CUFFT_FORWARD) != CUFFT_SUCCESS)
+    if ((err=pt2CufftExec(fft_plan, gdata_d, gdata_d, CUFFT_FORWARD)) != CUFFT_SUCCESS)
     {
       fprintf(stderr,"cufft has failed with err %i \n",err);
       showMemoryInfo(true,stderr);
@@ -838,7 +834,6 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(gpuNUFFT::Array<DType2> 
   int      data_count          = (int)this->kSpaceTraj.count();
   int      n_coils             = (int)kspaceData.dim.channels;
   IndType  imdata_count        = this->imgDims.count();
-  int      sector_count        = (int)this->gridSectorDims.count();
 
   //cuda mem allocation
   DType2 *imdata_d;
@@ -908,7 +903,7 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(gpuNUFFT::Array<DType2> 
       printf("error at thread synchronization 4: %s\n",cudaGetErrorString(cudaGetLastError()));
     // eventually free imdata_d
     // Forward FFT to kspace domain
-    if (err=pt2CufftExec(fft_plan, gdata_d, gdata_d, CUFFT_FORWARD) != CUFFT_SUCCESS)
+    if ((err=pt2CufftExec(fft_plan, gdata_d, gdata_d, CUFFT_FORWARD)) != CUFFT_SUCCESS)
     {
       fprintf(stderr,"cufft has failed with err %i \n",err);
       showMemoryInfo(true,stderr);

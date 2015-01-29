@@ -67,7 +67,7 @@ void gpuNUFFT::GpuNUFFTOperatorFactory::computeProcessingOrder(gpuNUFFT::GpuNUFF
   Array<IndType> sectorDataCount = gpuNUFFTOp->getSectorDataCount();
   std::vector<IndPair> countPerSector;
 
-  for (int i=0; i<sectorDataCount.count()-1;i++)
+  for (unsigned i=0; i<sectorDataCount.count()-1;i++)
   {
     countPerSector.push_back(IndPair(i,sectorDataCount.data[i+1]-sectorDataCount.data[i]));
   }
@@ -75,7 +75,7 @@ void gpuNUFFT::GpuNUFFTOperatorFactory::computeProcessingOrder(gpuNUFFT::GpuNUFF
   std::sort(countPerSector.begin(),countPerSector.end(),std::greater<IndPair>());
   std::vector<IndType2> processingOrder;
 
-  for (int i=0; i<countPerSector.size();i++)
+  for (unsigned i=0; i<countPerSector.size();i++)
   {
     if (countPerSector[i].second>0)
     {

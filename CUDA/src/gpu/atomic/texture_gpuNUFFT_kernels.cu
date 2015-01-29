@@ -360,8 +360,8 @@ void performTextureConvolution( DType2* data_d,
   dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,1));
   if (DEBUG)
   {
-    printf("adjoint texture convolution requires %d bytes of shared memory!\n",shared_mem_size);
-    printf("grid dim %d, block dim %d \n",grid_dim.x, block_dim.x); 
+    printf("adjoint texture convolution requires %ld bytes of shared memory!\n",shared_mem_size);
+    printf("grid dim %u, block dim %u \n",grid_dim.x, block_dim.x); 
   }
   if (gi_host->is2Dprocessing)
     textureConvolutionKernel2D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
@@ -389,8 +389,8 @@ void performTextureConvolution( DType2* data_d,
   dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,1));
   if (DEBUG)
   {
-    printf("adjoint balanced texture convolution requires %d bytes of shared memory!\n",shared_mem_size);
-    printf("grid dim %d, block dim %d \n",grid_dim.x, block_dim.x); 
+    printf("adjoint balanced texture convolution requires %ld bytes of shared memory!\n",shared_mem_size);
+    printf("grid dim %u, block dim %u \n",grid_dim.x, block_dim.x); 
   }
   if (gi_host->is2Dprocessing)
     balancedTextureConvolutionKernel2D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_processing_order_d,sector_centers_d,gi_host->sectorsToProcess);
@@ -742,7 +742,7 @@ void performTextureForwardConvolution( CufftType*		data_d,
   dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,thread_size));
 
   if (DEBUG)
-    printf("texture forward convolution requires %d bytes of shared memory!\n",shared_mem_size);
+    printf("texture forward convolution requires %ld bytes of shared memory!\n",shared_mem_size);
   if (gi_host->is2Dprocessing)
     textureForwardConvolutionKernel2D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
   else
@@ -766,7 +766,7 @@ void performTextureForwardConvolution( CufftType*		data_d,
   dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,thread_size));
 
   if (DEBUG)
-    printf("balanced texture forward convolution requires %d bytes of shared memory!\n",shared_mem_size);
+    printf("balanced texture forward convolution requires %ld bytes of shared memory!\n",shared_mem_size);
   if (gi_host->is2Dprocessing)
     balancedTextureForwardConvolutionKernel2D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_processing_order_d,sector_centers_d,gi_host->sectorsToProcess);
   else

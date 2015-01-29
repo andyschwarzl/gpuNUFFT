@@ -58,9 +58,9 @@ TEST(OperatorFactoryTest,TestInit)
 	EXPECT_EQ(expected,sectorDims.count());	
 
 	gpuNUFFT::Array<IndType> sectorCenters = gpuNUFFTOp->getSectorCenters();
-	EXPECT_EQ(4,sectorCenters.data[0]);
-	EXPECT_EQ(4,sectorCenters.data[1]);
-	EXPECT_EQ(4,sectorCenters.data[2]);
+	EXPECT_EQ(4u,sectorCenters.data[0]);
+	EXPECT_EQ(4u,sectorCenters.data[1]);
+	EXPECT_EQ(4u,sectorCenters.data[2]);
 
 	gpuNUFFT::Array<IndType> dataIndices = gpuNUFFTOp->getDataIndices();
 	IndType expectedSecIndexSorted[6] = {0,4,1,2,3,5};
@@ -104,7 +104,7 @@ TEST(OperatorFactoryTest,TestInvalidArgumentInit)
 
 	EXPECT_THROW({
     gpuNUFFT::GpuNUFFTOperatorFactory factory(false,false,false);
-	gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(kSpaceTraj, kernelWidth, sectorWidth, osf, imgDims);
+	factory.createGpuNUFFTOperator(kSpaceTraj, kernelWidth, sectorWidth, osf, imgDims);
 	},std::invalid_argument);
 }
 
@@ -148,8 +148,8 @@ TEST(OperatorFactoryTest,Test2DInit)
 	EXPECT_EQ(expected,sectorDims.count());	
 	
 	gpuNUFFT::Array<IndType> sectorCenters = gpuNUFFTOp->getSectorCenters();
-	EXPECT_EQ(4,sectorCenters.data[0]);
-	EXPECT_EQ(4,sectorCenters.data[1]);
+	EXPECT_EQ(4u,sectorCenters.data[0]);
+	EXPECT_EQ(4u,sectorCenters.data[1]);
 	/*
 	gpuNUFFT::Array<IndType> dataIndices = gpuNUFFTOp->getDataIndices();
 	IndType expectedSecIndexSorted[6] = {0,4,1,2,3,5};

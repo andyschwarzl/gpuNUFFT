@@ -308,15 +308,6 @@ TEST(TestGPUGpuNUFFTConv,GPUTest_1SectorKernel5)
   coords[2] = 0;
 
   //Output Grid
-  unsigned long dims_g[4];
-  dims_g[0] = 1; // complex /
-  dims_g[1] = (unsigned long)(im_width * osr); 
-  dims_g[2] = (unsigned long)(im_width * osr);
-  dims_g[3] = (unsigned long)(im_width * osr);
-
-  long grid_size = dims_g[0]*dims_g[1]*dims_g[2]*dims_g[3];
-
-  //gdata = (CufftType*) calloc(grid_size,sizeof(CufftType));
 
   //sectors of data, count and start indices
   int sector_width = 5;
@@ -330,8 +321,6 @@ TEST(TestGPUGpuNUFFTConv,GPUTest_1SectorKernel5)
   sector_centers[0] = 5;
   sector_centers[1] = 5;
   sector_centers[2] = 5;
-
-  //gpuNUFFT_gpu_adj(data,data_entries,1,coords,&gdata,grid_size,dims_g[1],kern,kernel_entries, kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,false,NULL,CONVOLUTION);
 
   gpuNUFFT::Array<DType> kSpaceData;
   kSpaceData.data = coords;
@@ -441,15 +430,6 @@ TEST(TestGPUGpuNUFFTConv,GPUTest_2SectorsKernel3nData)
   coords[coord_cnt++] = 0;
 
   //Output Grid
-  unsigned long dims_g[4];
-  dims_g[0] = 1; // complex 
-  dims_g[1] = (unsigned long)(im_width * osr); 
-  dims_g[2] = (unsigned long)(im_width * osr);
-  dims_g[3] = (unsigned long)(im_width * osr);
-
-  long grid_size = dims_g[0]*dims_g[1]*dims_g[2]*dims_g[3];
-
-  //gdata = (CufftType*) calloc(grid_size,sizeof(CufftType));
 
   //sectors of data, count and start indices
   int sector_width = 5;
@@ -1174,28 +1154,8 @@ TEST(TestGPUGpuNUFFTConv,MatlabTest_8SK3w32)
   coords[coord_cnt++] = 0;
 
   //Output Grid
-  unsigned long dims_g[4];
-  dims_g[0] = 1; // complex
-  dims_g[1] = (unsigned long)(im_width * osr); 
-  dims_g[2] = (unsigned long)(im_width * osr);
-  dims_g[3] = (unsigned long)(im_width * osr);
-
-  long grid_size = dims_g[0]*dims_g[1]*dims_g[2]*dims_g[3];
-
   //sectors of data, count and start indices
   int sector_width = 8;
-
-  const int sector_count = 64;
-  //int* sectors = (int*) calloc(sector_count+1,sizeof(int));
-  //extracted from matlab
-  IndType sectors[sector_count+1] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
-
-  //int* sector_centers = (int*) calloc(3*sector_count,sizeof(int));
-  int sector_cnt = 0;
-
-  IndType sector_centers[3*sector_count] = {4,4,4,4,4,12,4,4,20,4,4,28,4,12,4,4,12,12,4,12,20,4,12,28,4,20,4,4,20,12,4,20,20,4,20,28,4,28,4,4,28,12,4,28,20,4,28,28,12,4,4,12,4,12,12,4,20,12,4,28,12,12,4,12,12,12,12,12,20,12,12,28,12,20,4,12,20,12,12,20,20,12,20,28,12,28,4,12,28,12,12,28,20,12,28,28,20,4,4,20,4,12,20,4,20,20,4,28,20,12,4,20,12,12,20,12,20,20,12,28,20,20,4,20,20,12,20,20,20,20,20,28,20,28,4,20,28,12,20,28,20,20,28,28,28,4,4,28,4,12,28,4,20,28,4,28,28,12,4,28,12,12,28,12,20,28,12,28,28,20,4,28,20,12,28,20,20,28,20,28,28,28,4,28,28,12,28,28,20,28,28,28};
-
-  //gpuNUFFT_gpu_adj(data,data_entries,1,coords,&gdata,grid_size,dims_g[1],kern,kernel_entries, kernel_width,sectors,sector_count,sector_centers,sector_width, im_width,osr,false,NULL,CONVOLUTION);
 
   gpuNUFFT::Array<DType> kSpaceData;
   kSpaceData.data = coords;
@@ -1539,29 +1499,9 @@ TEST(TestGPUGpuNUFFTConvAnisotropic,GPUTest_20x20x10_osf_15)
 
   gdataArray = gpuNUFFTOp->performGpuNUFFTAdj(dataArray,gpuNUFFT::CONVOLUTION);
 
-  gpuNUFFT::Dimensions gridDims=gpuNUFFTOp->getGridDims();
-
   //Output Grid
   CufftType* gdata = gdataArray.data;
 
-  /*	if (DEBUG) 
-  {
-  for (int k=0; k<(gridDims.depth); k++)
-  {
-  for (int j=0; j<(gridDims.height); j++)
-  {
-  for (int i=0; i<(gridDims.width); i++)
-  printf("%.1f ",gdata[computeXYZ2Lin(i,gridDims.width-1-j,k,gridDims)].x);
-  printf("\n");
-  }
-  printf("-------------------------------------------------------------\n");
-  }
-  }*/
-
-
-  //int index = computeXYZ2Lin(20,20,10,gdataArray.dim);
-  //if (DEBUG) printf("index to test %d\n",index);
-  //EXPECT_EQ(index,2*555);
   EXPECT_NEAR(0.5853f,gdata[computeXYZ2Lin(6,21,3,gdataArray.dim)].x,epsilon);
   EXPECT_NEAR(0.9445f,gdata[computeXYZ2Lin(6,21,4,gdataArray.dim)].x,epsilon);
   EXPECT_NEAR(4.8931f,gdata[computeXYZ2Lin(24,24,11,gdataArray.dim)].x,10*epsilon);
@@ -1644,8 +1584,6 @@ TEST(TestGPUGpuNUFFTConvAnisotropic,GPUTest_20x20x10_osf_15_Balanced)
   gpuNUFFT::Array<CufftType> gdataArray;
 
   gdataArray = gpuNUFFTOp->performGpuNUFFTAdj(dataArray,gpuNUFFT::CONVOLUTION);
-
-  gpuNUFFT::Dimensions gridDims=gpuNUFFTOp->getGridDims();
 
   //Output Grid
   CufftType* gdata = gdataArray.data;

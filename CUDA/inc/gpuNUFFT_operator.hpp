@@ -51,7 +51,7 @@ namespace gpuNUFFT
         sectorDims.depth = sectorWidth;
     }
 
-    ~GpuNUFFTOperator()
+    virtual ~GpuNUFFTOperator()
     {
       free(this->kernel.data);
       freeDeviceMemory();

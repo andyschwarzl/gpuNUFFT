@@ -34,7 +34,7 @@ namespace gpuNUFFT
       initKernel();	
     }
 
-    ~BalancedTextureGpuNUFFTOperator()
+    virtual ~BalancedTextureGpuNUFFTOperator()
     {
     }
 

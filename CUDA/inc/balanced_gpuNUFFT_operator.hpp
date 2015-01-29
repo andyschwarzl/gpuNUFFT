@@ -25,7 +25,7 @@ namespace gpuNUFFT
     {
     }
 
-    ~BalancedGpuNUFFTOperator()
+    virtual ~BalancedGpuNUFFTOperator()
     {
     }
 

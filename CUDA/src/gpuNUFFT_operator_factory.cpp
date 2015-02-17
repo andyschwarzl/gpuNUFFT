@@ -436,8 +436,6 @@ void gpuNUFFT::GpuNUFFTOperatorFactory::checkMemoryConsumption(Dimensions& kSpac
   ss << "Total available memory: " << total << std::endl;
   ss << "Required memory: " << estMem << std::endl;
 
-  std::cout << ss.str() << std::endl;
-
   if (total < estMem)
     throw std::runtime_error(ss.str());
 }

@@ -152,10 +152,11 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	dataArray.dim.length = data_entries;
 	dataArray.dim.channels = MAX(n_coils_sens,n_coils);
 
+	gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = NULL;
 	try
 	{
     gpuNUFFT::GpuNUFFTOperatorMatlabFactory gpuNUFFTFactory(use_textures,true,balance_workload);
-		gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = gpuNUFFTFactory.loadPrecomputedGpuNUFFTOperator(kSpaceTraj,dataIndicesArray,sectorDataCountArray,sectorProcessingOrderArray,sectorCentersArray,sensArray,kernel_width,sector_width,osr,imgDims);
+		gpuNUFFTOp = gpuNUFFTFactory.loadPrecomputedGpuNUFFTOperator(kSpaceTraj,dataIndicesArray,sectorDataCountArray,sectorProcessingOrderArray,sectorCentersArray,sensArray,kernel_width,sector_width,osr,imgDims);
   
     if (MATLAB_DEBUG)
       mexPrintf("Creating gpuNUFFT Operator of Type: %d \n",gpuNUFFTOp->getType());
@@ -164,9 +165,10 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 		
 		delete gpuNUFFTOp;
 	}
-	catch (...)
+	catch (std::exception& e)
 	{
-		mexPrintf("FAILURE in gpuNUFFT operation\n");
+		delete gpuNUFFTOp;
+		mexErrMsgIdAndTxt("gpuNUFFT:forward","FAILURE in gpuNUFFT operation: %s\n",e.what());
 	}
 
 	cudaThreadSynchronize();

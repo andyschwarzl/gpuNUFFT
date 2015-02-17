@@ -14,7 +14,6 @@ void gpuNUFFT_cpu(DType* data, DType* crds, DType* gdata, DType* kernel, int* se
 
 	if (DEBUG)
 		printf("radius rel. to grid width %f\n",radius);
-	DType width_inv = 1.0f / width;
 	DType radiusSquared = radius * radius;
 	DType kernelRadius_invSqr = 1 / radiusSquared;
 
@@ -113,7 +112,6 @@ void gpuNUFFT_cpu(DType* data, DType* crds, DType* gdata, DType* kernel, int* se
 	
 	}/*sectors*/
 	
-	int max_im_index = width;
 	for (int sec = 0; sec < sector_count; sec++)
 	{
 		//printf("DEBUG: showing entries of sector %d in z = 5 plane...\n",sec);

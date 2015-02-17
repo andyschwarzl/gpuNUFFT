@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <functional>
 #include <algorithm>
+#include <sstream>
 #include "precomp_kernels.hpp"
 
 void gpuNUFFT::GpuNUFFTOperatorFactory::setUseTextures(bool useTextures)
@@ -67,7 +68,7 @@ void gpuNUFFT::GpuNUFFTOperatorFactory::computeProcessingOrder(gpuNUFFT::GpuNUFF
   Array<IndType> sectorDataCount = gpuNUFFTOp->getSectorDataCount();
   std::vector<IndPair> countPerSector;
 
-  for (int i=0; i<sectorDataCount.count()-1;i++)
+  for (unsigned i=0; i<sectorDataCount.count()-1;i++)
   {
     countPerSector.push_back(IndPair(i,sectorDataCount.data[i+1]-sectorDataCount.data[i]));
   }
@@ -75,7 +76,7 @@ void gpuNUFFT::GpuNUFFTOperatorFactory::computeProcessingOrder(gpuNUFFT::GpuNUFF
   std::sort(countPerSector.begin(),countPerSector.end(),std::greater<IndPair>());
   std::vector<IndType2> processingOrder;
 
-  for (int i=0; i<countPerSector.size();i++)
+  for (unsigned i=0; i<countPerSector.size();i++)
   {
     if (countPerSector[i].second>0)
     {
@@ -293,6 +294,8 @@ gpuNUFFT::GpuNUFFTOperator* gpuNUFFT::GpuNUFFTOperatorFactory::createNewGpuNUFFT
 gpuNUFFT::GpuNUFFTOperator* gpuNUFFT::GpuNUFFTOperatorFactory::createGpuNUFFTOperator(gpuNUFFT::Array<DType>& kSpaceTraj, gpuNUFFT::Array<DType>& densCompData,gpuNUFFT::Array<DType2>& sensData, const IndType& kernelWidth, const IndType& sectorWidth, const DType& osf, gpuNUFFT::Dimensions& imgDims)
 {
   //validate arguments
+  checkMemoryConsumption(kSpaceTraj.dim, sectorWidth, osf, imgDims, densCompData.dim, sensData.dim);
+
   if (kSpaceTraj.dim.channels > 1)
     throw std::invalid_argument("Trajectory dimension must not contain a channel size greater than 1!");
 
@@ -405,4 +408,34 @@ gpuNUFFT::GpuNUFFTOperator* gpuNUFFT::GpuNUFFTOperatorFactory::loadPrecomputedGp
   gpuNUFFTOp->setDens(densCompData);
 
   return gpuNUFFTOp;
+}
+    
+void gpuNUFFT::GpuNUFFTOperatorFactory::checkMemoryConsumption(Dimensions& kSpaceDims, const IndType& sectorWidth, const DType& osf, Dimensions& imgDims, Dimensions& densDims, Dimensions& sensDims)
+{
+  size_t multiplier = sizeof(DType);
+  size_t complexMultiplier = 2 * multiplier;
+
+  size_t estMem = 2 * imgDims.count() * std::pow(osf, 3) * complexMultiplier; //< oversampled grid, and fft 
+  estMem += kSpaceDims.count() * (3 * multiplier + complexMultiplier); //< 3 components of trajectory + complex data
+
+  estMem += densDims.count() * multiplier; //<density compensation
+
+  if (sensDims.count() > 0)
+  {
+    estMem += imgDims.count() * complexMultiplier; //< only one coil is stored on the device
+    estMem += imgDims.count() * complexMultiplier; //< precomputed deapo
+    estMem += imgDims.count() * complexMultiplier; //< coil summation 
+  }
+
+  cudaDeviceProp prop;
+  cudaGetDeviceProperties(&prop, 0);
+
+  size_t total = prop.totalGlobalMem;
+
+  std::stringstream ss("Required device memory too large for selected device!\n");
+  ss << "Total available memory: " << total << std::endl;
+  ss << "Required memory: " << estMem << std::endl;
+
+  if (total < estMem)
+    throw std::runtime_error(ss.str());
 }

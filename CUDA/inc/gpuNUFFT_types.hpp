@@ -86,10 +86,10 @@ namespace gpuNUFFT
   IndType height ;
   IndType depth  ;
 
-  IndType length; //1D case 
-
   IndType channels ;
   IndType frames ;
+  
+  IndType length; //1D case 
 
   /** \brief Compute total count of array length 
    * 
@@ -142,6 +142,15 @@ namespace gpuNUFFT
     return dim.count();
   }
 
+  };
+  
+  /** \brief Array container consisting of raw data, which is expected to be allocated
+   * on the GPU, and gpuNUFFT::Dimensions descriptor.
+   *
+   */
+  template <typename T>
+  struct GpuArray : Array<T> 
+  {
   };
 
   /** \brief Type used for texture interpolation on GPU

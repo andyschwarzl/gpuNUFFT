@@ -40,22 +40,22 @@ TEST(PrecomputationTest, ComputeIsotropicSectorCount) {
 	IndType sectorWidth = 8;
 
 	IndType sectors = computeSectorCountPerDimension(imageWidth,sectorWidth);
-	EXPECT_EQ(16,sectors);
+	EXPECT_EQ(16u,sectors);
 
 	imageWidth = 124; 
 	sectorWidth = 8;
     sectors = computeSectorCountPerDimension(imageWidth,sectorWidth);
-	EXPECT_EQ(16,sectors);
+	EXPECT_EQ(16u,sectors);
 
 	imageWidth = 7; 
 	sectorWidth = 8;
     sectors = computeSectorCountPerDimension(imageWidth,sectorWidth);
-	EXPECT_EQ(1,sectors);
+	EXPECT_EQ(1u,sectors);
 
 	imageWidth = 120; 
 	sectorWidth = 8;
     sectors = computeSectorCountPerDimension(imageWidth,sectorWidth);
-	EXPECT_EQ(15,sectors);
+	EXPECT_EQ(15u,sectors);
 }
 
 TEST(PrecomputationTest, ComputeIsotropicSectorDim) {
@@ -88,9 +88,9 @@ TEST(PrecomputationTest, testAddScalarToDimension)
 
 	d = d + 3;
 
-	EXPECT_EQ(13,d.width);
-	EXPECT_EQ(13,d.height);
-	EXPECT_EQ(0,d.depth);
+	EXPECT_EQ(13u,d.width);
+	EXPECT_EQ(13u,d.height);
+	EXPECT_EQ(0u,d.depth);
 }
 
 TEST(PrecomputationTest, ComputeSectorRanges) {
@@ -159,7 +159,7 @@ TEST(PrecomputationTest, AssignSectors1D) {
 	
 	IndType expectedSec[6] = {0,0,1,1,2,2};
 
-	for (int cCnt = 0; cCnt < coordCnt; cCnt++)
+	for (unsigned cCnt = 0; cCnt < coordCnt; cCnt++)
 	{
 		DType x = kSpaceData.data[cCnt];
     if (DEBUG)
@@ -212,7 +212,7 @@ TEST(PrecomputationTest, AssignSectors1DOnBorders) {
 	
 	IndType expectedSec[4] = {0,1,2,2};
 
-	for (int cCnt = 0; cCnt < coordCnt; cCnt++)
+	for (unsigned cCnt = 0; cCnt < coordCnt; cCnt++)
 	{
 		DType x = kSpaceData.data[cCnt];
     if (DEBUG)
@@ -265,7 +265,7 @@ TEST(PrecomputationTest, AssignSectors2D) {
 	
 	IndType expectedSec[6] = {0,0,4,4,8,8};
 
-	for (int cCnt = 0; cCnt < coordCnt; cCnt++)
+	for (unsigned cCnt = 0; cCnt < coordCnt; cCnt++)
 	{
 		DType2 coord;
 		coord.x = kSpaceData.data[cCnt];
@@ -324,9 +324,9 @@ TEST(PrecomputationTest, AssignSectors3D_16x16x16_15) {
 	}
 	if (DEBUG) std::cout << std::endl;
 	
-	IndType expectedSec[6] = {0,9,13,13,8,26};
+	IndType expectedSec[6] = {0u,9u,13u,13u,8u,26u};
 
-	for (int cCnt = 0; cCnt < coordCnt; cCnt++)
+	for (unsigned cCnt = 0; cCnt < coordCnt; cCnt++)
 	{
 		DType3 coord;
 		coord.x = kSpaceData.data[cCnt];
@@ -342,10 +342,10 @@ TEST(PrecomputationTest, AssignSectors3D_16x16x16_15) {
     
     if (DEBUG)
 		  std::cout << "into sector x: " << x_sector << " y: " << y_sector << " z: " << z_sector << std::endl;
-		EXPECT_EQ(expectedSec[cCnt],computeXYZ2Lin(x_sector,y_sector,z_sector,sectorDims));
+		EXPECT_EQ(expectedSec[cCnt],(unsigned)computeXYZ2Lin(x_sector,y_sector,z_sector,sectorDims));
 
 		IndType3 mappedSectors = computeSectorMapping(coord,sectorDims);
-		EXPECT_EQ(expectedSec[cCnt],computeInd32Lin(mappedSectors,sectorDims));
+		EXPECT_EQ(expectedSec[cCnt],(unsigned)computeInd32Lin(mappedSectors,sectorDims));
 	}
 
 	free(sectorRange);
@@ -404,10 +404,10 @@ TEST(PrecomputationTest, AssignSectors3D_20x20x10) {
 
     if (DEBUG)
 		  std::cout << "into sector x: " << x_sector << " y: " << y_sector << " z: " << z_sector << std::endl;
-		EXPECT_EQ(expectedSec[cCnt],computeXYZ2Lin(x_sector,y_sector,z_sector,sectorDims));
+		EXPECT_EQ(expectedSec[cCnt],(unsigned)computeXYZ2Lin(x_sector,y_sector,z_sector,sectorDims));
 
 		IndType3 mappedSectors = computeSectorMapping(coord,sectorDims);
-		EXPECT_EQ(expectedSec[cCnt],computeInd32Lin(mappedSectors,sectorDims));
+		EXPECT_EQ(expectedSec[cCnt],(unsigned)computeInd32Lin(mappedSectors,sectorDims));
 	}
 
 	free(sectorRange);
@@ -450,7 +450,7 @@ TEST(PrecomputationTest, AssignSectors3D_20x20x10_15) {
 	
 	IndType expectedSec[6] = {0,37,56,57,70,107};
 
-	for (int cCnt = 0; cCnt < coordCnt; cCnt++)
+	for (unsigned cCnt = 0; cCnt < coordCnt; cCnt++)
 	{
 		DType3 coord;
 		coord.x = kSpaceData.data[cCnt];
@@ -466,10 +466,10 @@ TEST(PrecomputationTest, AssignSectors3D_20x20x10_15) {
 
     if (DEBUG)
 		  std::cout << "into sector x: " << x_sector << " y: " << y_sector << " z: " << z_sector << std::endl;
-		EXPECT_EQ(expectedSec[cCnt],computeXYZ2Lin(x_sector,y_sector,z_sector,sectorDims));
+		EXPECT_EQ(expectedSec[cCnt],(unsigned)computeXYZ2Lin(x_sector,y_sector,z_sector,sectorDims));
 
 		IndType3 mappedSectors = computeSectorMapping(coord,sectorDims);
-		EXPECT_EQ(expectedSec[cCnt],computeInd32Lin(mappedSectors,sectorDims));
+		EXPECT_EQ(expectedSec[cCnt],(unsigned)computeInd32Lin(mappedSectors,sectorDims));
 	}
 
 	free(sectorRange);
@@ -556,7 +556,7 @@ TEST(PrecomputationTest, AssignSectors3DSorted) {
     assignedSectors.data = (IndType*)malloc(coordCnt * sizeof(IndType));
     assignedSectors.dim.length = coordCnt;
 
-	for (int cCnt = 0; cCnt < coordCnt; cCnt++)
+	for (unsigned cCnt = 0; cCnt < coordCnt; cCnt++)
 	{
 		DType3 coord;
 		coord.x = kSpaceData.data[cCnt];
@@ -626,7 +626,7 @@ TEST(PrecomputationTest, ComputeDataIndices) {
     assignedSectors.data = (IndType*)malloc(coordCnt * sizeof(IndType));
     assignedSectors.dim.length = coordCnt;
 
-	for (int cCnt = 0; cCnt < coordCnt; cCnt++)
+	for (unsigned cCnt = 0; cCnt < coordCnt; cCnt++)
 	{
 		DType3 coord;
 		coord.x = kSpaceData.data[cCnt];
@@ -643,18 +643,13 @@ TEST(PrecomputationTest, ComputeDataIndices) {
 	IndType expectedSecSorted[6] = {0,8,9,13,13,26};
 	IndType expectedSecIndexSorted[6] = {0,4,1,2,3,5};
 
-    std::vector<gpuNUFFT::IndPair> secVector = sortVector(assignedSectors);
+  std::vector<gpuNUFFT::IndPair> secVector = sortVector(assignedSectors);
 
-	DType coords_sorted[coordCnt*3];
-	
-	for (int i=0; i<coordCnt;i++)
+	for (unsigned i=0; i<coordCnt;i++)
 	{
 		//compare index
 		EXPECT_EQ(expectedSecIndexSorted[i],secVector[i].first);
 		EXPECT_EQ(expectedSecSorted[i],secVector[i].second);
-		coords_sorted[i] = kSpaceData.data[secVector[i].first];
-		coords_sorted[i + 1*coordCnt] = kSpaceData.data[secVector[i].first + 1*coordCnt];
-		coords_sorted[i + 2*coordCnt] = kSpaceData.data[secVector[i].first + 2*coordCnt];
 	}
 
 	IndType cnt = 0;
@@ -674,7 +669,7 @@ TEST(PrecomputationTest, ComputeDataIndices) {
 
   if (DEBUG)
   {
-	  for (int i=0; i<dataIndices.size(); i++)
+	  for (unsigned i=0; i<dataIndices.size(); i++)
 	  {
 		  std::cout << dataIndices.at(i) << " " ;
 	  }
@@ -695,7 +690,7 @@ TEST(PrecomputationTest, ComputeSectorCenters) {
 	
 	gpuNUFFT::Dimensions sectorDims= computeSectorCountPerDimension(gridDim,sectorWidth);
 
-  EXPECT_EQ(27,sectorDims.count());
+  EXPECT_EQ(27u,sectorDims.count());
 
 	gpuNUFFT::Array<IndType3> sectorCenters; 
 	sectorCenters.data = (IndType3*)malloc(sectorDims.count() * sizeof(IndType3));
@@ -718,9 +713,9 @@ TEST(PrecomputationTest, ComputeSectorCenters) {
 		  std::cout << " x: " << sectorCenters.data[i].x << " y: " << sectorCenters.data[i].y << " z: " << sectorCenters.data[i].z << std::endl;
 	  }
 
-	EXPECT_EQ(4,sectorCenters.data[0].x);
-	EXPECT_EQ(4,sectorCenters.data[0].y);
-	EXPECT_EQ(4,sectorCenters.data[0].z);
+	EXPECT_EQ(4u,sectorCenters.data[0].x);
+	EXPECT_EQ(4u,sectorCenters.data[0].y);
+	EXPECT_EQ(4u,sectorCenters.data[0].z);
 
 	free(sectorCenters.data);
 }
@@ -765,8 +760,8 @@ TEST(PrecomputationTest, AnisotropicComputeSectorCenters) {
 	
 	gpuNUFFT::Dimensions sectorDims= computeSectorCountPerDimension(gridDim,sectorWidth);
 
-  EXPECT_EQ(18,sectorDims.count());
-  EXPECT_EQ(2,sectorDims.depth);
+  EXPECT_EQ(18u,sectorDims.count());
+  EXPECT_EQ(2u,sectorDims.depth);
 
 	gpuNUFFT::Array<IndType3> sectorCenters; 
 	sectorCenters.data = (IndType3*)malloc(sectorDims.count() * sizeof(IndType3));
@@ -789,17 +784,17 @@ TEST(PrecomputationTest, AnisotropicComputeSectorCenters) {
 		  std::cout << " x: " << sectorCenters.data[i].x << " y: " << sectorCenters.data[i].y << " z: " << sectorCenters.data[i].z << std::endl;
 	  }
 
-	EXPECT_EQ(4,sectorCenters.data[0].x);
-	EXPECT_EQ(4,sectorCenters.data[0].y);
-	EXPECT_EQ(4,sectorCenters.data[0].z);
+	EXPECT_EQ(4u,sectorCenters.data[0].x);
+	EXPECT_EQ(4u,sectorCenters.data[0].y);
+	EXPECT_EQ(4u,sectorCenters.data[0].z);
 
-  EXPECT_EQ(4,sectorCenters.data[9].x);
-	EXPECT_EQ(4,sectorCenters.data[9].y);
-	EXPECT_EQ(12,sectorCenters.data[9].z);
+  EXPECT_EQ(4u,sectorCenters.data[9].x);
+	EXPECT_EQ(4u,sectorCenters.data[9].y);
+	EXPECT_EQ(12u,sectorCenters.data[9].z);
 
-  EXPECT_EQ(20,sectorCenters.data[17].x);
-	EXPECT_EQ(20,sectorCenters.data[17].y);
-	EXPECT_EQ(12,sectorCenters.data[17].z);
+  EXPECT_EQ(20u,sectorCenters.data[17].x);
+	EXPECT_EQ(20u,sectorCenters.data[17].y);
+	EXPECT_EQ(12u,sectorCenters.data[17].z);
 
 	free(sectorCenters.data);
 }
@@ -807,9 +802,6 @@ TEST(PrecomputationTest, AnisotropicComputeSectorCenters) {
 TEST(IndexComputationTest, TestGetCoordsFromIndex_2x2x2) 
 {
   const int N = 8;
-  int data[N];
-  for (int i = 0; i<N; i++)
-    data[i] = i;
   
   IndType3 gridDims;
   gridDims.x = 2;
@@ -838,9 +830,6 @@ TEST(IndexComputationTest, TestGetCoordsFromIndex_2x2x2)
 TEST(IndexComputationTest, TestGetCoordsFromIndex_2x2x1) 
 {
   int N = 4;
-  int data[4];
-  for (int i = 0; i<N; i++)
-    data[i] = i;
   
   IndType3 gridDims;
   gridDims.x = 2;
@@ -864,9 +853,6 @@ TEST(IndexComputationTest, TestGetCoordsFromIndex_2x2x1)
 TEST(IndexComputationTest, TestGetCoordsFromIndex_4x4x2) 
 {
   const int N = 32;
-  int data[N];
-  for (int i = 0; i<N; i++)
-    data[i] = i;
   
   IndType3 gridDims;
   gridDims.x = 4;

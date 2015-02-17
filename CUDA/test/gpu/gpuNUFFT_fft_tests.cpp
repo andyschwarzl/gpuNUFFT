@@ -448,7 +448,7 @@ TEST(TestForwardBackward,Test64)
 	gpuNUFFT::Array<CufftType> kSpace = gpuNUFFTOp->performForwardGpuNUFFT(imgArray);
 	
 	printf("contrast %f \n",kSpace.data[0].x/kSpace.data[1].x);
-
+  EXPECT_NEAR(data[0].x/data[1].x,5.0,epsilon);
 	free(data);
 	free(coords);
 	free(gdata);
@@ -736,4 +736,78 @@ TEST_F(TestFFT,Test8x11x4)
   }
 
   cudaFree(data_d);
+}
+
+TEST(TestForwardBackward,Test_GpuArray)
+{
+  //Test the same as above but use GpuArray data structure  
+
+  int kernel_width = 3;
+	float osf = 1.25;//oversampling ratio
+	int sector_width = 8;
+	
+	//Data
+	int data_entries = 2;
+  DType2* data = (DType2*) calloc(data_entries,sizeof(DType2)); //2* re + im
+	data[0].x = 5;//Re
+	data[0].y = 0;//Im
+	data[1].x = 1;//Re
+	data[1].y = 0;//Im
+
+	//Coords
+	//Scaled between -0.5 and 0.5
+	//in triplets (x,y,z) as structure of array
+	//p0 = (0,0,0)
+	//p1 0 (0.25,0.25,0.25)
+  DType* coords = (DType*) calloc(3*data_entries,sizeof(DType));//3* x,y,z
+	coords[0] = 0.00; //x0
+	coords[1] = 0.25; //x1
+	
+	coords[2] = 0.00; //y0
+	coords[3] = 0.25; //y0
+	
+	coords[4] = 0.00; //z0
+	coords[5] = 0.25; //z1
+
+  //Input data array, complex values
+  //and copy to GPU 
+	gpuNUFFT::GpuArray<DType2> dataArray_gpu;
+	dataArray_gpu.dim.length = data_entries;
+
+  allocateAndCopyToDeviceMem<DType2>(&dataArray_gpu.data,data,data_entries);
+	
+	//Input array containing trajectory in k-space
+	gpuNUFFT::Array<DType> kSpaceData;
+  kSpaceData.data = coords;
+  kSpaceData.dim.length = data_entries;
+
+	gpuNUFFT::Dimensions imgDims;
+	imgDims.width = 64;
+	imgDims.height = 64;
+	imgDims.depth = 64;
+
+  //precomputation performed by factory
+  gpuNUFFT::GpuNUFFTOperatorFactory factory; 
+  gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(kSpaceData,kernel_width,sector_width,osf,imgDims);
+
+	//Output Array
+	gpuNUFFT::GpuArray<CufftType> imgArray_gpu;
+	imgArray_gpu.dim = imgDims;
+  allocateDeviceMem<CufftType>(&imgArray_gpu.data,imgArray_gpu.count());
+	
+	//Perform FT^H Operation
+	gpuNUFFTOp->performGpuNUFFTAdj(dataArray_gpu, imgArray_gpu);
+	
+	//Perform FT Operation
+  gpuNUFFTOp->performForwardGpuNUFFT(imgArray_gpu,dataArray_gpu);
+	copyFromDevice(dataArray_gpu.data,data,data_entries);
+	
+	printf("contrast %f \n",data[0].x/data[1].x);
+  EXPECT_NEAR(data[0].x/data[1].x,5.0,epsilon);
+
+	free(data);
+	free(coords);
+  freeTotalDeviceMemory(dataArray_gpu.data,imgArray_gpu.data,NULL);
+
+  delete gpuNUFFTOp;
 }

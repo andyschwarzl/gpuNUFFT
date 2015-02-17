@@ -78,7 +78,6 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 	int kernel_width = getParamField<int>(matParams,"kernel_width");
 	int sector_width = getParamField<int>(matParams,"sector_width");
 	int traj_length = getParamField<int>(matParams,"trajectory_length");
-  bool use_textures = getParamField<bool>(matParams,"use_textures");
   bool balance_workload = getParamField<bool>(matParams,"balance_workload");
 		
 	if (MATLAB_DEBUG)
@@ -100,21 +99,24 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     gpuNUFFT::Array<DType> kSpaceTraj;
     kSpaceTraj.data = coords;
     kSpaceTraj.dim.length = traj_length;
-	
+
+	gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = NULL;
 	try
 	{
 		gpuNUFFT::GpuNUFFTOperatorMatlabFactory factory;
     factory.setBalanceWorkload(balance_workload);
-		gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(kSpaceTraj,density_compArray,sensArray,kernel_width,sector_width,osr,imgDims,plhs);
+		gpuNUFFTOp = factory.createGpuNUFFTOperator(kSpaceTraj,density_compArray,sensArray,kernel_width,sector_width,osr,imgDims,plhs);
 
 		delete gpuNUFFTOp;
 	}
-	catch(...)
+	catch(std::exception& e)
 	{
-		mexPrintf("FAILURE in GpuNUFFT Initialization\n");
+    delete gpuNUFFTOp;
+		mexErrMsgIdAndTxt("gpuNUFFT:init","FAILURE in GpuNUFFT Initialization.\nOperator is not created, in order "  
+        "to avoid Matlab crashes:\n%s\n",e.what());
 	}
 	
-    cudaThreadSynchronize();
+  cudaThreadSynchronize();
 
 	if (MATLAB_DEBUG)
 	{

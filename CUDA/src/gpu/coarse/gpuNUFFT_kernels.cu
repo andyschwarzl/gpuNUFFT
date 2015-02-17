@@ -453,7 +453,7 @@ void performConvolution( DType2* data_d,
   dim3 block_dim(gi_host->sector_pad_width,gi_host->sector_pad_width,1);
   dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,(gi_host->sector_pad_width)*(gi_host->sector_pad_width)*(1)));
   if (DEBUG)
-    printf("convolution requires %d bytes of shared memory!\n",shared_mem_size);
+    printf("convolution requires %ld bytes of shared memory!\n",shared_mem_size);
 
   if (gi_host->is2Dprocessing)
     convolutionKernel2D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,temp_gdata_d,gi_host->sector_count);
@@ -493,7 +493,7 @@ void performConvolution( DType2* data_d,
   dim3 block_dim(gi_host->sector_pad_width,gi_host->sector_pad_width,1);
   dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,(gi_host->sector_pad_width)*(gi_host->sector_pad_width)*(1)));
   if (DEBUG)
-    printf("convolution requires %d bytes of shared memory!\n",shared_mem_size);
+    printf("convolution requires %ld bytes of shared memory!\n",shared_mem_size);
 
   if (gi_host->is2Dprocessing)
     balancedConvolutionKernel2D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_processing_order_d,sector_centers_d,temp_gdata_d,gi_host->sectorsToProcess);
@@ -1000,7 +1000,7 @@ void performForwardConvolution( CufftType*		data_d,
     dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,1));
 
     if (DEBUG)
-      printf("forward convolution requires %d bytes of shared memory!\n",shared_mem_size);
+      printf("forward convolution requires %ld bytes of shared memory!\n",shared_mem_size);
     if (gi_host->is2Dprocessing)
       forwardConvolutionKernel2D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
     else
@@ -1015,7 +1015,7 @@ void performForwardConvolution( CufftType*		data_d,
     dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,1));
 
     if (DEBUG)
-      printf("cached forward convolution requires %d bytes of shared memory!\n",shared_mem_size);
+      printf("cached forward convolution requires %ld bytes of shared memory!\n",shared_mem_size);
     if (gi_host->is2Dprocessing)
       forwardConvolutionKernel22D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
     else

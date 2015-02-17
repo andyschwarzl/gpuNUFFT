@@ -63,7 +63,29 @@ void gpuNUFFT::BalancedTextureGpuNUFFTOperator::performGpuNUFFTAdj(gpuNUFFT::Arr
   freeTotalDeviceMemory(sector_processing_order_d,NULL);//NULL as stop token
 }
 
+void gpuNUFFT::BalancedTextureGpuNUFFTOperator::performGpuNUFFTAdj(GpuArray<DType2> kspaceData_gpu, GpuArray<CufftType>& imgData_gpu, GpuNUFFTOutput gpuNUFFTOut)
+{
+  if (DEBUG)
+    printf("BTGpuNUFFT: allocate and copy sector processing order of size %d...\n",this->sectorProcessingOrder.count());
+  allocateAndCopyToDeviceMem<IndType2>(&sector_processing_order_d,this->sectorProcessingOrder.data,this->sectorProcessingOrder.count());
+
+  TextureGpuNUFFTOperator::performGpuNUFFTAdj(kspaceData_gpu,imgData_gpu,gpuNUFFTOut);
+
+  freeTotalDeviceMemory(sector_processing_order_d,NULL);//NULL as stop token
+}
+
 void gpuNUFFT::BalancedTextureGpuNUFFTOperator::performForwardGpuNUFFT(gpuNUFFT::Array<DType2> imgData,gpuNUFFT::Array<CufftType>& kspaceData, GpuNUFFTOutput gpuNUFFTOut)
+{
+  if (DEBUG)
+    printf("BTGpuNUFFT: allocate and copy sector processing order of size %d...\n",this->sectorProcessingOrder.count());
+  allocateAndCopyToDeviceMem<IndType2>(&sector_processing_order_d,this->sectorProcessingOrder.data,this->sectorProcessingOrder.count());
+  
+  TextureGpuNUFFTOperator::performForwardGpuNUFFT(imgData,kspaceData,gpuNUFFTOut);
+
+  freeTotalDeviceMemory(sector_processing_order_d,NULL);//NULL as stop token
+}
+
+void gpuNUFFT::BalancedTextureGpuNUFFTOperator::performForwardGpuNUFFT(gpuNUFFT::GpuArray<DType2> imgData,gpuNUFFT::GpuArray<CufftType>& kspaceData, GpuNUFFTOutput gpuNUFFTOut)
 {
   if (DEBUG)
     printf("BTGpuNUFFT: allocate and copy sector processing order of size %d...\n",this->sectorProcessingOrder.count());

@@ -507,7 +507,7 @@ void performCrop(CufftType* gdata_d,
   ind_off.y = (IndType)(gi_host->imgDims.y * ((DType)gi_host->osr - 1.0f)/(DType)2);
   ind_off.z = (IndType)(gi_host->imgDims.z * ((DType)gi_host->osr - 1.0f)/(DType)2);
   if (DEBUG)
-    printf("start cropping image with offset %d\n",ind_off);
+    printf("start cropping image with offset %u\n",ind_off.x);
 
   dim3 grid_dim(getOptimalGridDim(gi_host->im_width_dim,THREAD_BLOCK_SIZE));
   dim3 block_dim(THREAD_BLOCK_SIZE);
@@ -723,7 +723,7 @@ void performPadding(DType2* imdata_d,
   ind_off.y = (IndType)(gi_host->imgDims.y * ((DType)gi_host->osr -1.0f)/(DType)2);
   ind_off.z = (IndType)(gi_host->imgDims.z * ((DType)gi_host->osr -1.0f)/(DType)2);
   if (DEBUG)
-    printf("start padding image with offset (%d,%d,%d)\n",ind_off.x,ind_off.y,ind_off.z);
+    printf("start padding image with offset (%u,%u,%u)\n",ind_off.x,ind_off.y,ind_off.z);
 
   dim3 grid_dim(getOptimalGridDim(gi_host->im_width_dim,THREAD_BLOCK_SIZE));
   dim3 block_dim(THREAD_BLOCK_SIZE);

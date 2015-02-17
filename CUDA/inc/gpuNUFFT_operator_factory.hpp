@@ -265,6 +265,13 @@ namespace gpuNUFFT
       */
     GpuNUFFTOperator* createNewGpuNUFFTOperator(IndType kernelWidth, IndType sectorWidth, DType osf, Dimensions imgDims);
 
+    /**
+     * \brief Function to check if the problem will fit into device memory
+     *
+     * @throws Exception in case of too much required memory 
+     */
+    void checkMemoryConsumption(Dimensions& kSpaceDims, const IndType& sectorWidth, const DType& osf, Dimensions& imgDims, Dimensions& densDims, Dimensions& sensDims);
+
   private:
     /** \brief Flag to indicate texture interpolation */
     bool useTextures;

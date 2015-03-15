@@ -35,7 +35,7 @@ namespace gpuNUFFT
       * @param osf          oversampling factor
       * @param imgDims      image dimensions of problem 
       * @param loadKernel   Flag to determine whether the default interpolation kernel has to be loaded or not, false for texture interpolation
-      * @param operatorType Overwrite defalt operator type
+      * @param operatorType Overwrite default operator type
       */
     GpuNUFFTOperator(IndType kernelWidth, IndType sectorWidth, DType osf, Dimensions imgDims, bool loadKernel = true, OperatorType operatorType = DEFAULT): 
       operatorType(operatorType),osf(osf), kernelWidth(kernelWidth), sectorWidth(sectorWidth),imgDims(imgDims), gpuMemAllocated(false), debugTiming(DEBUG),

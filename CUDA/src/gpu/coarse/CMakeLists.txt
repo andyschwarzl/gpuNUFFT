@@ -11,9 +11,11 @@ set(GPU_CU_SOURCES	${CMAKE_CURRENT_SOURCE_DIR}/coarse_gpuNUFFT.cu
 									 )
 
 if(GPU_DOUBLE_PREC)
-  SET(CUDA_NVCC_FLAGS "-arch;sm_13;--ptxas-options=-v")
+  SET(CUDA_NVCC_FLAGS "-arch;sm_20;--ptxas-options=-v")
 else(GPU_DOUBLE_PREC)
-  SET(CUDA_NVCC_FLAGS "-arch;sm_11;--ptxas-options=-v")
+  if (NOT GEN_ATOMIC)
+    SET(CUDA_NVCC_FLAGS "-arch;sm_11;--ptxas-options=-v")
+  endif(GEN_ATOMIC)
 endif(GPU_DOUBLE_PREC)
 
 if(WIN32)

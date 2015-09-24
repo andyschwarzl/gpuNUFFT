@@ -60,7 +60,7 @@ endif()
 MESSAGE(STATUS "Setting MATLAB DEBUG Option to ${MATLAB_DEBUG}")
 
 #Enable ATOMIC kernel  
-SET(GEN_ATOMIC ON CACHE BOOL "Enable atomic kernel generation (Compute Capability 2.0 needed)")
+SET(GEN_ATOMIC ON CACHE BOOL "Enable atomic kernel generation (Compute Capability 2.0 needed). Only turn it off when old architectures (<2.0) have to be supported.")
 
 #Enable Google Tests
 SET(GEN_TESTS OFF CACHE BOOL "Enable and generate simple GOOGLE test framework unit tests")
@@ -70,10 +70,10 @@ SET(GPU_DOUBLE_PREC OFF CACHE BOOL "Enable double precision floating point opera
 
 if(GPU_DOUBLE_PREC)
   SET(PREC_SUFFIX "_d")
-  SET(CUDA_NVCC_FLAGS "-arch;sm_13;--ptxas-options=-v")
+  SET(CUDA_NVCC_FLAGS "-arch;sm_20;--ptxas-options=-v")
 else(GPU_DOUBLE_PREC)
   SET(PREC_SUFFIX "_f")
-SET(CUDA_NVCC_FLAGS "-arch;sm_11;--ptxas-options=-v")
+  SET(CUDA_NVCC_FLAGS "-arch;sm_20;--ptxas-options=-v")
 endif(GPU_DOUBLE_PREC)
 
 MESSAGE(STATUS "setting NVCC FLAGS to: ${CUDA_NVCC_FLAGS}")

@@ -1,4 +1,4 @@
-## gpuNUFFT - GPU Regridding of Radial 3-D MRI data
+## gpuNUFFT - GPU Regridding of arbitrary 3-D/2-D MRI data
 
 - Andreas Schwarzl - andreas.schwarzl@student.tugraz.at
 - Florian Knoll - florian.knoll@nyumc.org
@@ -6,7 +6,7 @@
 -------------------------------------------------------------------------------
 INFO:
 -------------------------------------------------------------------------------
-GPU 3D regridding library with MATLAB(R) Mexfile output.
+GPU 3D/2D regridding library with MATLAB(R) Mexfile output.
 Go to subfolder CUDA to compile mexfiles. 
 
 REQUIREMENTS:

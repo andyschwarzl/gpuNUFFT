@@ -15,7 +15,7 @@ if(GPU_DOUBLE_PREC)
 else(GPU_DOUBLE_PREC)
   if (NOT GEN_ATOMIC)
     SET(CUDA_NVCC_FLAGS "-arch;sm_11;--ptxas-options=-v")
-  endif(GEN_ATOMIC)
+  endif(NOT GEN_ATOMIC)
 endif(GPU_DOUBLE_PREC)
 
 if(WIN32)

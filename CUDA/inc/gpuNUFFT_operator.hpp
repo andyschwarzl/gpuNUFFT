@@ -509,7 +509,7 @@ class GpuNUFFTOperator
 
   /** \brief Function to allocate all neccessary device memory used by the
    * GriddingOperator. */
-  void initDeviceMemory(int n_coils);
+  void initDeviceMemory(unsigned n_coils, unsigned n_coils_cc = 1);
 
   /** \brief Function to free the neccessary device memory used by the
    * GriddingOperator. */

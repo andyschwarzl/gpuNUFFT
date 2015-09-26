@@ -182,14 +182,14 @@ void gpuNUFFT::GpuNUFFTOperator::freeLookupTable()
 {
 }
 
-void gpuNUFFT::GpuNUFFTOperator::initDeviceMemory(int n_coils)
+void gpuNUFFT::GpuNUFFTOperator::initDeviceMemory(unsigned n_coils, unsigned n_coils_cc)
 {
   if (gpuMemAllocated)
     return;
 
   gi_host = initAndCopyGpuNUFFTInfo();  //
 
-  int data_count = (int)this->kSpaceTraj.count();
+  int data_count = (int)this->kSpaceTraj.count() * n_coils_cc;
   IndType imdata_count = this->imgDims.count();
   int sector_count = (int)this->gridSectorDims.count();
 
@@ -204,8 +204,8 @@ void gpuNUFFT::GpuNUFFTOperator::initDeviceMemory(int n_coils)
   allocateDeviceMem<DType2>(&data_sorted_d, data_count);
 
   if (DEBUG)
-    printf("allocate and copy gdata of size %d...\n", gi_host->grid_width_dim);
-  allocateDeviceMem<CufftType>(&gdata_d, gi_host->grid_width_dim);
+    printf("allocate and copy gdata of size %d...\n", gi_host->grid_width_dim * n_coils_cc);
+  allocateDeviceMem<CufftType>(&gdata_d, gi_host->grid_width_dim * n_coils_cc);
 
   if (DEBUG)
     printf("allocate and copy coords of size %d...\n",
@@ -244,8 +244,8 @@ void gpuNUFFT::GpuNUFFTOperator::initDeviceMemory(int n_coils)
   if (this->applySensData())
   {
     if (DEBUG)
-      printf("allocate sens data of size %d...\n", imdata_count);
-    allocateDeviceMem<DType2>(&sens_d, imdata_count);
+      printf("allocate sens data of size %d...\n", imdata_count * n_coils_cc);
+    allocateDeviceMem<DType2>(&sens_d, imdata_count * n_coils_cc);
   }
 
   if (n_coils > 1)
@@ -545,18 +545,22 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(
   int n_coils = (int)kspaceData.dim.channels;
   IndType imdata_count = this->imgDims.count();
 
+  //TODO depend amount of coils on avail memory
+  unsigned n_coils_cc = 1;
+  std::cout << "Computing " << n_coils_cc << " concurrently." << std::endl;
+
   // select data ordered and leave it on gpu
   DType2 *data_d;
 
   if (DEBUG)
-    printf("allocate data of size %d...\n", data_count);
-  allocateDeviceMem<DType2>(&data_d, data_count);
+    printf("allocate data of size %d...\n", data_count * n_coils_cc);
+  allocateDeviceMem<DType2>(&data_d, data_count * n_coils_cc);
 
   CufftType *imdata_d, *imdata_sum_d = NULL;
 
   if (DEBUG)
-    printf("allocate and copy imdata of size %d...\n", imdata_count);
-  allocateDeviceMem<CufftType>(&imdata_d, imdata_count);
+    printf("allocate and copy imdata of size %d...\n", imdata_count * n_coils_cc);
+  allocateDeviceMem<CufftType>(&imdata_d, imdata_count * n_coils_cc);
 
   if (this->applySensData())
   {
@@ -580,10 +584,10 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(
     int data_coil_offset = coil_it * data_count;
     int im_coil_offset = coil_it * (int)imdata_count;  // gi_host->width_dim;
 
-    cudaMemset(gdata_d, 0, sizeof(CufftType) * gi_host->grid_width_dim);
+    cudaMemset(gdata_d, 0, sizeof(CufftType) * gi_host->grid_width_dim * n_coils_cc);
     // copy coil data to device and select ordered
-    copyToDevice(kspaceData.data + data_coil_offset, data_d, data_count);
     selectOrderedGPU(data_d, data_indices_d, data_sorted_d, data_count);
+    copyToDevice(kspaceData.data + data_coil_offset, data_d, data_count * n_coils_cc);
 
     if (this->applyDensComp())
       performDensityCompensation(data_sorted_d, density_comp_d, gi_host);

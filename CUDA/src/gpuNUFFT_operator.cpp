@@ -469,7 +469,7 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(gpuNUFFT::Array<DType2> kspa
   if (DEBUG)
   {
     std::cout << "performing gpuNUFFT adjoint!!!" << std::endl;
-    std::cout << "dataCount: " << kspaceData.count() << " chnCount: " << kspaceData.dim.channels << std::endl;
+    std::cout << "dataCount: " << kSpaceTraj.count() << " chnCount: " << kspaceData.dim.channels << std::endl;
     std::cout << "imgCount: " << imgData.count() << " gridWidth: " << this->getGridWidth() << std::endl;
     std::cout << "apply density comp: " << this->applyDensComp() << std::endl;
     std::cout << "apply sens data: " << this->applySensData() << std::endl;
@@ -513,6 +513,8 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(gpuNUFFT::Array<DType2> kspa
   //iterate over coils and compute result
   for (int coil_it = 0; coil_it < n_coils; coil_it++)
   {
+    if (DEBUG)
+      printf("process coil no %d / %d\n", coil_it + 1, n_coils);
     int data_coil_offset = coil_it * data_count;
     int im_coil_offset = coil_it * (int)imdata_count;//gi_host->width_dim;
 
@@ -539,10 +541,13 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(gpuNUFFT::Array<DType2> kspa
       fprintf(stderr,"error at adj  thread synchronization 2: %s\n",cudaGetErrorString(cudaGetLastError()));
     if (gpuNUFFTOut == CONVOLUTION)
     {
+      //get output (per coil)
+      copyFromDevice<CufftType>(gdata_d,imgData.data+im_coil_offset,gi_host->grid_width_dim);
+      if (coil_it < (n_coils))
+        continue;
       if (DEBUG)
         printf("stopping output after CONVOLUTION step\n");
-      //get output
-      copyFromDevice<CufftType>(gdata_d,imgData.data,gi_host->grid_width_dim);
+
       if (DEBUG)
         printf("test value at point zero: %f\n",(imgData.data)[0].x);
 

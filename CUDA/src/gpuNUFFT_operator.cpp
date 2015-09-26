@@ -46,7 +46,7 @@ void gpuNUFFT::GpuNUFFTOperator::initKernel()
   load1DKernel(this->kernel.data, (int)kernelSize, (int)kernelWidth, osf);
 }
 
-gpuNUFFT::GpuNUFFTInfo *gpuNUFFT::GpuNUFFTOperator::initGpuNUFFTInfo(unsigned n_coils_cc)
+gpuNUFFT::GpuNUFFTInfo *gpuNUFFT::GpuNUFFTOperator::initGpuNUFFTInfo(int n_coils_cc)
 {
   gpuNUFFT::GpuNUFFTInfo *gi_host =
       (gpuNUFFT::GpuNUFFTInfo *)malloc(sizeof(gpuNUFFT::GpuNUFFTInfo));
@@ -140,9 +140,10 @@ gpuNUFFT::GpuNUFFTInfo *gpuNUFFT::GpuNUFFTOperator::initGpuNUFFTInfo(unsigned n_
   return gi_host;
 }
 
-gpuNUFFT::GpuNUFFTInfo *gpuNUFFT::GpuNUFFTOperator::initAndCopyGpuNUFFTInfo(unsigned n_coils_cc)
+gpuNUFFT::GpuNUFFTInfo *gpuNUFFT::GpuNUFFTOperator::initAndCopyGpuNUFFTInfo(int n_coils_cc)
 {
   GpuNUFFTInfo *gi_host = initGpuNUFFTInfo(n_coils_cc);
+
   if (DEBUG)
     printf("copy GpuNUFFT Info to symbol memory... size = %ld \n",
            sizeof(gpuNUFFT::GpuNUFFTInfo));
@@ -184,7 +185,7 @@ void gpuNUFFT::GpuNUFFTOperator::freeLookupTable()
 {
 }
 
-void gpuNUFFT::GpuNUFFTOperator::initDeviceMemory(unsigned n_coils, unsigned n_coils_cc)
+void gpuNUFFT::GpuNUFFTOperator::initDeviceMemory(int n_coils, int n_coils_cc)
 {
   if (gpuMemAllocated)
     return;
@@ -548,8 +549,8 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(
   IndType imdata_count = this->imgDims.count();
 
   //TODO depend amount of coils on avail memory
-  unsigned n_coils_cc = 1;
-  std::cout << "Computing " << n_coils_cc << " concurrently." << std::endl;
+  int n_coils_cc = 1;
+  std::cout << "Computing " << n_coils_cc << " coils concurrently." << std::endl;
 
   // select data ordered and leave it on gpu
   DType2 *data_d;

@@ -1,9 +1,9 @@
 #include "balanced_texture_gpuNUFFT_operator.hpp"
 
 gpuNUFFT::GpuNUFFTInfo *
-gpuNUFFT::BalancedTextureGpuNUFFTOperator::initAndCopyGpuNUFFTInfo()
+gpuNUFFT::BalancedTextureGpuNUFFTOperator::initAndCopyGpuNUFFTInfo(int n_coils_cc)
 {
-  gpuNUFFT::GpuNUFFTInfo *gi_host = initGpuNUFFTInfo();
+  gpuNUFFT::GpuNUFFTInfo *gi_host = initGpuNUFFTInfo(n_coils_cc);
 
   gi_host->sectorsToProcess = sectorProcessingOrder.count();
   gi_host->interpolationType = interpolationType;

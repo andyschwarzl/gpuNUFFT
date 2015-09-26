@@ -75,7 +75,7 @@ class BalancedTextureGpuNUFFTOperator : public TextureGpuNUFFTOperator,
   }
   // OPERATIONS
  private:
-  GpuNUFFTInfo *initAndCopyGpuNUFFTInfo();
+  GpuNUFFTInfo *initAndCopyGpuNUFFTInfo(int n_coils_cc = 1);
 
   // sectorProcessingOrder
   Array<IndType2> sectorProcessingOrder;

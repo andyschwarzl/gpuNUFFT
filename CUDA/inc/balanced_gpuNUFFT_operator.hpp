@@ -65,7 +65,7 @@ class BalancedGpuNUFFTOperator : public GpuNUFFTOperator,
 
   IndType2 *sector_processing_order_d;
 
-  GpuNUFFTInfo *initAndCopyGpuNUFFTInfo();
+  GpuNUFFTInfo *initAndCopyGpuNUFFTInfo(int n_coils_cc = 1);
 
   void adjConvolution(DType2 *data_d, DType *crds_d, CufftType *gdata_d,
                       DType *kernel_d, IndType *sectors_d,

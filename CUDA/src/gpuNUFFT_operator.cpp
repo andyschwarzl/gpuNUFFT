@@ -46,7 +46,7 @@ void gpuNUFFT::GpuNUFFTOperator::initKernel()
   load1DKernel(this->kernel.data, (int)kernelSize, (int)kernelWidth, osf);
 }
 
-gpuNUFFT::GpuNUFFTInfo *gpuNUFFT::GpuNUFFTOperator::initGpuNUFFTInfo()
+gpuNUFFT::GpuNUFFTInfo *gpuNUFFT::GpuNUFFTOperator::initGpuNUFFTInfo(unsigned n_coils_cc)
 {
   gpuNUFFT::GpuNUFFTInfo *gi_host =
       (gpuNUFFT::GpuNUFFTInfo *)malloc(sizeof(gpuNUFFT::GpuNUFFTInfo));
@@ -135,12 +135,14 @@ gpuNUFFT::GpuNUFFTInfo *gpuNUFFT::GpuNUFFTOperator::initGpuNUFFTInfo()
   gi_host->dist_multiplier = dist_multiplier;
 
   gi_host->is2Dprocessing = this->is2DProcessing();
+
+  gi_host->n_coils_cc = n_coils_cc;
   return gi_host;
 }
 
-gpuNUFFT::GpuNUFFTInfo *gpuNUFFT::GpuNUFFTOperator::initAndCopyGpuNUFFTInfo()
+gpuNUFFT::GpuNUFFTInfo *gpuNUFFT::GpuNUFFTOperator::initAndCopyGpuNUFFTInfo(unsigned n_coils_cc)
 {
-  GpuNUFFTInfo *gi_host = initGpuNUFFTInfo();
+  GpuNUFFTInfo *gi_host = initGpuNUFFTInfo(n_coils_cc);
   if (DEBUG)
     printf("copy GpuNUFFT Info to symbol memory... size = %ld \n",
            sizeof(gpuNUFFT::GpuNUFFTInfo));
@@ -187,7 +189,7 @@ void gpuNUFFT::GpuNUFFTOperator::initDeviceMemory(unsigned n_coils, unsigned n_c
   if (gpuMemAllocated)
     return;
 
-  gi_host = initAndCopyGpuNUFFTInfo();  //
+  gi_host = initAndCopyGpuNUFFTInfo(n_coils_cc);  //
 
   int data_count = (int)this->kSpaceTraj.count() * n_coils_cc;
   IndType imdata_count = this->imgDims.count();

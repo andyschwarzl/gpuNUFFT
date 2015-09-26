@@ -305,6 +305,9 @@ struct GpuNUFFTInfo
   /**\brief Total amount of sectors which have to be processed.
     * Depends on sector load balancing.*/
   int sectorsToProcess;
+
+  /**\brief Number of coils processed concurrently */
+  unsigned n_coils_cc;
 };
 }
 

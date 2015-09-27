@@ -524,6 +524,7 @@ TEST_F(TestFFT,Test8x8)
   gi_host.is2Dprocessing = true;
   gi_host.gridDims.x = imgDims.width;
   gi_host.gridDims.y = imgDims.height;
+  gi_host.n_coils_cc = 1;
 
   initConstSymbol("GI",&gi_host,sizeof(gpuNUFFT::GpuNUFFTInfo));
 
@@ -569,6 +570,7 @@ TEST_F(TestFFT,Test9x9)
   gi_host.is2Dprocessing = true;
   gi_host.gridDims.x = imgDims.width;
   gi_host.gridDims.y = imgDims.height;
+  gi_host.n_coils_cc = 1;
 
   initConstSymbol("GI",&gi_host,sizeof(gpuNUFFT::GpuNUFFTInfo));
 
@@ -614,6 +616,7 @@ TEST_F(TestFFT,Test9x11)
   gi_host.is2Dprocessing = true;
   gi_host.gridDims.x = imgDims.width;
   gi_host.gridDims.y = imgDims.height;
+  gi_host.n_coils_cc = 1;
 
   initConstSymbol("GI",&gi_host,sizeof(gpuNUFFT::GpuNUFFTInfo));
 
@@ -662,6 +665,7 @@ TEST_F(TestFFT,Test4x4x4)
   gi_host.gridDims.x = imgDims.width;
   gi_host.gridDims.y = imgDims.height;
   gi_host.gridDims.z = imgDims.depth;
+  gi_host.n_coils_cc = 1;
 
   initConstSymbol("GI",&gi_host,sizeof(gpuNUFFT::GpuNUFFTInfo));
 
@@ -711,6 +715,7 @@ TEST_F(TestFFT,Test8x11x4)
   gi_host.gridDims.x = imgDims.width;
   gi_host.gridDims.y = imgDims.height;
   gi_host.gridDims.z = imgDims.depth;
+  gi_host.n_coils_cc = 1;
 
   initConstSymbol("GI",&gi_host,sizeof(gpuNUFFT::GpuNUFFTInfo));
 

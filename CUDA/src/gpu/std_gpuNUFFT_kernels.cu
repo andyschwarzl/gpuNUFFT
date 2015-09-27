@@ -116,11 +116,17 @@ __global__ void fftScaleKernel(CufftType* data, DType scaling, int N)
 
   while (t < N) 
   {
-    CufftType data_p = data[t]; 
-    data_p.x = data_p.x * scaling;
-    data_p.y = data_p.y * scaling;
-    data[t] = data_p;
+    int c =0; 
+    while (c< GI.n_coils_cc)
+    {
+      CufftType data_p = data[t + c*N]; 
+      data_p.x = data_p.x * scaling;
+      data_p.y = data_p.y * scaling;
+      data[t + c*N] = data_p;
+      c++;
+    }
     t = t+ blockDim.x*gridDim.x;
+
   }
 }
 
@@ -207,10 +213,15 @@ __global__ void densityCompensationKernel(DType2* data, DType* density_comp, int
 
   while (t < N) 
   {
-    DType2 data_p = data[t]; 
-    data_p.x = data_p.x * density_comp[t];
-    data_p.y = data_p.y * density_comp[t];
-    data[t] = data_p;
+    int c = 0;
+    while (c < GI.n_coils_cc)
+    {
+      DType2 data_p = data[t + c*N]; 
+      data_p.x = data_p.x * density_comp[t];
+      data_p.y = data_p.y * density_comp[t];
+      data[t + c*N] = data_p;
+      c++;
+    }
     t = t+ blockDim.x*gridDim.x;
   }
 }
@@ -236,10 +247,15 @@ __global__ void deapodizationKernel(CufftType* gdata, DType beta, DType norm_val
     //check if deapodization value is valid number
     if (!isnan(deapo))
     {
-      CufftType gdata_p = gdata[t]; 
-      gdata_p.x = gdata_p.x / deapo;//Re
-      gdata_p.y = gdata_p.y / deapo;//Im
-      gdata[t] = gdata_p;
+      int c = 0;
+      while (c < GI.n_coils_cc)
+      {
+        CufftType gdata_p = gdata[t + c*N]; 
+        gdata_p.x = gdata_p.x / deapo;//Re
+        gdata_p.y = gdata_p.y / deapo;//Im
+        gdata[t + c*N] = gdata_p;
+        c++;
+      }
     }
     t = t + blockDim.x*gridDim.x;
   }
@@ -259,10 +275,15 @@ __global__ void deapodizationKernel2D(CufftType* gdata, DType beta, DType norm_v
     //check if deapodization value is valid number
     if (!isnan(deapo))
     {
-      CufftType gdata_p = gdata[t]; 
-      gdata_p.x = gdata_p.x / deapo;//Re
-      gdata_p.y = gdata_p.y / deapo;//Im
-      gdata[t] = gdata_p;
+      int c=0;
+      while (c < GI.n_coils_cc)
+      {
+        CufftType gdata_p = gdata[t + c*N]; 
+        gdata_p.x = gdata_p.x / deapo;//Re
+        gdata_p.y = gdata_p.y / deapo;//Im
+        gdata[t + c*N] = gdata_p;
+        c++;
+      }
     }
     t = t + blockDim.x*gridDim.x;
   }
@@ -321,7 +342,13 @@ __global__ void cropKernel(CufftType* gdata,CufftType* imdata, IndType3 offset, 
   {
     getCoordsFromIndex(t, &x, &y, &z, GI.imgDims.x,GI.imgDims.y,GI.imgDims.z);
     grid_ind = computeXYZ2Lin(offset.x+x,offset.y+y,offset.z+z,GI.gridDims);
-    imdata[t] = gdata[grid_ind];
+
+    int c=0;
+    while (c<GI.n_coils_cc)
+    {
+      imdata[t + c*N] = gdata[grid_ind + c*GI.gridDims_count];
+      c++;
+    }
     t = t + blockDim.x*gridDim.x;
   }
 }
@@ -334,7 +361,12 @@ __global__ void cropKernel2D(CufftType* gdata,CufftType* imdata, IndType3 offset
   {
     getCoordsFromIndex2D(t, &x, &y, GI.imgDims.x,GI.imgDims.y);
     grid_ind = computeXY2Lin(offset.x+x,offset.y+y,GI.gridDims);
-    imdata[t] = gdata[grid_ind];
+    int c =0;
+    while (c < GI.n_coils_cc)
+    {
+      imdata[t + c*N] = gdata[grid_ind + c*GI.gridDims_count];
+      c++; 
+    }
     t = t + blockDim.x*gridDim.x;
   }
 }
@@ -352,9 +384,14 @@ __global__ void fftShiftKernel(CufftType* gdata, IndType3 offset, int N)
     z_opp = (z + offset.z) % GI.gridDims.z;
     ind_opp = computeXYZ2Lin(x_opp,y_opp,z_opp,GI.gridDims);
     //swap points
-    CufftType temp = gdata[t];
-    gdata[t] = gdata[ind_opp];
-    gdata[ind_opp] = temp;
+    int c=0;
+    while (c < GI.n_coils_cc)
+    {
+      CufftType temp = gdata[t + c*GI.gridDims_count];
+      gdata[t + c*GI.gridDims_count] = gdata[ind_opp + c*GI.gridDims_count];
+      gdata[ind_opp + c*GI.gridDims_count] = temp;
+      c++;
+    }
 
     t = t + blockDim.x*gridDim.x;
   }
@@ -373,7 +410,12 @@ __global__ void fftShiftKernel(CufftType* gdata, CufftType* outdata, IndType3 of
     z_opp = (z + offset.z) % GI.gridDims.z;
     ind_opp = computeXYZ2Lin(x_opp,y_opp,z_opp,GI.gridDims);
 
-    outdata[t] = gdata[ind_opp];
+    int c=0;
+    while (c < GI.n_coils_cc)
+    {
+      outdata[t + c*GI.gridDims_count] = gdata[ind_opp + c*GI.gridDims_count];
+      c++;
+    }
 
     t = t + blockDim.x*gridDim.x;
   }
@@ -391,7 +433,12 @@ __global__ void fftShiftKernel2D(CufftType* gdata, CufftType* outdata, IndType3 
     y_opp = (y + offset.y) % GI.gridDims.y;
     ind_opp = computeXY2Lin(x_opp,y_opp,GI.gridDims);
 
-    outdata[t] = gdata[ind_opp];
+    int c=0;
+    while (c < GI.n_coils_cc)
+    {
+      outdata[t + c*GI.gridDims_count] = gdata[ind_opp + c*GI.gridDims_count];
+      c++;
+    }
 
     t = t + blockDim.x*gridDim.x;
   }
@@ -409,9 +456,14 @@ __global__ void fftShiftKernel2D(CufftType* gdata, IndType3 offset, int N)
     y_opp = (y + offset.y) % GI.gridDims.y;
     ind_opp = computeXY2Lin(x_opp,y_opp,GI.gridDims);
     //swap points
-    CufftType temp = gdata[t];
-    gdata[t] = gdata[ind_opp];
-    gdata[ind_opp] = temp;
+    int c=0;
+    while (c < GI.n_coils_cc)
+    {
+      CufftType temp = gdata[t + c*GI.gridDims_count];
+      gdata[t + c*GI.gridDims_count] = gdata[ind_opp + c*GI.gridDims_count];
+      gdata[ind_opp + c*GI.gridDims_count] = temp;
+      c++;
+    }
 
     t = t + blockDim.x*gridDim.x;
   }
@@ -452,10 +504,15 @@ __global__ void precomputedDeapodizationKernel(CufftType* imdata, DType* deapo, 
 
   while (t < N) 
   {
-    CufftType data_p = imdata[t]; 
-    data_p.x = data_p.x * deapo[t];
-    data_p.y = data_p.y * deapo[t];
-    imdata[t] = data_p;
+    int c = 0;
+    while (c < GI.n_coils_cc)
+    {
+      CufftType data_p = imdata[t + c*N]; 
+      data_p.x = data_p.x * deapo[t];
+      data_p.y = data_p.y * deapo[t];
+      imdata[t + c*N] = data_p;
+      c++;
+    }
     t = t+ blockDim.x*gridDim.x;
   }
 }

@@ -176,24 +176,29 @@ void sortArrays(gpuNUFFT::GpuNUFFTOperator* gpuNUFFTOp,
   freeTotalDeviceMemory(kSpaceTraj_d,assignedSectorsAndIndicesSorted_d,assignedSectors_d,dataIndices_d,trajSorted_d,densCompData_d,densData_d,NULL);//NULL as stop
 }
 
-__global__ void selectOrderedGPUKernel(DType2* data, DType2* data_sorted, IndType* dataIndices, int N)
+__global__ void selectOrderedGPUKernel(DType2* data, DType2* data_sorted, IndType* dataIndices, int N, int n_coils_cc)
 {
   int t = threadIdx.x + blockIdx.x * blockDim.x;
   
   while (t < N) 
   {
-    data_sorted[t] = data[dataIndices[t]];
+    int c = 0;
+    while (c < n_coils_cc)
+    {
+      data_sorted[t + c * N] = data[dataIndices[t] + c * N];
+      c += 1;
+    }
 
     t = t + blockDim.x * gridDim.x;
   }
 }
 
-void selectOrderedGPU(DType2* data_d, IndType* data_indices_d, DType2* data_sorted_d,int N)
+void selectOrderedGPU(DType2* data_d, IndType* data_indices_d, DType2* data_sorted_d,int N, int n_coils_cc)
 {
   dim3 block_dim(THREAD_BLOCK_SIZE);
   dim3 grid_dim(getOptimalGridDim(N,THREAD_BLOCK_SIZE)); 
 
-  selectOrderedGPUKernel<<<grid_dim,block_dim>>>(data_d,data_sorted_d,data_indices_d,N);
+  selectOrderedGPUKernel<<<grid_dim,block_dim>>>(data_d,data_sorted_d,data_indices_d,N,n_coils_cc);
 
   if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
     printf("error: at selectOrderedGPU thread synchronization 1: %s\n",cudaGetErrorString(cudaGetLastError()));
@@ -219,7 +224,7 @@ void writeOrderedGPU( DType2* data_sorted_d, IndType* data_indices_d,CufftType* 
   writeOrderedGPUKernel<<<grid_dim,block_dim>>>(data_sorted_d,data_d,data_indices_d,N);
 
   if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
-    printf("error: at selectOrderedGPU thread synchronization 1: %s\n",cudaGetErrorString(cudaGetLastError()));
+    printf("error: at writeOrderedGPU thread synchronization 1: %s\n",cudaGetErrorString(cudaGetLastError()));
 }
 
 #endif

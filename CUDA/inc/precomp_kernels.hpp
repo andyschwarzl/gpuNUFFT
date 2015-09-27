@@ -43,7 +43,7 @@ void sortArrays(gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp,
   * @param N count of elements
   */
 void selectOrderedGPU(DType2 *data_d, IndType *data_indices_d,
-                      DType2 *data_sorted_d, int N);
+                      DType2 *data_sorted_d, int N, int n_coils_cc = 1);
 
 /**
   * \brief Write from sorted input array to unsorted data array.

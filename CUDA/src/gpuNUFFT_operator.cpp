@@ -554,7 +554,7 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(
   IndType imdata_count = this->imgDims.count();
 
   // TODO depend amount of coils on avail memory
-  int n_coils_cc = std::min(n_coils, 2);
+  int n_coils_cc = this->is2DProcessing() ? std::min(n_coils, 2) : 1;
   std::cout << "Computing " << n_coils_cc << " coils concurrently."
             << std::endl;
 

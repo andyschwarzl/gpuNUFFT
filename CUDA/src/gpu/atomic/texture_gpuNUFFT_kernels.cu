@@ -77,8 +77,13 @@ __device__ void textureConvolutionFunction(int* sec, int sec_max, int sec_offset
 
           // multiply data by current kernel val 
           // grid complex or scalar 
-          atomicAdd(&(sdata[ind].x),val * tex1Dfetch(texDATA,data_cnt).x);
-          atomicAdd(&(sdata[ind].y),val * tex1Dfetch(texDATA,data_cnt).y);
+          int c = 0;
+          while (c < GI.n_coils_cc)
+          {
+            atomicAdd(&(sdata[ind + c*GI.sector_dim].x),val * tex1Dfetch(texDATA,data_cnt+ c*GI.data_count).x);
+            atomicAdd(&(sdata[ind + c*GI.sector_dim].y),val * tex1Dfetch(texDATA,data_cnt+ c*GI.data_count).y);
+            c++;
+          }
           i++;
         } // x 	 
         j++;
@@ -108,12 +113,16 @@ __device__ void textureConvolutionFunction(int* sec, int sec_max, int sec_offset
     else
       ind = sector_ind_offset + computeXYZ2Lin(x,y,z,GI.gridDims);//index in output grid
 
-    atomicAdd(&(gdata[ind].x),sdata[s_ind].x);//Re
-    atomicAdd(&(gdata[ind].y),sdata[s_ind].y);//Im
-
-    //reset shared mem
-    sdata[s_ind].x = (DType)0.0;
-    sdata[s_ind].y = (DType)0.0;
+    int c = 0;
+    while (c < GI.n_coils_cc)
+    {
+      atomicAdd(&(gdata[ind + c*GI.gridDims_count].x),sdata[s_ind + c*GI.sector_dim].x);//Re
+      atomicAdd(&(gdata[ind + c*GI.gridDims_count].y),sdata[s_ind + c*GI.sector_dim].y);//Im
+      //reset shared mem
+      sdata[s_ind + c*GI.sector_dim].x = (DType)0.0;
+      sdata[s_ind + c*GI.sector_dim].y = (DType)0.0;
+      c++;
+    }
   }
 }
 
@@ -245,8 +254,13 @@ __device__ void textureConvolutionFunction2D(DType2* sdata,int* sec, int sec_max
 
         // multiply data by current kernel val 
         // grid complex or scalar
-        atomicAdd(&(sdata[ind].x),val * tex1Dfetch(texDATA,data_cnt).x);
-        atomicAdd(&(sdata[ind].y),val * tex1Dfetch(texDATA,data_cnt).y);
+        int c = 0;
+        while (c < GI.n_coils_cc)
+        {
+          atomicAdd(&(sdata[ind+ c*GI.sector_dim].x),val * tex1Dfetch(texDATA,data_cnt+ c*GI.data_count).x);
+          atomicAdd(&(sdata[ind+ c*GI.sector_dim].y),val * tex1Dfetch(texDATA,data_cnt+ c*GI.data_count).y);
+          c++;
+        }
         i++;
       } // x 	 
       j++;
@@ -273,14 +287,20 @@ __device__ void textureConvolutionFunction2D(DType2* sdata,int* sec, int sec_max
     else
       ind = sector_ind_offset + computeXY2Lin(x,y,GI.gridDims);//index in output grid
 
-    atomicAdd(&(gdata[ind].x),sdata[s_ind].x);//Re
-    atomicAdd(&(gdata[ind].y),sdata[s_ind].y);//Im
-    
-    //reset shared mem
-    sdata[s_ind].x = (DType)0.0;
-    sdata[s_ind].y = (DType)0.0;
+    int c=0;
+    while (c < GI.n_coils_cc)
+    {
+      atomicAdd(&(gdata[ind + c*GI.sector_dim].x),sdata[s_ind + c*GI.sector_dim].x);//Re
+      atomicAdd(&(gdata[ind + c*GI.sector_dim].y),sdata[s_ind + c*GI.sector_dim].y);//Im
+
+      //reset shared mem
+      sdata[s_ind + c*GI.sector_dim].x = (DType)0.0;
+      sdata[s_ind + c*GI.sector_dim].y = (DType)0.0;
+      c++;
+    }
   }
 }
+
 __global__ void textureConvolutionKernel2D(DType2* data, 
   DType* crds, 
   CufftType* gdata,
@@ -294,8 +314,13 @@ __global__ void textureConvolutionKernel2D(DType2* data,
   //init shared memory
   for (int s_ind=threadIdx.x;s_ind<GI.sector_dim; s_ind+= blockDim.x)
   {
-    sdata[s_ind].x = (DType)0.0;//Re
-    sdata[s_ind].y = (DType)0.0;//Im
+      int c=0;
+      while (c < GI.n_coils_cc)
+      {
+        sdata[s_ind + c*GI.sector_dim].x = 0.0f;//Re
+        sdata[s_ind + c*GI.sector_dim].y = 0.0f;//Im
+        c++;
+      }
   }
   __syncthreads();
 
@@ -353,7 +378,7 @@ void performTextureConvolution( DType2* data_d,
   gpuNUFFT::GpuNUFFTInfo* gi_host
   )
 {
-  long shared_mem_size = (gi_host->sector_dim)*sizeof(DType2);
+  long shared_mem_size = (gi_host->sector_dim)*sizeof(DType2) * gi_host->n_coils_cc;
   int thread_size =THREAD_BLOCK_SIZE;
 
   dim3 block_dim(thread_size);
@@ -382,7 +407,7 @@ void performTextureConvolution( DType2* data_d,
   gpuNUFFT::GpuNUFFTInfo* gi_host
   )
 {
-  long shared_mem_size = (gi_host->sector_dim)*sizeof(DType2);
+  long shared_mem_size = (gi_host->sector_dim)*sizeof(DType2) * gi_host->n_coils_cc;
   int thread_size =THREAD_BLOCK_SIZE;
 
   dim3 block_dim(thread_size);

@@ -24,7 +24,7 @@ void gpuNUFFT::BalancedTextureGpuNUFFTOperator::adjConvolution(
     IndType *sectors_d, IndType *sector_centers_d,
     gpuNUFFT::GpuNUFFTInfo *gi_host)
 {
-  bindTo1DTexture("texDATA", data_d, this->kSpaceTraj.count());
+  bindTo1DTexture("texDATA", data_d, this->kSpaceTraj.count() * gi_host->n_coils_cc);
 
   // call balanced texture kernel
   performTextureConvolution(data_d, crds_d, gdata_d, kernel_d, sectors_d,

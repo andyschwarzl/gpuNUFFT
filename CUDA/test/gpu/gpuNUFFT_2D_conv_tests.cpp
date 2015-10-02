@@ -1100,8 +1100,8 @@ TEST(Test2DGpuNUFFTConv, Test_256x128_4Chn)
   // Data of 4 channels
   unsigned data_entries = 1;
   unsigned nCoils = 4;
-  DType2 *data =
-      (DType2 *)calloc(data_entries * nCoils * 2, sizeof(DType2));  // 2* re + im
+  DType2 *data = (DType2 *)calloc(data_entries * nCoils * 2,
+                                  sizeof(DType2));  // 2* re + im
   unsigned data_cnt = 0;
 
   while (data_cnt < data_entries * nCoils * 2)
@@ -1128,60 +1128,77 @@ TEST(Test2DGpuNUFFTConv, Test_256x128_4Chn)
 
   gpuNUFFT::Dimensions imgDims(256, 128);
 
-  gpuNUFFT::GpuNUFFTOperatorFactory factory(false, true, true);
-  gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(
-      kSpaceData, kernel_width, sector_width, osr, imgDims);
-
-  gpuNUFFT::Array<DType2> dataArray;
-  dataArray.data = data;
-  dataArray.dim.length = data_entries;
-  dataArray.dim.channels = nCoils;
-
-  gpuNUFFT::Array<CufftType> gdataArray;
-
-  gdataArray = gpuNUFFTOp->performGpuNUFFTAdj(dataArray, gpuNUFFT::CONVOLUTION);
-
-
-  std::cout << "Test dims channesl? " << gdataArray.dim.channels << std::endl;
-  // Output Grid
-  CufftType *gdata = gdataArray.data;
-
-  if (DEBUG)
+  for (int cnt = 0; cnt < 8; cnt++)
   {
-    for (unsigned j = imgDims.height / 2 - 10; j < imgDims.height / 2 + 10; j++)
+    bool useTextures = cnt & 1;
+    bool useGpu = cnt & 2;
+    bool loadBalancing = cnt & 4;
+
+    std::cout << "Use Textures: " << useTextures << std::endl
+              << "Use GPU: " << useGpu << std::endl
+              << "Use LoadBalancing:" << loadBalancing << std::endl;
+
+    gpuNUFFT::GpuNUFFTOperatorFactory factory(useTextures, useGpu,
+                                              loadBalancing);
+    gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(
+        kSpaceData, kernel_width, sector_width, osr, imgDims);
+
+    gpuNUFFT::Array<DType2> dataArray;
+    dataArray.data = data;
+    dataArray.dim.length = data_entries;
+    dataArray.dim.channels = nCoils;
+
+    gpuNUFFT::Array<CufftType> gdataArray;
+
+    gdataArray =
+        gpuNUFFTOp->performGpuNUFFTAdj(dataArray, gpuNUFFT::CONVOLUTION);
+
+    std::cout << "Test dims channesl? " << gdataArray.dim.channels << std::endl;
+    // Output Grid
+    CufftType *gdata = gdataArray.data;
+
+    if (DEBUG)
     {
-      for (unsigned i = imgDims.width / 2 - 10; i < imgDims.width / 2 + 10; i++)
+      for (unsigned j = imgDims.height / 2 - 10; j < imgDims.height / 2 + 10;
+           j++)
       {
-        float dpr = gdata[computeXY2Lin(i, imgDims.height - 1 - j, imgDims)].x;
-        float dpi = gdata[computeXY2Lin(i, imgDims.height - 1 - j, imgDims)].y;
+        for (unsigned i = imgDims.width / 2 - 10; i < imgDims.width / 2 + 10;
+             i++)
+        {
+          float dpr =
+              gdata[computeXY2Lin(i, imgDims.height - 1 - j, imgDims)].x;
+          float dpi =
+              gdata[computeXY2Lin(i, imgDims.height - 1 - j, imgDims)].y;
 
-        printf("%.1f+%.1fi ", dpr, dpi);
+          printf("%.1f+%.1fi ", dpr, dpi);
+        }
+        printf("\n");
       }
-      printf("\n");
     }
-  }
 
-  for (unsigned chn = 0; chn < nCoils; chn++)
-  {
-    unsigned chnOffset = chn * imgDims.width * imgDims.height;
+    for (unsigned chn = 0; chn < nCoils; chn++)
+    {
+      unsigned chnOffset = chn * imgDims.width * imgDims.height;
 
-    EXPECT_NEAR(1.0f,
-                gdata[chnOffset + computeXY2Lin(imgDims.width / 2,
+      EXPECT_NEAR(
+          1.0f, gdata[chnOffset + computeXY2Lin(imgDims.width / 2,
                                                 imgDims.height / 2, imgDims)].x,
-                epsilon);
-    EXPECT_NEAR(0.5f,
-                gdata[chnOffset + computeXY2Lin(imgDims.width / 2,
+          epsilon);
+      EXPECT_NEAR(
+          0.5f, gdata[chnOffset + computeXY2Lin(imgDims.width / 2,
                                                 imgDims.height / 2, imgDims)].y,
-                epsilon);
-    EXPECT_NEAR(0.45f,
-                gdata[chnOffset + computeXY2Lin(imgDims.width / 2 - 1,
-                                                imgDims.height / 2, imgDims)].x,
-                epsilon);
-  }
+          epsilon);
+      EXPECT_NEAR(
+          0.45f,
+          gdata[chnOffset + computeXY2Lin(imgDims.width / 2 - 1,
+                                          imgDims.height / 2, imgDims)].x,
+          epsilon);
+    }
+    free(gdata);
 
+    delete gpuNUFFTOp;
+  }
   free(data);
   free(coords);
-  free(gdata);
-
-  delete gpuNUFFTOp;
 }
+

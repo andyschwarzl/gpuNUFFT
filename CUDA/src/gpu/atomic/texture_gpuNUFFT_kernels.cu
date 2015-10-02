@@ -290,8 +290,8 @@ __device__ void textureConvolutionFunction2D(DType2* sdata,int* sec, int sec_max
     int c=0;
     while (c < GI.n_coils_cc)
     {
-      atomicAdd(&(gdata[ind + c*GI.sector_dim].x),sdata[s_ind + c*GI.sector_dim].x);//Re
-      atomicAdd(&(gdata[ind + c*GI.sector_dim].y),sdata[s_ind + c*GI.sector_dim].y);//Im
+      atomicAdd(&(gdata[ind + c*GI.gridDims_count].x),sdata[s_ind + c*GI.sector_dim].x);//Re
+      atomicAdd(&(gdata[ind + c*GI.gridDims_count].y),sdata[s_ind + c*GI.sector_dim].y);//Im
 
       //reset shared mem
       sdata[s_ind + c*GI.sector_dim].x = (DType)0.0;

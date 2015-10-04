@@ -43,9 +43,9 @@ const char *gpuNUFFT::TextureGpuNUFFTOperator::getInterpolationTypeName()
 }
 
 gpuNUFFT::GpuNUFFTInfo *
-gpuNUFFT::TextureGpuNUFFTOperator::initAndCopyGpuNUFFTInfo()
+gpuNUFFT::TextureGpuNUFFTOperator::initAndCopyGpuNUFFTInfo(int n_coils_cc)
 {
-  gpuNUFFT::GpuNUFFTInfo *gi_host = initGpuNUFFTInfo();
+  gpuNUFFT::GpuNUFFTInfo *gi_host = initGpuNUFFTInfo(n_coils_cc);
 
   gi_host->interpolationType = interpolationType;
 

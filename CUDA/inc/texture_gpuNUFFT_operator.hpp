@@ -62,7 +62,7 @@ class TextureGpuNUFFTOperator : public GpuNUFFTOperator
 
   // OPERATIONS
  private:
-  GpuNUFFTInfo *initAndCopyGpuNUFFTInfo();
+  GpuNUFFTInfo *initAndCopyGpuNUFFTInfo(int n_coils_cc = 1);
 
   virtual void adjConvolution(DType2 *data_d, DType *crds_d, CufftType *gdata_d,
                               DType *kernel_d, IndType *sectors_d,

@@ -1099,7 +1099,7 @@ TEST(Test2DGpuNUFFTConv, Test_256x128_4Chn)
 
   // Data of 4 channels
   unsigned data_entries = 1;
-  unsigned nCoils = 4;
+  unsigned nCoils = 30;
   DType2 *data = (DType2 *)calloc(data_entries * nCoils * 2,
                                   sizeof(DType2));  // 2* re + im
   unsigned data_cnt = 0;

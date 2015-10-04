@@ -335,6 +335,11 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(
   int n_coils = (int)kspaceData_gpu.dim.channels;
   IndType imdata_count = this->imgDims.count();
 
+  // TODO depend amount of coils on avail memory
+  int n_coils_cc = this->is2DProcessing() ? std::min(n_coils, 6) : 1;
+  if (DEBUG)
+    printf("Computing %d coils concurrently.\n",n_coils_cc);
+
   CufftType *imdata_sum_d = NULL;
   CufftType *imdata_d = imgData_gpu.data;
 
@@ -346,15 +351,15 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(
     cudaMemset(imdata_sum_d, 0, imdata_count * sizeof(CufftType));
   }
 
-  initDeviceMemory(n_coils);
+  initDeviceMemory(n_coils, n_coils_cc);
   int err;
 
   if (debugTiming)
     printf("Memory allocation: %.2f ms\n", stopTiming());
   // iterate over coils and compute result
-  for (int coil_it = 0; coil_it < n_coils; coil_it++)
+  for (int coil_it = 0; coil_it < n_coils; coil_it += n_coils_cc)
   {
-    int im_coil_offset = coil_it * (int)imdata_count;  // gi_host->width_dim;
+    int im_coil_offset = coil_it * imdata_count;  // gi_host->width_dim;
     int data_coil_offset = coil_it * data_count;
 
     // Set pointer relative to existing gpu data
@@ -363,10 +368,11 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(
       imdata_d = imgData_gpu.data + im_coil_offset;
     }
 
-    cudaMemset(gdata_d, 0, sizeof(CufftType) * gi_host->grid_width_dim);
+    cudaMemset(gdata_d, 0,
+               sizeof(CufftType) * gi_host->grid_width_dim * n_coils_cc);
     // expect data to reside already in GPU memory
     selectOrderedGPU(kspaceData_gpu.data + data_coil_offset, data_indices_d,
-                     data_sorted_d, data_count);
+                     data_sorted_d, data_count, n_coils_cc);
 
     if (this->applyDensComp())
       performDensityCompensation(data_sorted_d, density_comp_d, gi_host);
@@ -392,8 +398,10 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(
       if (DEBUG)
         printf("stopping output after CONVOLUTION step\n");
       // get output
-      copyDeviceToDevice<CufftType>(gdata_d, imgData_gpu.data,
-                                    gi_host->grid_width_dim);
+      copyDeviceToDevice<CufftType>(gdata_d, imgData_gpu.data + im_coil_offset,
+                                    gi_host->grid_width_dim * n_coils_cc);
+      if ((coil_it + n_coils_cc) < (n_coils))
+        continue;
 
       freeTotalDeviceMemory(imdata_sum_d, NULL);
       return;
@@ -407,16 +415,23 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(
 
     performFFTShift(gdata_d, INVERSE, getGridDims(), gi_host);
 
-    // Inverse FFT
-    if ((err = pt2CufftExec(fft_plan, gdata_d, gdata_d, CUFFT_INVERSE)) !=
-        CUFFT_SUCCESS)
-    {
-      fprintf(stderr, "cufft has failed at adj with err %i \n", err);
-      showMemoryInfo(true, stderr);
-    }
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       fprintf(stderr, "error at adj thread synchronization 4: %s\n",
               cudaGetErrorString(cudaGetLastError()));
+
+    // Inverse FFT
+    int c = 0;
+    while (c < n_coils_cc)
+    {
+      if ((err = pt2CufftExec(fft_plan, gdata_d + c * gi_host->gridDims_count,
+                              gdata_d + c * gi_host->gridDims_count,
+                              CUFFT_INVERSE)) != CUFFT_SUCCESS)
+      {
+        fprintf(stderr, "cufft has failed at adj with err %i \n", err);
+        showMemoryInfo(true, stderr);
+      }
+      c++;
+    }
 
     if (gpuNUFFTOut == FFT)
     {
@@ -463,7 +478,8 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(
 
     if (this->applySensData())
     {
-      copyToDevice(this->sens.data + im_coil_offset, sens_d, imdata_count);
+      copyToDevice(this->sens.data + im_coil_offset, sens_d,
+                   imdata_count * n_coils_cc);
       performSensMul(imdata_d, sens_d, gi_host, true);
       performSensSum(imdata_d, imdata_sum_d, gi_host);
     }
@@ -557,9 +573,9 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(
   IndType imdata_count = this->imgDims.count();
 
   // TODO depend amount of coils on avail memory
-  int n_coils_cc = this->is2DProcessing() ? std::min(n_coils, 2) : 1;
-  std::cout << "Computing " << n_coils_cc << " coils concurrently."
-            << std::endl;
+  int n_coils_cc = this->is2DProcessing() ? std::min(n_coils, 6) : 1;
+  if (DEBUG)
+    printf("Computing %d coils concurrently.\n",n_coils_cc);
 
   // select data ordered and leave it on gpu
   DType2 *data_d;

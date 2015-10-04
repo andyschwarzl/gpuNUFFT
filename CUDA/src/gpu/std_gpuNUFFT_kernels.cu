@@ -145,9 +145,14 @@ __global__ void sensMulKernel(CufftType* imdata, DType2* sens, int N)
 
   while (t < N) 
   {
-    CufftType data_p = imdata[t]; 
-    imdata[t].x = data_p.x * sens[t].x - data_p.y * sens[t].y; //Re
-    imdata[t].y = data_p.x * sens[t].y + data_p.y * sens[t].x; //Im
+    int c = 0;
+    while (c < GI.n_coils_cc)
+    {
+      CufftType data_p = imdata[t + c*N]; 
+      imdata[t + c*N].x = data_p.x * sens[t + c*N].x - data_p.y * sens[t + c*N].y; //Re
+      imdata[t + c*N].y = data_p.x * sens[t + c*N].y + data_p.y * sens[t + c*N].x; //Im
+      c++;
+    }
     t = t+ blockDim.x*gridDim.x;
   }
 }
@@ -158,9 +163,14 @@ __global__ void conjSensMulKernel(CufftType* imdata, DType2* sens, int N)
 
   while (t < N) 
   {
-    CufftType data_p = imdata[t]; 
-    imdata[t].x = data_p.x * sens[t].x + data_p.y * sens[t].y; //Re
-    imdata[t].y = data_p.y * sens[t].x - data_p.x * sens[t].y; //Im
+    int c = 0;
+    while (c < GI.n_coils_cc)
+    {
+      CufftType data_p = imdata[t + c*N]; 
+      imdata[t + c*N].x = data_p.x * sens[t + c*N].x + data_p.y * sens[t + c*N].y; //Re
+      imdata[t + c*N].y = data_p.y * sens[t + c*N].x - data_p.x * sens[t + c*N].y; //Im
+      c++;
+    }
     t = t+ blockDim.x*gridDim.x;
   }
 }
@@ -187,9 +197,14 @@ __global__ void sensSumKernel(CufftType* imdata, DType2* imdata_sum, int N)
 
   while (t < N) 
   {
-    CufftType data_p = imdata[t]; 
-    imdata_sum[t].x += data_p.x; // Re
-    imdata_sum[t].y += data_p.y; // Im
+    int c = 0;
+    while (c < GI.n_coils_cc)
+    {
+      CufftType data_p = imdata[t + c*N]; 
+      imdata_sum[t].x += data_p.x; // Re
+      imdata_sum[t].y += data_p.y; // Im
+      c++;
+    }
     t = t + blockDim.x*gridDim.x;
   }
 }

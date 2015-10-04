@@ -350,8 +350,13 @@ __global__ void balancedTextureConvolutionKernel2D(DType2* data,
   //init shared memory
   for (int s_ind=threadIdx.x;s_ind<GI.sector_dim; s_ind+= blockDim.x)
   {
-    sdata[s_ind].x = (DType)0.0;//Re
-    sdata[s_ind].y = (DType)0.0;//Im
+    int c=0;
+    while (c < GI.n_coils_cc)
+    {
+      sdata[s_ind + c*GI.sector_dim].x = 0.0f;//Re
+      sdata[s_ind + c*GI.sector_dim].y = 0.0f;//Im
+      c++;
+    }
   }
   __syncthreads();
 

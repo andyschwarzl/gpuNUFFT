@@ -579,6 +579,8 @@ __device__ void convolutionFunction2D(DType2* sdata,int* sec, int sec_max, int s
       {
         atomicAdd(&(gdata[ind + c*GI.gridDims_count].x),sdata[s_ind + c*GI.sector_dim].x);//Re
         atomicAdd(&(gdata[ind + c*GI.gridDims_count].y),sdata[s_ind + c*GI.sector_dim].y);//Im
+        sdata[s_ind + c*GI.sector_dim].x = 0.0f;//Re
+        sdata[s_ind + c*GI.sector_dim].y = 0.0f;//Im
         c++;
       }
     }
@@ -766,7 +768,7 @@ void performConvolution( DType2* data_d,
     convolutionKernel<<<grid_dim,block_dim>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
 #else
 #ifdef CONVKERNEL2
-  long shared_mem_size = (gi_host->sector_dim)*sizeof(DType2) * gi_host->n_coils_cc;
+  long shared_mem_size = (gi_host->sector_dim) * sizeof(DType2) * gi_host->n_coils_cc;
   int thread_size =THREAD_BLOCK_SIZE;
 
   dim3 block_dim(thread_size);

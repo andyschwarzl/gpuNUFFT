@@ -261,12 +261,12 @@ __device__ void textureConvolutionFunction2D(DType2* sdata, int sec, int sec_cnt
   int c=0;
   while (c < GI.n_coils_cc)
   {
-    temp_gdata[ind+ c*GI.sectorsToProcess * GI.sector_dim].x = sdata[s_ind + c*GI.sector_dim].x;//Re
-    temp_gdata[ind+ c*GI.sectorsToProcess * GI.sector_dim].y = sdata[s_ind + c*GI.sector_dim].y;//Im
+    temp_gdata[ind + c*GI.sectorsToProcess * GI.sector_dim].x = sdata[s_ind + c*GI.sector_dim].x;//Re
+    temp_gdata[ind + c*GI.sectorsToProcess * GI.sector_dim].y = sdata[s_ind + c*GI.sector_dim].y;//Im
 
     __syncthreads();
-    sdata[s_ind + c*GI.sector_dim].x = (DType)0.0;
-    sdata[s_ind + c*GI.sector_dim].y = (DType)0.0;
+    sdata[s_ind + c * GI.sector_dim].x = (DType)0.0;
+    sdata[s_ind + c * GI.sector_dim].y = (DType)0.0;
     c++;
   }
 }
@@ -289,7 +289,7 @@ __global__ void textureConvolutionKernel2D(DType2* data,
   int x=threadIdx.x;
   int s_ind = getIndex2D(x,y,GI.sector_pad_width) ;
   int c=0;
-  while (c <GI.n_coils_cc)
+  while (c < GI.n_coils_cc)
   {
     sdata[s_ind + c*GI.sector_dim].x = 0.0f;//Re
     sdata[s_ind + c*GI.sector_dim].y = 0.0f;//Im
@@ -357,7 +357,7 @@ void performTextureConvolution( DType2* data_d,
     printf("allocate temp grid data of size %d...\n",temp_grid_count);
   allocateDeviceMem<DType2>(&temp_gdata_d,temp_grid_count);
 
-  long shared_mem_size = gi_host->sector_dim*sizeof(DType2) * gi_host->n_coils_cc;
+  long shared_mem_size = gi_host->sector_dim * sizeof(DType2) * gi_host->n_coils_cc;
 
   //TODO third dimension > 1?
   dim3 block_dim(gi_host->sector_pad_width,gi_host->sector_pad_width,1);
@@ -372,6 +372,7 @@ void performTextureConvolution( DType2* data_d,
 
   if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
     printf("error at adj thread synchronization 2: %s\n",cudaGetErrorString(cudaGetLastError()));
+
   //compose total output from local blocks 
   composeOutput(temp_gdata_d,gdata_d,sector_centers_d,gi_host,NULL,gi_host->sector_count);
 
@@ -397,7 +398,7 @@ void performTextureConvolution( DType2* data_d,
     printf("allocate temp grid data of size %d...\n",temp_grid_count);
   allocateDeviceMem<DType2>(&temp_gdata_d,temp_grid_count);
 
-  long shared_mem_size = gi_host->sector_dim*sizeof(DType2) * gi_host->n_coils_cc;
+  long shared_mem_size = gi_host->sector_dim * sizeof(DType2) * gi_host->n_coils_cc;
 
   dim3 block_dim(gi_host->sector_pad_width,gi_host->sector_pad_width,1);
   dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,1));

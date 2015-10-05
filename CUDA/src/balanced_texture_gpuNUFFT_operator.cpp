@@ -41,7 +41,8 @@ void gpuNUFFT::BalancedTextureGpuNUFFTOperator::forwardConvolution(
     IndType *sectors_d, IndType *sector_centers_d,
     gpuNUFFT::GpuNUFFTInfo *gi_host)
 {
-  bindTo1DTexture("texGDATA", gdata_d, gi_host->grid_width_dim);
+  bindTo1DTexture("texGDATA", gdata_d,
+                  gi_host->grid_width_dim * gi_host->n_coils_cc);
 
   // call balanced texture kernel
   performTextureForwardConvolution(data_d, crds_d, gdata_d, kernel_d, sectors_d,

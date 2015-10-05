@@ -636,8 +636,11 @@ __device__ void textureForwardConvolutionFunction2D(int* sec, int sec_max, int s
     else
       grid_index = (sector_ind_offset + getIndex2D(i,j,GI.gridDims.x));
 
-    gdata_cache[ind].x = tex1Dfetch(texGDATA,grid_index).x;
-    gdata_cache[ind].y = tex1Dfetch(texGDATA,grid_index).y;
+    for (int c=0; c < GI.n_coils_cc; c++)
+    {
+      gdata_cache[ind + c*GI.sector_dim].x = tex1Dfetch(texGDATA, grid_index + c*GI.gridDims_count).x;
+      gdata_cache[ind + c*GI.sector_dim].y = tex1Dfetch(texGDATA, grid_index + c*GI.gridDims_count).y;
+    }
   }
   __syncthreads();
 
@@ -675,19 +678,25 @@ __device__ void textureForwardConvolutionFunction2D(int* sec, int sec_max, int s
    
         ind = getIndex2D(i,j,GI.sector_pad_width);
 
-        sdata[threadIdx.x].x += gdata_cache[ind].x * val; 
-        sdata[threadIdx.x].y += gdata_cache[ind].y * val;									
+        for (int c=0; c < GI.n_coils_cc; c++)
+        {
+          sdata[threadIdx.x + c*blockDim.x].x += gdata_cache[ind + c*GI.sector_dim].x * val; 
+          sdata[threadIdx.x + c*blockDim.x].y += gdata_cache[ind + c*GI.sector_dim].y * val;
+        }
         i++;
       } // x loop
     j++;
     } // y loop
-    atomicAdd(&(data[data_cnt].x),sdata[threadIdx.x].x);
-    atomicAdd(&(data[data_cnt].y),sdata[threadIdx.x].y);
+
+    for (int c=0; c < GI.n_coils_cc; c++)
+    {
+      atomicAdd(&(data[data_cnt + c*GI.data_count].x),sdata[threadIdx.x + c*blockDim.x].x);
+      atomicAdd(&(data[data_cnt + c*GI.data_count].y),sdata[threadIdx.x + c*blockDim.x].y);
+      sdata[threadIdx.x + c*blockDim.x].x = (DType)0.0;//Re
+      sdata[threadIdx.x + c*blockDim.x].y = (DType)0.0;//Im
+    }
 
     data_cnt = data_cnt + blockDim.x;
-
-    sdata[threadIdx.x].x = (DType)0.0;//Re
-    sdata[threadIdx.x].y = (DType)0.0;//Im
   } //data points per sector
 }
 
@@ -700,14 +709,17 @@ __global__ void textureForwardConvolutionKernel2D(CufftType* data,
 {
   extern __shared__ CufftType shared[];//externally managed shared memory
   CufftType* shared_out_data =(CufftType*) &shared[0];  
-  CufftType* gdata_cache =(CufftType*) &shared[blockDim.x]; 
+  CufftType* gdata_cache =(CufftType*) &shared[blockDim.x * GI.n_coils_cc];
 
   __shared__ int sec[THREAD_BLOCK_SIZE];
   sec[threadIdx.x]= blockIdx.x;
 
   //init shared memory
-  shared_out_data[threadIdx.x].x = (DType)0.0;//Re
-  shared_out_data[threadIdx.x].y = (DType)0.0;//Im
+  for (int c = 0; c < GI.n_coils_cc; c++)
+  {
+    shared_out_data[threadIdx.x + c * blockDim.x].x = 0.0f;//Re
+    shared_out_data[threadIdx.x + c * blockDim.x].y = 0.0f;//Im
+  }
   __syncthreads();
   //start convolution
   while (sec[threadIdx.x] < N)
@@ -732,14 +744,18 @@ __global__ void balancedTextureForwardConvolutionKernel2D(CufftType* data,
 {
   extern __shared__ CufftType shared[];//externally managed shared memory
   CufftType* shared_out_data =(CufftType*) &shared[0];  
-  CufftType* gdata_cache =(CufftType*) &shared[blockDim.x]; 
+  CufftType* gdata_cache =(CufftType*) &shared[blockDim.x * GI.n_coils_cc];
 
   int sec_cnt= blockIdx.x;
   __shared__ int sec[THREAD_BLOCK_SIZE];
   
   //init shared memory
-  shared_out_data[threadIdx.x].x = (DType)0.0;//Re
-  shared_out_data[threadIdx.x].y = (DType)0.0;//Im
+  //init shared memory
+  for (int c = 0; c < GI.n_coils_cc; c++)
+  {
+    shared_out_data[threadIdx.x + c * blockDim.x].x = 0.0f;//Re
+    shared_out_data[threadIdx.x + c * blockDim.x].y = 0.0f;//Im
+  }
   __syncthreads();
   //start convolution
   while (sec_cnt < N)
@@ -766,7 +782,7 @@ void performTextureForwardConvolution( CufftType*		data_d,
   )
 {
   int thread_size =THREAD_BLOCK_SIZE;
-  long shared_mem_size = (thread_size + gi_host->sector_dim) * sizeof(CufftType);//empiric
+  long shared_mem_size = (thread_size + gi_host->sector_dim ) * gi_host->n_coils_cc * sizeof(CufftType);
 
   dim3 block_dim(thread_size);
   dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,thread_size));
@@ -790,7 +806,7 @@ void performTextureForwardConvolution( CufftType*		data_d,
   )
 {
   int thread_size =THREAD_BLOCK_SIZE;
-  long shared_mem_size = (thread_size + gi_host->sector_dim) * sizeof(CufftType);//empiric
+  long shared_mem_size = (thread_size + gi_host->sector_dim ) * gi_host->n_coils_cc * sizeof(CufftType);
 
   dim3 block_dim(thread_size);
   dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,thread_size));

@@ -740,8 +740,13 @@ __global__ void paddingKernel2D(DType2* imdata,CufftType* gdata, IndType3 offset
     getCoordsFromIndex2D(t, &x, &y,GI.imgDims.x,GI.imgDims.y);
     grid_ind =  computeXY2Lin(offset.x + x,offset.y + y,GI.gridDims);
 
-    gdata[grid_ind].x =  imdata[t].x;
-    gdata[grid_ind].y = imdata[t].y;
+    int c =0;
+    while (c < GI.n_coils_cc)
+    {
+      gdata[grid_ind + c*GI.gridDims_count].x =  imdata[t + c*N].x;
+      gdata[grid_ind + c*GI.gridDims_count].y = imdata[t + c*N].y;
+      c++;
+    }
     t = t+ blockDim.x*gridDim.x;
   }
 }

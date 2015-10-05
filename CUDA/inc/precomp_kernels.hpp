@@ -56,6 +56,6 @@ void selectOrderedGPU(DType2 *data_d, IndType *data_indices_d,
   * @param N count of elements
   */
 void writeOrderedGPU(DType2 *data_sorted_d, IndType *data_indices_d,
-                     CufftType *data_d, int N);
+                     CufftType *data_d, int N, int n_coils_cc = 1);
 
 #endif

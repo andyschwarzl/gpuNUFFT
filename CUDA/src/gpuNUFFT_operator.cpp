@@ -339,10 +339,11 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(
   int n_coils = (int)kspaceData_gpu.dim.channels;
   IndType imdata_count = this->imgDims.count();
 
-  // TODO depend amount of coils on avail memory
-  int n_coils_cc = this->is2DProcessing() ? std::min(n_coils, 6) : 1;
+  // TODO depend amount of concurrent coils on avail memory
+  // and on amount of coils
+  int n_coils_cc = this->is2DProcessing() ? std::min(n_coils, 2) : 1;
   if (DEBUG)
-    printf("Computing %d coils concurrently.\n",n_coils_cc);
+    printf("Computing %d coils concurrently.\n", n_coils_cc);
 
   CufftType *imdata_sum_d = NULL;
   CufftType *imdata_d = imgData_gpu.data;
@@ -576,10 +577,12 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(
   int n_coils = (int)kspaceData.dim.channels;
   IndType imdata_count = this->imgDims.count();
 
-  // TODO depend amount of coils on avail memory
-  int n_coils_cc = this->is2DProcessing() ? std::min(n_coils, 6) : 1;
+  // TODO depend amount of concurrent coils on avail memory
+  // and on amount of coils
+  int n_coils_cc = this->is2DProcessing() ? std::min(n_coils, 2) : 1;
+
   if (DEBUG)
-    printf("Computing %d coils concurrently.\n",n_coils_cc);
+    printf("Computing %d coils concurrently.\n", n_coils_cc);
 
   // select data ordered and leave it on gpu
   DType2 *data_d;
@@ -820,8 +823,9 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(
   int n_coils = (int)kspaceData_gpu.dim.channels;
   IndType imdata_count = this->imgDims.count();
 
-  // TODO depend amount of coils on avail memory
-  int n_coils_cc = this->is2DProcessing() ? std::min(n_coils, 1) : 1;
+  // TODO depend amount of concurrent coils on avail memory
+  // and on amount of coils
+  int n_coils_cc = this->is2DProcessing() ? std::min(n_coils, 10) : 1;
   if (DEBUG)
     printf("Computing %d coils concurrently.\n", n_coils_cc);
 
@@ -1009,7 +1013,7 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(
   IndType imdata_count = this->imgDims.count();
 
   // TODO depend amount of coils on avail memory
-  int n_coils_cc = this->is2DProcessing() ? std::min(n_coils, 4) : 1;
+  int n_coils_cc = this->is2DProcessing() ? std::min(n_coils, 10) : 1;
   if (DEBUG)
     printf("Computing %d coils concurrently.\n", n_coils_cc);
 

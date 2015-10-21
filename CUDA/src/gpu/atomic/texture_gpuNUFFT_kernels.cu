@@ -700,6 +700,79 @@ __device__ void textureForwardConvolutionFunction2D(int* sec, int sec_max, int s
   } //data points per sector
 }
 
+__device__ void textureForwardConvolutionFunction22D(int* sec, int sec_max, int sec_offset, DType* cache, DType2* data, DType* crds, CufftType* gdata, IndType* sectors, IndType* sector_centers)
+{
+  int imin, imax, jmin, jmax, i, j;
+  DType val, ix, jy;
+
+  __shared__ IndType2 center;
+  center.x = sector_centers[sec[threadIdx.x] * 2];
+  center.y = sector_centers[sec[threadIdx.x] * 2 + 1];
+
+  __shared__ int sector_ind_offset;
+  sector_ind_offset = computeXY2Lin(center.x - GI.sector_offset,center.y - GI.sector_offset,GI.gridDims);
+  int grid_index;
+
+  //Grid Points over Threads
+  int data_cnt = sectors[sec[threadIdx.x]] + threadIdx.x + sec_offset;
+
+  while (data_cnt < sec_max)
+  {
+    DType2 data_point; //datapoint per thread
+    data_point.x = crds[data_cnt];
+    data_point.y = crds[data_cnt + GI.data_count];
+
+    // set the boundaries of final dataset for gpuNUFFT this point
+    ix = mapKSpaceToGrid(data_point.x,GI.gridDims.x,center.x,GI.sector_offset);
+    set_minmax(&ix, &imin, &imax, GI.sector_pad_max, GI.kernel_radius);
+    jy = mapKSpaceToGrid(data_point.y,GI.gridDims.y,center.y,GI.sector_offset);
+    set_minmax(&jy, &jmin, &jmax, GI.sector_pad_max, GI.kernel_radius);
+
+    __syncthreads();
+
+    // convolve neighboring cartesian points to this data point
+    getCoordsFromIndex2D(threadIdx.y,&i,&j,GI.kernel_width);
+    i += imin;
+    j += jmin;
+    if (j<=jmax && j>=jmin)
+    {
+      jy = mapGridToKSpace(j,GI.gridDims.y,center.y,GI.sector_offset);
+      DType dy_sqr = (jy - data_point.y) * GI.aniso_y_scale;
+      dy_sqr *= dy_sqr;
+      if (i<=imax && i>=imin)
+      {
+        ix = mapGridToKSpace(i,GI.gridDims.x,center.x,GI.sector_offset);
+        DType dx_sqr = (ix - data_point.x)*GI.aniso_x_scale;
+        dx_sqr *= dx_sqr;
+        // get kernel value
+        // calc as separable filter
+        val = computeTextureLookup(dx_sqr*GI.radiusSquared_inv,dy_sqr*GI.radiusSquared_inv);
+        cache[GI.kernel_widthSquared * threadIdx.x + threadIdx.y] = val;
+
+        if (isOutlier2D(i,j,center.x,center.y,GI.gridDims,GI.sector_offset))
+          //calculate opposite index
+          grid_index = getIndex2D(calculateOppositeIndex(i,center.x,GI.gridDims.x,GI.sector_offset),
+              calculateOppositeIndex(j,center.y,GI.gridDims.y,GI.sector_offset),
+              GI.gridDims.x);
+        else
+          grid_index = (sector_ind_offset + getIndex2D(i,j,GI.gridDims.x));
+
+        for (int c = 0; c < GI.n_coils_cc; c++)
+        {
+          atomicAdd(&(data[data_cnt + c*GI.data_count].x),cache[GI.kernel_widthSquared * threadIdx.x + threadIdx.y] * tex1Dfetch(texGDATA, grid_index + c*GI.gridDims_count).x);
+          atomicAdd(&(data[data_cnt + c*GI.data_count].y),cache[GI.kernel_widthSquared * threadIdx.x + threadIdx.y] * tex1Dfetch(texGDATA, grid_index + c*GI.gridDims_count).y);
+        }
+      } // x if
+    } // y if
+    __syncthreads();
+
+    cache[GI.kernel_widthSquared * threadIdx.x + threadIdx.y] = 0;
+    __syncthreads();
+
+    data_cnt = data_cnt + blockDim.x;
+  } //data points per sector
+}
+
 __global__ void textureForwardConvolutionKernel2D(CufftType* data, 
   DType*     crds, 
   CufftType* gdata,
@@ -772,6 +845,37 @@ __global__ void balancedTextureForwardConvolutionKernel2D(CufftType* data,
   } //sector check
 }
 
+__global__ void balancedTextureForwardConvolutionKernel22D(CufftType* data, 
+  DType*     crds, 
+  CufftType* gdata,
+  IndType* sectors, 
+  IndType2* sector_processing_order,
+  IndType* sector_centers,
+  int N)
+{
+  extern __shared__ DType shared_cache[];//externally managed shared memory
+  DType* cache =(DType*) &shared_cache[0];  
+
+  int sec_cnt= blockIdx.x;
+  __shared__ int sec[THREAD_BLOCK_SIZE];
+  
+  //init shared memory
+  cache[threadIdx.x * GI.kernel_widthSquared + threadIdx.y] = (DType)0.0;
+  __syncthreads();
+  //start convolution
+  while (sec_cnt < N)
+  {
+    sec[threadIdx.x] = sector_processing_order[sec_cnt].x;
+    __shared__ int data_max;
+    data_max = min(sectors[sec[threadIdx.x]+1],sectors[sec[threadIdx.x]] + threadIdx.x + sector_processing_order[sec_cnt].y+MAXIMUM_PAYLOAD);
+
+    textureForwardConvolutionFunction22D(sec,data_max,sector_processing_order[sec_cnt].y,cache,data,crds,gdata,sectors,sector_centers);
+
+    __syncthreads();
+    sec_cnt = sec_cnt + gridDim.x;
+  } //sector check
+}
+
 
 void performTextureForwardConvolution( CufftType*		data_d, 
   DType*			crds_d, 
@@ -821,16 +925,26 @@ void performTextureForwardConvolution( CufftType*		data_d,
     printf("balanced texture forward convolution requires %ld bytes of shared memory!\n",shared_mem_size);
   if (gi_host->is2Dprocessing)
   {
-    int thread_size = 192;
+    /*int thread_size = 192;
     long shared_mem_size = (thread_size + gi_host->sector_dim) * gi_host->n_coils_cc * sizeof(CufftType);
 
     grid_dim = dim3(getOptimalGridDim(gi_host->sector_count,thread_size));
-    //shared_mem_size = (thread_size /*+ gi_host->sector_dim*/ ) * gi_host->n_coils_cc * sizeof(CufftType);
     if (DEBUG)
       printf("balanced texture forward convolution requires %ld bytes of shared memory!\n",shared_mem_size);
     block_dim = dim3(thread_size, 1, 1);// DEFAULT_VALUE(gi_host->n_coils_cc > 1 ? 2 : gi_host->n_coils_cc));
     printf("block dims: %u %u %u!\n",block_dim.x, block_dim.y, block_dim.z);
     balancedTextureForwardConvolutionKernel2D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_processing_order_d,sector_centers_d,gi_host->sectorsToProcess);
+    */
+
+    int thread_size = 32;
+    long shared_mem_size = (gi_host->kernel_widthSquared * thread_size) * sizeof(DType);
+
+    grid_dim = dim3(getOptimalGridDim(gi_host->sector_count,thread_size));
+    if (DEBUG)
+      printf("balanced texture forward convolution 2 (2d) requires %ld bytes of shared memory!\n",shared_mem_size);
+    block_dim = dim3(thread_size, gi_host->kernel_widthSquared, 1); 
+    printf("block dims: %u %u %u!\n",block_dim.x, block_dim.y, block_dim.z);
+    balancedTextureForwardConvolutionKernel22D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_processing_order_d,sector_centers_d,gi_host->sectorsToProcess);
   }
   else
   {

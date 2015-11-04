@@ -1466,7 +1466,7 @@ void performForwardConvolution( CufftType*		data_d,
   }
   else
   {
-    int thread_size =THREAD_BLOCK_SIZE;
+    int thread_size = THREAD_BLOCK_SIZE;
     long shared_mem_size = (thread_size + gi_host->sector_dim) * gi_host->n_coils_cc * sizeof(CufftType);//empiric
 
     dim3 block_dim(thread_size);
@@ -1504,7 +1504,7 @@ void performForwardConvolution( CufftType*		data_d,
     printf("balanced convolution requires %ld bytes of shared memory!\n",shared_mem_size);
   if (gi_host->is2Dprocessing)
     {
-      dim3 block_dim(thread_size, 1, DEFAULT_VALUE(gi_host->n_coils_cc > 4 ? 1 : gi_host->n_coils_cc));
+      dim3 block_dim(160, 1, DEFAULT_VALUE(gi_host->n_coils_cc > 4 ? 2 : gi_host->n_coils_cc));
       balancedForwardConvolutionKernel22D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_processing_order_d,sector_centers_d,gi_host->sectorsToProcess);
     }
   else

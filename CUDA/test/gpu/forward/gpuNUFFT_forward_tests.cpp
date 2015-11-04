@@ -173,7 +173,7 @@ TEST(TestGPUGpuNUFFTForwardConv, 2D_32_32_4)
   int im_width = 32;
 
   // Data
-  int data_count = 1;
+  int data_count = 3;
   int n_coils = 4;
 
   // Coords
@@ -182,6 +182,12 @@ TEST(TestGPUGpuNUFFTForwardConv, 2D_32_32_4)
   DType *coords = (DType *)calloc(2 * data_count, sizeof(DType));  // 2* x,y,z
   coords[0] = -0.31719f;  // should result in 7,7,7 center
   coords[1] = -0.38650f;
+
+  coords[2] = 0.0;  // should result in 7,7,7 center
+  coords[3] = 0.0;
+
+  coords[4] = 0.31719f;  // should result in 7,7,7 center
+  coords[5] = 0.38650f;
 
   gpuNUFFT::Array<DType2> im_dataArray;
   im_dataArray.data = NULL;
@@ -217,9 +223,10 @@ TEST(TestGPUGpuNUFFTForwardConv, 2D_32_32_4)
     bool useGpu = cnt & 2;
     bool loadBalancing = cnt & 4;
 
-    std::cout << "Use Textures: " << useTextures << std::endl
-              << "Use GPU: " << useGpu << std::endl
-              << "Use LoadBalancing:" << loadBalancing << std::endl;
+    if (DEBUG)
+      std::cout << "Use Textures: " << useTextures << std::endl
+                << "Use GPU: " << useGpu << std::endl
+                << "Use LoadBalancing:" << loadBalancing << std::endl;
 
     gpuNUFFT::GpuNUFFTOperatorFactory factory(useTextures, useGpu,
                                               loadBalancing);
@@ -234,13 +241,20 @@ TEST(TestGPUGpuNUFFTForwardConv, 2D_32_32_4)
 
       for (unsigned j = 0; j < dataArray.count(); j++)
       {
-        printf("%.4f %.4f \n", dataArray.data[j].x, dataArray.data[j].y);
+        printf("%.9f %.9f \n", dataArray.data[j].x, dataArray.data[j].y);
       }
     }
 
     for (int chn = 0; chn < n_coils; chn++)
     {
-      EXPECT_NEAR(0.01358f, dataArray.data[0 + chn * data_count].x, epsilon);
+      // EXPECT_NEAR(0.01358f, dataArray.data[0 + chn * data_count].x, epsilon);
+      if (DEBUG)
+      {
+        printf("x: %.5f %.5f \n", dataArray.data[0].x,
+               dataArray.data[0 + chn * data_count].x);
+        printf("y: %.5f %.5f \n", dataArray.data[0].y,
+               dataArray.data[0 + chn * data_count].y);
+      }
       EXPECT_EQ(dataArray.data[0].x, dataArray.data[0 + chn * data_count].x);
       EXPECT_EQ(dataArray.data[0].y, dataArray.data[0 + chn * data_count].y);
     }

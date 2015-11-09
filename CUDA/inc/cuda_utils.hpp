@@ -158,6 +158,17 @@ inline dim3 getOptimalGridDim(long N, long thread_count)
                   128 * 128));  // 128*128 empiric, max is 256*256 = 65536
 }
 
+/** \brief Compute optimal 2d block dimensions for given thread count in y
+ *direction
+ *
+ * @param threadsX required thread size in x direction
+ * @param threadsY necessary thread size in y direction
+ */
+inline dim3 getOptimal2DBlockDim(long threadsX, long threadsY)
+{
+  return dim3(MIN(threadsX * threadsY, 1024) / threadsY, threadsY);
+}
+
 /** \brief Debug short device memory information (free/total) to stream if DEBUG
  *flag is set to true.
  *

@@ -1019,7 +1019,7 @@ __global__ void balancedTextureForwardConvolutionKernel22D(
   // start convolution
   while (sec_cnt < N)
   {
-    __shared__ int data_max;
+    int data_max;
     if (threadIdx.y == 0)
     {
       sec[threadIdx.x] = sector_processing_order[sec_cnt].x;
@@ -1138,7 +1138,7 @@ void performTextureForwardConvolution(CufftType *data_d, DType *crds_d,
     balancedTextureForwardConvolutionKernel2D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_processing_order_d,sector_centers_d,gi_host->sectorsToProcess);
     */
 
-    bool useV2cached = true;
+    bool useV2cached = false;
 
     if (useV2cached)
     {
@@ -1172,7 +1172,9 @@ void performTextureForwardConvolution(CufftType *data_d, DType *crds_d,
 
       grid_dim = dim3(getOptimalGridDim(gi_host->sector_count, 1));
 
-      block_dim = dim3(thread_size, gi_host->kernel_widthSquared, 1);
+      //block_dim = dim3(thread_size, gi_host->kernel_widthSquared, 1);
+      //TODO maybe it's better to round kwSqrd to the next multiple of 2
+      block_dim = getOptimal2DBlockDim(thread_size, gi_host->kernel_widthSquared);
 
       if (DEBUG)
       {

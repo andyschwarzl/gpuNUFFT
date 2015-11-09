@@ -1018,16 +1018,18 @@ void performTextureForwardConvolution(CufftType *data_d, DType *crds_d,
       printf("balanced texture forward convolution requires %ld bytes of shared memory!\n",shared_mem_size);
     block_dim = dim3(thread_size, 1, 1);// DEFAULT_VALUE(gi_host->n_coils_cc > 1 ? 2 : gi_host->n_coils_cc));
     printf("block dims: %u %u %u!\n",block_dim.x, block_dim.y, block_dim.z);
+    printf("Sector Count: %d, SectorsToProcess: %d\n", gi_host->sector_count, gi_host->sectorsToProcess);
     balancedTextureForwardConvolutionKernel2D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_processing_order_d,sector_centers_d,gi_host->sectorsToProcess);
-*/
-    int thread_size = 192;
+    */
+
+    int thread_size = 32;
     long shared_mem_size =
         (gi_host->kernel_widthSquared * thread_size) * sizeof(DType);
 
     grid_dim = dim3(getOptimalGridDim(gi_host->sector_count, 1));
-    
-    //block_dim = dim3(thread_size, gi_host->kernel_widthSquared, 1);
-    block_dim = dim3(thread_size, 1, 1);
+
+    block_dim = dim3(thread_size, gi_host->kernel_widthSquared, 1);
+    //block_dim = dim3(thread_size, 1, 1);
 
     if (DEBUG)
     {

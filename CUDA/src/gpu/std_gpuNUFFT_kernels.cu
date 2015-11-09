@@ -193,7 +193,7 @@ __global__ void sensSumKernel(CufftType* imdata, DType2* imdata_sum, int N)
 
   while (t < N) 
   {
-    for (int c = threadIdx.z; c < GI.n_coils_cc; c+= blockDim.z)
+    for (int c = 0; c < GI.n_coils_cc; c ++)
     {
       CufftType data_p = imdata[t + c*N]; 
       imdata_sum[t].x += data_p.x; // Re
@@ -211,9 +211,8 @@ void performSensSum(CufftType* imdata_d,
     printf("perform sens coil summation\n");
 
   dim3 grid_dim(getOptimalGridDim(gi_host->im_width_dim,THREAD_BLOCK_SIZE));
-  //dim3 block_dim(THREAD_BLOCK_SIZE);
-  dim3 block_dim(64, 1, 8);
-  
+  dim3 block_dim(THREAD_BLOCK_SIZE);
+
   sensSumKernel<<<grid_dim,block_dim>>>(imdata_d,imdata_sum_d,gi_host->im_width_dim);
 }
 

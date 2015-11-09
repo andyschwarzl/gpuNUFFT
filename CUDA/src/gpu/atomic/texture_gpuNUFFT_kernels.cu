@@ -191,7 +191,7 @@ __global__ void balancedTextureConvolutionKernel(
     sec[threadIdx.x] = sector_processing_order[sec_cnt].x;
     __shared__ int data_max;
     data_max = min(sectors[sec[threadIdx.x] + 1],
-                   sectors[sec[threadIdx.x]] + threadIdx.x +
+                   sectors[sec[threadIdx.x]] +
                        sector_processing_order[sec_cnt].y + MAXIMUM_PAYLOAD);
     textureConvolutionFunction(sec, data_max,
                                sector_processing_order[sec_cnt].y, sdata, data,
@@ -378,8 +378,8 @@ __global__ void balancedTextureConvolutionKernel2D(
     sec[threadIdx.x] = sector_processing_order[sec_cnt].x;
     __shared__ int data_max;
     data_max = min(sectors[sec[threadIdx.x] + 1],
-                   sectors[sec[threadIdx.x]] + threadIdx.x +
-                       sector_processing_order[sec_cnt].y + MAXIMUM_PAYLOAD);
+                   sectors[sec[threadIdx.x]] 
+                      + sector_processing_order[sec_cnt].y + MAXIMUM_PAYLOAD);
     textureConvolutionFunction2D(sdata, sec, data_max,
                                  sector_processing_order[sec_cnt].y, data, crds,
                                  gdata, sectors, sector_centers);
@@ -642,7 +642,7 @@ __global__ void balancedTextureForwardConvolutionKernel(
     sec[threadIdx.x] = sector_processing_order[sec_cnt].x;
     __shared__ int data_max;
     data_max = min(sectors[sec[threadIdx.x] + 1],
-                   sectors[sec[threadIdx.x]] + threadIdx.x +
+                   sectors[sec[threadIdx.x]] +
                        sector_processing_order[sec_cnt].y + MAXIMUM_PAYLOAD);
 
     textureForwardConvolutionFunction(
@@ -898,7 +898,6 @@ __global__ void balancedTextureForwardConvolutionKernel2D(
   __shared__ int sec[THREAD_BLOCK_SIZE];
 
   // init shared memory
-  // init shared memory
   // for (int c = threadIdx.z; c < GI.n_coils_cc; c+= blockDim.z)
   for (int c = 0; c < GI.n_coils_cc; c++)
   {
@@ -912,8 +911,8 @@ __global__ void balancedTextureForwardConvolutionKernel2D(
     sec[threadIdx.x] = sector_processing_order[sec_cnt].x;
     __shared__ int data_max;
     data_max = min(sectors[sec[threadIdx.x] + 1],
-                   sectors[sec[threadIdx.x]] + threadIdx.x +
-                       sector_processing_order[sec_cnt].y + MAXIMUM_PAYLOAD);
+        sectors[sec[threadIdx.x]] + 
+        sector_processing_order[sec_cnt].y + MAXIMUM_PAYLOAD);
 
     textureForwardConvolutionFunction2D(
         sec, data_max, sector_processing_order[sec_cnt].y, shared_out_data,
@@ -932,12 +931,10 @@ __global__ void balancedTextureForwardConvolutionKernel22D(
   __shared__ int sec[THREAD_BLOCK_SIZE];
 
   // init shared memory
-  //cache[threadIdx.x * GI.kernel_widthSquared + threadIdx.y] = (DType)0.0;
-  //__syncthreads();
   // start convolution
   while (sec_cnt < N)
   {
-    int data_max;
+    __shared__ int data_max;
     if (threadIdx.y == 0)
     {
       sec[threadIdx.x] = sector_processing_order[sec_cnt].x;
@@ -945,8 +942,8 @@ __global__ void balancedTextureForwardConvolutionKernel22D(
     __syncthreads();
 
     data_max = min(sectors[sec[threadIdx.x] + 1],
-          sectors[sec[threadIdx.x]] + threadIdx.x +
-          sector_processing_order[sec_cnt].y + MAXIMUM_PAYLOAD);
+          sectors[sec[threadIdx.x]]
+          + sector_processing_order[sec_cnt].y + MAXIMUM_PAYLOAD);
 
     textureForwardConvolutionFunction22D(
         sec, data_max, sector_processing_order[sec_cnt].y, data, crds,

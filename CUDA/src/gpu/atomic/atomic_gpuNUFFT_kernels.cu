@@ -449,7 +449,7 @@ __global__ void balancedConvolutionKernel2(DType2* data,
   {
     sec[threadIdx.x] = sector_processing_order[sec_cnt].x;
     __shared__ int data_max;
-    data_max = min(sectors[sec[threadIdx.x]+1],sectors[sec[threadIdx.x]] + threadIdx.x + sector_processing_order[sec_cnt].y+MAXIMUM_PAYLOAD);
+    data_max = min(sectors[sec[threadIdx.x]+1],sectors[sec[threadIdx.x]] + sector_processing_order[sec_cnt].y+MAXIMUM_PAYLOAD);
     convolutionFunction2(sec,data_max,sector_processing_order[sec_cnt].y,sdata,data,crds,gdata,sectors,sector_centers);
     __syncthreads();
     sec_cnt = sec_cnt + gridDim.x;
@@ -619,7 +619,7 @@ __global__ void balancedConvolutionKernel2D(DType2* data,
   {
     sec[threadIdx.x] = sector_processing_order[sec_cnt].x; 
     __shared__ int data_max;
-    data_max = min(sectors[sec[threadIdx.x]+1],sectors[sec[threadIdx.x]] + threadIdx.x + sector_processing_order[sec_cnt].y + MAXIMUM_PAYLOAD);
+    data_max = min(sectors[sec[threadIdx.x]+1],sectors[sec[threadIdx.x]] + sector_processing_order[sec_cnt].y + MAXIMUM_PAYLOAD);
     convolutionFunction2D(sdata,sec,data_max,sector_processing_order[sec_cnt].y,data,crds,gdata,sectors,sector_centers);
     __syncthreads();
     sec_cnt = sec_cnt+ gridDim.x;
@@ -1148,8 +1148,8 @@ __global__ void balancedForwardConvolutionKernel2(CufftType* data,
   {
     sec[threadIdx.x] = sector_processing_order[sec_cnt].x;
     __shared__ int data_max;
-    data_max = min(sectors[sec[threadIdx.x]+1],sectors[sec[threadIdx.x]] + threadIdx.x + sector_processing_order[sec_cnt].y+MAXIMUM_PAYLOAD);
-       
+    data_max = min(sectors[sec[threadIdx.x]+1],sectors[sec[threadIdx.x]] + sector_processing_order[sec_cnt].y + MAXIMUM_PAYLOAD);
+
     forwardConvolutionFunction2(sec,data_max,sector_processing_order[sec_cnt].y,shared_out_data,gdata_cache,data,crds,gdata,sectors,sector_centers);
     __syncthreads();
     sec_cnt = sec_cnt + gridDim.x;
@@ -1424,7 +1424,7 @@ __global__ void balancedForwardConvolutionKernel22D(CufftType* data,
   {
     sec[threadIdx.x] = sector_processing_order[sec_cnt].x;
     __shared__ int data_max;
-    data_max = min(sectors[sec[threadIdx.x]+1],sectors[sec[threadIdx.x]] + threadIdx.x + sector_processing_order[sec_cnt].y+MAXIMUM_PAYLOAD);
+    data_max = min(sectors[sec[threadIdx.x]+1],sectors[sec[threadIdx.x]] + sector_processing_order[sec_cnt].y+MAXIMUM_PAYLOAD);
 
     forwardConvolutionFunction2D(sec,data_max,sector_processing_order[sec_cnt].y,shared_out_data,gdata_cache,data,crds,gdata,sectors,sector_centers);
 

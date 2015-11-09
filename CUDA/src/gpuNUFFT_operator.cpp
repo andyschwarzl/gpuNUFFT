@@ -1159,11 +1159,15 @@ gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(Array<DType2> imgData,
                                                    GpuNUFFTOutput gpuNUFFTOut)
 {
   gpuNUFFT::Array<CufftType> kspaceData;
-  kspaceData.data = (CufftType *)calloc(
-      this->kSpaceTraj.count() * imgData.dim.channels, sizeof(CufftType));
   kspaceData.dim = this->kSpaceTraj.dim;
-  // TODO adapt size of channels depending on sens data
-  kspaceData.dim.channels = imgData.dim.channels;
+
+  if (this->applySensData())
+    kspaceData.dim.channels = this->sens.dim.channels;
+  else
+    kspaceData.dim.channels = imgData.dim.channels;
+
+  kspaceData.data = (CufftType *)calloc(
+      this->kSpaceTraj.count() * kspaceData.dim.channels, sizeof(CufftType));
 
   performForwardGpuNUFFT(imgData, kspaceData, gpuNUFFTOut);
 

@@ -886,57 +886,52 @@ __device__ void textureForwardConvolutionFunction32D(
 
     // convolve neighboring cartesian points to this data point
     int idx = threadIdx.y;
-    while (idx < ((GI.kernel_width + 1) * (GI.kernel_width + 1)))
+    getCoordsFromIndex2D(idx, &i, &j, GI.kernel_width + 1, GI.kernel_width + 1);
+    i += imin;
+    j += jmin;
+    if (j <= jmax && j >= jmin)
     {
-      getCoordsFromIndex2D(idx, &i, &j, GI.kernel_width + 1);
-      i += imin;
-      j += jmin;
-      if (j <= jmax && j >= jmin)
+      jy = mapGridToKSpace(j, GI.gridDims.y, center.y, GI.sector_offset);
+      DType dy_sqr = (jy - data_point.y) * GI.aniso_y_scale;
+      dy_sqr *= dy_sqr;
+      if (i <= imax && i >= imin)
       {
-        jy = mapGridToKSpace(j, GI.gridDims.y, center.y, GI.sector_offset);
-        DType dy_sqr = (jy - data_point.y) * GI.aniso_y_scale;
-        dy_sqr *= dy_sqr;
-        if (i <= imax && i >= imin)
+        ix = mapGridToKSpace(i, GI.gridDims.x, center.x, GI.sector_offset);
+        DType dx_sqr = (ix - data_point.x) * GI.aniso_x_scale;
+        dx_sqr *= dx_sqr;
+        // get kernel value
+        // calc as separable filter
+        val = computeTextureLookup(dx_sqr * GI.radiusSquared_inv,
+            dy_sqr * GI.radiusSquared_inv);
+        cache[GI.kernel_widthSquared * threadIdx.x + threadIdx.y] = val;
+
+        if (isOutlier2D(i, j, center.x, center.y, GI.gridDims,
+              GI.sector_offset))
+          // calculate opposite index
+          grid_index =
+            getIndex2D(calculateOppositeIndex(i, center.x, GI.gridDims.x,
+                  GI.sector_offset),
+                calculateOppositeIndex(j, center.y, GI.gridDims.y,
+                  GI.sector_offset),
+                GI.gridDims.x);
+        else
+          grid_index = (sector_ind_offset + getIndex2D(i, j, GI.gridDims.x));
+
+        for (int c = 0; c < GI.n_coils_cc; c++)
         {
-          ix = mapGridToKSpace(i, GI.gridDims.x, center.x, GI.sector_offset);
-          DType dx_sqr = (ix - data_point.x) * GI.aniso_x_scale;
-          dx_sqr *= dx_sqr;
-          // get kernel value
-          // calc as separable filter
-          val = computeTextureLookup(dx_sqr * GI.radiusSquared_inv,
-              dy_sqr * GI.radiusSquared_inv);
-          cache[GI.kernel_widthSquared * threadIdx.x + threadIdx.y] = val;
-
-          if (isOutlier2D(i, j, center.x, center.y, GI.gridDims,
-                GI.sector_offset))
-            // calculate opposite index
-            grid_index =
-              getIndex2D(calculateOppositeIndex(i, center.x, GI.gridDims.x,
-                    GI.sector_offset),
-                  calculateOppositeIndex(j, center.y, GI.gridDims.y,
-                    GI.sector_offset),
-                  GI.gridDims.x);
-          else
-            grid_index = (sector_ind_offset + getIndex2D(i, j, GI.gridDims.x));
-
-          for (int c = 0; c < GI.n_coils_cc; c++)
-          {
-            atomicAdd(
-                &(data[data_cnt + c * GI.data_count].x),
-                cache[GI.kernel_widthSquared * threadIdx.x + threadIdx.y] *
-                tex1Dfetch(texGDATA, grid_index + c * GI.gridDims_count).x);
-            atomicAdd(
-                &(data[data_cnt + c * GI.data_count].y),
-                cache[GI.kernel_widthSquared * threadIdx.x + threadIdx.y] *
-                tex1Dfetch(texGDATA, grid_index + c * GI.gridDims_count).y);
-          }
-        }  // x if
-      }    // y if
-      idx += blockDim.y;
-    }
+          atomicAdd(
+              &(data[data_cnt + c * GI.data_count].x),
+              cache[GI.kernel_widthSquared * threadIdx.x + threadIdx.y] *
+              tex1Dfetch(texGDATA, grid_index + c * GI.gridDims_count).x);
+          atomicAdd(
+              &(data[data_cnt + c * GI.data_count].y),
+              cache[GI.kernel_widthSquared * threadIdx.x + threadIdx.y] *
+              tex1Dfetch(texGDATA, grid_index + c * GI.gridDims_count).y);
+        }
+      }  // x if
+    }    // y if
 
     cache[GI.kernel_widthSquared * threadIdx.x + threadIdx.y] = 0;
-
     data_cnt = data_cnt + blockDim.x;
   }  // data points per sector
 }
@@ -1055,7 +1050,7 @@ __global__ void balancedTextureForwardConvolutionKernel32D(
   __shared__ int sec[THREAD_BLOCK_SIZE];
 
   // init shared memory
-  cache[threadIdx.x * GI.kernel_widthSquared + threadIdx.y] = (DType)0.0;
+  cache[threadIdx.x * blockDim.y + threadIdx.y] = (DType)0.0;
   __syncthreads();
   // start convolution
   while (sec_cnt < N)
@@ -1148,22 +1143,22 @@ void performTextureForwardConvolution(CufftType *data_d, DType *crds_d,
     if (useV2cached)
     {
       int thread_size = 32;
-      int threadY = (gi_host->kernel_width + 0) * (gi_host->kernel_width + 0);
+      int threadY = (gi_host->kernel_width + 1) * (gi_host->kernel_width + 1);
 
       long shared_mem_size =
         (threadY * thread_size) * sizeof(DType);
 
       grid_dim = dim3(getOptimalGridDim(gi_host->sector_count, 1));
 
-      block_dim = dim3(thread_size, gi_host->kernel_widthSquared, 1);
+      block_dim = getOptimal2DBlockDim(thread_size, threadY);
 
       if (DEBUG)
       {
         printf("balanced texture forward convolution 2 (2d) requires %ld bytes "
             "of shared memory!\n",
             shared_mem_size);
-        printf("grid dims: %u %u %u!\n", grid_dim.x, grid_dim.y, grid_dim.z);
         printf("block dims: %u %u %u!\n", block_dim.x, block_dim.y, block_dim.z);
+        printf("grid dims: %u %u %u!\n", grid_dim.x, grid_dim.y, grid_dim.z);
       }
 
       balancedTextureForwardConvolutionKernel32D<<<grid_dim, block_dim, shared_mem_size>>>

@@ -514,6 +514,11 @@ class GpuNUFFTOperator
   /** \brief Function to free the neccessary device memory used by the
    * GriddingOperator. */
   void freeDeviceMemory();
+
+  /** \brief Update amount of concurrently computed coils 
+   */
+  void updateConcurrentCoilCount(int coil_it, int n_coils,
+                                 int &n_coils_cc);
 };
 }
 

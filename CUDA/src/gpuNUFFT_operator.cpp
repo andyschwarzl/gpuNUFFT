@@ -316,6 +316,20 @@ void gpuNUFFT::GpuNUFFTOperator::freeDeviceMemory()
   gpuMemAllocated = false;
 }
 
+void gpuNUFFT::GpuNUFFTOperator::updateConcurrentCoilCount(int coil_it,
+                                                           int n_coils,
+                                                           int &n_coils_cc)
+{
+  if ((coil_it + n_coils_cc) >= n_coils)
+  {
+    // Reduce n_coils_cc for the last loop iteration
+    n_coils_cc = n_coils - coil_it;
+    // Update Gridding Info struct
+    gi_host->n_coils_cc = n_coils_cc;
+    initConstSymbol("GI", gi_host, sizeof(gpuNUFFT::GpuNUFFTInfo));
+  }
+}
+
 void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(
     gpuNUFFT::GpuArray<DType2> kspaceData_gpu,
     gpuNUFFT::GpuArray<CufftType> &imgData_gpu,
@@ -368,14 +382,7 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(
     int im_coil_offset = coil_it * imdata_count;  // gi_host->width_dim;
     int data_coil_offset = coil_it * data_count;
 
-    if ((coil_it + n_coils_cc) >= n_coils)
-    {
-      // Reduce n_coils_cc for the last loop iteration
-      n_coils_cc = n_coils - coil_it;
-      // Update Gridding Info struct
-      gi_host->n_coils_cc = n_coils_cc;
-      initConstSymbol("GI", gi_host, sizeof(gpuNUFFT::GpuNUFFTInfo));
-    }
+    this->updateConcurrentCoilCount(coil_it, n_coils, n_coils_cc);
 
     // Set pointer relative to existing gpu data
     if (!this->applySensData())
@@ -631,14 +638,7 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(
     unsigned data_coil_offset = coil_it * data_count;
     unsigned im_coil_offset = coil_it * imdata_count;  // gi_host->width_dim;
 
-    if ((coil_it + n_coils_cc) >= n_coils)
-    {
-      // Reduce n_coils_cc for the last loop iteration
-      n_coils_cc = n_coils - coil_it;
-      // Update Gridding Info struct
-      gi_host->n_coils_cc = n_coils_cc;
-      initConstSymbol("GI", gi_host, sizeof(gpuNUFFT::GpuNUFFTInfo));
-    }
+    this->updateConcurrentCoilCount(coil_it, n_coils, n_coils_cc);
 
     cudaMemset(gdata_d, 0,
                sizeof(CufftType) * gi_host->grid_width_dim * n_coils_cc);
@@ -871,14 +871,7 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(
 
     data_d = kspaceData_gpu.data + data_coil_offset;
 
-    if ((coil_it + n_coils_cc) > n_coils)
-    {
-      // Reduce n_coils_cc for the last loop iteration
-      n_coils_cc = n_coils - coil_it;
-      // Update Gridding Info struct
-      gi_host->n_coils_cc = n_coils_cc;
-      initConstSymbol("GI", gi_host, sizeof(gpuNUFFT::GpuNUFFTInfo));
-    }
+    this->updateConcurrentCoilCount(coil_it, n_coils, n_coils_cc);
 
     if (this->applySensData())
       // perform automatically "repeating" of input image in case
@@ -1072,14 +1065,7 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(
     int data_coil_offset = coil_it * data_count;
     int im_coil_offset = coil_it * (int)imdata_count;
 
-    if ((coil_it + n_coils_cc) >= n_coils)
-    {
-      // Reduce n_coils_cc for the last loop iteration
-      n_coils_cc = n_coils - coil_it;
-      // Update Gridding Info struct
-      gi_host->n_coils_cc = n_coils_cc;
-      initConstSymbol("GI", gi_host, sizeof(gpuNUFFT::GpuNUFFTInfo));
-    }
+    this->updateConcurrentCoilCount(coil_it, n_coils, n_coils_cc);
 
     if (this->applySensData())
       // perform automatically "repeating" of input image in case

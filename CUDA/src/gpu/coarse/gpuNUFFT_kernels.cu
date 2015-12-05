@@ -1038,8 +1038,8 @@ __global__ void forwardConvolutionKernel22D(CufftType* data,
       } // y loop
       for (int c=0; c < GI.n_coils_cc; c++)
       {
-        atomicAdd(&(data[data_cnt + c*GI.data_count].x),shared_out_data[threadIdx.x + c*blockDim.x].x);
-        atomicAdd(&(data[data_cnt + c*GI.data_count].y),shared_out_data[threadIdx.x + c*blockDim.x].y);
+        data[data_cnt + c*GI.data_count].x += shared_out_data[threadIdx.x + c*blockDim.x].x;
+        data[data_cnt + c*GI.data_count].y += shared_out_data[threadIdx.x + c*blockDim.x].y;
         shared_out_data[threadIdx.x + c*blockDim.x].x = (DType)0.0;//Re
         shared_out_data[threadIdx.x + c*blockDim.x].y = (DType)0.0;//Im
       }

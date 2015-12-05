@@ -23,7 +23,9 @@ rawdata = reshape(rawdata,[nFE*nSpokes,nCh]);
 w = abs(k);
 %%
 disp('Generate NUFFT Operator without coil sensitivities');
-osf = 2; wg = 3; sw = 8;
+osf = 2; % oversampling: 1.5 1.25
+wg = 3; % kernel width: 5 7
+sw = 8; % parallel sectors' width: 12 16
 imwidth = nFE;
 
 if (useGPU)

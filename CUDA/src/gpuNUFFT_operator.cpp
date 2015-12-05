@@ -6,6 +6,7 @@
 #include "precomp_kernels.hpp"
 
 #include <iostream>
+#include <algorithm>
 
 template <typename T>
 T *gpuNUFFT::GpuNUFFTOperator::selectOrdered(gpuNUFFT::Array<T> &dataArray,

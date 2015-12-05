@@ -25,7 +25,7 @@ function  u = cg_sense_2d(data,FT,c,mask,alpha,tol,maxit,display,useMulticoil)
 % Magn Reson Med 46: 638-651 (2001)
 % 
 % =========================================================================
-if nargin < 10
+if nargin < 9
   useMulticoil = false;
 end
 %% set up parameters and operators

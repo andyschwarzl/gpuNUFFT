@@ -3,6 +3,7 @@ clear all; clc; close all;
 
 addpath(genpath('./utils'));
 addpath(genpath('../../gpuNUFFT'));
+addpath(genpath('../../../fessler/NUFFT'));
 
 load ./data/radial_cardiac_25_projections.mat;
 %% Reconstruction parameters
@@ -26,7 +27,7 @@ osf = 2; wg = 3; sw = 8;
 imwidth = nFE;
 
 if (useGPU)
-    FT = gpuNUFFT([real(col(k)), imag(col(k))]',col(w),osf,wg,sw,[imwidth,imwidth],[],false);
+    FT = gpuNUFFT([real(col(k)), imag(col(k))]',col(w),osf,wg,sw,[imwidth,imwidth],[],true);
 else
     FT = NUFFT(col(k),col(w),1,0,[imwidth,imwidth], 2);
     useMultiCoil = 0; 
@@ -50,17 +51,24 @@ end
 %% Forward and adjoint transform
 tic
 img_comb = zeros(imwidth,imwidth);
-for ii=1:nCh
-    img_comb = img_comb + (FT'*rawdata(:,ii)) .* conj(senseEst(:,:,ii));
+if (useGPU)
+    img_comb = FT'*rawdata;
+else
+    for ii=1:nCh
+        img_comb = img_comb + (FT'*rawdata(:,ii)) .* conj(senseEst(:,:,ii));
+    end
 end
 timeFTH = toc;
 disp(['Time adjoint: ', num2str(timeFTH), ' s']);
 figure,imshow(abs(img_comb(:,:)),[]); title('Regridding');
 
 tic
-test = FT * img_comb;
-for ii=1:nCh
-    test(:,ii) = FT * (img_comb .* senseEst(:,:,ii));
+if (useGPU)
+    test = FT * img_comb;
+else
+    for ii=1:nCh
+        test(:,ii) = FT * (img_comb .* senseEst(:,:,ii));
+    end
 end
 timeFT = toc;
 disp(['Time forward: ', num2str(timeFT), ' s']);

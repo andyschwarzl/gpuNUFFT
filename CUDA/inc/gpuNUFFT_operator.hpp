@@ -519,6 +519,13 @@ class GpuNUFFTOperator
    */
   void updateConcurrentCoilCount(int coil_it, int n_coils,
                                  int &n_coils_cc);
+
+  /** \brief Compute amount of coils which can be computed at once.
+   *
+   * Depends primary on available GPU memory
+   *
+   */
+  int computePossibleConcurrentCoilCount(int n_coils);
 };
 }
 

@@ -316,6 +316,32 @@ void gpuNUFFT::GpuNUFFTOperator::freeDeviceMemory()
   gpuMemAllocated = false;
 }
 
+int gpuNUFFT::GpuNUFFTOperator::computePossibleConcurrentCoilCount(int n_coils)
+{
+  size_t free_mem = 0;
+  size_t total_mem = 0;
+  cudaMemGetInfo(&free_mem, &total_mem);
+
+  int possibleCoilCount = n_coils;
+
+  // estimated memory required per coil
+  float requiredMemoryPerCoil = imgDims.width * imgDims.height * 8.0 * 2.0;
+
+  while ((free_mem / (possibleCoilCount * requiredMemoryPerCoil)) < 1.0 &&
+         possibleCoilCount-- > 1)
+    ;
+
+  // if (DEBUG)
+  // printf("Compute Possible concurrent coil count. Free memory: %lu - possible
+  // "
+  //        "coils: %d - required "
+  //       "coil memory: %lu\n",
+  //       free_mem, possibleCoilCount,
+  //      (unsigned)(possibleCoilCount * requiredMemoryPerCoil));
+
+  return possibleCoilCount;
+}
+
 void gpuNUFFT::GpuNUFFTOperator::updateConcurrentCoilCount(int coil_it,
                                                            int n_coils,
                                                            int &n_coils_cc)
@@ -356,7 +382,10 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(
 
   // TODO depend amount of concurrent coils on avail memory
   // and on amount of coils
-  int n_coils_cc = this->is2DProcessing() ? std::min(n_coils, 2) : 1;
+  int n_coils_cc =
+      this->is2DProcessing()
+          ? std::min(this->computePossibleConcurrentCoilCount(n_coils), 2)
+          : 1;
   if (DEBUG)
     printf("Computing %d coils concurrently.\n", n_coils_cc);
 
@@ -596,7 +625,10 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(
 
   // TODO depend amount of concurrent coils on avail memory
   // and on amount of coils
-  int n_coils_cc = this->is2DProcessing() ? std::min(n_coils, 2) : 1;
+  int n_coils_cc =
+      this->is2DProcessing()
+          ? std::min(this->computePossibleConcurrentCoilCount(n_coils), 2)
+          : 1;
 
   if (DEBUG)
     printf("Computing %d coils concurrently.\n", n_coils_cc);
@@ -844,7 +876,10 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(
 
   // TODO depend amount of concurrent coils on avail memory
   // and on amount of coils
-  int n_coils_cc = this->is2DProcessing() ? std::min(n_coils, 10) : 1;
+  int n_coils_cc =
+      this->is2DProcessing()
+          ? std::min(this->computePossibleConcurrentCoilCount(n_coils), 32)
+          : 1;
   if (DEBUG)
     printf("Computing %d coils concurrently.\n", n_coils_cc);
 
@@ -1034,7 +1069,10 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(
   IndType imdata_count = this->imgDims.count();
 
   // TODO depend amount of coils on avail memory
-  int n_coils_cc = this->is2DProcessing() ? std::min(n_coils, 10) : 1;
+  int n_coils_cc =
+      this->is2DProcessing()
+          ? std::min(this->computePossibleConcurrentCoilCount(n_coils), 32)
+          : 1;
   if (DEBUG)
     printf("Computing %d coils concurrently.\n", n_coils_cc);
 

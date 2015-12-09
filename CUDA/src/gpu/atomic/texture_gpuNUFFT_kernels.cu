@@ -128,16 +128,11 @@ __device__ void textureConvolutionFunction(int *sec, int sec_max,
       ind = sector_ind_offset +
             computeXYZ2Lin(x, y, z, GI.gridDims);  // index in output grid
 
-    for (int c = threadIdx.z; c < GI.n_coils_cc; c += blockDim.z)
-    {
-      atomicAdd(&(gdata[ind + c * GI.gridDims_count].x),
-                sdata[s_ind + c * GI.sector_dim].x);  // Re
-      atomicAdd(&(gdata[ind + c * GI.gridDims_count].y),
-                sdata[s_ind + c * GI.sector_dim].y);  // Im
-      // reset shared mem
-      sdata[s_ind + c * GI.sector_dim].x = (DType)0.0;
-      sdata[s_ind + c * GI.sector_dim].y = (DType)0.0;
-    }
+    atomicAdd(&(gdata[ind].x), sdata[s_ind].x);  // Re
+    atomicAdd(&(gdata[ind].y), sdata[s_ind].y);  // Im
+    // reset shared mem
+    sdata[s_ind].x = (DType)0.0;
+    sdata[s_ind].y = (DType)0.0;
   }
   __syncthreads();
 }
@@ -423,7 +418,6 @@ void performTextureConvolution(DType2 *data_d, DType *crds_d,
     printf("...finished with: %s\n", cudaGetErrorString(cudaGetLastError()));
 }
 
-// TODO(XXX))
 void performTextureConvolution(DType2 *data_d, DType *crds_d,
                                CufftType *gdata_d, DType *kernel_d,
                                IndType *sectors_d,
@@ -688,7 +682,6 @@ textureForwardConvolutionFunction2D(int *sec, int sec_max, int sec_offset,
     else
       grid_index = (sector_ind_offset + getIndex2D(i, j, GI.gridDims.x));
 
-    // for (int c=threadIdx.z; c < GI.n_coils_cc; c+=blockDim.z)
     for (int c = 0; c < GI.n_coils_cc; c++)
     {
       gdata_cache[ind + c * GI.sector_dim].x =
@@ -736,7 +729,6 @@ textureForwardConvolutionFunction2D(int *sec, int sec_max, int sec_offset,
 
         ind = getIndex2D(i, j, GI.sector_pad_width);
 
-        // for (int c=threadIdx.z; c < GI.n_coils_cc; c+=blockDim.z)
         for (int c = 0; c < GI.n_coils_cc; c++)
         {
           sdata[threadIdx.x + c * blockDim.x].x +=
@@ -744,15 +736,11 @@ textureForwardConvolutionFunction2D(int *sec, int sec_max, int sec_offset,
           sdata[threadIdx.x + c * blockDim.x].y +=
               gdata_cache[ind + c * GI.sector_dim].y * val;
         }
-        //__syncthreads();
         i++;
       }  // x loop
       j++;
     }  // y loop
 
-    //__syncthreads();
-
-    // for (int c=threadIdx.z; c < GI.n_coils_cc; c+=blockDim.z)
     for (int c = 0; c < GI.n_coils_cc; c++)
     {
       atomicAdd(&(data[data_cnt + c * GI.data_count].x),
@@ -983,7 +971,6 @@ __global__ void balancedTextureForwardConvolutionKernel2D(
   __shared__ int sec[THREAD_BLOCK_SIZE];
 
   // init shared memory
-  // for (int c = threadIdx.z; c < GI.n_coils_cc; c+= blockDim.z)
   for (int c = 0; c < GI.n_coils_cc; c++)
   {
     shared_out_data[threadIdx.x + c * blockDim.x].x = 0.0f;  // Re
@@ -1103,7 +1090,6 @@ void performTextureForwardConvolution(CufftType *data_d, DType *crds_d,
          gi_host->sector_count);
 }
 
-// TODO(XXX)
 void performTextureForwardConvolution(CufftType *data_d, DType *crds_d,
                                       CufftType *gdata_d, DType *kernel_d,
                                       IndType *sectors_d,
@@ -1124,20 +1110,6 @@ void performTextureForwardConvolution(CufftType *data_d, DType *crds_d,
            shared_mem_size);
   if (gi_host->is2Dprocessing)
   {
-    /*
-    int thread_size = 192;
-    long shared_mem_size = (thread_size + gi_host->sector_dim) *
-    gi_host->n_coils_cc * sizeof(CufftType);
-
-    grid_dim = dim3(getOptimalGridDim(gi_host->sector_count,thread_size));
-    if (DEBUG)
-      printf("balanced texture forward convolution requires %ld bytes of shared memory!\n",shared_mem_size);
-    block_dim = dim3(thread_size, 1, 1);// DEFAULT_VALUE(gi_host->n_coils_cc > 1 ? 2 : gi_host->n_coils_cc));
-    printf("block dims: %u %u %u!\n",block_dim.x, block_dim.y, block_dim.z);
-    printf("Sector Count: %d, SectorsToProcess: %d\n", gi_host->sector_count, gi_host->sectorsToProcess);
-    balancedTextureForwardConvolutionKernel2D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_processing_order_d,sector_centers_d,gi_host->sectorsToProcess);
-    */
-
     bool useV2cached = false;
 
     if (useV2cached)
@@ -1172,7 +1144,6 @@ void performTextureForwardConvolution(CufftType *data_d, DType *crds_d,
 
       grid_dim = dim3(getOptimalGridDim(gi_host->sector_count, 1));
 
-      //block_dim = dim3(thread_size, gi_host->kernel_widthSquared, 1);
       //TODO maybe it's better to round kwSqrd to the next multiple of 2
       block_dim = getOptimal2DBlockDim(thread_size, gi_host->kernel_widthSquared);
 

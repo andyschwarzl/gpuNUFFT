@@ -380,8 +380,6 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(
   int n_coils = (int)kspaceData_gpu.dim.channels;
   IndType imdata_count = this->imgDims.count();
 
-  // TODO depend amount of concurrent coils on avail memory
-  // and on amount of coils
   int n_coils_cc =
       this->is2DProcessing()
           ? std::min(this->computePossibleConcurrentCoilCount(n_coils), 2)
@@ -623,8 +621,6 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(
   int n_coils = (int)kspaceData.dim.channels;
   IndType imdata_count = this->imgDims.count();
 
-  // TODO depend amount of concurrent coils on avail memory
-  // and on amount of coils
   int n_coils_cc =
       this->is2DProcessing()
           ? std::min(this->computePossibleConcurrentCoilCount(n_coils), 2)
@@ -874,8 +870,6 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(
   int n_coils = (int)kspaceData_gpu.dim.channels;
   IndType imdata_count = this->imgDims.count();
 
-  // TODO depend amount of concurrent coils on avail memory
-  // and on amount of coils
   int n_coils_cc =
       this->is2DProcessing()
           ? std::min(this->computePossibleConcurrentCoilCount(n_coils), 32)
@@ -1068,7 +1062,6 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(
   int n_coils = (int)kspaceData.dim.channels;
   IndType imdata_count = this->imgDims.count();
 
-  // TODO depend amount of coils on avail memory
   int n_coils_cc =
       this->is2DProcessing()
           ? std::min(this->computePossibleConcurrentCoilCount(n_coils), 32)

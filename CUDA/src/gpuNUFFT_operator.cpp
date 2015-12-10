@@ -196,7 +196,7 @@ void gpuNUFFT::GpuNUFFTOperator::initDeviceMemory(int n_coils, int n_coils_cc)
   {
     if (gi_host->n_coils_cc != n_coils_cc)
     {
-      freeDeviceMemory();
+      this->freeDeviceMemory();
     }
     else
       return;
@@ -316,7 +316,8 @@ void gpuNUFFT::GpuNUFFTOperator::freeDeviceMemory()
   gpuMemAllocated = false;
 }
 
-int gpuNUFFT::GpuNUFFTOperator::computePossibleConcurrentCoilCount(int n_coils)
+int gpuNUFFT::GpuNUFFTOperator::computePossibleConcurrentCoilCount(
+    int n_coils, gpuNUFFT::Dimensions kSpaceDataDim)
 {
   size_t free_mem = 0;
   size_t total_mem = 0;
@@ -325,19 +326,21 @@ int gpuNUFFT::GpuNUFFTOperator::computePossibleConcurrentCoilCount(int n_coils)
   int possibleCoilCount = n_coils;
 
   // estimated memory required per coil
-  float requiredMemoryPerCoil = imgDims.width * imgDims.height * 8.0 * 2.0;
+  float requiredMemoryPerCoil =
+      kSpaceDataDim.length * 8.0 * 2.0 +
+      this->imgDims.width * this->imgDims.height * 8.0 +
+      this->getGridDims().width * this->getGridDims().height * 8.0;
 
   while ((free_mem / (possibleCoilCount * requiredMemoryPerCoil)) < 1.0 &&
          possibleCoilCount-- > 1)
     ;
 
   // if (DEBUG)
-  // printf("Compute Possible concurrent coil count. Free memory: %lu - possible
-  // "
+  // printf("Compute Possible concurrent coil count. Free memory: %lu - possible "
   //        "coils: %d - required "
-  //       "coil memory: %lu\n",
-  //       free_mem, possibleCoilCount,
-  //      (unsigned)(possibleCoilCount * requiredMemoryPerCoil));
+  //        "coil memory: %lu\n",
+  //        free_mem, possibleCoilCount,
+  //        (unsigned)(possibleCoilCount * requiredMemoryPerCoil));
 
   return possibleCoilCount;
 }
@@ -380,10 +383,13 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(
   int n_coils = (int)kspaceData_gpu.dim.channels;
   IndType imdata_count = this->imgDims.count();
 
-  int n_coils_cc =
-      this->is2DProcessing()
-          ? std::min(this->computePossibleConcurrentCoilCount(n_coils), 2)
-          : 1;
+  // more than 2 coil sets are not sensible to reconstruct in one
+  // adjoint kernel call , since the used shared memory is limited
+  int n_coils_cc = this->is2DProcessing()
+                       ? std::min(this->computePossibleConcurrentCoilCount(
+                                      n_coils, kspaceData_gpu.dim),
+                                  2)
+                       : 1;
   if (DEBUG)
     printf("Computing %d coils concurrently.\n", n_coils_cc);
 
@@ -621,10 +627,13 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(
   int n_coils = (int)kspaceData.dim.channels;
   IndType imdata_count = this->imgDims.count();
 
-  int n_coils_cc =
-      this->is2DProcessing()
-          ? std::min(this->computePossibleConcurrentCoilCount(n_coils), 2)
-          : 1;
+  // more than 2 coil sets are not sensible to reconstruct in one
+  // adjoint kernel call , since the used shared memory is limited
+  int n_coils_cc = this->is2DProcessing()
+                       ? std::min(this->computePossibleConcurrentCoilCount(
+                                      n_coils, kspaceData.dim),
+                                  2)
+                       : 1;
 
   if (DEBUG)
     printf("Computing %d coils concurrently.\n", n_coils_cc);
@@ -870,10 +879,12 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(
   int n_coils = (int)kspaceData_gpu.dim.channels;
   IndType imdata_count = this->imgDims.count();
 
-  int n_coils_cc =
-      this->is2DProcessing()
-          ? std::min(this->computePossibleConcurrentCoilCount(n_coils), 32)
-          : 1;
+  int n_coils_cc = this->is2DProcessing()
+                       ? std::min(this->computePossibleConcurrentCoilCount(
+                                      n_coils, kspaceData_gpu.dim),
+                                  16)
+                       : 1;
+
   if (DEBUG)
     printf("Computing %d coils concurrently.\n", n_coils_cc);
 
@@ -1062,10 +1073,11 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(
   int n_coils = (int)kspaceData.dim.channels;
   IndType imdata_count = this->imgDims.count();
 
-  int n_coils_cc =
-      this->is2DProcessing()
-          ? std::min(this->computePossibleConcurrentCoilCount(n_coils), 32)
-          : 1;
+  int n_coils_cc = this->is2DProcessing()
+                       ? std::min(this->computePossibleConcurrentCoilCount(
+                                      n_coils, kspaceData.dim),
+                                  16)
+                       : 1;
   if (DEBUG)
     printf("Computing %d coils concurrently.\n", n_coils_cc);
 

@@ -515,17 +515,17 @@ class GpuNUFFTOperator
    * GriddingOperator. */
   void freeDeviceMemory();
 
-  /** \brief Update amount of concurrently computed coils 
+  /** \brief Update amount of concurrently computed coils
    */
-  void updateConcurrentCoilCount(int coil_it, int n_coils,
-                                 int &n_coils_cc);
+  void updateConcurrentCoilCount(int coil_it, int n_coils, int &n_coils_cc);
 
   /** \brief Compute amount of coils which can be computed at once.
    *
    * Depends primary on available GPU memory
    *
    */
-  int computePossibleConcurrentCoilCount(int n_coils);
+  int computePossibleConcurrentCoilCount(int n_coils,
+                                         gpuNUFFT::Dimensions kSpaceDataDim);
 };
 }
 

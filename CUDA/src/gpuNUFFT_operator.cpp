@@ -194,8 +194,8 @@ void gpuNUFFT::GpuNUFFTOperator::initDeviceMemory(int n_coils, int n_coils_cc)
 {
   if (gpuMemAllocated)
   {
-    // if (this->gi_host->n_coils_cc != n_coils_cc)
-    if (this->allocatedCoils < n_coils_cc)
+    //if (this->allocatedCoils < n_coils_cc)
+    if (this->gi_host->n_coils_cc != n_coils_cc)
     {
       this->freeDeviceMemory();
     }

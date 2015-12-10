@@ -46,7 +46,7 @@ class GpuNUFFTOperator
       sectorWidth(sectorWidth), imgDims(imgDims), gpuMemAllocated(false),
       debugTiming(DEBUG), sens_d(NULL), crds_d(NULL), density_comp_d(NULL),
       deapo_d(NULL), gdata_d(NULL), sector_centers_d(NULL), sectors_d(NULL),
-      data_indices_d(NULL), data_sorted_d(NULL)
+      data_indices_d(NULL), data_sorted_d(NULL), allocatedCoils(0)
   {
     if (loadKernel)
       initKernel();
@@ -495,6 +495,8 @@ class GpuNUFFTOperator
   IndType *data_indices_d;
   /** \brief GPU Device pointer to sorted data array elements. */
   DType2 *data_sorted_d;
+
+  int allocatedCoils;
 
   /** \brief GPU CUFFT plan. */
   cufftHandle fft_plan;

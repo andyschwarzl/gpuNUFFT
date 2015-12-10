@@ -194,15 +194,20 @@ void gpuNUFFT::GpuNUFFTOperator::initDeviceMemory(int n_coils, int n_coils_cc)
 {
   if (gpuMemAllocated)
   {
-    if (gi_host->n_coils_cc != n_coils_cc)
+    // if (this->gi_host->n_coils_cc != n_coils_cc)
+    if (this->allocatedCoils < n_coils_cc)
     {
       this->freeDeviceMemory();
     }
     else
+    {
+      gi_host = initAndCopyGpuNUFFTInfo(n_coils_cc);
       return;
+    }
   }
 
-  gi_host = initAndCopyGpuNUFFTInfo(n_coils_cc);  //
+  gi_host = initAndCopyGpuNUFFTInfo(n_coils_cc);
+  this->allocatedCoils = n_coils_cc;
 
   int data_count = (int)this->kSpaceTraj.count();
   IndType imdata_count = this->imgDims.count();
@@ -328,7 +333,7 @@ int gpuNUFFT::GpuNUFFTOperator::computePossibleConcurrentCoilCount(
   // estimated memory required per coil
   float requiredMemoryPerCoil =
       kSpaceDataDim.length * 8.0 * 2.0 +
-      this->imgDims.width * this->imgDims.height * 8.0 +
+      this->imgDims.width * this->imgDims.height * 8.0 * 2.0 +
       this->getGridDims().width * this->getGridDims().height * 8.0;
 
   while ((free_mem / (possibleCoilCount * requiredMemoryPerCoil)) < 1.0 &&
@@ -336,7 +341,7 @@ int gpuNUFFT::GpuNUFFTOperator::computePossibleConcurrentCoilCount(
     ;
 
   // if (DEBUG)
-  // printf("Compute Possible concurrent coil count. Free memory: %lu - possible "
+  // printf("Free memory: %lu - possible "
   //        "coils: %d - required "
   //        "coil memory: %lu\n",
   //        free_mem, possibleCoilCount,
@@ -565,6 +570,7 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(
   // move memory management into constructor/destructor of GpuNUFFT Operator!!!
   //
   freeTotalDeviceMemory(imdata_sum_d, NULL);
+  // this->freeDeviceMemory();
 
   if ((cudaThreadSynchronize() != cudaSuccess))
     fprintf(stderr, "error in gpuNUFFT_gpu_adj function: %s\n",
@@ -1015,6 +1021,7 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(
   }  // iterate over coils
 
   freeTotalDeviceMemory(imdata_d, NULL);
+  // this->freeDeviceMemory();
 
   if ((cudaThreadSynchronize() != cudaSuccess))
     fprintf(stderr, "error in performForwardGpuNUFFT function: %s\n",

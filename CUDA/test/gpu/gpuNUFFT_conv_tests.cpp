@@ -220,7 +220,7 @@ TEST(TestGPUGpuNUFFTConv,KernelCall1SectorArbSW)
 
   // sectors of data, count and start indices
   // different sector widths, some no integer multiple of im_width 
-  for (int sector_width =2; sector_width<=10; sector_width++)
+  for (int sector_width = 9; sector_width<=9; sector_width++)
   {
     gpuNUFFT::Array<DType> kSpaceData;
     kSpaceData.data = coords;

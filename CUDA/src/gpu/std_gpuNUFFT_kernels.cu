@@ -116,17 +116,22 @@ __global__ void fftScaleKernel(CufftType* data, DType scaling, int N)
 
   while (t < N) 
   {
-    CufftType data_p = data[t]; 
-    data_p.x = data_p.x * scaling;
-    data_p.y = data_p.y * scaling;
-    data[t] = data_p;
+    for (int c = threadIdx.z; c < GI.n_coils_cc; c+= blockDim.z)
+    {
+      CufftType data_p = data[t + c*N]; 
+      data_p.x = data_p.x * scaling;
+      data_p.y = data_p.y * scaling;
+      data[t + c*N] = data_p;
+    }
     t = t+ blockDim.x*gridDim.x;
+
   }
 }
 
 void performFFTScaling(CufftType* data,int N, gpuNUFFT::GpuNUFFTInfo* gi_host)
 {
-  dim3 block_dim(THREAD_BLOCK_SIZE);
+  dim3 block_dim(64, 1, 8);
+  //dim3 block_dim(THREAD_BLOCK_SIZE);
   dim3 grid_dim(getOptimalGridDim(N,THREAD_BLOCK_SIZE));
   DType scaling_factor = (DType)1.0 / (DType) sqrt((DType)gi_host->im_width_dim);
 
@@ -139,9 +144,12 @@ __global__ void sensMulKernel(CufftType* imdata, DType2* sens, int N)
 
   while (t < N) 
   {
-    CufftType data_p = imdata[t]; 
-    imdata[t].x = data_p.x * sens[t].x - data_p.y * sens[t].y; //Re
-    imdata[t].y = data_p.x * sens[t].y + data_p.y * sens[t].x; //Im
+    for (int c = threadIdx.z; c < GI.n_coils_cc; c+= blockDim.z)
+    {
+      CufftType data_p = imdata[t + c*N]; 
+      imdata[t + c*N].x = data_p.x * sens[t + c*N].x - data_p.y * sens[t + c*N].y; //Re
+      imdata[t + c*N].y = data_p.x * sens[t + c*N].y + data_p.y * sens[t + c*N].x; //Im
+    }
     t = t+ blockDim.x*gridDim.x;
   }
 }
@@ -152,9 +160,12 @@ __global__ void conjSensMulKernel(CufftType* imdata, DType2* sens, int N)
 
   while (t < N) 
   {
-    CufftType data_p = imdata[t]; 
-    imdata[t].x = data_p.x * sens[t].x + data_p.y * sens[t].y; //Re
-    imdata[t].y = data_p.y * sens[t].x - data_p.x * sens[t].y; //Im
+    for (int c = threadIdx.z; c < GI.n_coils_cc; c+= blockDim.z)
+    {
+      CufftType data_p = imdata[t + c*N]; 
+      imdata[t + c*N].x = data_p.x * sens[t + c*N].x + data_p.y * sens[t + c*N].y; //Re
+      imdata[t + c*N].y = data_p.y * sens[t + c*N].x - data_p.x * sens[t + c*N].y; //Im
+    }
     t = t+ blockDim.x*gridDim.x;
   }
 }
@@ -168,7 +179,8 @@ void performSensMul(CufftType* imdata_d,
     printf("perform sensitivity multiplication \n");
 
   dim3 grid_dim(getOptimalGridDim(gi_host->im_width_dim,THREAD_BLOCK_SIZE));
-  dim3 block_dim(THREAD_BLOCK_SIZE);
+  //dim3 block_dim(THREAD_BLOCK_SIZE);
+  dim3 block_dim(64, 1, 8);
   if (conjugate)
     conjSensMulKernel<<<grid_dim,block_dim>>>(imdata_d,sens_d,gi_host->im_width_dim);
   else
@@ -181,9 +193,12 @@ __global__ void sensSumKernel(CufftType* imdata, DType2* imdata_sum, int N)
 
   while (t < N) 
   {
-    CufftType data_p = imdata[t]; 
-    imdata_sum[t].x += data_p.x; // Re
-    imdata_sum[t].y += data_p.y; // Im
+    for (int c = 0; c < GI.n_coils_cc; c ++)
+    {
+      CufftType data_p = imdata[t + c*N]; 
+      imdata_sum[t].x += data_p.x; // Re
+      imdata_sum[t].y += data_p.y; // Im
+    }
     t = t + blockDim.x*gridDim.x;
   }
 }
@@ -197,7 +212,7 @@ void performSensSum(CufftType* imdata_d,
 
   dim3 grid_dim(getOptimalGridDim(gi_host->im_width_dim,THREAD_BLOCK_SIZE));
   dim3 block_dim(THREAD_BLOCK_SIZE);
-  
+
   sensSumKernel<<<grid_dim,block_dim>>>(imdata_d,imdata_sum_d,gi_host->im_width_dim);
 }
 
@@ -207,17 +222,20 @@ __global__ void densityCompensationKernel(DType2* data, DType* density_comp, int
 
   while (t < N) 
   {
-    DType2 data_p = data[t]; 
-    data_p.x = data_p.x * density_comp[t];
-    data_p.y = data_p.y * density_comp[t];
-    data[t] = data_p;
+    for (int c = threadIdx.z; c < GI.n_coils_cc; c+= blockDim.z)
+    {
+      DType2 data_p = data[t + c*N]; 
+      data_p.x = data_p.x * density_comp[t];
+      data_p.y = data_p.y * density_comp[t];
+      data[t + c*N] = data_p;
+    }
     t = t+ blockDim.x*gridDim.x;
   }
 }
 
 void performDensityCompensation(DType2* data, DType* density_comp, gpuNUFFT::GpuNUFFTInfo* gi_host)
 {
-  dim3 block_dim(THREAD_BLOCK_SIZE);
+  dim3 block_dim(64, 1, 8);
   dim3 grid_dim(getOptimalGridDim(gi_host->data_count,THREAD_BLOCK_SIZE));
   densityCompensationKernel<<<grid_dim,block_dim>>>(data,density_comp,gi_host->data_count);
 }
@@ -236,10 +254,13 @@ __global__ void deapodizationKernel(CufftType* gdata, DType beta, DType norm_val
     //check if deapodization value is valid number
     if (!isnan(deapo))
     {
-      CufftType gdata_p = gdata[t]; 
-      gdata_p.x = gdata_p.x / deapo;//Re
-      gdata_p.y = gdata_p.y / deapo;//Im
-      gdata[t] = gdata_p;
+      for (int c = threadIdx.z; c < GI.n_coils_cc; c+= blockDim.z)
+      {
+        CufftType gdata_p = gdata[t + c*N]; 
+        gdata_p.x = gdata_p.x / deapo;//Re
+        gdata_p.y = gdata_p.y / deapo;//Im
+        gdata[t + c*N] = gdata_p;
+      }
     }
     t = t + blockDim.x*gridDim.x;
   }
@@ -259,10 +280,13 @@ __global__ void deapodizationKernel2D(CufftType* gdata, DType beta, DType norm_v
     //check if deapodization value is valid number
     if (!isnan(deapo))
     {
-      CufftType gdata_p = gdata[t]; 
-      gdata_p.x = gdata_p.x / deapo;//Re
-      gdata_p.y = gdata_p.y / deapo;//Im
-      gdata[t] = gdata_p;
+      for (int c = threadIdx.z; c < GI.n_coils_cc; c+= blockDim.z)
+      {
+        CufftType gdata_p = gdata[t + c*N]; 
+        gdata_p.x = gdata_p.x / deapo;//Re
+        gdata_p.y = gdata_p.y / deapo;//Im
+        gdata[t + c*N] = gdata_p;
+      }
     }
     t = t + blockDim.x*gridDim.x;
   }
@@ -321,7 +345,11 @@ __global__ void cropKernel(CufftType* gdata,CufftType* imdata, IndType3 offset, 
   {
     getCoordsFromIndex(t, &x, &y, &z, GI.imgDims.x,GI.imgDims.y,GI.imgDims.z);
     grid_ind = computeXYZ2Lin(offset.x+x,offset.y+y,offset.z+z,GI.gridDims);
-    imdata[t] = gdata[grid_ind];
+
+    for (int c = threadIdx.z; c < GI.n_coils_cc; c+= blockDim.z)
+    {
+      imdata[t + c*N] = gdata[grid_ind + c*GI.gridDims_count];
+    }
     t = t + blockDim.x*gridDim.x;
   }
 }
@@ -334,7 +362,10 @@ __global__ void cropKernel2D(CufftType* gdata,CufftType* imdata, IndType3 offset
   {
     getCoordsFromIndex2D(t, &x, &y, GI.imgDims.x,GI.imgDims.y);
     grid_ind = computeXY2Lin(offset.x+x,offset.y+y,GI.gridDims);
-    imdata[t] = gdata[grid_ind];
+    for (int c = threadIdx.z; c < GI.n_coils_cc; c+= blockDim.z)
+    {
+      imdata[t + c*N] = gdata[grid_ind + c*GI.gridDims_count];
+    }
     t = t + blockDim.x*gridDim.x;
   }
 }
@@ -352,9 +383,12 @@ __global__ void fftShiftKernel(CufftType* gdata, IndType3 offset, int N)
     z_opp = (z + offset.z) % GI.gridDims.z;
     ind_opp = computeXYZ2Lin(x_opp,y_opp,z_opp,GI.gridDims);
     //swap points
-    CufftType temp = gdata[t];
-    gdata[t] = gdata[ind_opp];
-    gdata[ind_opp] = temp;
+    for (int c = threadIdx.z; c < GI.n_coils_cc; c+= blockDim.z)
+    {
+      CufftType temp = gdata[t + c*GI.gridDims_count];
+      gdata[t + c*GI.gridDims_count] = gdata[ind_opp + c*GI.gridDims_count];
+      gdata[ind_opp + c*GI.gridDims_count] = temp;
+    }
 
     t = t + blockDim.x*gridDim.x;
   }
@@ -373,7 +407,10 @@ __global__ void fftShiftKernel(CufftType* gdata, CufftType* outdata, IndType3 of
     z_opp = (z + offset.z) % GI.gridDims.z;
     ind_opp = computeXYZ2Lin(x_opp,y_opp,z_opp,GI.gridDims);
 
-    outdata[t] = gdata[ind_opp];
+    for (int c = threadIdx.z; c < GI.n_coils_cc; c+= blockDim.z)
+    {
+      outdata[t + c*GI.gridDims_count] = gdata[ind_opp + c*GI.gridDims_count];
+    }
 
     t = t + blockDim.x*gridDim.x;
   }
@@ -391,7 +428,10 @@ __global__ void fftShiftKernel2D(CufftType* gdata, CufftType* outdata, IndType3 
     y_opp = (y + offset.y) % GI.gridDims.y;
     ind_opp = computeXY2Lin(x_opp,y_opp,GI.gridDims);
 
-    outdata[t] = gdata[ind_opp];
+    for (int c = threadIdx.z; c < GI.n_coils_cc; c+= blockDim.z)
+    {
+      outdata[t + c*GI.gridDims_count] = gdata[ind_opp + c*GI.gridDims_count];
+    }
 
     t = t + blockDim.x*gridDim.x;
   }
@@ -409,9 +449,12 @@ __global__ void fftShiftKernel2D(CufftType* gdata, IndType3 offset, int N)
     y_opp = (y + offset.y) % GI.gridDims.y;
     ind_opp = computeXY2Lin(x_opp,y_opp,GI.gridDims);
     //swap points
-    CufftType temp = gdata[t];
-    gdata[t] = gdata[ind_opp];
-    gdata[ind_opp] = temp;
+    for (int c = threadIdx.z; c < GI.n_coils_cc; c+= blockDim.z)
+    {
+      CufftType temp = gdata[t + c*GI.gridDims_count];
+      gdata[t + c*GI.gridDims_count] = gdata[ind_opp + c*GI.gridDims_count];
+      gdata[ind_opp + c*GI.gridDims_count] = temp;
+    }
 
     t = t + blockDim.x*gridDim.x;
   }
@@ -441,7 +484,10 @@ void performDeapodization(CufftType* imdata_d,
   dim3 grid_dim(getOptimalGridDim(gi_host->im_width_dim,THREAD_BLOCK_SIZE));
   dim3 block_dim(THREAD_BLOCK_SIZE);
   if (gi_host->is2Dprocessing)
+  {
+    dim3 block_dim(64, 1, 8);
     deapodizationKernel2D<<<grid_dim,block_dim>>>(imdata_d,beta,norm_val,gi_host->im_width_dim);
+  }
   else
     deapodizationKernel<<<grid_dim,block_dim>>>(imdata_d,beta,norm_val,gi_host->im_width_dim);
 }
@@ -452,10 +498,13 @@ __global__ void precomputedDeapodizationKernel(CufftType* imdata, DType* deapo, 
 
   while (t < N) 
   {
-    CufftType data_p = imdata[t]; 
-    data_p.x = data_p.x * deapo[t];
-    data_p.y = data_p.y * deapo[t];
-    imdata[t] = data_p;
+    for (int c = threadIdx.z; c < GI.n_coils_cc; c+= blockDim.z)
+    {
+      CufftType data_p = imdata[t + c*N]; 
+      data_p.x = data_p.x * deapo[t];
+      data_p.y = data_p.y * deapo[t];
+      imdata[t + c*N] = data_p;
+    }
     t = t+ blockDim.x*gridDim.x;
   }
 }
@@ -468,7 +517,8 @@ void performDeapodization(CufftType* imdata_d,
     printf("running deapodization with precomputed values\n");
 
   dim3 grid_dim(getOptimalGridDim(gi_host->im_width_dim,THREAD_BLOCK_SIZE));
-  dim3 block_dim(THREAD_BLOCK_SIZE);
+  //dim3 block_dim(THREAD_BLOCK_SIZE);
+  dim3 block_dim(64, 1, 8);
   precomputedDeapodizationKernel<<<grid_dim,block_dim>>>(imdata_d,deapo_d,gi_host->im_width_dim);
 }
 
@@ -513,7 +563,10 @@ void performCrop(CufftType* gdata_d,
   dim3 block_dim(THREAD_BLOCK_SIZE);
 
   if (gi_host->is2Dprocessing)
+  {
+    dim3 block_dim(64, 1, 8);
     cropKernel2D<<<grid_dim,block_dim>>>(gdata_d,imdata_d,ind_off,gi_host->im_width_dim);
+  }
   else
     cropKernel<<<grid_dim,block_dim>>>(gdata_d,imdata_d,ind_off,gi_host->im_width_dim);
 }
@@ -541,7 +594,10 @@ void performInPlaceFFTShift(CufftType* gdata_d,
   dim3 block_dim(THREAD_BLOCK_SIZE);
 
   if (gi_host->is2Dprocessing)
+  {
+    dim3 block_dim(64, 1, 8);
     fftShiftKernel2D<<<grid_dim,block_dim>>>(gdata_d,offset,(int)gridDims.height * t_width);
+  }
   else
     fftShiftKernel<<<grid_dim,block_dim>>>(gdata_d,offset,(int)gridDims.count()/2);
 }
@@ -565,7 +621,10 @@ void performOutOfPlaceFFTShift(CufftType* gdata_d,
   cudaMemcpy(copy_gdata_d,gdata_d,gridDims.count()*sizeof(CufftType),cudaMemcpyDeviceToDevice);
 
   if (gi_host->is2Dprocessing)
+  {
+    dim3 block_dim(64, 1, 8);
     fftShiftKernel2D<<<grid_dim,block_dim>>>(copy_gdata_d,gdata_d,offset,(int)gridDims.count());
+  }
   else
     fftShiftKernel<<<grid_dim,block_dim>>>(copy_gdata_d,gdata_d,offset,(int)gridDims.count());
 
@@ -668,8 +727,11 @@ __global__ void paddingKernel2D(DType2* imdata,CufftType* gdata, IndType3 offset
     getCoordsFromIndex2D(t, &x, &y,GI.imgDims.x,GI.imgDims.y);
     grid_ind =  computeXY2Lin(offset.x + x,offset.y + y,GI.gridDims);
 
-    gdata[grid_ind].x =  imdata[t].x;
-    gdata[grid_ind].y = imdata[t].y;
+    for (int c = threadIdx.z; c < GI.n_coils_cc; c+= blockDim.z)
+    {
+      gdata[grid_ind + c*GI.gridDims_count].x =  imdata[t + c*N].x;
+      gdata[grid_ind + c*GI.gridDims_count].y = imdata[t + c*N].y;
+    }
     t = t+ blockDim.x*gridDim.x;
   }
 }
@@ -709,7 +771,8 @@ void performForwardDeapodization(DType2* imdata_d,
     printf("running forward deapodization with precomputed values\n");
 
   dim3 grid_dim(getOptimalGridDim(gi_host->im_width_dim,THREAD_BLOCK_SIZE));
-  dim3 block_dim(THREAD_BLOCK_SIZE);
+  //dim3 block_dim(THREAD_BLOCK_SIZE);
+  dim3 block_dim(64, 1, 8);
 
   precomputedDeapodizationKernel<<<grid_dim,block_dim>>>((CufftType*)imdata_d,deapo_d,gi_host->im_width_dim);
 }
@@ -728,7 +791,10 @@ void performPadding(DType2* imdata_d,
   dim3 grid_dim(getOptimalGridDim(gi_host->im_width_dim,THREAD_BLOCK_SIZE));
   dim3 block_dim(THREAD_BLOCK_SIZE);
   if (gi_host->is2Dprocessing)
+  {
+    dim3 block_dim(64, 1, 8);
     paddingKernel2D<<<grid_dim,block_dim>>>(imdata_d,gdata_d,ind_off,gi_host->im_width_dim);
+  }
   else
     paddingKernel<<<grid_dim,block_dim>>>(imdata_d,gdata_d,ind_off,gi_host->im_width_dim);
 }

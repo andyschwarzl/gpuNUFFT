@@ -449,7 +449,7 @@ __global__ void balancedConvolutionKernel2(DType2* data,
   {
     sec[threadIdx.x] = sector_processing_order[sec_cnt].x;
     __shared__ int data_max;
-    data_max = min(sectors[sec[threadIdx.x]+1],sectors[sec[threadIdx.x]] + threadIdx.x + sector_processing_order[sec_cnt].y+MAXIMUM_PAYLOAD);
+    data_max = min(sectors[sec[threadIdx.x]+1],sectors[sec[threadIdx.x]] + sector_processing_order[sec_cnt].y+MAXIMUM_PAYLOAD);
     convolutionFunction2(sec,data_max,sector_processing_order[sec_cnt].y,sdata,data,crds,gdata,sectors,sector_centers);
     __syncthreads();
     sec_cnt = sec_cnt + gridDim.x;
@@ -477,8 +477,11 @@ __device__ void convolutionFunction2D(DType2* sdata,int* sec, int sec_max, int s
   //init shared memory
     for (int s_ind=threadIdx.x;s_ind<GI.sector_dim; s_ind+= blockDim.x)
     {
-      sdata[s_ind].x = 0.0f;//Re
-      sdata[s_ind].y = 0.0f;//Im
+      for (int c = threadIdx.z; c < GI.n_coils_cc; c+= blockDim.z)
+      {
+        sdata[s_ind + c*GI.sector_dim].x = 0.0f;//Re
+        sdata[s_ind + c*GI.sector_dim].y = 0.0f;//Im
+      }
     }
     __syncthreads();
 
@@ -534,8 +537,11 @@ __device__ void convolutionFunction2D(DType2* sdata,int* sec, int sec_max, int s
 
               // multiply data by current kernel val 
               // grid complex or scalar 
-              atomicAdd(&(sdata[ind].x),val * data[data_cnt].x);
-              atomicAdd(&(sdata[ind].y),val * data[data_cnt].y);
+              for (int c = threadIdx.z; c < GI.n_coils_cc; c+= blockDim.z)
+              {
+                atomicAdd(&(sdata[ind + c * GI.sector_dim].x),val * data[data_cnt + c * GI.data_count].x);
+                atomicAdd(&(sdata[ind + c * GI.sector_dim].y),val * data[data_cnt + c * GI.data_count].y);
+              }
             } // kernel bounds check x, spherical support 
             i++;
           } // x 	 
@@ -564,9 +570,15 @@ __device__ void convolutionFunction2D(DType2* sdata,int* sec, int sec_max, int s
       else
         ind = sector_ind_offset + computeXY2Lin(x,y,GI.gridDims);//index in output grid
 
-      atomicAdd(&(gdata[ind].x),sdata[s_ind].x);//Re
-      atomicAdd(&(gdata[ind].y),sdata[s_ind].y);//Im
+      for (int c = threadIdx.z; c < GI.n_coils_cc; c+= blockDim.z)
+      {
+        atomicAdd(&(gdata[ind + c * GI.gridDims_count].x),sdata[s_ind + c * GI.sector_dim].x);//Re
+        atomicAdd(&(gdata[ind + c * GI.gridDims_count].y),sdata[s_ind + c * GI.sector_dim].y);//Im
+        sdata[s_ind + c * GI.sector_dim].x = 0.0f;//Re
+        sdata[s_ind + c * GI.sector_dim].y = 0.0f;//Im
+      }
     }
+    __syncthreads();
 }
 
 __global__ void convolutionKernel2D(DType2* data, 
@@ -607,7 +619,7 @@ __global__ void balancedConvolutionKernel2D(DType2* data,
   {
     sec[threadIdx.x] = sector_processing_order[sec_cnt].x; 
     __shared__ int data_max;
-    data_max = min(sectors[sec[threadIdx.x]+1],sectors[sec[threadIdx.x]] + threadIdx.x + sector_processing_order[sec_cnt].y + MAXIMUM_PAYLOAD);
+    data_max = min(sectors[sec[threadIdx.x]+1],sectors[sec[threadIdx.x]] + sector_processing_order[sec_cnt].y + MAXIMUM_PAYLOAD);
     convolutionFunction2D(sdata,sec,data_max,sector_processing_order[sec_cnt].y,data,crds,gdata,sectors,sector_centers);
     __syncthreads();
     sec_cnt = sec_cnt+ gridDim.x;
@@ -751,7 +763,7 @@ void performConvolution( DType2* data_d,
     convolutionKernel<<<grid_dim,block_dim>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
 #else
 #ifdef CONVKERNEL2
-  long shared_mem_size = (gi_host->sector_dim)*sizeof(DType2);
+  long shared_mem_size = (gi_host->sector_dim) * sizeof(DType2) * gi_host->n_coils_cc;
   int thread_size =THREAD_BLOCK_SIZE;
 
   dim3 block_dim(thread_size);
@@ -762,7 +774,10 @@ void performConvolution( DType2* data_d,
     printf("grid dim %u, block dim %u \n",grid_dim.x, block_dim.x); 
   }
   if (gi_host->is2Dprocessing)
+  {
+    dim3 block_dim(64, 1, DEFAULT_VALUE(gi_host->n_coils_cc > 4 ? 4 : gi_host->n_coils_cc));
     convolutionKernel2D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
+  }
   else
     convolutionKernel2<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
 #else 
@@ -814,7 +829,7 @@ void performConvolution( DType2* data_d,
   gpuNUFFT::GpuNUFFTInfo* gi_host
   )
 {
-  long shared_mem_size = (gi_host->sector_dim)*sizeof(DType2);
+  long shared_mem_size = (gi_host->sector_dim)*sizeof(DType2) * gi_host->n_coils_cc;
   int thread_size =THREAD_BLOCK_SIZE;
 
   dim3 block_dim(thread_size);
@@ -825,7 +840,10 @@ void performConvolution( DType2* data_d,
     printf("grid dim %u, block dim %u \n",grid_dim.x, block_dim.x); 
   }
   if (gi_host->is2Dprocessing)
+  {
+    dim3 block_dim(64, 1, DEFAULT_VALUE(gi_host->n_coils_cc > 4 ? 4 : gi_host->n_coils_cc));
     balancedConvolutionKernel2D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_processing_order_d,sector_centers_d,gi_host->sectorsToProcess);
+  }
   else
   {
     balancedConvolutionKernel2<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_processing_order_d,sector_centers_d,gi_host->sectorsToProcess);
@@ -1130,8 +1148,8 @@ __global__ void balancedForwardConvolutionKernel2(CufftType* data,
   {
     sec[threadIdx.x] = sector_processing_order[sec_cnt].x;
     __shared__ int data_max;
-    data_max = min(sectors[sec[threadIdx.x]+1],sectors[sec[threadIdx.x]] + threadIdx.x + sector_processing_order[sec_cnt].y+MAXIMUM_PAYLOAD);
-       
+    data_max = min(sectors[sec[threadIdx.x]+1],sectors[sec[threadIdx.x]] + sector_processing_order[sec_cnt].y + MAXIMUM_PAYLOAD);
+
     forwardConvolutionFunction2(sec,data_max,sector_processing_order[sec_cnt].y,shared_out_data,gdata_cache,data,crds,gdata,sectors,sector_centers);
     __syncthreads();
     sec_cnt = sec_cnt + gridDim.x;
@@ -1149,8 +1167,11 @@ __global__ void forwardConvolutionKernel2D( CufftType* data,
   __shared__ int sec[THREAD_BLOCK_SIZE];
   sec[threadIdx.x]= blockIdx.x;
   //init shared memory
-  shared_out_data[threadIdx.x].x = 0.0f;//Re
-  shared_out_data[threadIdx.x].y = 0.0f;//Im
+  for (int c=threadIdx.z; c < GI.n_coils_cc; c+=blockDim.z)
+  { 
+    shared_out_data[threadIdx.x + c * blockDim.x].x = 0.0f;//Re
+    shared_out_data[threadIdx.x + c * blockDim.x].y = 0.0f;//Im
+  }
   __syncthreads();
   //start convolution
   while (sec[threadIdx.x] < N)
@@ -1213,8 +1234,11 @@ __global__ void forwardConvolutionKernel2D( CufftType* data,
               else
                 ind = (sector_ind_offset + computeXY2Lin(i,j,GI.gridDims));
 
-              shared_out_data[threadIdx.x].x += gdata[ind].x * val; 
-              shared_out_data[threadIdx.x].y += gdata[ind].y * val;
+              for (int c=threadIdx.z; c < GI.n_coils_cc; c+=blockDim.z)
+              { 
+                shared_out_data[threadIdx.x + c * blockDim.x].x += gdata[ind+ c*GI.gridDims_count].x * val; 
+                shared_out_data[threadIdx.x + c * blockDim.x].y += gdata[ind+ c*GI.gridDims_count].y * val;
+              }
             }// kernel bounds check x, spherical support 
             i++;
           } // x loop
@@ -1222,13 +1246,15 @@ __global__ void forwardConvolutionKernel2D( CufftType* data,
         j++;
       } // y loop
 
-      data[data_cnt].x = shared_out_data[threadIdx.x].x;
-      data[data_cnt].y = shared_out_data[threadIdx.x].y;
+      for (int c=threadIdx.z; c < GI.n_coils_cc; c+=blockDim.z)
+      { 
+        data[data_cnt + c*GI.data_count].x = shared_out_data[threadIdx.x + c * blockDim.x].x;
+        data[data_cnt + c*GI.data_count].y = shared_out_data[threadIdx.x + c * blockDim.x].y;
 
-      data_cnt = data_cnt + blockDim.x;
-
-      shared_out_data[threadIdx.x].x = (DType)0.0;//Re
-      shared_out_data[threadIdx.x].y = (DType)0.0;//Im
+        shared_out_data[threadIdx.x + c*blockDim.x].x = (DType)0.0;//Re
+        shared_out_data[threadIdx.x + c*blockDim.x].y = (DType)0.0;//Im
+      }
+        data_cnt = data_cnt + blockDim.x;
     } //data points per sector
     __syncthreads();
     sec[threadIdx.x]= sec[threadIdx.x] + gridDim.x;
@@ -1264,8 +1290,11 @@ __device__ void forwardConvolutionFunction2D(int* sec, int sec_max, int sec_offs
     else
       grid_index = (sector_ind_offset + getIndex2D(i,j,GI.gridDims.x));
 
-    gdata_cache[ind].x = gdata[grid_index].x;
-    gdata_cache[ind].y = gdata[grid_index].y;
+    for (int c=threadIdx.z; c < GI.n_coils_cc; c+=blockDim.z)
+    {
+      gdata_cache[ind + c*GI.sector_dim].x = gdata[grid_index + c*GI.gridDims_count].x;
+      gdata_cache[ind + c*GI.sector_dim].y = gdata[grid_index + c*GI.gridDims_count].y;
+    }
   }
   __syncthreads();
 
@@ -1305,24 +1334,30 @@ __device__ void forwardConvolutionFunction2D(int* sec, int sec_max, int sec_offs
             // calc as separable filter
             val = KERNEL[(int) round(dy_sqr * GI.dist_multiplier)] *
               KERNEL[(int) round(dx_sqr * GI.dist_multiplier)];
-              
+
             ind = getIndex2D(i,j,GI.sector_pad_width);
 
-            sdata[threadIdx.x].x += gdata_cache[ind].x * val; 
-            sdata[threadIdx.x].y += gdata_cache[ind].y * val;									
+            for (int c=threadIdx.z; c < GI.n_coils_cc; c+=blockDim.z)
+            {
+              sdata[threadIdx.x + c*blockDim.x].x += gdata_cache[ind + c*GI.sector_dim].x * val; 
+              sdata[threadIdx.x + c*blockDim.x].y += gdata_cache[ind + c*GI.sector_dim].y * val;
+            }
           }// kernel bounds check x, spherical support 
           i++;
         } // x loop
       } // kernel bounds check y, spherical support  
       j++;
     } // y loop
-    atomicAdd(&(data[data_cnt].x),sdata[threadIdx.x].x);
-    atomicAdd(&(data[data_cnt].y),sdata[threadIdx.x].y);
+
+    for (int c=threadIdx.z; c < GI.n_coils_cc; c+=blockDim.z)
+    {
+      atomicAdd(&(data[data_cnt + c*GI.data_count].x),sdata[threadIdx.x + c*blockDim.x].x);
+      atomicAdd(&(data[data_cnt + c*GI.data_count].y),sdata[threadIdx.x + c*blockDim.x].y);
+      sdata[threadIdx.x + c*blockDim.x].x = (DType)0.0;//Re
+      sdata[threadIdx.x + c*blockDim.x].y = (DType)0.0;//Im
+    }
 
     data_cnt = data_cnt + blockDim.x;
-
-    sdata[threadIdx.x].x = (DType)0.0;//Re
-    sdata[threadIdx.x].y = (DType)0.0;//Im
   } //data points per sector
 }
 
@@ -1336,14 +1371,17 @@ __global__ void forwardConvolutionKernel22D(CufftType* data,
 {
   extern __shared__ CufftType shared[];//externally managed shared memory
   CufftType* shared_out_data =(CufftType*) &shared[0];  
-  CufftType* gdata_cache =(CufftType*) &shared[blockDim.x]; 
+  CufftType* gdata_cache =(CufftType*) &shared[blockDim.x * GI.n_coils_cc]; 
 
   __shared__ int sec[THREAD_BLOCK_SIZE];
   sec[threadIdx.x]= blockIdx.x;
 
   //init shared memory
-  shared_out_data[threadIdx.x].x = 0.0f;//Re
-  shared_out_data[threadIdx.x].y = 0.0f;//Im
+  for (int c=threadIdx.z; c < GI.n_coils_cc; c+=blockDim.z)
+  { 
+    shared_out_data[threadIdx.x + c*blockDim.x].x = 0.0f;//Re
+    shared_out_data[threadIdx.x + c*blockDim.x].y = 0.0f;//Im
+  }
   __syncthreads();
   //start convolution
   while (sec[threadIdx.x] < N)
@@ -1368,22 +1406,26 @@ __global__ void balancedForwardConvolutionKernel22D(CufftType* data,
 {
   extern __shared__ CufftType shared[];//externally managed shared memory
   CufftType* shared_out_data =(CufftType*) &shared[0];  
-  CufftType* gdata_cache =(CufftType*) &shared[blockDim.x]; 
+  CufftType* gdata_cache =(CufftType*) &shared[blockDim.x * GI.n_coils_cc];
 
   int sec_cnt= blockIdx.x;
   __shared__ int sec[THREAD_BLOCK_SIZE];
   
   //init shared memory
-  shared_out_data[threadIdx.x].x = 0.0f;//Re
-  shared_out_data[threadIdx.x].y = 0.0f;//Im
+  for (int c=threadIdx.z; c < GI.n_coils_cc; c+=blockDim.z)
+  {
+    shared_out_data[threadIdx.x + c * blockDim.x].x = 0.0f;//Re
+    shared_out_data[threadIdx.x + c * blockDim.x].y = 0.0f;//Im
+  }
+
   __syncthreads();
   //start convolution
   while (sec_cnt < N)
   {
     sec[threadIdx.x] = sector_processing_order[sec_cnt].x;
     __shared__ int data_max;
-    data_max = min(sectors[sec[threadIdx.x]+1],sectors[sec[threadIdx.x]] + threadIdx.x + sector_processing_order[sec_cnt].y+MAXIMUM_PAYLOAD);
-    
+    data_max = min(sectors[sec[threadIdx.x]+1],sectors[sec[threadIdx.x]] + sector_processing_order[sec_cnt].y+MAXIMUM_PAYLOAD);
+
     forwardConvolutionFunction2D(sec,data_max,sector_processing_order[sec_cnt].y,shared_out_data,gdata_cache,data,crds,gdata,sectors,sector_centers);
 
     __syncthreads();
@@ -1400,11 +1442,14 @@ void performForwardConvolution( CufftType*		data_d,
   gpuNUFFT::GpuNUFFTInfo*	gi_host
   )
 {
+  // cached version proved to be
+  // faster than non-cached version 
+  // even in 2d case
   bool useCache = true;
   if (!useCache)
   {
     int thread_size =THREAD_BLOCK_SIZE;
-    long shared_mem_size = thread_size * sizeof(CufftType);//empiric
+    long shared_mem_size = thread_size * sizeof(CufftType) * gi_host->n_coils_cc;//empiric
 
     dim3 block_dim(thread_size);
     dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,thread_size));
@@ -1412,14 +1457,17 @@ void performForwardConvolution( CufftType*		data_d,
     if (DEBUG)
       printf("convolution requires %ld bytes of shared memory!\n",shared_mem_size);
     if (gi_host->is2Dprocessing)
+    {
+      dim3 block_dim(thread_size, 1, DEFAULT_VALUE(gi_host->n_coils_cc > 8 ? 8 : gi_host->n_coils_cc));
       forwardConvolutionKernel2D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
+    }
     else
       forwardConvolutionKernel<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
   }
   else
   {
-    int thread_size =THREAD_BLOCK_SIZE;
-    long shared_mem_size = (thread_size + gi_host->sector_dim) * sizeof(CufftType);//empiric
+    int thread_size = THREAD_BLOCK_SIZE;
+    long shared_mem_size = (thread_size + gi_host->sector_dim) * gi_host->n_coils_cc * sizeof(CufftType);//empiric
 
     dim3 block_dim(thread_size);
     dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,thread_size));
@@ -1427,7 +1475,10 @@ void performForwardConvolution( CufftType*		data_d,
     if (DEBUG)
       printf("forward convolution requires %ld bytes of shared memory!\n",shared_mem_size);
     if (gi_host->is2Dprocessing)
+    {
+      dim3 block_dim(thread_size, 1, DEFAULT_VALUE(gi_host->n_coils_cc > 4 ? 2 : gi_host->n_coils_cc));
       forwardConvolutionKernel22D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
+    }
     else
       forwardConvolutionKernel2<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
   }
@@ -1443,8 +1494,8 @@ void performForwardConvolution( CufftType*		data_d,
   gpuNUFFT::GpuNUFFTInfo*	gi_host
   )
 {
-  int thread_size =THREAD_BLOCK_SIZE;
-  long shared_mem_size = (thread_size + gi_host->sector_dim) * sizeof(CufftType);//empiric
+  int thread_size =THREAD_BLOCK_SIZE;//empiric
+  long shared_mem_size = (thread_size + gi_host->sector_dim ) * gi_host->n_coils_cc * sizeof(CufftType);
 
   dim3 block_dim(thread_size);
   dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,thread_size));
@@ -1452,7 +1503,10 @@ void performForwardConvolution( CufftType*		data_d,
   if (DEBUG)
     printf("balanced convolution requires %ld bytes of shared memory!\n",shared_mem_size);
   if (gi_host->is2Dprocessing)
-    balancedForwardConvolutionKernel22D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_processing_order_d,sector_centers_d,gi_host->sectorsToProcess);
+    {
+      dim3 block_dim(160, 1, DEFAULT_VALUE(gi_host->n_coils_cc > 4 ? 2 : gi_host->n_coils_cc));
+      balancedForwardConvolutionKernel22D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_processing_order_d,sector_centers_d,gi_host->sectorsToProcess);
+    }
   else
     balancedForwardConvolutionKernel2<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_processing_order_d,sector_centers_d,gi_host->sectorsToProcess);
 }

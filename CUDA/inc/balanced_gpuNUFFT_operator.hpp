@@ -7,65 +7,76 @@
 
 namespace gpuNUFFT
 {
-    /**
-    * \brief Balanced GpuNUFFTOperator inherited from gpuNUFFT::GpuNUFFTOperator
-    * 
-    * Changes the behaviour of the default GpuNUFFTOperator by balancing the 
-    * work load by sector to a maximum amount of samples per sector (MAXIMUM_PAYLOAD). 
-    * Thus, sectors with a high density of data points are split into multiple ones,
-    * which are processed in parallel.
-    *
-    */
-  class BalancedGpuNUFFTOperator : public GpuNUFFTOperator, public BalancedOperator
+/**
+* \brief Balanced GpuNUFFTOperator inherited from gpuNUFFT::GpuNUFFTOperator
+*
+* Changes the behaviour of the default GpuNUFFTOperator by balancing the
+* work load by sector to a maximum amount of samples per sector
+*(MAXIMUM_PAYLOAD).
+* Thus, sectors with a high density of data points are split into multiple ones,
+* which are processed in parallel.
+*
+*/
+class BalancedGpuNUFFTOperator : public GpuNUFFTOperator,
+                                 public BalancedOperator
+{
+ public:
+  BalancedGpuNUFFTOperator(IndType kernelWidth, IndType sectorWidth, DType osf,
+                           Dimensions imgDims)
+    : GpuNUFFTOperator(kernelWidth, sectorWidth, osf, imgDims, true, BALANCED)
   {
-  public:
+  }
 
-    BalancedGpuNUFFTOperator(IndType kernelWidth, IndType sectorWidth, DType osf, Dimensions imgDims): 
-      GpuNUFFTOperator(kernelWidth,sectorWidth,osf,imgDims,true,BALANCED)
-    {
-    }
+  virtual ~BalancedGpuNUFFTOperator()
+  {
+  }
 
-    virtual ~BalancedGpuNUFFTOperator()
-    {
-    }
+  Array<IndType2> getSectorProcessingOrder()
+  {
+    return this->sectorProcessingOrder;
+  }
+  void setSectorProcessingOrder(Array<IndType2> sectorProcessingOrder)
+  {
+    this->sectorProcessingOrder = sectorProcessingOrder;
+  }
 
-    Array<IndType2>  getSectorProcessingOrder(){return this->sectorProcessingOrder;}
-    void setSectorProcessingOrder(Array<IndType2> sectorProcessingOrder)  {this->sectorProcessingOrder = sectorProcessingOrder;}
+  // OPERATIONS
+  void performGpuNUFFTAdj(Array<DType2> kspaceData, Array<CufftType> &imgData,
+                          GpuNUFFTOutput gpuNUFFTOut = DEAPODIZATION);
+  void performGpuNUFFTAdj(GpuArray<DType2> kspaceData_gpu,
+                          GpuArray<CufftType> &imgData_gpu,
+                          GpuNUFFTOutput gpuNUFFTOut = DEAPODIZATION);
 
-    // OPERATIONS
-    void performGpuNUFFTAdj(Array<DType2> kspaceData, Array<CufftType>& imgData, GpuNUFFTOutput gpuNUFFTOut = DEAPODIZATION);
-    void performGpuNUFFTAdj(GpuArray<DType2> kspaceData_gpu, GpuArray<CufftType>& imgData_gpu, GpuNUFFTOutput gpuNUFFTOut = DEAPODIZATION);
+  void performForwardGpuNUFFT(Array<DType2> imgData,
+                              Array<CufftType> &kspaceData,
+                              GpuNUFFTOutput gpuNUFFTOut = DEAPODIZATION);
+  void performForwardGpuNUFFT(GpuArray<DType2> imgData_gpu,
+                              GpuArray<CufftType> &kspaceData,
+                              GpuNUFFTOutput gpuNUFFTOut = DEAPODIZATION);
 
-    void performForwardGpuNUFFT(Array<DType2> imgData,Array<CufftType>& kspaceData, GpuNUFFTOutput gpuNUFFTOut = DEAPODIZATION);
-    void performForwardGpuNUFFT(GpuArray<DType2> imgData_gpu, GpuArray<CufftType>& kspaceData, GpuNUFFTOutput gpuNUFFTOut = DEAPODIZATION);
+  OperatorType getType()
+  {
+    return gpuNUFFT::BALANCED;
+  }
 
-    OperatorType getType() {return gpuNUFFT::BALANCED;}
+ protected:
+  // sectorProcessingOrder
+  Array<IndType2> sectorProcessingOrder;
 
-  protected:
+  IndType2 *sector_processing_order_d;
 
-    // sectorProcessingOrder
-    Array<IndType2> sectorProcessingOrder;
+  GpuNUFFTInfo *initAndCopyGpuNUFFTInfo(int n_coils_cc = 1);
 
-    IndType2* sector_processing_order_d;
+  void adjConvolution(DType2 *data_d, DType *crds_d, CufftType *gdata_d,
+                      DType *kernel_d, IndType *sectors_d,
+                      IndType *sector_centers_d,
+                      gpuNUFFT::GpuNUFFTInfo *gi_host);
 
-    GpuNUFFTInfo* initAndCopyGpuNUFFTInfo();
-
-    void adjConvolution(DType2* data_d, 
-        DType* crds_d, 
-        CufftType* gdata_d,
-        DType* kernel_d, 
-        IndType* sectors_d, 
-        IndType* sector_centers_d,
-        gpuNUFFT::GpuNUFFTInfo* gi_host);
-
-    void forwardConvolution(CufftType*    data_d, 
-        DType*      crds_d, 
-        CufftType*    gdata_d,
-        DType*      kernel_d, 
-        IndType*    sectors_d, 
-        IndType*    sector_centers_d,
-        gpuNUFFT::GpuNUFFTInfo* gi_host);
-  };
+  void forwardConvolution(CufftType *data_d, DType *crds_d, CufftType *gdata_d,
+                          DType *kernel_d, IndType *sectors_d,
+                          IndType *sector_centers_d,
+                          gpuNUFFT::GpuNUFFTInfo *gi_host);
+};
 }
 
-#endif //BALANCED_GPUNUFFT_OPERATOR_H_INCLUDED
+#endif  // BALANCED_GPUNUFFT_OPERATOR_H_INCLUDED

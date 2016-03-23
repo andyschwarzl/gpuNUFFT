@@ -8,70 +8,74 @@
 
 namespace gpuNUFFT
 {
-    /**
-    * \brief GpuNUFFTOperator with texture memory lookup
-    * 
-    * Changes the behaviour of the default GpuNUFFTOperator by using gpu texture memory 
-    * in the kernel interpolation step. 
-    *
-    */
-  class TextureGpuNUFFTOperator : public GpuNUFFTOperator
+/**
+* \brief GpuNUFFTOperator with texture memory lookup
+*
+* Changes the behaviour of the default GpuNUFFTOperator by using gpu texture
+*memory
+* in the kernel interpolation step.
+*
+*/
+class TextureGpuNUFFTOperator : public GpuNUFFTOperator
+{
+ public:
+  TextureGpuNUFFTOperator(IndType kernelWidth, IndType sectorWidth, DType osf,
+                          Dimensions imgDims,
+                          InterpolationType interpolationType)
+    : GpuNUFFTOperator(kernelWidth, sectorWidth, osf, imgDims, false, TEXTURE),
+      interpolationType(interpolationType)
   {
-  public:
-    
-    TextureGpuNUFFTOperator(IndType kernelWidth, IndType sectorWidth, DType osf, Dimensions imgDims,InterpolationType interpolationType): 
-    GpuNUFFTOperator(kernelWidth,sectorWidth,osf,imgDims,false,TEXTURE),interpolationType(interpolationType)
-    {
-      if (typeid(DType) == typeid(double))
-        throw std::runtime_error("Double precision textures are not supported yet!"); 
+    if (typeid(DType) == typeid(double))
+      throw std::runtime_error(
+          "Double precision textures are not supported yet!");
 
-      initKernel();	
-    }
+    initKernel();
+  }
 
-    TextureGpuNUFFTOperator(IndType kernelWidth, IndType sectorWidth, DType osf, Dimensions imgDims): 
-    GpuNUFFTOperator(kernelWidth,sectorWidth,osf,imgDims,false,TEXTURE),interpolationType(gpuNUFFT::TEXTURE2D_LOOKUP)
-    {
-      if (typeid(DType)==typeid(double))
-        throw std::runtime_error("Double precision textures are not supported yet!"); 
+  TextureGpuNUFFTOperator(IndType kernelWidth, IndType sectorWidth, DType osf,
+                          Dimensions imgDims)
+    : GpuNUFFTOperator(kernelWidth, sectorWidth, osf, imgDims, false, TEXTURE),
+      interpolationType(gpuNUFFT::TEXTURE2D_LOOKUP)
+  {
+    if (typeid(DType) == typeid(double))
+      throw std::runtime_error(
+          "Double precision textures are not supported yet!");
 
-      initKernel();	
-    }
+    initKernel();
+  }
 
-    ~TextureGpuNUFFTOperator()
-    {
-    }
+  ~TextureGpuNUFFTOperator()
+  {
+  }
 
-    virtual OperatorType getType() {return gpuNUFFT::TEXTURE;}
+  virtual OperatorType getType()
+  {
+    return gpuNUFFT::TEXTURE;
+  }
 
-  protected:
-    void initKernel();
-    
-		cudaArray* kernel_d;
-    InterpolationType interpolationType;
-    const char* getInterpolationTypeName();
+ protected:
+  void initKernel();
 
-    // OPERATIONS
-  private:
-    GpuNUFFTInfo* initAndCopyGpuNUFFTInfo();
+  cudaArray *kernel_d;
+  InterpolationType interpolationType;
+  const char *getInterpolationTypeName();
 
-    virtual void adjConvolution(DType2* data_d, 
-      DType* crds_d, 
-      CufftType* gdata_d,
-      DType* kernel_d, 
-      IndType* sectors_d, 
-      IndType* sector_centers_d,
-      gpuNUFFT::GpuNUFFTInfo* gi_host);
-    virtual void forwardConvolution(CufftType*		data_d, 
-      DType*			crds_d, 
-      CufftType*		gdata_d,
-      DType*			kernel_d, 
-      IndType*		sectors_d, 
-      IndType*		sector_centers_d,
-      gpuNUFFT::GpuNUFFTInfo* gi_host);
-    
-    void initLookupTable();
-    void freeLookupTable();
-  };
+  // OPERATIONS
+ private:
+  GpuNUFFTInfo *initAndCopyGpuNUFFTInfo(int n_coils_cc = 1);
+
+  virtual void adjConvolution(DType2 *data_d, DType *crds_d, CufftType *gdata_d,
+                              DType *kernel_d, IndType *sectors_d,
+                              IndType *sector_centers_d,
+                              gpuNUFFT::GpuNUFFTInfo *gi_host);
+  virtual void forwardConvolution(CufftType *data_d, DType *crds_d,
+                                  CufftType *gdata_d, DType *kernel_d,
+                                  IndType *sectors_d, IndType *sector_centers_d,
+                                  gpuNUFFT::GpuNUFFTInfo *gi_host);
+
+  void initLookupTable();
+  void freeLookupTable();
+};
 }
 
-#endif //TEXTURE_GPUNUFFT_OPERATOR_H_INCLUDED
+#endif  // TEXTURE_GPUNUFFT_OPERATOR_H_INCLUDED

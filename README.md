@@ -12,10 +12,10 @@ Go to subfolder CUDA to compile mexfiles.
 REQUIREMENTS:
 -------------------------------------------------------------------------------
 
-- CUDA
-- CMAKE 2.8
+- CUDA capable graphics card and working installation of [CUDA Toolkit](https://developer.nvidia.com/cuda-downloads)
+- [CMake 2.8](https://cmake.org/download/) or higher
 - MATLAB 2008 or higher
-- Google test framework (optional)
+- [Google test](https://github.com/google/googletest) framework (optional)
 
 CMAKE Options:
 
@@ -50,15 +50,14 @@ Note: This version of gpuNUFFT was tested with CUDA 5.0. NVIDIAs nvcc compiler d
 -------------------------------------------------------------------------------
 WINDOWS, with Visual Studio:
 -------------------------------------------------------------------------------
-build project using cmake or cmake-gui, starting from project root directory:
+Setup a working version of [Visual Studio Community 2013](https://www.visualstudio.com/en-us/news/vs2013-community-vs.aspx) or use the Visual Studio professional edition if available. Generate the project solution using the CMake-GUI or from command line by starting from the project root directory:
 
     > mkdir build 
     > cd build
     > cmake .. -G "Visual Studio 2008 Win64" 
     > Build created Solution gpuNUFFT.sln using Visual Studio
 
-Ensure that at least a Visual Studio 2008 Express build environment is setup correctly.
-If the library shall run using Win64 check that all necessary Visual Studio Add-ons are
+For the Win64 platform check that all necessary Visual Studio Add-ons are
 installed correctly and a Win64 dummy project can be created using VS.
 
 -------------------------------------------------------------------------------

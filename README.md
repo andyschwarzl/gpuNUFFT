@@ -54,7 +54,7 @@ Setup a working version of [Visual Studio Community 2013](https://www.visualstud
 
     > mkdir build 
     > cd build
-    > cmake .. -G "Visual Studio 2008 Win64" 
+    > cmake .. -G "Visual Studio 12 2013 Win64"
     > Build created Solution gpuNUFFT.sln using Visual Studio
 
 For the Win64 platform check that all necessary Visual Studio Add-ons are

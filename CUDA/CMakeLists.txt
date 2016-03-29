@@ -70,16 +70,19 @@ SET(GPU_DOUBLE_PREC OFF CACHE BOOL "Enable double precision floating point opera
 
 if(GPU_DOUBLE_PREC)
   SET(PREC_SUFFIX "_d")
-  SET(CUDA_NVCC_FLAGS "-arch;sm_20;--ptxas-options=-v")
 else(GPU_DOUBLE_PREC)
   SET(PREC_SUFFIX "_f")
-  SET(CUDA_NVCC_FLAGS "-arch;sm_20;--ptxas-options=-v")
 endif(GPU_DOUBLE_PREC)
 
-MESSAGE(STATUS "setting NVCC FLAGS to: ${CUDA_NVCC_FLAGS}")
+IF(CMAKE_BUILD_TYPE MATCHES Debug)
+  MESSAGE("debug mode")
+  SET(CUDA_NVCC_FLAGS "-arch;sm_20;--ptxas-options=-v")
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -g")
+ELSE(CMAKE_BUILD_TYPE)
+  SET(CUDA_NVCC_FLAGS "-arch;sm_20;")
+ENDIF()
 
-# TODO build type dependent
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -g")
+MESSAGE(STATUS "setting NVCC FLAGS to: ${CUDA_NVCC_FLAGS}")
 
 #LIB and MEX-file names
 SET(GRID_LIB_NAME "gpuNUFFT${PREC_SUFFIX}")

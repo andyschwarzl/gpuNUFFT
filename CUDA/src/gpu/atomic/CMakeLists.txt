@@ -10,8 +10,6 @@ set(GPU_CU_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/atomic_gpuNUFFT.cu
 					#${CMAKE_CURRENT_SOURCE_DIR}/texture_gpuNUFFT_kernels.cu 
 					#${CMAKE_CURRENT_SOURCE_DIR}/../std_gpuNUFFT_kernels.cu
 									 )
-SET(CUDA_NVCC_FLAGS "-arch;sm_20;--ptxas-options=-v")
-									 
 if(WIN32)
     CUDA_ADD_LIBRARY(${GRID_LIB_ATM_NAME} ${GPU_CU_SOURCES}  ${GPU_GPUNUFFT_SOURCES} ${GPUNUFFT_SOURCES} ${GPUNUFFT_INCLUDE})
 else(WIN32)

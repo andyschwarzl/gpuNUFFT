@@ -47,7 +47,9 @@ build project via cmake, starting from project root directory:
 	
 Note: This version of gpuNUFFT was tested with CUDA 5.0. NVIDIAs nvcc compiler did not support gcc 4.7 or higher at this time. It is therefore suggested to compile gpuNUFFT with gcc 4.6. One comfortable way to toggle between gcc/g++ versions is to use the update-alternatives tool.
 
-*Screencast*: Alternatively follow the installation and usage instructions for Linux [here](https://vimeo.com/161036817)
+*Screencast*: Alternatively follow the installation and usage instructions for Linux:
+
+[![Linux Installation](http://imgur.com/z0bxIIr.png)](https://vimeo.com/161036817 "gpuNUFFT Installation Linux - Click to Watch!")
 
 -------------------------------------------------------------------------------
 WINDOWS, with Visual Studio:
@@ -62,7 +64,9 @@ Setup a working version of [Visual Studio Community 2013](https://www.visualstud
 For the Win64 platform check that all necessary Visual Studio Add-ons are
 installed correctly and a Win64 dummy project can be created using VS.
 
-*Screencast*: Alternatively follow the installation and usage instructions for Windows [here](https://vimeo.com/161037263)
+*Screencast*: Alternatively follow the installation and usage instructions for Windows:
+
+[![Windows Installation](http://imgur.com/ZYzx8hL.png)](https://vimeo.com/161037263 "gpuNUFFT Installation Windows - Click to Watch!")
 
 -------------------------------------------------------------------------------
 Run:

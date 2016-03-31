@@ -86,3 +86,7 @@ To generate the source code documentation run
 in the build directory. 
 
 *Note: Requires doxygen to be installed.*
+
+### Supporting material
+
+Written documentation and presentations can be found [here](https://www.dropbox.com/sh/gcvcszporj65wnq/AAA3eFsGQnSb7UottCSx0Hiva?dl=0).

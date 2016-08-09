@@ -295,22 +295,30 @@ __device__ void textureConvolutionFunction2D(DType2 *sdata, int *sec,
     getCoordsFromIndex2D(s_ind, &x, &y, GI.sector_pad_width.x, GI.sector_pad_width.y);
 
     if (isOutlier2D(x, y, center.x, center.y, GI.gridDims, GI.sector_offset))
-      // calculate opposite index
-      ind = computeXY2Lin(
-          calculateOppositeIndex(x, center.x, GI.gridDims.x, GI.sector_offset.x),
-          calculateOppositeIndex(y, center.y, GI.gridDims.y, GI.sector_offset.y),
-          GI.gridDims);
+    {
+      if (isOutlier2D(x - ceil(GI.kernel_radius), y - ceil(GI.kernel_radius), center.x, center.y, GI.gridDims, GI.sector_offset))
+        ind = -1; // superfluous value
+      else // calculate opposite index
+        ind = computeXY2Lin(
+            calculateOppositeIndex(x, center.x, GI.gridDims.x, GI.sector_offset.x),
+            calculateOppositeIndex(y, center.y, GI.gridDims.y, GI.sector_offset.y),
+            GI.gridDims);
+      //ind = -1;
+    }
     else
       ind = sector_ind_offset +
             computeXY2Lin(x, y, GI.gridDims);  // index in output grid
 
     for (int c = threadIdx.z; c < GI.n_coils_cc; c += blockDim.z)
     {
-      atomicAdd(&(gdata[ind + c * GI.gridDims_count].x),
-                sdata[s_ind + c * GI.sector_dim].x);  // Re
-      atomicAdd(&(gdata[ind + c * GI.gridDims_count].y),
-                sdata[s_ind + c * GI.sector_dim].y);  // Im
-
+      if (ind != -1) {
+        atomicAdd(&(gdata[ind + c * GI.gridDims_count].x),
+            //1.0); 
+            sdata[s_ind + c * GI.sector_dim].x);  // Re
+        atomicAdd(&(gdata[ind + c * GI.gridDims_count].y),
+            //1.0); 
+            sdata[s_ind + c * GI.sector_dim].y);  // Im
+      }
       // reset shared mem
       sdata[s_ind + c * GI.sector_dim].x = (DType)0.0;
       sdata[s_ind + c * GI.sector_dim].y = (DType)0.0;

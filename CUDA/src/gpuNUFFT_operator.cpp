@@ -55,7 +55,6 @@ gpuNUFFT::GpuNUFFTOperator::initGpuNUFFTInfo(int n_coils_cc)
 
   gi_host->data_count = (int)this->kSpaceTraj.count();
   gi_host->sector_count = (int)this->gridSectorDims.count();
-  gi_host->sector_width = (int)sectorDims.width;
 
   gi_host->kernel_width = (int)this->kernelWidth;
   gi_host->kernel_widthSquared = (int)(this->kernelWidth * this->kernelWidth);

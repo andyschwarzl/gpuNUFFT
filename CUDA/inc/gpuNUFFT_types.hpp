@@ -258,8 +258,6 @@ struct GpuNUFFTInfo
 
   /**\brief Total amount of sectors.*/
   int sector_count;
-  /**\brief Amount of sectors per dimension.*/
-  int sector_width;
 
   /**\brief Padded sector width (sector_width + kernel_width / 2).*/
   int sector_pad_width;

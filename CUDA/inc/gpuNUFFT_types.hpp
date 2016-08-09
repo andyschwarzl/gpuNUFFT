@@ -260,17 +260,17 @@ struct GpuNUFFTInfo
   int sector_count;
 
   /**\brief Padded sector width (sector_width + kernel_width / 2).*/
-  int sector_pad_width;
+  IndType3 sector_pad_width;
   /**\brief Maximum index per dimension of padded sector (sector_pad_width -
    * 1).*/
-  int sector_pad_max;
+  IndType3 sector_pad_max;
   /**\brief Total amount of elements in one padded sector.*/
   int sector_dim;
   /**\brief Offset to zero position inside padded sector (sector_pad_width / 2).
    * Used in combination with the sector center in order to get to the starting
    * index (bottom left of the front slice)
    */
-  int sector_offset;
+  IndType3 sector_offset;
 
   /**\brief Distance scale in x direction in case of anisotropic grids.*/
   DType aniso_x_scale;

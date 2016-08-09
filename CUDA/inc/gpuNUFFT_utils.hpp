@@ -135,10 +135,21 @@ __inline__ __device__ __host__ int getIndex(int x, int y, int z, int gwidth)
   return x + gwidth * (y + gwidth * z);
 }
 
+__inline__ __device__ __host__ int getIndex(int x, int y, int z, IndType3 dims)
+{
+  return x + dims.x * (y + dims.y * z);
+}
+
 /** \brief Convert position (x,y) to index in linear array */
 __inline__ __device__ __host__ int getIndex2D(int x, int y, int gwidth)
 {
   return x + gwidth * (y);
+}
+
+/** \brief Convert position (x,y) to index in linear array */
+__inline__ __device__ __host__ int getIndex2D(int x, int y, IndType3 dims)
+{
+  return x + dims.x * (y);
 }
 
 /** \brief Compute position (x,y,z) from linear index */
@@ -206,7 +217,7 @@ __inline__ __device__ __host__ bool isOutlier(int x, int y, int z, int center_x,
 {
   return ((center_x - sector_offset + x) >= width ||
           (center_x - sector_offset + x) < 0 ||
-          (center_y - sector_offset + y) >= width ||
+          (center_y - sector_offset+ y) >= width ||
           (center_y - sector_offset + y) < 0 ||
           (center_z - sector_offset + z) >= width ||
           (center_z - sector_offset + z) < 0);
@@ -216,14 +227,14 @@ __inline__ __device__ __host__ bool isOutlier(int x, int y, int z, int center_x,
  * at (center_x,center_y,center_z) lies outside the grid defined by dim.  */
 __inline__ __device__ __host__ bool isOutlier(int x, int y, int z, int center_x,
                                               int center_y, int center_z,
-                                              IndType3 dim, int sector_offset)
+                                              IndType3 dim, IndType3 sector_offset)
 {
-  return ((center_x - sector_offset + x) >= (int)dim.x ||
-          (center_x - sector_offset + x) < 0 ||
-          (center_y - sector_offset + y) >= (int)dim.y ||
-          (center_y - sector_offset + y) < 0 ||
-          (center_z - sector_offset + z) >= (int)dim.z ||
-          (center_z - sector_offset + z) < 0);
+  return ((center_x - sector_offset.x + x) >= (int)dim.x ||
+          (center_x - sector_offset.x + x) < 0 ||
+          (center_y - sector_offset.y + y) >= (int)dim.y ||
+          (center_y - sector_offset.y + y) < 0 ||
+          (center_z - sector_offset.z + z) >= (int)dim.z ||
+          (center_z - sector_offset.z + z) < 0);
 }
 
 /** \brief Evaluate whether position (x,y) inside the defined sector located at
@@ -242,12 +253,12 @@ __inline__ __device__ __host__ bool isOutlier2D(int x, int y, int center_x,
  * (center_x,center_y) lies outside the grid defined by dim.  */
 __inline__ __device__ __host__ bool isOutlier2D(int x, int y, int center_x,
                                                 int center_y, IndType3 dim,
-                                                int sector_offset)
+                                                IndType3 sector_offset)
 {
-  return ((center_x - sector_offset + x) >= (int)dim.x ||
-          (center_x - sector_offset + x) < 0 ||
-          (center_y - sector_offset + y) >= (int)dim.y ||
-          (center_y - sector_offset + y) < 0);
+  return ((center_x - sector_offset.x + x) >= (int)dim.x ||
+          (center_x - sector_offset.x + x) < 0 ||
+          (center_y - sector_offset.y + y) >= (int)dim.y ||
+          (center_y - sector_offset.y + y) < 0);
 }
 
 /** \brief Calculate the coord array index on the opposite side of the grid.

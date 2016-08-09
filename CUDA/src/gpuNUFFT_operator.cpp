@@ -105,9 +105,16 @@ gpuNUFFT::GpuNUFFTOperator::initGpuNUFFTInfo(int n_coils_cc)
   gpuNUFFT::Dimensions sectorPadDims =
       sectorDims + 2 * (int)(floor((DType) this->kernelWidth / (DType)2.0));
 
-  int sector_pad_width = (int)sectorPadDims.width;
+  IndType3 sector_pad_width;
+  sector_pad_width.x = sectorPadDims.width;
+  sector_pad_width.y = sectorPadDims.height;
+  sector_pad_width.z = sectorPadDims.depth;
+
   int sector_dim = (int)sectorPadDims.count();
-  int sector_offset = (int)floor(((DType)sector_pad_width / (DType)2.0));
+  IndType3 sector_offset;
+  sector_offset.x = (int)floor(((DType)sector_pad_width.x / (DType)2.0));
+  sector_offset.y = (int)floor(((DType)sector_pad_width.y / (DType)2.0));
+  sector_offset.z = (int)floor(((DType)sector_pad_width.z / (DType)2.0));
 
   gi_host->grid_width_inv.x =
       (DType)1.0 / static_cast<DType>(this->getGridDims().width);
@@ -120,7 +127,9 @@ gpuNUFFT::GpuNUFFTOperator::initGpuNUFFTInfo(int n_coils_cc)
 
   gi_host->kernel_radius = (DType)kernel_radius;
   gi_host->sector_pad_width = sector_pad_width;
-  gi_host->sector_pad_max = sector_pad_width - 1;
+  gi_host->sector_pad_max.x = sector_pad_width.x - 1;
+  gi_host->sector_pad_max.y = sector_pad_width.y - 1;
+  gi_host->sector_pad_max.z = sector_pad_width.z - 1;
   gi_host->sector_dim = sector_dim;
   gi_host->sector_offset = sector_offset;
 
@@ -193,7 +202,7 @@ void gpuNUFFT::GpuNUFFTOperator::initDeviceMemory(int n_coils, int n_coils_cc)
 {
   if (gpuMemAllocated)
   {
-    //if (this->allocatedCoils < n_coils_cc)
+    // if (this->allocatedCoils < n_coils_cc)
     if (this->gi_host->n_coils_cc != n_coils_cc)
     {
       this->freeDeviceMemory();

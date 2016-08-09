@@ -69,13 +69,13 @@ __device__ void textureConvolutionFunction(int *sec, int sec_max,
       j = jmin;
       while (j <= jmax && j >= jmin)
       {
-        jy = mapGridToKSpace(j, GI.gridDims.y, center.y, GI.sector_offset.z);
+        jy = mapGridToKSpace(j, GI.gridDims.y, center.y, GI.sector_offset.y);
         dy_sqr = (jy - data_point.y) * GI.aniso_y_scale;
         dy_sqr *= dy_sqr;
         i = imin;
         while (i <= imax && i >= imin)
         {
-          ix = mapGridToKSpace(i, GI.gridDims.x, center.x, GI.sector_offset.z);
+          ix = mapGridToKSpace(i, GI.gridDims.x, center.x, GI.sector_offset.x);
           dx_sqr = (ix - data_point.x) * GI.aniso_x_scale;
           dx_sqr *= dx_sqr;
           // get kernel value

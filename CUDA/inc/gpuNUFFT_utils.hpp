@@ -255,10 +255,10 @@ __inline__ __device__ __host__ bool isOutlier2D(int x, int y, int center_x,
                                                 int center_y, IndType3 dim,
                                                 IndType3 sector_offset)
 {
-  return ((center_x - sector_offset.x + x) >= (int)dim.x ||
-          (center_x - sector_offset.x + x) < 0 ||
-          (center_y - sector_offset.y + y) >= (int)dim.y ||
-          (center_y - sector_offset.y + y) < 0);
+  return ((center_x - (int)sector_offset.x + x) >= (int)dim.x ||
+          (center_x - (int)sector_offset.x + x) < 0 ||
+          (center_y - (int)sector_offset.y + y) >= (int)dim.y ||
+          (center_y - (int)sector_offset.y + y) < 0);
 }
 
 /** \brief Calculate the coord array index on the opposite side of the grid.

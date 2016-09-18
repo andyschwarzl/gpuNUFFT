@@ -1672,15 +1672,128 @@ TEST(TestGPUGpuNUFFTConvAnisotropic, GPUTest_20x20x10_osf_15_Balanced)
   delete gpuNUFFTOp;
 }
 
-#define frand() (static_cast<float>(rand()) / static_cast <float> (RAND_MAX))
+IndType computeSectorCountPerDimension(IndType dim, IndType sectorWidth)
+{
+  return (IndType)std::ceil(static_cast<DType>(dim) / sectorWidth);
+}
+
+gpuNUFFT::Dimensions computeSectorCountPerDimension(gpuNUFFT::Dimensions dim,
+                                                    IndType sectorWidth)
+{
+  gpuNUFFT::Dimensions sectorDims;
+  sectorDims.width = computeSectorCountPerDimension(dim.width, sectorWidth);
+  sectorDims.height = computeSectorCountPerDimension(dim.height, sectorWidth);
+  sectorDims.depth = computeSectorCountPerDimension(dim.depth, sectorWidth);
+  return sectorDims;
+}
+
+TEST(TestAnisotropicSW, Test_IndicesForDifferentSWsandKW1)
+{
+  gpuNUFFT::Dimensions gridDimsOrig(20, 20, 0);
+
+  IndType3 gridDims;
+  gridDims.x = 20;
+  gridDims.y = 20;
+
+  int kw = 3;
+
+  int outArray[gridDims.y][gridDims.x];
+  for (int sw = 4; sw <= 6/*std::min(gridDimsOrig.width, gridDimsOrig.height)*/; sw++)
+  {
+    printf("------------------- SW: %d ----------------------- \n", sw);
+    for (int yCnt=0; yCnt < gridDims.y; yCnt++)
+      for (int xCnt=0; xCnt < gridDims.x; xCnt++)
+        outArray[yCnt][xCnt] = 0;
+    gpuNUFFT::Dimensions sectorDims =
+        computeSectorCountPerDimension(gridDimsOrig, sw);
+
+    IndType3 sector_pad_width;
+    sector_pad_width.x = sw + 2 * (int)(floor((DType)kw / (DType)2.0));
+    sector_pad_width.y = sw + 2 * (int)(floor((DType)kw / (DType)2.0));
+
+    printf("SWPW: %d,%d\n", sector_pad_width.x, sector_pad_width.y);
+
+    IndType3 sector_offset;
+    sector_offset.x = floor(sector_pad_width.x / 2.0);
+    sector_offset.y = floor(sector_pad_width.y / 2.0);
+
+    float kernel_radius = kw / 2.0;
+
+    IndType3 center;
+
+    for (int sectorX = 0; sectorX < sectorDims.width; sectorX++)
+      for (int sectorY = 0; sectorY < sectorDims.height; sectorY++)
+      {
+        center.x = sectorX * sw +
+                   (IndType)std::floor(static_cast<DType>(sw) / (DType)2.0);
+        center.y = sectorY * sw +
+                   (IndType)std::floor(static_cast<DType>(sw) / (DType)2.0);
+
+        // printf("Start with sector (%d,%d):\n", center.x, center.y);
+
+        int sector_ind_offset = computeXY2Lin(
+            center.x - sector_offset.x, center.y - sector_offset.y, gridDims);
+
+        int x, y, ind;
+        // each thread writes one position from shared mem to global mem
+        for (int s_ind = 0; s_ind < sector_pad_width.x * sector_pad_width.y;
+             s_ind++)
+        {
+          getCoordsFromIndex2D(s_ind, &x, &y, sector_pad_width.x,
+                               sector_pad_width.y);
+
+          // printf("Compute %d (%d, %d):", s_ind, x, y);
+          if (isOutlier2D(x, y, center.x, center.y, gridDims, sector_offset))
+          {
+            if (isOutlierButValidOverlap2D(x, y, center.x, center.y, gridDims,
+                                           sector_offset, kernel_radius))
+            {
+              ind = computeXY2Lin(calculateOppositeIndex(
+                                      x, center.x, gridDims.x, sector_offset.x),
+                                  calculateOppositeIndex(
+                                      y, center.y, gridDims.y, sector_offset.y),
+                                  gridDims);
+              int xOpp, yOpp;
+              getCoordsFromIndex2D(ind, &xOpp, &yOpp, gridDims.x, gridDims.y);
+              // printf("--> Opposite %d (%d, %d)\n", ind, xOpp, yOpp);
+              //FAIL() << "Must not be called!";
+              outArray[yOpp][xOpp] += 1;
+            }
+            else
+            {
+              // printf("--> outlier\n");
+              ind = -1;  // superfluous value
+            }
+          }
+          else
+          {
+            ind = sector_ind_offset +
+                  computeXY2Lin(x, y, gridDims);  // index in output grid
+            int xOut, yOut;
+            getCoordsFromIndex2D(ind, &xOut, &yOut, gridDims.x, gridDims.y);
+            // printf("--> inside %d (%d, %d)\n", ind, xOut, yOut);
+            outArray[yOut][xOut] += 1;
+          }
+        }
+      }
+    for (int yCnt = 0; yCnt < gridDims.y; yCnt++)
+    {
+      for (int xCnt = 0; xCnt < gridDims.x; xCnt++)
+        printf("%d ", outArray[yCnt][xCnt]);
+      printf("\n");
+    }
+  }
+}
+
+#define frand() (static_cast<float>(rand()) / static_cast<float>(RAND_MAX))
 TEST(TestAnisotropicSW, Test_240_60_384_osf_125)
 {
-  int kernel_width = 1;
-  float osf = 2.0;
-  int sector_width = 8;
+  int kernel_width = 5;
+  float osf = 2.05;
+  int sector_width = 3;
 
-  int num_angle = 16;
-  int num_fre = 16;
+  int num_angle = 230;
+  int num_fre = 123;
   int num_z = 1;
 
   // data
@@ -1691,8 +1804,8 @@ TEST(TestAnisotropicSW, Test_240_60_384_osf_125)
   // Test data between [-2,2]
   for (int i = 0; i < data_entries; i++)
   {
-    data[i].x = (4.0*frand()) - 2.0;
-    data[i].y = (4.0*frand()) - 2.0;
+    data[i].x = (4.0 * frand()) - 2.0;
+    data[i].y = (4.0 * frand()) - 2.0;
   }
 
   // coords
@@ -1701,8 +1814,8 @@ TEST(TestAnisotropicSW, Test_240_60_384_osf_125)
   DType *coords;
   coords = new DType[len];
   // i read my kspace trajectory data from a txt file
-  //ifstream myfile("D:\\software\\Test_gpuNUFFT\\1x.txt", ios::in);
-  //if (myfile.is_open())
+  // ifstream myfile("D:\\software\\Test_gpuNUFFT\\1x.txt", ios::in);
+  // if (myfile.is_open())
   //{
   //  cout << "openok" << endl;
   //  int ii = 0;
@@ -1713,12 +1826,12 @@ TEST(TestAnisotropicSW, Test_240_60_384_osf_125)
   //    double value = atof(line.c_str());
   //    coords[ii++] = value;
   //  }
- // }
-  //else
+  // }
+  // else
   //  cout << "unable to open file" << endl;
-  //myfile.close();
+  // myfile.close();
 
-  for (unsigned cnt=0; cnt<len; cnt++)
+  for (unsigned cnt = 0; cnt < len; cnt++)
   {
     coords[cnt] = frand() - 0.5;
   }
@@ -1735,16 +1848,25 @@ TEST(TestAnisotropicSW, Test_240_60_384_osf_125)
   gpuNUFFT::Dimensions imgDims;
   imgDims.width = num_angle;  // 240;
   imgDims.height = num_fre;   // 60;
-  //imgDims.depth = num_z;      // 384;
+  // imgDims.depth = num_z;      // 384;
 
-  for (unsigned sw= 4; sw<= 16; sw++)
+  gpuNUFFT::GpuNUFFTOperatorFactory factory;
+  gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp =
+      factory.createGpuNUFFTOperator(kSpaceData, kernel_width, 8, osf, imgDims);
+  // reference output array
+  gpuNUFFT::Array<CufftType> refImgArray;
+  refImgArray =
+      gpuNUFFTOp->performGpuNUFFTAdj(dataArray, gpuNUFFT::CONVOLUTION);
+
+  for (unsigned sw = 4; sw <= 16; sw++)
   {
-    printf("*************************** SW: %u **********************************\n",sw);
+    printf("*************************** SW: %u "
+           "**********************************\n",
+           sw);
 
     // precomputation performed by factory
-    gpuNUFFT::GpuNUFFTOperatorFactory factory;
-    gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(
-        kSpaceData, kernel_width, sw, osf, imgDims);
+    gpuNUFFTOp = factory.createGpuNUFFTOperator(kSpaceData, kernel_width, sw,
+                                                osf, imgDims);
 
     // output array
     gpuNUFFT::Array<CufftType> imgArray;
@@ -1754,9 +1876,19 @@ TEST(TestAnisotropicSW, Test_240_60_384_osf_125)
     CufftType *gdata = imgArray.data;
     for (int i = 0; i < 20; i++)
     {
-      printf("%.2f,",gdata[i].x);
+      printf("%.2f,", gdata[i].x);
     }
     std::cout << std::endl;
+
+    for (int cnt = 0; cnt < imgArray.dim.count(); cnt++)
+    {
+      EXPECT_NEAR(refImgArray.data[cnt].x, imgArray.data[cnt].x, 1E-4)
+          << "index: " << cnt;
+      EXPECT_NEAR(refImgArray.data[cnt].y, imgArray.data[cnt].y, 1E-4)
+          << "index: " << cnt;
+    }
+    std::cout << std::endl;
+
     delete gpuNUFFTOp;
   }
 

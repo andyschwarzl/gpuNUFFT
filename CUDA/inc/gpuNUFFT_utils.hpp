@@ -261,6 +261,29 @@ __inline__ __device__ __host__ bool isOutlier2D(int x, int y, int center_x,
           (center_y - (int)sector_offset.y + y) < 0);
 }
 
+/** \brief Evaluate whether position (x,y) inside the sector located at
+ * (center_x,center_y) lies outside the grid but still is a valid location on 
+ * the opposite side of the grid (Fourier repetition).  */
+__inline__ __device__ __host__ bool isOutlierButValidOverlap2D(int x, int y, int center_x,
+                                                int center_y, IndType3 dim,
+                                                IndType3 sector_offset, int radius)
+{
+  int xOff = center_x - (int)sector_offset.x + x;
+  bool xOutlier = (xOff >= (int)dim.x) || (xOff < 0);
+  bool xOverlap = xOutlier && ((xOff - radius) < (int)dim.x && (xOff + radius) >= 0);
+
+  int yOff = center_y - (int)sector_offset.y + y;
+  bool yOutlier = (yOff >= (int)dim.y) || (yOff < 0);
+  bool yOverlap = yOutlier && ((yOff - radius) < (int)dim.y && (yOff + radius) >= 0);
+
+  return (xOverlap && (yOverlap || !yOutlier)) || (yOverlap && (xOverlap || !xOutlier));
+  /*return ((xOff >= (int)dim.x && (xOff - radius) < (int)dim.x) ||
+         (xOff < 0 && (xOff + radius) >= 0)) ||
+         (yOff >= (int)dim.y && (yOff - radius) < (int)dim.y) ||
+         (yOff < 0 && (yOff + radius) >= 0);
+         */
+}
+
 /** \brief Calculate the coord array index on the opposite side of the grid.
   *
   * @see isOutlier

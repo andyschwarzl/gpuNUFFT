@@ -296,14 +296,13 @@ __device__ void textureConvolutionFunction2D(DType2 *sdata, int *sec,
 
     if (isOutlier2D(x, y, center.x, center.y, GI.gridDims, GI.sector_offset))
     {
-      if (isOutlier2D(x - ceil(GI.kernel_radius), y - ceil(GI.kernel_radius), center.x, center.y, GI.gridDims, GI.sector_offset))
-        ind = -1; // superfluous value
-      else // calculate opposite index
+      if (isOutlierButValidOverlap2D(x, y, center.x, center.y, GI.gridDims, GI.sector_offset, GI.kernel_radius))
         ind = computeXY2Lin(
             calculateOppositeIndex(x, center.x, GI.gridDims.x, GI.sector_offset.x),
             calculateOppositeIndex(y, center.y, GI.gridDims.y, GI.sector_offset.y),
             GI.gridDims);
-      //ind = -1;
+      else
+        ind = -1; // superfluous value
     }
     else
       ind = sector_ind_offset +
@@ -319,6 +318,7 @@ __device__ void textureConvolutionFunction2D(DType2 *sdata, int *sec,
             //1.0); 
             sdata[s_ind + c * GI.sector_dim].y);  // Im
       }
+
       // reset shared mem
       sdata[s_ind + c * GI.sector_dim].x = (DType)0.0;
       sdata[s_ind + c * GI.sector_dim].y = (DType)0.0;

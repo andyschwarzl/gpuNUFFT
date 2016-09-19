@@ -1689,20 +1689,21 @@ gpuNUFFT::Dimensions computeSectorCountPerDimension(gpuNUFFT::Dimensions dim,
 
 TEST(TestAnisotropicSW, Test_IndicesForDifferentSWsandKW1)
 {
-  gpuNUFFT::Dimensions gridDimsOrig(20, 20, 0);
+  gpuNUFFT::Dimensions gridDimsOrig(12, 7, 0);
 
   IndType3 gridDims;
-  gridDims.x = 20;
-  gridDims.y = 20;
+  gridDims.x = 12;
+  gridDims.y = 7;
 
-  int kw = 3;
+  int kw = 4;
 
   int outArray[gridDims.y][gridDims.x];
-  for (int sw = 4; sw <= 6/*std::min(gridDimsOrig.width, gridDimsOrig.height)*/; sw++)
+  for (int sw = 3; sw <= std::min(gridDimsOrig.width, gridDimsOrig.height);
+       sw++)
   {
     printf("------------------- SW: %d ----------------------- \n", sw);
-    for (int yCnt=0; yCnt < gridDims.y; yCnt++)
-      for (int xCnt=0; xCnt < gridDims.x; xCnt++)
+    for (int yCnt = 0; yCnt < gridDims.y; yCnt++)
+      for (int xCnt = 0; xCnt < gridDims.x; xCnt++)
         outArray[yCnt][xCnt] = 0;
     gpuNUFFT::Dimensions sectorDims =
         computeSectorCountPerDimension(gridDimsOrig, sw);
@@ -1755,8 +1756,8 @@ TEST(TestAnisotropicSW, Test_IndicesForDifferentSWsandKW1)
                                   gridDims);
               int xOpp, yOpp;
               getCoordsFromIndex2D(ind, &xOpp, &yOpp, gridDims.x, gridDims.y);
-              // printf("--> Opposite %d (%d, %d)\n", ind, xOpp, yOpp);
-              //FAIL() << "Must not be called!";
+              printf("--> Opposite %d (%d, %d)\n", ind, xOpp, yOpp);
+              // FAIL() << "Must not be called!";
               outArray[yOpp][xOpp] += 1;
             }
             else
@@ -1785,19 +1786,109 @@ TEST(TestAnisotropicSW, Test_IndicesForDifferentSWsandKW1)
   }
 }
 
-#define frand() (static_cast<float>(rand()) / static_cast<float>(RAND_MAX))
-TEST(TestAnisotropicSW, Test_240_60_384_osf_125)
+// Test fixtures
+// Reuse test resources
+//
+typedef struct ParamSet
 {
-  int kernel_width = 5;
-  float osf = 2.05;
-  int sector_width = 3;
+  int kernel_width;
+  float osf;
+  int sector_width;
 
-  int num_angle = 230;
-  int num_fre = 123;
-  int num_z = 1;
+  int width;
+  int height;
+  int depth;
+
+  ParamSet(int kw, float osf, int sw, int width, int height, int depth)
+    : kernel_width(kw), osf(osf), sector_width(sw), width(width),
+      height(height), depth(depth){};
+} ParamSet;
+
+class TestAnisotropicSW : public ::testing::Test,
+                          public ::testing::WithParamInterface<ParamSet>
+{
+ public:
+  static void SetUpTestCase()
+  {
+  }
+};
+
+INSTANTIATE_TEST_CASE_P(Test_2D_IsoGrid_20_20_KW1, TestAnisotropicSW,
+                        ::testing::Values(ParamSet(1, 1.00, 3, 20, 20, 0),
+                                          ParamSet(1, 1.25, 3, 20, 20, 0),
+                                          ParamSet(1, 1.50, 3, 20, 20, 0),
+                                          ParamSet(1, 1.75, 3, 20, 20, 0),
+                                          ParamSet(1, 2.00, 3, 20, 20, 0)));
+
+INSTANTIATE_TEST_CASE_P(Test_2D_IsoGrid_20_20_KW2, TestAnisotropicSW,
+                        ::testing::Values(ParamSet(2, 1.00, 3, 20, 20, 0),
+                                          ParamSet(2, 1.25, 3, 20, 20, 0),
+                                          ParamSet(2, 1.50, 3, 20, 20, 0),
+                                          ParamSet(2, 1.75, 3, 20, 20, 0),
+                                          ParamSet(2, 2.00, 3, 20, 20, 0)));
+
+INSTANTIATE_TEST_CASE_P(Test_2D_IsoGrid_20_20_KW3, TestAnisotropicSW,
+                        ::testing::Values(ParamSet(3, 1.00, 3, 20, 20, 0),
+                                          ParamSet(3, 1.25, 3, 20, 20, 0),
+                                          ParamSet(3, 1.50, 3, 20, 20, 0),
+                                          ParamSet(3, 1.75, 3, 20, 20, 0),
+                                          ParamSet(3, 2.00, 3, 20, 20, 0)));
+
+INSTANTIATE_TEST_CASE_P(Test_2D_IsoGrid_20_20_KW4, TestAnisotropicSW,
+                        ::testing::Values(ParamSet(4, 1.00, 3, 20, 20, 0),
+                                          ParamSet(4, 1.25, 3, 20, 20, 0),
+                                          ParamSet(4, 1.50, 3, 20, 20, 0),
+                                          ParamSet(4, 1.75, 3, 20, 20, 0),
+                                          ParamSet(4, 2.00, 3, 20, 20, 0)));
+
+INSTANTIATE_TEST_CASE_P(Test_2D_IsoGrid_20_20_KW5, TestAnisotropicSW,
+                        ::testing::Values(ParamSet(5, 1.00, 3, 20, 20, 0),
+                                          ParamSet(5, 1.25, 3, 20, 20, 0),
+                                          ParamSet(5, 1.50, 3, 20, 20, 0),
+                                          ParamSet(5, 1.75, 3, 20, 20, 0),
+                                          ParamSet(5, 2.00, 3, 20, 20, 0)));
+
+INSTANTIATE_TEST_CASE_P(Test_2D_AnisoGrid_33_20_KW1, TestAnisotropicSW,
+                        ::testing::Values(ParamSet(1, 1.00, 3, 33, 20, 0),
+                                          ParamSet(1, 1.25, 3, 33, 20, 0),
+                                          ParamSet(1, 1.50, 3, 33, 20, 0),
+                                          ParamSet(1, 1.75, 3, 33, 20, 0),
+                                          ParamSet(1, 2.00, 3, 33, 20, 0)));
+
+INSTANTIATE_TEST_CASE_P(Test_2D_AnisoGrid_33_20_KW4, TestAnisotropicSW,
+                        ::testing::Values(ParamSet(4, 1.00, 3, 33, 20, 0),
+                                          ParamSet(4, 1.25, 3, 33, 20, 0),
+                                          ParamSet(4, 1.50, 3, 33, 20, 0),
+                                          ParamSet(4, 1.75, 3, 33, 20, 0),
+                                          ParamSet(4, 2.00, 3, 33, 20, 0)));
+
+INSTANTIATE_TEST_CASE_P(Test_2D_AnisoGrid_19_34_KW7, TestAnisotropicSW,
+                        ::testing::Values(ParamSet(7, 1.00, 3, 19, 34, 0),
+                                          ParamSet(7, 1.25, 3, 19, 34, 0),
+                                          ParamSet(7, 1.50, 3, 19, 34, 0),
+                                          ParamSet(7, 1.75, 3, 19, 34, 0),
+                                          ParamSet(7, 2.00, 3, 19, 34, 0)));
+
+/*INSTANTIATE_TEST_CASE_P(Test_3D_AnisoGrid_19_34_67_KW3, TestAnisotropicSW,
+                        ::testing::Values(ParamSet(3, 1.00, 3, 19, 34, 67),
+                                          ParamSet(3, 1.25, 3, 19, 34, 67),
+                                          ParamSet(3, 1.50, 3, 19, 34, 67),
+                                          ParamSet(3, 1.75, 3, 19, 34, 67),
+                                          ParamSet(3, 2.00, 3, 19, 34, 67)));
+                                          */
+
+#define frand() (static_cast<float>(rand()) / static_cast<float>(RAND_MAX))
+TEST_P(TestAnisotropicSW, TestDifferentSectorWidths)
+{
+  int kernel_width = GetParam().kernel_width;
+  float osf = GetParam().osf;
+
+  int num_angle = GetParam().width;
+  int num_fre = GetParam().height;
+  int num_z = GetParam().depth;
 
   // data
-  int data_entries = num_angle * num_fre * num_z;
+  int data_entries = num_angle * num_fre * DEFAULT_VALUE(num_z);
 
   DType2 *data;
   data = new DType2[data_entries];
@@ -1813,23 +1904,6 @@ TEST(TestAnisotropicSW, Test_240_60_384_osf_125)
   unsigned len = 3 * data_entries;
   DType *coords;
   coords = new DType[len];
-  // i read my kspace trajectory data from a txt file
-  // ifstream myfile("D:\\software\\Test_gpuNUFFT\\1x.txt", ios::in);
-  // if (myfile.is_open())
-  //{
-  //  cout << "openok" << endl;
-  //  int ii = 0;
-  //  while (!myfile.eof() && ii < len)
-  //  {
-  //    std::string line;
-  //    getline(myfile, line);
-  //    double value = atof(line.c_str());
-  //    coords[ii++] = value;
-  //  }
-  // }
-  // else
-  //  cout << "unable to open file" << endl;
-  // myfile.close();
 
   for (unsigned cnt = 0; cnt < len; cnt++)
   {
@@ -1848,7 +1922,7 @@ TEST(TestAnisotropicSW, Test_240_60_384_osf_125)
   gpuNUFFT::Dimensions imgDims;
   imgDims.width = num_angle;  // 240;
   imgDims.height = num_fre;   // 60;
-  // imgDims.depth = num_z;      // 384;
+  imgDims.depth = num_z;      // 384;
 
   gpuNUFFT::GpuNUFFTOperatorFactory factory;
   gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp =

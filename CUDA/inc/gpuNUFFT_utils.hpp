@@ -217,7 +217,7 @@ __inline__ __device__ __host__ bool isOutlier(int x, int y, int z, int center_x,
 {
   return ((center_x - sector_offset + x) >= width ||
           (center_x - sector_offset + x) < 0 ||
-          (center_y - sector_offset+ y) >= width ||
+          (center_y - sector_offset + y) >= width ||
           (center_y - sector_offset + y) < 0 ||
           (center_z - sector_offset + z) >= width ||
           (center_z - sector_offset + z) < 0);
@@ -227,14 +227,43 @@ __inline__ __device__ __host__ bool isOutlier(int x, int y, int z, int center_x,
  * at (center_x,center_y,center_z) lies outside the grid defined by dim.  */
 __inline__ __device__ __host__ bool isOutlier(int x, int y, int z, int center_x,
                                               int center_y, int center_z,
-                                              IndType3 dim, IndType3 sector_offset)
+                                              IndType3 dim,
+                                              IndType3 sector_offset)
 {
-  return ((center_x - sector_offset.x + x) >= (int)dim.x ||
-          (center_x - sector_offset.x + x) < 0 ||
-          (center_y - sector_offset.y + y) >= (int)dim.y ||
-          (center_y - sector_offset.y + y) < 0 ||
-          (center_z - sector_offset.z + z) >= (int)dim.z ||
-          (center_z - sector_offset.z + z) < 0);
+  return ((center_x - (int)sector_offset.x + x) >= (int)dim.x ||
+          (center_x - (int)sector_offset.x + x) < 0 ||
+          (center_y - (int)sector_offset.y + y) >= (int)dim.y ||
+          (center_y - (int)sector_offset.y + y) < 0 ||
+          (center_z - (int)sector_offset.z + z) >= (int)dim.z ||
+          (center_z - (int)sector_offset.z + z) < 0);
+}
+
+/** \brief Evaluate whether position (x,y) inside the sector located at
+ * (center_x,center_y) lies outside the grid but still is a valid location on
+ * the opposite side of the grid (Fourier repetition).  */
+__inline__ __device__ __host__ bool
+isOutlierButValidOverlap3D(int x, int y, int z, int center_x, int center_y,
+                           int center_z, IndType3 dim, IndType3 sector_offset,
+                           int radius)
+{
+  int xOff = center_x - (int)sector_offset.x + x;
+  bool xOutlier = (xOff >= (int)dim.x) || (xOff < 0);
+  bool xOverlap =
+      xOutlier && ((xOff - radius) < (int)dim.x && (xOff + radius) >= 0);
+
+  int yOff = center_y - (int)sector_offset.y + y;
+  bool yOutlier = (yOff >= (int)dim.y) || (yOff < 0);
+  bool yOverlap =
+      yOutlier && ((yOff - radius) < (int)dim.y && (yOff + radius) >= 0);
+
+  int zOff = center_z - (int)sector_offset.z + z;
+  bool zOutlier = (zOff >= (int)dim.z) || (zOff < 0);
+  bool zOverlap =
+      zOutlier && ((zOff - radius) < (int)dim.z && (zOff + radius) >= 0);
+
+  return (xOverlap && ((yOverlap && zOverlap) || (!yOutlier && !zOutlier))) ||
+         (yOverlap && ((xOverlap && zOverlap) || (!xOutlier && !zOutlier)))||
+         (zOverlap && ((xOverlap && yOverlap) || (!xOutlier && !yOutlier)));
 }
 
 /** \brief Evaluate whether position (x,y) inside the defined sector located at
@@ -262,26 +291,24 @@ __inline__ __device__ __host__ bool isOutlier2D(int x, int y, int center_x,
 }
 
 /** \brief Evaluate whether position (x,y) inside the sector located at
- * (center_x,center_y) lies outside the grid but still is a valid location on 
+ * (center_x,center_y) lies outside the grid but still is a valid location on
  * the opposite side of the grid (Fourier repetition).  */
-__inline__ __device__ __host__ bool isOutlierButValidOverlap2D(int x, int y, int center_x,
-                                                int center_y, IndType3 dim,
-                                                IndType3 sector_offset, int radius)
+__inline__ __device__ __host__ bool
+isOutlierButValidOverlap2D(int x, int y, int center_x, int center_y,
+                           IndType3 dim, IndType3 sector_offset, int radius)
 {
   int xOff = center_x - (int)sector_offset.x + x;
   bool xOutlier = (xOff >= (int)dim.x) || (xOff < 0);
-  bool xOverlap = xOutlier && ((xOff - radius) < (int)dim.x && (xOff + radius) >= 0);
+  bool xOverlap =
+      xOutlier && ((xOff - radius) < (int)dim.x && (xOff + radius) >= 0);
 
   int yOff = center_y - (int)sector_offset.y + y;
   bool yOutlier = (yOff >= (int)dim.y) || (yOff < 0);
-  bool yOverlap = yOutlier && ((yOff - radius) < (int)dim.y && (yOff + radius) >= 0);
+  bool yOverlap =
+      yOutlier && ((yOff - radius) < (int)dim.y && (yOff + radius) >= 0);
 
-  return (xOverlap && (yOverlap || !yOutlier)) || (yOverlap && (xOverlap || !xOutlier));
-  /*return ((xOff >= (int)dim.x && (xOff - radius) < (int)dim.x) ||
-         (xOff < 0 && (xOff + radius) >= 0)) ||
-         (yOff >= (int)dim.y && (yOff - radius) < (int)dim.y) ||
-         (yOff < 0 && (yOff + radius) >= 0);
-         */
+  return (xOverlap && (yOverlap || !yOutlier)) ||
+         (yOverlap && (xOverlap || !xOutlier));
 }
 
 /** \brief Calculate the coord array index on the opposite side of the grid.

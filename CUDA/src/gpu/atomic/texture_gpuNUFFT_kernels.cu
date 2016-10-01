@@ -118,18 +118,25 @@ __device__ void textureConvolutionFunction(int *sec, int sec_max,
 
     if (isOutlier(x, y, z, center.x, center.y, center.z, GI.gridDims,
                   GI.sector_offset))
-      // calculate opposite index
-      ind = computeXYZ2Lin(
-          calculateOppositeIndex(x, center.x, GI.gridDims.x, GI.sector_offset.x),
-          calculateOppositeIndex(y, center.y, GI.gridDims.y, GI.sector_offset.y),
-          calculateOppositeIndex(z, center.z, GI.gridDims.z, GI.sector_offset.z),
-          GI.gridDims);
+    {
+      if (isOutlierButValidOverlap3D(x, y, z, center.x, center.y, center.z, GI.gridDims, GI.sector_offset, GI.kernel_radius))
+        // calculate opposite index
+        ind = computeXYZ2Lin(
+            calculateOppositeIndex(x, center.x, GI.gridDims.x, GI.sector_offset.x),
+            calculateOppositeIndex(y, center.y, GI.gridDims.y, GI.sector_offset.y),
+            calculateOppositeIndex(z, center.z, GI.gridDims.z, GI.sector_offset.z),
+            GI.gridDims);
+      else
+        ind = -1; // superfluous value
+    }
     else
       ind = sector_ind_offset +
             computeXYZ2Lin(x, y, z, GI.gridDims);  // index in output grid
 
-    atomicAdd(&(gdata[ind].x), sdata[s_ind].x);  // Re
-    atomicAdd(&(gdata[ind].y), sdata[s_ind].y);  // Im
+    if (ind != -1) {
+      atomicAdd(&(gdata[ind].x), sdata[s_ind].x);  // Re
+      atomicAdd(&(gdata[ind].y), sdata[s_ind].y);  // Im
+    }
     // reset shared mem
     sdata[s_ind].x = (DType)0.0;
     sdata[s_ind].y = (DType)0.0;
@@ -312,10 +319,8 @@ __device__ void textureConvolutionFunction2D(DType2 *sdata, int *sec,
     {
       if (ind != -1) {
         atomicAdd(&(gdata[ind + c * GI.gridDims_count].x),
-            //1.0); 
             sdata[s_ind + c * GI.sector_dim].x);  // Re
         atomicAdd(&(gdata[ind + c * GI.gridDims_count].y),
-            //1.0); 
             sdata[s_ind + c * GI.sector_dim].y);  // Im
       }
 

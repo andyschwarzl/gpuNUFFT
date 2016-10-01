@@ -325,7 +325,8 @@ class GpuNUFFTOperatorFactory
   void checkMemoryConsumption(Dimensions &kSpaceDims,
                               const IndType &sectorWidth, const DType &osf,
                               Dimensions &imgDims, Dimensions &densDims,
-                              Dimensions &sensDims);
+                              Dimensions &sensDims,
+                              const IndType kernelWidth);
 
  private:
   /** \brief Flag to indicate texture interpolation */

@@ -122,7 +122,7 @@ void gpuNUFFT::GpuNUFFTOperatorFactory::computeProcessingOrder(
 gpuNUFFT::Array<IndType> gpuNUFFT::GpuNUFFTOperatorFactory::assignSectors(
     gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp, gpuNUFFT::Array<DType> &kSpaceTraj)
 {
-  debug("in assign sectors\n");
+  debug("in assign sectors");
 
   gpuNUFFTOp->setGridSectorDims(computeSectorCountPerDimension(
       gpuNUFFTOp->getGridDims(), gpuNUFFTOp->getSectorWidth()));
@@ -170,7 +170,7 @@ gpuNUFFT::Array<IndType> gpuNUFFT::GpuNUFFTOperatorFactory::assignSectors(
       assignedSectors.data[cCnt] = sector;
     }
   }
-  debug("finished assign sectors\n");
+  debug("finished assign sectors");
   return assignedSectors;
 }
 
@@ -313,13 +313,13 @@ gpuNUFFT::GpuNUFFTOperatorFactory::createNewGpuNUFFTOperator(
   {
     if (useTextures)
     {
-      debug("creating Balanced 2D TextureLookup Operator!\n");
+      debug("creating Balanced TextureLookup Operator!");
       return new gpuNUFFT::BalancedTextureGpuNUFFTOperator(
           kernelWidth, sectorWidth, osf, imgDims, TEXTURE2D_LOOKUP);
     }
     else
     {
-      debug("creating Balanced GpuNUFFT Operator!\n");
+      debug("creating Balanced GpuNUFFT Operator!");
       return new gpuNUFFT::BalancedGpuNUFFTOperator(kernelWidth, sectorWidth,
                                                     osf, imgDims);
     }
@@ -327,13 +327,13 @@ gpuNUFFT::GpuNUFFTOperatorFactory::createNewGpuNUFFTOperator(
 
   if (useTextures)
   {
-    debug("creating 2D TextureLookup Operator!\n");
+    debug("creating 2D TextureLookup Operator!");
     return new gpuNUFFT::TextureGpuNUFFTOperator(kernelWidth, sectorWidth, osf,
                                                  imgDims, TEXTURE2D_LOOKUP);
   }
   else
   {
-    debug("creating DEFAULT GpuNUFFT Operator!\n");
+    debug("creating DEFAULT GpuNUFFT Operator!");
     return new gpuNUFFT::GpuNUFFTOperator(kernelWidth, sectorWidth, osf,
                                           imgDims);
   }
@@ -347,7 +347,7 @@ gpuNUFFT::GpuNUFFTOperatorFactory::createGpuNUFFTOperator(
 {
   // validate arguments
   checkMemoryConsumption(kSpaceTraj.dim, sectorWidth, osf, imgDims,
-                         densCompData.dim, sensData.dim);
+                         densCompData.dim, sensData.dim, kernelWidth);
 
   if (kSpaceTraj.dim.channels > 1)
     throw std::invalid_argument(
@@ -434,7 +434,7 @@ gpuNUFFT::GpuNUFFTOperatorFactory::createGpuNUFFTOperator(
   // free temporary array
   free(assignedSectors.data);
 
-  debug("finished creation of gpuNUFFT operator\n");
+  debug("finished creation of gpuNUFFT operator");
   return gpuNUFFTOp;
 }
 
@@ -510,7 +510,8 @@ gpuNUFFT::GpuNUFFTOperatorFactory::loadPrecomputedGpuNUFFTOperator(
 
 void gpuNUFFT::GpuNUFFTOperatorFactory::checkMemoryConsumption(
     Dimensions &kSpaceDims, const IndType &sectorWidth, const DType &osf,
-    Dimensions &imgDims, Dimensions &densDims, Dimensions &sensDims)
+    Dimensions &imgDims, Dimensions &densDims, Dimensions &sensDims,
+    const IndType kernelWidth)
 {
   size_t multiplier = sizeof(DType);
   size_t complexMultiplier = 2 * multiplier;
@@ -536,11 +537,33 @@ void gpuNUFFT::GpuNUFFTOperatorFactory::checkMemoryConsumption(
 
   size_t total = prop.totalGlobalMem;
 
-  std::stringstream ss(
-      "Required device memory too large for selected device!\n");
-  ss << "Total available memory: " << total << std::endl;
-  ss << "Required memory: " << estMem << std::endl;
-
   if (total < estMem)
+  {
+    std::stringstream ss(
+        "Required device memory too large for selected device!\n");
+    ss << "Total available memory: " << total << std::endl;
+    ss << "Required memory: " << estMem << std::endl;
+
     throw std::runtime_error(ss.str());
+  }
+
+  // check shared memory consumption which basically depends
+  // on selected sector width
+  IndType sectorPadDims =
+      sectorWidth + 2 * (int)(floor((DType)kernelWidth / (DType)2.0));
+  IndType factor = (imgDims.depth > 0) ? 3 : 2;
+
+  size_t requiredSharedMem =
+      std::pow(sectorPadDims, factor) * complexMultiplier;
+
+  if (requiredSharedMem > prop.sharedMemPerBlock)
+  {
+    std::stringstream ss(
+        "Required shared memory too large for selected device!\n");
+    ss << "Total available shared memory: " << prop.sharedMemPerBlock
+       << std::endl;
+    ss << "Required shared memory: " << requiredSharedMem << std::endl;
+
+    throw std::runtime_error(ss.str());
+  }
 }

@@ -31,7 +31,13 @@ macro( matlab_config )
     SET( MATLAB_LIBRARIES ${MATLAB_ROOT_DIR}/bin/${LIB_DIR} CACHE STRING "" FORCE )
     SET( MATLAB_ENG_LIBRARY ${MATLAB_ROOT_DIR}/extern/lib/${LIB_DIR}/microsoft CACHE STRING "" FORCE )
 
-else(WIN32)
+  elseif(UNIX AND APPLE)
+    # Use values defined by FindMatlab
+    SET(MATLAB_INCLUDE_DIR ${Matlab_INCLUDE_DIRS})
+    SET(MATLAB_MEX_LIBRARY ${Matlab_MEX_LIBRARY})
+    SET(MATLAB_MX_LIBRARY ${Matlab_MX_LIBRARY})
+    SET(MATLAB_ENG_LIBRARY ${Matlab_ENG_LIBRARY})
+  elseif(UNIX)
     #SET (MATLAB_ROOT_DIR "/usr/local/MATLAB/R2010b")
     SET( MATLAB_INCLUDE_DIR "${MATLAB_ROOT_DIR}/extern/include" CACHE STRING "" FORCE )
 
@@ -56,7 +62,7 @@ else(WIN32)
         ${MATLAB_MX_LIBRARY}
         ${MATLAB_ENG_LIBRARY}  
         )
-  endif(WIN32)
+  endif()
 endmacro()
 
 matlab_config()
@@ -95,6 +101,9 @@ if(WIN32)
 	MESSAGE(STATUS "set Win 32 suffix")
 	SET(MEX_SUFFIX .mexw32)
   endif(CMAKE_SIZEOF_VOID_P MATCHES "8")
+elseif(UNIX AND APPLE)
+  # Use value defined by FindMatlab
+  SET(MEX_SUFFIX ${Matlab_MEX_EXTENSION})
 else(UNIX)
   if (CMAKE_SIZEOF_VOID_P MATCHES "8")
 	MESSAGE(STATUS "set Linux 64 suffix")
@@ -104,7 +113,7 @@ else(UNIX)
     SET(MEX_SUFFIX .mexglx)
   endif(CMAKE_SIZEOF_VOID_P MATCHES "8")
 endif()
-  
+
 if(WIN32)
   SET_TARGET_PROPERTIES(${GRID_MEX_ADJ_NAME} PROPERTIES
 						SUFFIX ${MEX_SUFFIX}

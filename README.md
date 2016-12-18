@@ -1,7 +1,7 @@
 ## gpuNUFFT - GPU Regridding of arbitrary 3-D/2-D MRI data
 
-- Andreas Schwarzl - andreas.schwarzl@student.tugraz.at
-- Florian Knoll - florian.knoll@nyumc.org
+- Andreas Schwarzl - andy.schwarzl[at]gmail.com
+- Florian Knoll - florian.knoll[at]nyumc.org
 
 -------------------------------------------------------------------------------
 INFO:

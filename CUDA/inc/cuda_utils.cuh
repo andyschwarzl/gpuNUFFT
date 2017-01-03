@@ -5,7 +5,7 @@
 
 __constant__ gpuNUFFT::GpuNUFFTInfo GI;
 
-__constant__ DType KERNEL[5000];
+__constant__ DType KERNEL[10000];
 
 texture<float, 1, cudaReadModeElementType> texKERNEL;
 texture<float, 2, cudaReadModeElementType> texKERNEL2D;

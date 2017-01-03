@@ -48,9 +48,6 @@
  * defined by Beatty et al. */
 #define MAXIMUM_ALIASING_ERROR_LIN_INT 0.0001f
 
-/** \brief Math round implementation */
-#define round(x) floor((x)+0.5)
-
 /** \brief Square value */
 #define sqr(__se) ((__se) * (__se))
 /** \brief beta function used in interpolation function. See Beatty et al. */

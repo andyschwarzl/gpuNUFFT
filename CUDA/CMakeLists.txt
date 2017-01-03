@@ -76,10 +76,10 @@ endif(GPU_DOUBLE_PREC)
 
 IF(CMAKE_BUILD_TYPE MATCHES Debug)
   MESSAGE("debug mode")
-  SET(CUDA_NVCC_FLAGS "-arch;sm_20;--ptxas-options=-v")
+  list(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_20,code=sm_20 -gencode arch=compute_30,code=sm_30 -gencode arch=compute_50,code=sm_50 --ptxas-options=-v)
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -g")
 ELSE(CMAKE_BUILD_TYPE)
-  SET(CUDA_NVCC_FLAGS "-arch;sm_20;")
+  list(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_20,code=sm_20 -gencode arch=compute_30,code=sm_30 -gencode arch=compute_50,code=sm_50)
 ENDIF()
 
 MESSAGE(STATUS "setting NVCC FLAGS to: ${CUDA_NVCC_FLAGS}")

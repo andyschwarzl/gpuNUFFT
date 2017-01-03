@@ -94,7 +94,7 @@ __inline__ __device__ __host__ void set_minmax(DType *x, int *min, int *max,
 
 long calculateGrid3KernelSize();
 long calculateGrid3KernelSize(DType osr, DType kernel_radius);
-long calculateKernelSizeLinInt(double osr, double kernel_radius);
+long calculateKernelSizeLinInt(DType osr, DType kernel_radius);
 
 /** \brief Loads a radius of the circularly symmetric kernel into a 1-d array,
 * with

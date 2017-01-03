@@ -378,7 +378,7 @@ TEST(TestGPUGpuNUFFTConv,GPUTest_2SectorsKernel3nData)
   //kernel width
   int kernel_width = 3;
 
-  long kernel_entries = calculateGrid3KernelSize(osr, kernel_width/2.0f);
+  long kernel_entries = calculateGrid3KernelSize(osr, kernel_width);
 
   DType *kern = (DType*) calloc(kernel_entries,sizeof(DType));
   load1DKernel(kern,kernel_entries,kernel_width,osr);
@@ -1127,7 +1127,7 @@ TEST(TestGPUGpuNUFFTConv,MatlabTest_8SK3w32)
   //kernel width
   int kernel_width = 3;
 
-  long kernel_entries = calculateGrid3KernelSize(osr, kernel_width/2.0f);
+  long kernel_entries = calculateGrid3KernelSize(osr, kernel_width);
 
   DType *kern = (DType*) calloc(kernel_entries,sizeof(DType));
   load1DKernel(kern,kernel_entries,kernel_width,osr);

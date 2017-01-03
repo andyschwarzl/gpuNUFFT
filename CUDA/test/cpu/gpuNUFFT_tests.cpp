@@ -96,7 +96,7 @@ TEST(TestGpuNUFFT,CPUTest_1SectorKernel5)
 	//kernel width
 	int kernel_width = 5;
 
-	long kernel_entries = calculateGrid3KernelSize(osr, kernel_width/2.0f);
+	long kernel_entries = calculateGrid3KernelSize(osr, kernel_width);
 
 	DType *kern = (DType*) calloc(kernel_entries,sizeof(DType));
 	load1DKernel(kern,kernel_entries,kernel_width,osr);
@@ -180,7 +180,7 @@ TEST(TestGpuNUFFT,CPUTest_1SectorKernel3nData)
 	//kernel width
 	int kernel_width = 3;
 
-	long kernel_entries = calculateGrid3KernelSize(osr, kernel_width/2.0f);
+	long kernel_entries = calculateGrid3KernelSize(osr, kernel_width);
 
 	DType *kern = (DType*) calloc(kernel_entries,sizeof(DType));
 	load1DKernel(kern,kernel_entries,kernel_width,osr);
@@ -284,7 +284,7 @@ TEST(TestGpuNUFFT,CPUTest_2SectorsKernel3nData)
 	//kernel width
 	int kernel_width = 3;
 
-	long kernel_entries = calculateGrid3KernelSize(osr, kernel_width/2.0f);
+	long kernel_entries = calculateGrid3KernelSize(osr, kernel_width);
 
 	DType *kern = (DType*) calloc(kernel_entries,sizeof(DType));
 	load1DKernel(kern,kernel_entries,kernel_width,osr);
@@ -404,7 +404,7 @@ TEST(TestGpuNUFFT,CPUTest_8SectorsKernel3nData)
 	//kernel width
 	int kernel_width = 3;
 
-	long kernel_entries = calculateGrid3KernelSize(osr, kernel_width/2.0f);
+	long kernel_entries = calculateGrid3KernelSize(osr, kernel_width);
 
 	DType *kern = (DType*) calloc(kernel_entries,sizeof(DType));
 	load1DKernel(kern,kernel_entries,kernel_width,osr);
@@ -556,7 +556,7 @@ TEST(TestGpuNUFFT,CPUTest_8SectorsKernel4nData)
 	//kernel width
 	int kernel_width = 4;
 
-	long kernel_entries = calculateGrid3KernelSize(osr, kernel_width/2.0f);
+	long kernel_entries = calculateGrid3KernelSize(osr, kernel_width);
 
 	DType *kern = (DType*) calloc(kernel_entries,sizeof(DType));
 	load1DKernel(kern,kernel_entries,kernel_width,osr);
@@ -707,7 +707,7 @@ TEST(TestGpuNUFFT,CPUTest_8SectorsKernel3nDataw32)
 	//kernel width
 	int kernel_width = 3;
 
-	long kernel_entries = calculateGrid3KernelSize(osr, kernel_width/2.0f);
+	long kernel_entries = calculateGrid3KernelSize(osr, kernel_width);
 
 	DType *kern = (DType*) calloc(kernel_entries,sizeof(DType));
 	load1DKernel(kern,kernel_entries,kernel_width,osr);
@@ -826,7 +826,7 @@ TEST(TestGpuNUFFT,MatlabTest_8SK3w32)
 	//kernel width
 	int kernel_width = 3;
 
-	long kernel_entries = calculateGrid3KernelSize(osr, kernel_width/2.0f);
+	long kernel_entries = calculateGrid3KernelSize(osr, kernel_width);
 
 	DType *kern = (DType*) calloc(kernel_entries,sizeof(DType));
 	load1DKernel(kern,kernel_entries,kernel_width,osr);
@@ -946,7 +946,7 @@ TEST(TestGpuNUFFT,CPUTest_8SectorsKernel5nData)
 	//kernel width
 	int kernel_width = 5;
 
-	long kernel_entries = calculateGrid3KernelSize(osr, kernel_width/2.0f);
+	long kernel_entries = calculateGrid3KernelSize(osr, kernel_width);
 
 	DType *kern = (DType*) calloc(kernel_entries,sizeof(DType));
 	load1DKernel(kern,kernel_entries,kernel_width,osr);
@@ -1096,7 +1096,7 @@ TEST(TestGpuNUFFT,CPUTest_Kernel5w64)
 	float osr = DEFAULT_OVERSAMPLING_RATIO;
 	//kernel width
 	int kernel_width = 5;
-	long kernel_entries = calculateGrid3KernelSize(osr, kernel_width/2.0f);
+	long kernel_entries = calculateGrid3KernelSize(osr, kernel_width);
 	DType *kern = (DType*) calloc(kernel_entries,sizeof(DType));
 	load1DKernel(kern,kernel_entries,kernel_width,osr);
 

@@ -44,23 +44,19 @@ long calculateGrid3KernelSize()
 // of 0.001
 //
 // based on Beatty et al. MRM 24, 2005
-long calculateGrid3KernelSize(DType osr, DType kernel_radius)
+long calculateGrid3KernelSize(DType osr, DType kernel_width)
 {
   long kernel_osf = (long)(floor((DType)0.91 / (osr * MAXIMUM_ALIASING_ERROR)));
 
-  DType kernel_radius_osr = static_cast<DType>(osr * kernel_radius);
-
-  return (long)(kernel_osf * kernel_radius_osr);
+  return (long)(kernel_osf * kernel_width);
 }
 
-long calculateKernelSizeLinInt(double osr, double kernel_radius)
+long calculateKernelSizeLinInt(DType osr, DType kernel_width)
 {
   long kernel_osf =
       (long)(floor(sqrt(0.37 / (sqr(osr) * MAXIMUM_ALIASING_ERROR_LIN_INT))));
 
-  DType kernel_radius_osr = static_cast<DType>(osr * kernel_radius);
-
-  return (long)(kernel_osf * kernel_radius_osr);
+  return (long)(kernel_osf * kernel_width);
 }
 
 void loadGrid3Kernel(DType *kernTab)

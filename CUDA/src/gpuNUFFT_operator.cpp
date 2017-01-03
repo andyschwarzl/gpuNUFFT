@@ -41,7 +41,7 @@ void gpuNUFFT::GpuNUFFTOperator::writeOrdered(gpuNUFFT::Array<T> &destArray,
 
 void gpuNUFFT::GpuNUFFTOperator::initKernel()
 {
-  IndType kernelSize = calculateGrid3KernelSize(osf, kernelWidth / 2.0f);
+  IndType kernelSize = calculateGrid3KernelSize(osf, kernelWidth);
   this->kernel.dim.length = kernelSize;
   this->kernel.data = (DType *)calloc(this->kernel.count(), sizeof(DType));
   load1DKernel(this->kernel.data, (int)kernelSize, (int)kernelWidth, osf);
@@ -530,6 +530,7 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       printf("error at adj thread synchronization 8: %s\n",
              cudaGetErrorString(cudaGetLastError()));
+			 
 
     performFFTScaling(imdata_d, gi_host->im_width_dim, gi_host);
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
@@ -786,6 +787,7 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(
       performDeapodization(imdata_d, deapo_d, gi_host);
     else
       performDeapodization(imdata_d, gi_host);
+	  
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       printf("error at adj thread synchronization 8: %s\n",
              cudaGetErrorString(cudaGetLastError()));
@@ -950,7 +952,7 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(
       performForwardDeapodization(imdata_d, deapo_d, gi_host);
     else
       performForwardDeapodization(imdata_d, gi_host);
-
+	  
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       printf("error at thread synchronization 2: %s\n",
              cudaGetErrorString(cudaGetLastError()));
@@ -1148,7 +1150,7 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(
       performForwardDeapodization(imdata_d, deapo_d, gi_host);
     else
       performForwardDeapodization(imdata_d, gi_host);
-
+	  
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       printf("error at thread synchronization 2: %s\n",
              cudaGetErrorString(cudaGetLastError()));

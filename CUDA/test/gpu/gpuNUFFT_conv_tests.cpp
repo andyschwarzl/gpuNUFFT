@@ -1691,13 +1691,11 @@ TEST(TestAnisotropicSW, Test_IndicesForDifferentSWsandKW1)
 {
   gpuNUFFT::Dimensions gridDimsOrig(12, 7, 0);
 
-  IndType3 gridDims;
-  gridDims.x = 12;
-  gridDims.y = 7;
+  const IndType3 gridDims(12,7,0);
 
   int kw = 4;
 
-  int outArray[gridDims.y][gridDims.x];
+  int outArray[12][7];
   for (int sw = 3; sw <= std::min(gridDimsOrig.width, gridDimsOrig.height);
        sw++)
   {

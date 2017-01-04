@@ -231,7 +231,7 @@ TEST(TestGPUGpuNUFFTDeapo, KernelCall1Sector2Coils)
   %.2f",gdata[get3DC2lin(i,j,16,im_width)].x,gdata[coil_offset+get3DC2lin(i,j,16,im_width)].x);
     printf("\n");
   }*/
-  EXPECT_NEAR(gdata[get3DC2lin(0, 0, 16, im_width)].x, 0.016846, epsilon);
+  EXPECT_NEAR(gdata[get3DC2lin(0, 0, 16, im_width)].x, 0.005513, epsilon);
   // EXPECT_NEAR(gdata[coil_offset +
   // get3DC2lin(0,0,16,im_width)].x,0.00928f,epsilon);
   EXPECT_NEAR(gdata[get3DC2lin(10, 0, 16, im_width)].x,
@@ -426,7 +426,7 @@ TEST(TestGPUGpuNUFFTDeapo, 2D_32_32_30_B1)
     printf("grid_size: %d\n", gpuNUFFTOp->getImageDims().count());
 
   EXPECT_EQ(1, gdataArray.dim.channels);
-  EXPECT_NEAR(gdata[computeXY2Lin(0, 0, imgDims)].x, 2.17159, epsilon);
+  EXPECT_NEAR(gdata[computeXY2Lin(0, 0, imgDims)].x, 1.03125, epsilon);
 
   free(gdata);
   free(data);

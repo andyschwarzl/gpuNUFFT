@@ -80,7 +80,7 @@ TEST(TestGPUGpuNUFFTForwardConv, KernelCall1Sector)
     {
       printf("%.4f %.4f \n", dataArray.data[j].x, dataArray.data[j].y);
     }
-  EXPECT_NEAR(0.1561f, dataArray.data[0].x, epsilon);
+  EXPECT_NEAR(0.0001973f, dataArray.data[0].x, epsilon);
 
   if (DEBUG)
     printf("\n");
@@ -154,7 +154,7 @@ TEST(TestGPUGpuNUFFTForwardConv, KernelCall1Sector2Channels)
       printf("%.4f %.4f \n", dataArray.data[j].x, dataArray.data[j].y);
     }
   }
-  EXPECT_NEAR(0.1561f, dataArray.data[0].x, epsilon);
+  EXPECT_NEAR(0.0001973f, dataArray.data[0].x, epsilon);
   EXPECT_EQ(dataArray.data[1].x, dataArray.data[0].x);
   EXPECT_EQ(dataArray.data[1].y, dataArray.data[0].y);
 
@@ -246,7 +246,7 @@ TEST(TestGPUGpuNUFFTForwardConv, 2D_32_32_4)
 
     for (int chn = 0; chn < n_coils; chn++)
     {
-      EXPECT_NEAR(3.2127f, dataArray.data[0 + chn * data_count].x, epsilon);
+      EXPECT_NEAR(0.02, dataArray.data[0 + chn * data_count].x, epsilon);
       EXPECT_NEAR(dataArray.data[0].x, dataArray.data[0 + chn * data_count].x,
                   1E-5);
       EXPECT_NEAR(dataArray.data[0].y, dataArray.data[0 + chn * data_count].y,

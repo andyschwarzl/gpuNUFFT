@@ -465,18 +465,15 @@ __global__ void fftShiftKernel2D(CufftType* gdata, IndType3 offset, int N)
 void performDeapodization(CufftType* imdata_d,
   gpuNUFFT::GpuNUFFTInfo* gi_host)
 {
-  DType beta = (DType)BETA(gi_host->kernel_width,gi_host->osr);
+  DType beta = (DType)BETA(gi_host->kernel_width, gi_host->osr);
 
-  //Calculate normalization value (should be at position 0 in interval [-N/2,N/2]) 
-  DType norm_val_x = calculateDeapodizationValue(gi_host->im_width_offset.x, gi_host->grid_width_inv.x, gi_host->kernel_width, beta);
-  DType norm_val_y = calculateDeapodizationValue(gi_host->im_width_offset.y, gi_host->grid_width_inv.y, gi_host->kernel_width, beta);
-  DType norm_val_z = calculateDeapodizationValue(gi_host->im_width_offset.z, gi_host->grid_width_inv.z, gi_host->kernel_width, beta);
-  DType norm_val;
+  //Calculate normalization value
+  DType norm_val = I0_BETA(gi_host->kernel_width, gi_host->osr) / (DType)gi_host->kernel_width;
 
   if (gi_host->is2Dprocessing)
-    norm_val = norm_val_x * norm_val_y;
+    norm_val = norm_val * norm_val;
   else
-    norm_val = norm_val_x * norm_val_y * norm_val_z;
+    norm_val = norm_val * norm_val * norm_val;
 
   if (DEBUG)
     printf("running deapodization with norm_val %.2f\n",norm_val);
@@ -525,17 +522,14 @@ void performDeapodization(CufftType* imdata_d,
 void precomputeDeapodization(DType* deapo_d,
   gpuNUFFT::GpuNUFFTInfo* gi_host)
 {
-  DType beta = (DType)BETA(gi_host->kernel_width,gi_host->osr);
+  DType beta = (DType)BETA(gi_host->kernel_width, gi_host->osr);
 
-  //Calculate normalization value (should be at position 0 in interval [-N/2,N/2]) 
-  DType norm_val_x = calculateDeapodizationValue(gi_host->im_width_offset.x, gi_host->grid_width_inv.x, gi_host->kernel_width, beta);
-  DType norm_val_y = calculateDeapodizationValue(gi_host->im_width_offset.y, gi_host->grid_width_inv.y, gi_host->kernel_width, beta);
-  DType norm_val_z = calculateDeapodizationValue(gi_host->im_width_offset.z, gi_host->grid_width_inv.z, gi_host->kernel_width, beta);
-  DType norm_val;
+  //Calculate normalization value
+  DType norm_val = I0_BETA(gi_host->kernel_width, gi_host->osr) / (DType)gi_host->kernel_width;
   if (gi_host->is2Dprocessing)
-    norm_val = norm_val_x * norm_val_y;
+    norm_val = norm_val * norm_val;
   else
-    norm_val = norm_val_x * norm_val_y * norm_val_z;
+    norm_val = norm_val * norm_val * norm_val;
 
   if (DEBUG)
     printf("running deapodization precomputation with norm_val %.2f\n",norm_val);
@@ -742,20 +736,18 @@ __global__ void paddingKernel2D(DType2* imdata,CufftType* gdata, IndType3 offset
 void performForwardDeapodization(DType2* imdata_d,
   gpuNUFFT::GpuNUFFTInfo* gi_host)
 {
-  DType beta = (DType)BETA(gi_host->kernel_width,gi_host->osr);
+  DType beta = (DType)BETA(gi_host->kernel_width, gi_host->osr);
 
   dim3 grid_dim(getOptimalGridDim(gi_host->im_width_dim,THREAD_BLOCK_SIZE));
   dim3 block_dim(THREAD_BLOCK_SIZE);
 
-  //Calculate normalization value (should be at position 0 in interval [-N/2,N/2]) 
-  DType norm_val_x = calculateDeapodizationValue(gi_host->im_width_offset.x, gi_host->grid_width_inv.x, gi_host->kernel_width, beta);
-  DType norm_val_y = calculateDeapodizationValue(gi_host->im_width_offset.y, gi_host->grid_width_inv.y, gi_host->kernel_width, beta);
-  DType norm_val_z = calculateDeapodizationValue(gi_host->im_width_offset.z, gi_host->grid_width_inv.z, gi_host->kernel_width, beta);
-  DType norm_val;
+  //Calculate normalization value
+  DType norm_val = I0_BETA(gi_host->kernel_width, gi_host->osr) / (DType)gi_host->kernel_width;
+
   if (gi_host->is2Dprocessing)
-    norm_val = norm_val_x * norm_val_y;
+    norm_val = norm_val * norm_val;
   else
-    norm_val = norm_val_x * norm_val_y * norm_val_z;
+    norm_val = norm_val * norm_val * norm_val;
 
   if (gi_host->is2Dprocessing)
     forwardDeapodizationKernel2D<<<grid_dim,block_dim>>>(imdata_d,beta,norm_val,gi_host->im_width_dim);

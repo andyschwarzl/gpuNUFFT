@@ -527,11 +527,11 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(
       performDeapodization(imdata_d, deapo_d, gi_host);
     else
       performDeapodization(imdata_d, gi_host);
+
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       printf("error at adj thread synchronization 8: %s\n",
              cudaGetErrorString(cudaGetLastError()));
-			 
-
+	
     performFFTScaling(imdata_d, gi_host->im_width_dim, gi_host);
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       printf("error: at adj  thread synchronization 9: %s\n",

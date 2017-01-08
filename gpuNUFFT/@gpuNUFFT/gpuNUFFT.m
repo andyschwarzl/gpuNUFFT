@@ -2,12 +2,11 @@ function [res] = gpuNUFFT(k,w,osf,wg,sw,imageDim,sens,varargin)
 % function m = gpuNUFFT(k,w,osf,wg,sw,imageDim,sens,varargin)
 %
 %     k -- k-trajectory, scaled -0.5 to 0.5
-%          dims: 3 ... x, y and z
+%          dims: 2 (3) ... x y (z)
 %                N ... # sample points
-%                nCh ... # channels / coils
 %     w -- k-space weighting, density compensation
 %     osf -- oversampling factor (usually between 1 and 2)
-%     wg -- kernel width (usually 3 to 7)
+%     wg -- interpolation kernel width (usually 3 to 7)
 %     sw -- sector width to use
 %     imageDim -- image dimensions [n n n] 
 %     sens -- coil sensitivity data
@@ -64,17 +63,21 @@ if (length(imageDim) > 3)
     error('gpuNUFFT:init:imageDims','Image dimensions too large. Currently supported: 2d, 3d');
 end
 
+is2Dprocessing = false;
 if (length(imageDim) < 3) 
     imageDim(3) = 0;
+    is2Dprocessing = true;
 end
 
 res.adjoint = 0;
 res.imageDim = imageDim;
 
 % adapt k space data dimension
-% transpose to 3 x N x nCh    
-if size(k,1) > size(k,2)
-	warning('gpuNUFFT:init:kspace','k space data passed in wrong dimensions. Expected dimensions are 3 x N x nCh - automatic transposing is applied');
+% transpose to 2 (3) x N
+kDims = size(k);
+if (kDims(1) ~= 2 && is2Dprocessing == true) || ... 
+    kDims(1) ~= 3
+	warning('gpuNUFFT:init:kspace','k space data passed in wrong dimensions. Expected dimensions are 2(3) x N - automatic transposing is applied');
 	k = k';
 end
 
@@ -93,7 +96,7 @@ res.op.params.img_dims = uint32(imageDim);
 res.op.params.osr = single(osf);
 res.op.params.kernel_width = uint32(wg);
 res.op.params.sector_width = uint32(sw);
-res.op.params.trajectory_length = uint32(length(k));
+res.op.params.trajectory_length = uint32(size(k,2));
 res.op.params.use_textures = use_textures;
 res.op.params.balance_workload = balance_workload;
 res.op.params.is2d_processing = imageDim(3) == 0;

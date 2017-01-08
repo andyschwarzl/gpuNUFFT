@@ -108,6 +108,7 @@ void readMatlabInputArray(const mxArray *prhs[], int input_index,
   {
     for (int i = 0; i < MIN((highest_varying_dim * (*data_entries)), 100);
          i++)  // re, im
+      // Debug out does not work with complex numbers
       if (is_int)
         mexPrintf("%s: %d, ", name, (*data)[i]);
       else

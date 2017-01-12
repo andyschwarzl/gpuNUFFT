@@ -339,6 +339,66 @@ gpuNUFFT::GpuNUFFTOperatorFactory::createNewGpuNUFFTOperator(
   }
 }
 
+gpuNUFFT::Array<CufftType> gpuNUFFT::GpuNUFFTOperatorFactory::computeDeapodizationFunction(
+  const IndType &kernelWidth, const DType &osf, gpuNUFFT::Dimensions &imgDims)
+{
+  debug("compute deapodization function\n");
+  
+  // Create simple gpuNUFFT Operator
+  IndType sectorWidth = 8;
+  gpuNUFFT::GpuNUFFTOperator *deapoGpuNUFFTOp =
+    new gpuNUFFT::GpuNUFFTOperator(kernelWidth, sectorWidth, osf, imgDims);
+  
+  // Data
+  gpuNUFFT::Array<DType2> dataArray;
+  dataArray.data = (DType2*)calloc(1, sizeof(DType2)); // re + im
+  dataArray.dim.length = 1;
+  dataArray.data[0].x = 1;
+  dataArray.data[0].y = 0;
+  
+  // Coord triplet (x,y,z)
+  // should result in k-space center (0,0,0)
+  gpuNUFFT::Array<DType> kSpaceTraj;
+  if (deapoGpuNUFFTOp->is3DProcessing())
+    kSpaceTraj.data = (DType*)calloc(3, sizeof(DType)); // x,y,z
+  else
+    kSpaceTraj.data = (DType*)calloc(2, sizeof(DType)); // x,y
+  kSpaceTraj.dim.length = 1;
+  kSpaceTraj.data = (DType*)calloc(1, sizeof(IndType));
+  kSpaceTraj.dim.length = 1;
+  deapoGpuNUFFTOp->setKSpaceTraj(kSpaceTraj);
+  
+  // assign according sector to k-Space position
+  gpuNUFFT::Array<IndType> assignedSectors =
+    assignSectors(deapoGpuNUFFTOp, kSpaceTraj);
+  deapoGpuNUFFTOp->setSectorDataCount(
+    computeSectorDataCount(deapoGpuNUFFTOp, assignedSectors));
+  
+  // only one data entry, data index = 0
+  Array<IndType> dataIndices;
+  deapoGpuNUFFTOp->setDataIndices(dataIndices);
+  
+  // sector centers
+  if (deapoGpuNUFFTOp->is3DProcessing())
+    deapoGpuNUFFTOp->setSectorCenters(computeSectorCenters(deapoGpuNUFFTOp));
+  else
+    deapoGpuNUFFTOp->setSectorCenters(computeSectorCenters2D(deapoGpuNUFFTOp));
+  debug("finished creation of gpuNUFFT operator for deapo computation\n");
+
+  // Compute deapodization function by gridding of a single value positioned 
+  // in the center of k-space and by using the intended oversampling factor
+  // and interpolation kernel width
+  gpuNUFFT::Array<CufftType> deapoFunction =
+    deapoGpuNUFFTOp->performGpuNUFFTAdj(dataArray,FFT);
+  
+  free(kSpaceTraj.data);
+  free(dataArray.data);
+  free(dataIndices.data);
+  delete deapoGpuNUFFTOp;
+  
+  return deapoFunction;
+}
+
 gpuNUFFT::GpuNUFFTOperator *
 gpuNUFFT::GpuNUFFTOperatorFactory::createGpuNUFFTOperator(
     gpuNUFFT::Array<DType> &kSpaceTraj, gpuNUFFT::Array<DType> &densCompData,

@@ -327,6 +327,14 @@ class GpuNUFFTOperatorFactory
                               Dimensions &imgDims, Dimensions &densDims,
                               Dimensions &sensDims);
 
+  /**
+  * \brief Computation of the deapodization function
+  * 
+  * @returns scalar array in image dimensions (imgDims)
+  */
+  gpuNUFFT::Array<CufftType> computeDeapodizationFunction(const IndType &kernelWidth,
+    const DType &osf, gpuNUFFT::Dimensions &imgDims);
+
  private:
   /** \brief Flag to indicate texture interpolation */
   bool useTextures;

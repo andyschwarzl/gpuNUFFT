@@ -95,6 +95,10 @@ class GpuNUFFTOperator
   {
     this->dens = dens;
   }
+  void setDeapodizationFunction(Array<DType> deapo)
+  {
+    this->deapo= deapo;
+  }
 
   void setImageDims(Dimensions dims)
   {
@@ -357,6 +361,12 @@ class GpuNUFFTOperator
     * dimensions: dataCount
     */
   Array<DType> dens;
+
+  /** \brief Deapodization function array
+  * 
+  * dimensions: image dimensions
+  */
+  Array<DType> deapo;
 
   /** \brief Sector centers array.
     * sector centers

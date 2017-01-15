@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <sstream>
 #include "precomp_kernels.hpp"
+#include <limits>
 
 void gpuNUFFT::GpuNUFFTOperatorFactory::setUseTextures(bool useTextures)
 {
@@ -339,7 +340,7 @@ gpuNUFFT::GpuNUFFTOperatorFactory::createNewGpuNUFFTOperator(
   }
 }
 
-gpuNUFFT::Array<CufftType> gpuNUFFT::GpuNUFFTOperatorFactory::computeDeapodizationFunction(
+gpuNUFFT::Array<DType> gpuNUFFT::GpuNUFFTOperatorFactory::computeDeapodizationFunction(
   const IndType &kernelWidth, const DType &osf, gpuNUFFT::Dimensions &imgDims)
 {
   debug("compute deapodization function\n");
@@ -364,8 +365,6 @@ gpuNUFFT::Array<CufftType> gpuNUFFT::GpuNUFFTOperatorFactory::computeDeapodizati
   else
     kSpaceTraj.data = (DType*)calloc(2, sizeof(DType)); // x,y
   kSpaceTraj.dim.length = 1;
-  kSpaceTraj.data = (DType*)calloc(1, sizeof(IndType));
-  kSpaceTraj.dim.length = 1;
   deapoGpuNUFFTOp->setKSpaceTraj(kSpaceTraj);
   
   // assign according sector to k-Space position
@@ -376,6 +375,8 @@ gpuNUFFT::Array<CufftType> gpuNUFFT::GpuNUFFTOperatorFactory::computeDeapodizati
   
   // only one data entry, data index = 0
   Array<IndType> dataIndices;
+  dataIndices.data = (IndType*)calloc(1, sizeof(IndType));
+  dataIndices.dim.length = 1;
   deapoGpuNUFFTOp->setDataIndices(dataIndices);
   
   // sector centers
@@ -395,8 +396,26 @@ gpuNUFFT::Array<CufftType> gpuNUFFT::GpuNUFFTOperatorFactory::computeDeapodizati
   free(dataArray.data);
   free(dataIndices.data);
   delete deapoGpuNUFFTOp;
-  
-  return deapoFunction;
+
+  gpuNUFFT::Array<DType> deapoAbs;
+  deapoAbs.data = (DType*)malloc(deapoFunction.count() * sizeof(DType));
+  deapoAbs.dim = deapoFunction.dim;
+
+  DType maxDeapoVal = 0;
+  DType minDeapoVal = std::numeric_limits<DType>::max();
+  for (unsigned cnt = 0; cnt < deapoFunction.count(); cnt++)
+  {
+    deapoAbs.data[cnt] = std::sqrt(std::pow(deapoFunction.data[cnt].x,2.0) + std::pow(deapoFunction.data[cnt].y, 2.0));
+    if (deapoAbs.data[cnt] > maxDeapoVal)
+      maxDeapoVal = deapoAbs.data[cnt];
+    if (deapoAbs.data[cnt] < minDeapoVal)
+      minDeapoVal = deapoAbs.data[cnt];
+  }
+  debug("Max. Deapo Value: " + std::to_string(maxDeapoVal) + "\n");
+  debug("Min. Deapo Value: " + std::to_string(minDeapoVal) + "\n");
+
+  free(deapoFunction.data);
+  return deapoAbs;
 }
 
 gpuNUFFT::GpuNUFFTOperator *
@@ -494,7 +513,11 @@ gpuNUFFT::GpuNUFFTOperatorFactory::createGpuNUFFTOperator(
   // free temporary array
   free(assignedSectors.data);
 
+  gpuNUFFTOp->setDeapodizationFunction(
+    this->computeDeapodizationFunction(kernelWidth, osf, imgDims));
+
   debug("finished creation of gpuNUFFT operator\n");
+  
   return gpuNUFFTOp;
 }
 

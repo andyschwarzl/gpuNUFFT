@@ -332,7 +332,7 @@ class GpuNUFFTOperatorFactory
   * 
   * @returns scalar array in image dimensions (imgDims)
   */
-  gpuNUFFT::Array<CufftType> computeDeapodizationFunction(const IndType &kernelWidth,
+  gpuNUFFT::Array<DType> computeDeapodizationFunction(const IndType &kernelWidth,
     const DType &osf, gpuNUFFT::Dimensions &imgDims);
 
  private:

@@ -137,15 +137,15 @@ gpuNUFFT::Array<DType> gpuNUFFT::GpuNUFFTOperatorMatlabFactory::initDensData(
 }
 
 gpuNUFFT::Array<DType> gpuNUFFT::GpuNUFFTOperatorMatlabFactory::initDeapoData(
-  gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp)
+  IndType imgDimsCount)
 {
   if (MATLAB_DEBUG)
-    mexPrintf("init Deapo Output Array: %d\n", gpuNUFFTOp->getImageDims().count());
-  plhs[6] = createDeapoArray(gpuNUFFTOp->getImageDims().count());
+    mexPrintf("init Deapo Output Array: %d\n", imgDimsCount);
+  plhs[6] = createDeapoArray(imgDimsCount);
 
   Array<DType> deapoData;
   deapoData.data = (DType *)mxGetData(plhs[6]);
-  deapoData.dim.length = gpuNUFFTOp->getImageDims().count();
+  deapoData.dim.length = imgDimsCount;
 
   return deapoData;
 }

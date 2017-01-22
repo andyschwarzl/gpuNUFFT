@@ -280,7 +280,7 @@ class GpuNUFFTOperatorFactory
    */
   Array<IndType>
   computeSectorDataCount(gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp,
-                         gpuNUFFT::Array<IndType> assignedSectors);
+                         gpuNUFFT::Array<IndType> assignedSectors, bool useLocalMemory = false);
 
   /** \brief Method to compute the sector processing order.
     *
@@ -292,9 +292,9 @@ class GpuNUFFTOperatorFactory
   void computeProcessingOrder(GpuNUFFTOperator *gpuNUFFTOp);
 
   /** \brief Compute sector centers array */
-  Array<IndType> computeSectorCenters(GpuNUFFTOperator *gpuNUFFTOp);
+  Array<IndType> computeSectorCenters(GpuNUFFTOperator *gpuNUFFTOp, bool useLocalMemory = false);
   /** \brief Compute 2-d sector centers array */
-  Array<IndType> computeSectorCenters2D(GpuNUFFTOperator *gpuNUFFTOp);
+  Array<IndType> computeSectorCenters2D(GpuNUFFTOperator *gpuNUFFTOp, bool useLocalMemory = false);
 
   /** \brief Method to compute the sector center for the given sector index. */
   IndType computeSectorCenter(IndType var, IndType sectorWidth);

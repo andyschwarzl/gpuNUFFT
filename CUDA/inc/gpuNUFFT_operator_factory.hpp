@@ -242,7 +242,7 @@ class GpuNUFFTOperatorFactory
                                            IndType sectorCnt);
 
   /** \brief Initialization method for the deapodization function array */
-  virtual Array<DType> initDeapoData(GpuNUFFTOperator *gpuNUFFTOp);
+  virtual Array<DType> initDeapoData(IndType imgDimsCount);
 
   /** \brief Debug message */
   virtual void debug(const std::string &message);

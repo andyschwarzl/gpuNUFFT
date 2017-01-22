@@ -309,11 +309,11 @@ gpuNUFFT::Array<IndType> gpuNUFFT::GpuNUFFTOperatorFactory::initSectorCenters(
 }
 
 gpuNUFFT::Array<DType> gpuNUFFT::GpuNUFFTOperatorFactory::initDeapoData(
-  gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp)
+  IndType imgDimsCount)
 {
   gpuNUFFT::Array<DType> deapoData =
-    initLinArray<DType>(gpuNUFFTOp->getImageDims().count());
-  deapoData.dim.length = gpuNUFFTOp->getImageDims().count();
+    initLinArray<DType>(imgDimsCount);
+  deapoData.dim.length = imgDimsCount;
   return deapoData;
 }
 
@@ -410,9 +410,7 @@ gpuNUFFT::Array<DType> gpuNUFFT::GpuNUFFTOperatorFactory::computeDeapodizationFu
   free(dataIndices.data);
   delete deapoGpuNUFFTOp;
 
-  gpuNUFFT::Array<DType> deapoAbs;
-  deapoAbs.data = (DType*)malloc(deapoFunction.count() * sizeof(DType));
-  deapoAbs.dim = deapoFunction.dim;
+  Array<DType> deapoAbs = initDeapoData(deapoFunction.count());
 
   DType maxDeapoVal = 0;
   DType minDeapoVal = std::numeric_limits<DType>::max();

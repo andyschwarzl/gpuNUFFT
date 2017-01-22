@@ -75,8 +75,8 @@ res.imageDim = imageDim;
 % adapt k space data dimension
 % transpose to 2 (3) x N
 kDims = size(k);
-if (kDims(1) ~= 2 && is2Dprocessing == true) || ... 
-    kDims(1) ~= 3
+if (kDims(1) ~= 2 && is2Dprocessing) || ... 
+   (kDims(1) ~= 3 && ~is2Dprocessing)
 	warning('gpuNUFFT:init:kspace','k space data passed in wrong dimensions. Expected dimensions are 2(3) x N - automatic transposing is applied');
 	k = k';
 end

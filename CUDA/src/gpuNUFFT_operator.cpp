@@ -269,12 +269,13 @@ void gpuNUFFT::GpuNUFFTOperator::initDeviceMemory(int n_coils, int n_coils_cc)
     allocateDeviceMem<DType2>(&sens_d, imdata_count * n_coils_cc);
   }
 
-  if (n_coils > 1)
+  // TODO copy deapo function to device
+  if (this->deapo.data)
   {
     if (DEBUG)
-      printf("allocate precompute deapofunction of size %d...\n", imdata_count);
-    allocateDeviceMem<DType>(&deapo_d, imdata_count);
-    precomputeDeapodization(deapo_d, gi_host);
+      printf("allocate precomputed deapofunction of size %d...\n", imdata_count);
+    allocateAndCopyToDeviceMem<DType>(&deapo_d, this->deapo.data, imdata_count);
+    // precomputeDeapodization(deapo_d, gi_host); 
   }
   if (DEBUG)
     printf("sector pad width: %d\n", gi_host->sector_pad_width);
@@ -523,10 +524,10 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(
       printf("error at adj thread synchronization 7: %s\n",
              cudaGetErrorString(cudaGetLastError()));
     // check if precomputed deapo function can be used
-    if (n_coils > 1 && deapo_d != NULL)
+    // if (n_coils > 1 && deapo_d != NULL)
       performDeapodization(imdata_d, deapo_d, gi_host);
-    else
-      performDeapodization(imdata_d, gi_host);
+    // else
+    //  performDeapodization(imdata_d, gi_host);
 
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       printf("error at adj thread synchronization 8: %s\n",
@@ -790,10 +791,10 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(
       cudaGetErrorString(cudaGetLastError()));
 
     // check if precomputed deapo function can be used
-    if (n_coils > 1 && deapo_d != NULL)
+    // if (n_coils > 1 && deapo_d != NULL)
       performDeapodization(imdata_d, deapo_d, gi_host);
-    else
-      performDeapodization(imdata_d, gi_host);
+    //else
+    //  performDeapodization(imdata_d, gi_host);
 	  
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       printf("error at adj thread synchronization 9: %s\n",
@@ -950,10 +951,10 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(
     }
 
     // apodization Correction
-    if (n_coils > 1 && deapo_d != NULL)
+    //if (n_coils > 1 && deapo_d != NULL)
       performForwardDeapodization(imdata_d, deapo_d, gi_host);
-    else
-      performForwardDeapodization(imdata_d, gi_host);
+    //else
+    //  performForwardDeapodization(imdata_d, gi_host);
 	  
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       printf("error at thread synchronization 2: %s\n",
@@ -1148,10 +1149,10 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(
     }
 
     // apodization Correction
-    if (n_coils > 1 && deapo_d != NULL)
+    // if (n_coils > 1 && deapo_d != NULL)
       performForwardDeapodization(imdata_d, deapo_d, gi_host);
-    else
-      performForwardDeapodization(imdata_d, gi_host);
+    // else
+    //  performForwardDeapodization(imdata_d, gi_host);
 	  
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       printf("error at thread synchronization 2: %s\n",

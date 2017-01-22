@@ -308,6 +308,15 @@ gpuNUFFT::Array<IndType> gpuNUFFT::GpuNUFFTOperatorFactory::initSectorCenters(
                                sectorCnt);
 }
 
+gpuNUFFT::Array<DType> gpuNUFFT::GpuNUFFTOperatorFactory::initDeapoData(
+  gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp)
+{
+  gpuNUFFT::Array<DType> deapoData =
+    initLinArray<DType>(gpuNUFFTOp->getImageDims().count());
+  deapoData.dim.length = gpuNUFFTOp->getImageDims().count();
+  return deapoData;
+}
+
 gpuNUFFT::GpuNUFFTOperator *
 gpuNUFFT::GpuNUFFTOperatorFactory::createNewGpuNUFFTOperator(
     IndType kernelWidth, IndType sectorWidth, DType osf, Dimensions imgDims)

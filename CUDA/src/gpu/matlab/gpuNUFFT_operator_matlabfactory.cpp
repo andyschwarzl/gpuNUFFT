@@ -41,6 +41,12 @@ mxArray *createSectorCentersArray(const IndType arrSize, const IndType nDim)
   return mxCreateNumericArray(2, secSize, INDTYPE_MATLAB, mxREAL);
 }
 
+mxArray *createDeapoArray(const IndType arrSize)
+{
+  mwSize deapoSize[] = { 1, arrSize };  // scaling factor
+  return mxCreateNumericArray(2, deapoSize, mxSINGLE_CLASS, mxREAL);
+}
+
 gpuNUFFT::Array<IndType>
 gpuNUFFT::GpuNUFFTOperatorMatlabFactory::initDataIndices(
     gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp, IndType coordCnt)
@@ -128,6 +134,20 @@ gpuNUFFT::Array<DType> gpuNUFFT::GpuNUFFTOperatorMatlabFactory::initDensData(
   densData.dim.length = coordCnt;
 
   return densData;
+}
+
+gpuNUFFT::Array<DType> gpuNUFFT::GpuNUFFTOperatorMatlabFactory::initDeapoData(
+  gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp)
+{
+  if (MATLAB_DEBUG)
+    mexPrintf("init Deapo Output Array: %d\n", gpuNUFFTOp->getImageDims().count());
+  plhs[6] = createDeapoArray(gpuNUFFTOp->getImageDims().count());
+
+  Array<DType> deapoData;
+  deapoData.data = (DType *)mxGetData(plhs[6]);
+  deapoData.dim.length = gpuNUFFTOp->getImageDims().count();
+
+  return deapoData;
 }
 
 gpuNUFFT::GpuNUFFTOperator *

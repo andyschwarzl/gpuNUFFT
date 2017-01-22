@@ -174,7 +174,7 @@ class GpuNUFFTOperatorFactory
       Array<IndType> &sectorDataCount,
       gpuNUFFT::Array<IndType2> &sectorProcessingOrder,
       Array<IndType> &sectorCenters, Array<DType> &densCompData,
-      Array<DType2> &sensData, const IndType &kernelWidth,
+      Array<DType2> &sensData, Array<DType> &deapoData, const IndType &kernelWidth,
       const IndType &sectorWidth, const DType &osf, Dimensions &imgDims);
 
   /** \brief Load GpuNUFFT Operator from previously computed mappings.
@@ -198,8 +198,8 @@ class GpuNUFFTOperatorFactory
       Array<IndType> &sectorDataCount,
       gpuNUFFT::Array<IndType2> &sectorProcessingOrder,
       Array<IndType> &sectorCenters, Array<DType2> &sensData,
-      const IndType &kernelWidth, const IndType &sectorWidth, const DType &osf,
-      Dimensions &imgDims);
+      Array<DType> &deapoData, const IndType &kernelWidth, const IndType &sectorWidth, 
+      const DType &osf, Dimensions &imgDims);
 
   void setUseTextures(bool useTextures);
 

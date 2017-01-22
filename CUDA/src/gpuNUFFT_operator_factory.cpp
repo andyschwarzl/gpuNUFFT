@@ -562,7 +562,8 @@ gpuNUFFT::GpuNUFFTOperatorFactory::loadPrecomputedGpuNUFFTOperator(
     gpuNUFFT::Array<IndType> &sectorDataCount,
     gpuNUFFT::Array<IndType2> &sectorProcessingOrder,
     gpuNUFFT::Array<IndType> &sectorCenters, gpuNUFFT::Array<DType2> &sensData,
-    const IndType &kernelWidth, const IndType &sectorWidth, const DType &osf,
+    gpuNUFFT::Array<DType> &deapoData, const IndType &kernelWidth, 
+    const IndType &sectorWidth, const DType &osf,
     gpuNUFFT::Dimensions &imgDims)
 {
   GpuNUFFTOperator *gpuNUFFTOp =
@@ -584,9 +585,7 @@ gpuNUFFT::GpuNUFFTOperatorFactory::loadPrecomputedGpuNUFFTOperator(
 
   gpuNUFFTOp->setSectorCenters(sectorCenters);
   gpuNUFFTOp->setSens(sensData);
-  // TODO store result in matlab array
-  gpuNUFFTOp->setDeapodizationFunction(
-    this->computeDeapodizationFunction(kernelWidth, osf, imgDims));
+  gpuNUFFTOp->setDeapodizationFunction(deapoData);
   return gpuNUFFTOp;
 }
 
@@ -597,12 +596,13 @@ gpuNUFFT::GpuNUFFTOperatorFactory::loadPrecomputedGpuNUFFTOperator(
     gpuNUFFT::Array<IndType2> &sectorProcessingOrder,
     gpuNUFFT::Array<IndType> &sectorCenters,
     gpuNUFFT::Array<DType> &densCompData, gpuNUFFT::Array<DType2> &sensData,
-    const IndType &kernelWidth, const IndType &sectorWidth, const DType &osf,
+    gpuNUFFT::Array<DType> &deapoData, const IndType &kernelWidth,
+    const IndType &sectorWidth, const DType &osf,
     gpuNUFFT::Dimensions &imgDims)
 {
   GpuNUFFTOperator *gpuNUFFTOp = loadPrecomputedGpuNUFFTOperator(
       kSpaceTraj, dataIndices, sectorDataCount, sectorProcessingOrder,
-      sectorCenters, sensData, kernelWidth, sectorWidth, osf, imgDims);
+      sectorCenters, sensData, deapoData, kernelWidth, sectorWidth, osf, imgDims);
   gpuNUFFTOp->setDens(densCompData);
 
   return gpuNUFFTOp;

@@ -107,6 +107,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   readMatlabInputArray<DType2>(prhs, pcount++, 0, "sens-data", &sensData,
                                &sens_count, 3, &n_coils_sens);
 
+  // Deapo function
+  gpuNUFFT::Array<DType> deapoFunctionArray =
+    readAndCreateArray<DType>(prhs, pcount++, 0, "deapo-function");
+
   // Parameters
   const mxArray *matParams = prhs[pcount++];
 
@@ -199,7 +203,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     gpuNUFFTOp = gpuNUFFTFactory.loadPrecomputedGpuNUFFTOperator(
         kSpaceTraj, dataIndicesArray, sectorDataCountArray,
         sectorProcessingOrderArray, sectorCentersArray, density_compArray,
-        sensArray, kernel_width, sector_width, osr, imgDims);
+        sensArray, deapoFunctionArray, kernel_width, sector_width, osr, imgDims);
 
     if (MATLAB_DEBUG)
       mexPrintf("Creating gpuNUFFT Operator of Type: %d \n",

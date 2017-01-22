@@ -101,7 +101,7 @@ res.op.params.use_textures = use_textures;
 res.op.params.balance_workload = balance_workload;
 res.op.params.is2d_processing = imageDim(3) == 0;
 
-[res.op.dataIndices,res.op.sectorDataCount,res.op.densSorted,res.op.coords,res.op.sectorCenters,res.op.sectorProcessingOrder] = mex_gpuNUFFT_precomp_f(single(k)',single(w)',res.op.params);
+[res.op.dataIndices,res.op.sectorDataCount,res.op.densSorted,res.op.coords,res.op.sectorCenters,res.op.sectorProcessingOrder,res.op.deapoFunction] = mex_gpuNUFFT_precomp_f(single(k)',single(w)',res.op.params);
 res.op.atomic = atomic;
 res.op.verbose = false;
 

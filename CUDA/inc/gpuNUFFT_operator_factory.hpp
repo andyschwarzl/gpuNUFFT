@@ -241,6 +241,9 @@ class GpuNUFFTOperatorFactory
   virtual Array<IndType> initSectorCenters(GpuNUFFTOperator *gpuNUFFTOp,
                                            IndType sectorCnt);
 
+  /** \brief Initialization method for the deapodization function array */
+  virtual Array<DType> initDeapoData(GpuNUFFTOperator *gpuNUFFTOp);
+
   /** \brief Debug message */
   virtual void debug(const std::string &message);
 

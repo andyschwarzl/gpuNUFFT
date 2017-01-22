@@ -64,6 +64,8 @@ class GpuNUFFTOperatorMatlabFactory : public GpuNUFFTOperatorFactory
                                             IndType sectorCnt);
   Array<DType> initDensData(GpuNUFFTOperator *gpuNUFFTOp, IndType coordCnt);
 
+  Array<DType> initDeapoData(GpuNUFFTOperator *gpuNUFFTOp);
+
   void debug(const std::string &message);
 
  private:

@@ -44,9 +44,9 @@ if a.sensChn ~= 0
 end
 
 if a.atomic == true
-    m = mex_gpuNUFFT_forw_atomic_f(single(bb),(a.dataIndices),single(a.coords),(a.sectorDataCount),(a.sectorProcessingOrder),(a.sectorCenters(:)),single(sens),single(a.deapoFunction),a.params);
+    m = mex_gpuNUFFT_forw_atomic_f(single(bb),(a.dataIndices),single(a.coords),(a.sectorDataCount),(a.sectorProcessingOrder),(a.sectorCenters(:)),single(a.densSorted),single(sens),single(a.deapoFunction),a.params);
 else
-    m = mex_gpuNUFFT_forw_f(single(bb),(a.dataIndices),single(a.coords),(a.sectorDataCount),(a.sectorProcessingOrder),(a.sectorCenters(:)),single(sens),single(a.deapoFunction),a.params);
+    m = mex_gpuNUFFT_forw_f(single(bb),(a.dataIndices),single(a.coords),(a.sectorDataCount),(a.sectorProcessingOrder),(a.sectorCenters(:)),single(a.densSorted),single(sens),single(a.deapoFunction),a.params);
 end
 
 if a.verbose

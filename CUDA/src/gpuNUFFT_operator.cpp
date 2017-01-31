@@ -1011,6 +1011,11 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(
     // write result in correct order back into output array
     writeOrderedGPU(data_sorted_d, data_indices_d, data_d,
                     (int)this->kSpaceTraj.count(), n_coils_cc);
+    
+    // Also apply density compensation here
+    if (this->applyDensComp())
+      performDensityCompensation(data_sorted_d, density_comp_d, gi_host);
+
     copyDeviceToDevice(data_sorted_d, data_d, data_count * n_coils_cc);
   }  // iterate over coils
 
@@ -1206,6 +1211,11 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(
     // write result in correct order back into output array
     writeOrderedGPU(data_sorted_d, data_indices_d, data_d,
                     (int)this->kSpaceTraj.count(), n_coils_cc);
+    
+    // Also apply density compensation here
+    if (this->applyDensComp())
+      performDensityCompensation(data_sorted_d, density_comp_d, gi_host);
+
     copyFromDevice(data_sorted_d, kspaceData.data + data_coil_offset,
                    data_count * n_coils_cc);
   }  // iterate over coils

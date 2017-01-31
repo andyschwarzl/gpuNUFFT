@@ -358,10 +358,13 @@ gpuNUFFT::Array<DType> gpuNUFFT::GpuNUFFTOperatorFactory::computeDeapodizationFu
   
   // Create simple gpuNUFFT Operator
   IndType sectorWidth = 8;
-  gpuNUFFT::GpuNUFFTOperator *deapoGpuNUFFTOp =
-    //new gpuNUFFT::GpuNUFFTOperator(kernelWidth, sectorWidth, osf, imgDims)
-    new gpuNUFFT::TextureGpuNUFFTOperator(kernelWidth, sectorWidth, osf,
+  gpuNUFFT::GpuNUFFTOperator *deapoGpuNUFFTOp;
+  
+  if (useTextures)
+    deapoGpuNUFFTOp = new gpuNUFFT::TextureGpuNUFFTOperator(kernelWidth, sectorWidth, osf,
     imgDims, TEXTURE2D_LOOKUP);
+  else
+    deapoGpuNUFFTOp = new gpuNUFFT::GpuNUFFTOperator(kernelWidth, sectorWidth, osf, imgDims);
   
   // Data
   gpuNUFFT::Array<DType2> dataArray;
@@ -410,6 +413,8 @@ gpuNUFFT::Array<DType> gpuNUFFT::GpuNUFFTOperatorFactory::computeDeapodizationFu
   free(dataIndices.data);
   delete deapoGpuNUFFTOp;
 
+  // Compute abs values of deapo function and compensate
+  // FFT scaling sqrt(N)
   Array<DType> deapoAbs = initDeapoData(deapoFunction.count());
 
   DType maxDeapoVal = 0;

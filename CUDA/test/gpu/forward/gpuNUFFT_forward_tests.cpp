@@ -246,7 +246,10 @@ TEST(TestGPUGpuNUFFTForwardConv, 2D_32_32_4)
 
     for (int chn = 0; chn < n_coils; chn++)
     {
-      EXPECT_NEAR(0.02, dataArray.data[0 + chn * data_count].x, epsilon);
+      if (useTextures)
+        EXPECT_NEAR(0.816, dataArray.data[0 + chn * data_count].x, epsilon);
+      else
+        EXPECT_NEAR(0.73328, dataArray.data[0 + chn * data_count].x, epsilon);
       EXPECT_NEAR(dataArray.data[0].x, dataArray.data[0 + chn * data_count].x,
                   1E-5);
       EXPECT_NEAR(dataArray.data[0].y, dataArray.data[0 + chn * data_count].y,

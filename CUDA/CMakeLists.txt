@@ -1,9 +1,9 @@
 #The name of the project
 PROJECT(gpuNUFFT)
 
-#The CMake Minimum version that is required. The FindCUDA script
-#is distributed since version 2.8
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+#The CMake Minimum version that is required. The refactored FindMatlab script
+#is distributed since version 3.3
+CMAKE_MINIMUM_REQUIRED(VERSION 3.3)
 
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${PROJECT_SOURCE_DIR}/bin)
@@ -26,20 +26,16 @@ SET(MEX_EXPORT_DIR ${PROJECT_SOURCE_DIR}/../gpuNUFFT/@gpuNUFFT/private CACHE STR
 FIND_PACKAGE(CUDA REQUIRED)
 
 #Searching MATLAB
-if(WIN32)
-  SET(MATLAB_ROOT_DIR "C:\\Program Files\\MATLAB\\R2011a" CACHE STRING "MATLAB Installation Directory")
-elseif(UNIX)
-  SET(MATLAB_ROOT_DIR "/usr/local/MATLAB/R2010b" CACHE STRING "MATLAB Installation Directory")
+FIND_PACKAGE(Matlab COMPONENTS MX_LIBRARY ENG_LIBRARY)
+
+if (Matlab_FOUND)
+  MESSAGE(STATUS "MATLAB Installation found via script variable Matlab_ROOT_DIR in ${Matlab_ROOT_DIR}")
 endif()
 
-SET(MATLAB_DIR = "${MATLAB_ROOT_DIR}")
-
-FIND_PACKAGE(Matlab)
-
-IF (EXISTS "${MATLAB_ROOT_DIR}")
-  MESSAGE(STATUS "MATLAB Installation found in ${MATLAB_ROOT_DIR}")
+IF (EXISTS "${Matlab_ROOT_DIR}")
+  MESSAGE(STATUS "MATLAB Installation found in ${Matlab_ROOT_DIR}")
 else()
-  MESSAGE(FATAL_ERROR "Please set variable MATLAB_ROOT_DIR correctly!")
+  MESSAGE(FATAL_ERROR "Please set variable Matlab_ROOT_DIR correctly! Current value: ${Matlab_ROOT_DIR}")
 endif()
 
 #Options

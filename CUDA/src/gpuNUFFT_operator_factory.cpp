@@ -430,8 +430,6 @@ gpuNUFFT::Array<DType> gpuNUFFT::GpuNUFFTOperatorFactory::computeDeapodizationFu
     if (deapoAbs.data[cnt] < minDeapoVal)
       minDeapoVal = deapoAbs.data[cnt];
   }
-  debug("Max. Deapo Value: " + std::to_string(maxDeapoVal) + "\n");
-  debug("Min. Deapo Value: " + std::to_string(minDeapoVal) + "\n");
 
   free(deapoFunction.data);
   return deapoAbs;

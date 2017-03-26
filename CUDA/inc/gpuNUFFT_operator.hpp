@@ -63,6 +63,11 @@ class GpuNUFFTOperator
       free(this->kernel.data);
       this->kernel.data = NULL;
     }
+    if (this->deapo.data != NULL) {
+      free(this->deapo.data);
+      this->deapo.data = NULL;
+    }
+
     freeDeviceMemory();
   }
 

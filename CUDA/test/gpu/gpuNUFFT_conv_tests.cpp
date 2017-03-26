@@ -1598,3 +1598,70 @@ TEST(TestGPUGpuNUFFTConvAnisotropic,GPUTest_20x20x10_osf_15_Balanced)
 
   delete gpuNUFFTOp;
 }
+
+float randomNumber(float start, float stop) {
+  assert(stop >= start);
+  return start + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (stop - start)));
+}
+
+TEST(TestOperatorFactory, GPUTest_256x256x128_osf_15_Balanced)
+{
+  float osr = 1.5f;
+  int kernel_width = 3;
+
+  //Data
+  int nFE = 256;
+  int nSpokes = 128;
+
+  int data_entries = nFE * nSpokes;
+
+  DType2* data = (DType2*)calloc(data_entries, sizeof(DType2)); //2* re + im
+  int data_cnt = 0;
+  for (int data_cnt = 0; data_cnt < data_entries; data_cnt++) {
+    data[data_cnt].x = 1.0f;
+    data[data_cnt].y = 0.5f;
+  }
+  
+  //Coords
+  //Scaled between -0.5 and 0.5
+  //in triplets (x,y,z)
+  DType* coords = (DType*)calloc(3 * data_entries, sizeof(DType));//3* x,y,z
+  for (int coord_cnt = 0; coord_cnt < 3 * data_entries; coord_cnt++) {
+    coords[coord_cnt++] = randomNumber(-0.5,0.5);
+    coords[coord_cnt++] = randomNumber(-0.5, 0.5);
+    coords[coord_cnt] = randomNumber(-0.5, 0.5);
+  }
+  
+  //sectors of data, count and start indices
+  int sector_width = 8;
+
+  gpuNUFFT::Array<DType> kSpaceData;
+  kSpaceData.data = coords;
+  kSpaceData.dim.length = data_entries;
+
+  gpuNUFFT::Dimensions imgDims;
+  imgDims.width = 256;
+  imgDims.height = 256;
+  imgDims.depth = 128;
+
+  for (int cnt = 0; cnt < 100; cnt++) {
+    gpuNUFFT::GpuNUFFTOperatorFactory factory(true, true, true);
+    gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(kSpaceData, kernel_width, sector_width, osr, imgDims);
+
+    gpuNUFFT::Array<DType2> dataArray;
+    dataArray.data = data;
+    dataArray.dim.length = data_entries;
+
+    gpuNUFFT::Array<CufftType> gdataArray;
+
+    gdataArray = gpuNUFFTOp->performGpuNUFFTAdj(dataArray);
+    //Output Grid
+    CufftType* gdata = gdataArray.data;
+
+    free(gdata);
+    delete gpuNUFFTOp;
+  }
+  
+  free(data);
+  free(coords);
+}

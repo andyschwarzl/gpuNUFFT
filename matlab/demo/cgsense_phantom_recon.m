@@ -31,7 +31,7 @@ imwidth = N;
 FT = gpuNUFFT(k',col(w(:,:,1)),osf,wg,sw,[N,N,nSl],[],true);
 
 for ii=1:nCh
-    img_sens(:,:,:,ii) = FT'*rawdata(:,ii);
+    img_sens(:,:,:,ii) = FT'*(rawdata(:,ii) .* sqrt(col(w)));
 end
 
 %% Estimate sensitivities
@@ -52,7 +52,7 @@ FT = gpuNUFFT(k',col(w(:,:,1)),osf,wg,sw,[N,N,nSl],senseEst,true);
 
 %% Forward and adjoint transform
 tic
-img_comb = FT'*rawdata;
+img_comb = FT'*(rawdata .* sqrt(repmat(col(w),[1 nCh])));
 timeFTH = toc;
 disp(['Time adjoint: ', num2str(timeFTH), ' s']);
 % figure,imshow(abs(img_comb(:,:,disp_slice)),[]); title('Regridding');
@@ -64,7 +64,7 @@ timeFT = toc;
 disp(['Time forward: ', num2str(timeFT), ' s']);
 
 %% CGSENSE Reconstruction
-mask = 1;
+mask = w;
 tic
 img_cgsense = cg_sense_3d(rawdata,FT,senseEst,mask,alpha,tol,maxitCG,display,disp_slice,useMultiCoil);
 timeCG = toc;

@@ -31,14 +31,12 @@ class BalancedTextureGpuNUFFTOperator : public TextureGpuNUFFTOperator,
     : TextureGpuNUFFTOperator(kernelWidth, sectorWidth, osf, imgDims,
                               interpolationType)
   {
-    initKernel();
   }
 
   BalancedTextureGpuNUFFTOperator(IndType kernelWidth, IndType sectorWidth,
                                   DType osf, Dimensions imgDims)
     : TextureGpuNUFFTOperator(kernelWidth, sectorWidth, osf, imgDims)
   {
-    initKernel();
   }
 
   virtual ~BalancedTextureGpuNUFFTOperator()

@@ -411,6 +411,10 @@ gpuNUFFT::Array<DType> gpuNUFFT::GpuNUFFTOperatorFactory::computeDeapodizationFu
   free(kSpaceTraj.data);
   free(dataArray.data);
   free(dataIndices.data);
+  free(assignedSectors.data);
+  // cleanup locally initialized arrays here
+  free(deapoGpuNUFFTOp->getSectorCenters().data);
+  free(deapoGpuNUFFTOp->getSectorDataCount().data);
   delete deapoGpuNUFFTOp;
 
   // Compute abs values of deapo function and compensate
@@ -532,7 +536,7 @@ gpuNUFFT::GpuNUFFTOperatorFactory::createGpuNUFFTOperator(
 
   gpuNUFFTOp->setDeapodizationFunction(
     this->computeDeapodizationFunction(kernelWidth, osf, imgDims));
-
+    
   debug("finished creation of gpuNUFFT operator\n");
   
   return gpuNUFFTOp;

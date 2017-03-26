@@ -46,6 +46,10 @@ class TextureGpuNUFFTOperator : public GpuNUFFTOperator
 
   ~TextureGpuNUFFTOperator()
   {
+    if (this->kernel.data != NULL) {
+      free(this->kernel.data);
+      this->kernel.data = NULL;
+    }
   }
 
   virtual OperatorType getType()

@@ -59,7 +59,10 @@ class GpuNUFFTOperator
 
   virtual ~GpuNUFFTOperator()
   {
-    free(this->kernel.data);
+    if (this->kernel.data != NULL) {
+      free(this->kernel.data);
+      this->kernel.data = NULL;
+    }
     freeDeviceMemory();
   }
 

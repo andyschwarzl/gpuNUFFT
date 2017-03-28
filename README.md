@@ -7,7 +7,7 @@
 INFO:
 -------------------------------------------------------------------------------
 GPU 3D/2D regridding library with MATLAB(R) Mexfile output.
-Go to subfolder CUDA to compile mexfiles. 
+Go to the subdirectory **CUDA** to compile the mexfiles. 
 
 REQUIREMENTS:
 -------------------------------------------------------------------------------
@@ -40,7 +40,8 @@ LINUX, using gcc:
 
 build project via cmake, starting from project root directory:
 
-    > mkdir build
+    > cd CUDA
+    > mkdir -p build
     > cd build
     > cmake ..
     > make
@@ -56,6 +57,7 @@ WINDOWS, with Visual Studio:
 -------------------------------------------------------------------------------
 Setup a working version of [Visual Studio Community 2013](https://www.visualstudio.com/en-us/news/vs2013-community-vs.aspx) or use the Visual Studio professional edition if available. Generate the project solution using the CMake-GUI or from command line by starting from the project root directory:
 
+    > cd CUDA
     > mkdir build 
     > cd build
     > cmake .. -G "Visual Studio 12 2013 Win64"

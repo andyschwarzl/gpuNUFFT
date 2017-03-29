@@ -59,14 +59,13 @@ class GpuNUFFTOperator
 
   virtual ~GpuNUFFTOperator()
   {
-    if (this->kernel.data != NULL) {
-      free(this->kernel.data);
-      this->kernel.data = NULL;
-    }
-    if (this->deapo.data != NULL) {
-      free(this->deapo.data);
-      this->deapo.data = NULL;
-    }
+    freeLocalMemberArray(this->kernel.data);
+    freeLocalMemberArray(this->deapo.data);
+
+    freeLocalMemberArray(this->kSpaceTraj.data);
+    freeLocalMemberArray(this->sectorCenters.data);
+    freeLocalMemberArray(this->dataIndices.data);
+    freeLocalMemberArray(this->sectorDataCount.data);
 
     freeDeviceMemory();
   }
@@ -344,6 +343,16 @@ class GpuNUFFTOperator
   }
 
  protected:
+
+   template<typename T>
+   void freeLocalMemberArray(T* dataPointer)
+   {
+     if (dataPointer != NULL) {
+       free(dataPointer);
+       dataPointer = NULL;
+     }
+   }
+
   /** \brief gpuNUFFT::OperatorType classifier. Value according to sub-class
    * implementation. */
   OperatorType operatorType;

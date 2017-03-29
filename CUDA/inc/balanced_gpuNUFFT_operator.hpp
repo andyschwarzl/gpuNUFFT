@@ -27,8 +27,9 @@ class BalancedGpuNUFFTOperator : public GpuNUFFTOperator,
   {
   }
 
-  virtual ~BalancedGpuNUFFTOperator()
+  ~BalancedGpuNUFFTOperator()
   {
+    freeLocalMemberArray(this->sectorProcessingOrder.data);
   }
 
   Array<IndType2> getSectorProcessingOrder()

@@ -39,8 +39,9 @@ class BalancedTextureGpuNUFFTOperator : public TextureGpuNUFFTOperator,
   {
   }
 
-  virtual ~BalancedTextureGpuNUFFTOperator()
+  ~BalancedTextureGpuNUFFTOperator()
   {
+    freeLocalMemberArray(this->sectorProcessingOrder.data);
   }
 
   // OPERATIONS

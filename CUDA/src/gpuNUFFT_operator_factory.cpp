@@ -408,13 +408,9 @@ gpuNUFFT::Array<DType> gpuNUFFT::GpuNUFFTOperatorFactory::computeDeapodizationFu
   gpuNUFFT::Array<CufftType> deapoFunction =
     deapoGpuNUFFTOp->performGpuNUFFTAdj(dataArray,FFT);
   
-  free(kSpaceTraj.data);
-  free(dataArray.data);
-  free(dataIndices.data);
-  free(assignedSectors.data);
   // cleanup locally initialized arrays here
-  free(deapoGpuNUFFTOp->getSectorCenters().data);
-  free(deapoGpuNUFFTOp->getSectorDataCount().data);
+  free(dataArray.data);
+  free(assignedSectors.data);
   delete deapoGpuNUFFTOp;
 
   // Compute abs values of deapo function and compensate
@@ -517,8 +513,9 @@ gpuNUFFT::GpuNUFFTOperatorFactory::createGpuNUFFTOperator(
       computeSectorDataCount(gpuNUFFTOp, assignedSectors));
 
   if (gpuNUFFTOp->getType() == gpuNUFFT::BALANCED ||
-      gpuNUFFTOp->getType() == gpuNUFFT::BALANCED_TEXTURE)
+    gpuNUFFTOp->getType() == gpuNUFFT::BALANCED_TEXTURE) {
     computeProcessingOrder(gpuNUFFTOp);
+  }
 
   gpuNUFFTOp->setDataIndices(dataIndices);
 

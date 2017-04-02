@@ -48,37 +48,6 @@ namespace gpuNUFFT
 class GpuNUFFTOperatorFactory
 {
  public:
-  /** \brief Default constructor
-    *
-    * Uses gpu for precomputation, balanced = true, textures = true
-    */
-  GpuNUFFTOperatorFactory()
-    : useTextures(true), useGpu(true), balanceWorkload(true)
-  {
-  }
-
-  /** \brief Constructor overload
-    *
-    * Uses gpu for precomputation, balanced = true
-    *
-    * @param useTextures Flag to indicate texture interpolation
-    */
-  GpuNUFFTOperatorFactory(const bool useTextures)
-    : useTextures(useTextures), useGpu(true), balanceWorkload(true)
-  {
-  }
-
-  /** \brief Constructor overload
-    *
-    * Uses balanced = true
-    *
-    * @param useTextures Flag to indicate texture interpolation
-    * @param useGpu Flag to indicate gpu usage for precomputation
-    */
-  GpuNUFFTOperatorFactory(const bool useTextures, const bool useGpu)
-    : useTextures(useTextures), useGpu(useGpu), balanceWorkload(true)
-  {
-  }
 
   /** \brief Constructor overload
     *
@@ -86,9 +55,10 @@ class GpuNUFFTOperatorFactory
     * @param useGpu Flag to indicate gpu usage for precomputation
     * @param balanceWorkload Flag to indicate load balancing
     */
-  GpuNUFFTOperatorFactory(const bool useTextures, const bool useGpu,
-                          bool balanceWorkload)
-    : useTextures(useTextures), useGpu(useGpu), balanceWorkload(balanceWorkload)
+  GpuNUFFTOperatorFactory(const bool useTextures = true, const bool useGpu = true,
+                          bool balanceWorkload = true, bool matlabSharedMem = false)
+    : useTextures(useTextures), useGpu(useGpu), balanceWorkload(balanceWorkload),
+    matlabSharedMem(matlabSharedMem)
   {
   }
 
@@ -347,6 +317,9 @@ class GpuNUFFTOperatorFactory
 
   /** \brief Flag to indicate load balancing */
   bool balanceWorkload;
+
+  /** \brief Flag to indicate shared memory usage with Matlab */
+  bool matlabSharedMem;
 };
 }
 

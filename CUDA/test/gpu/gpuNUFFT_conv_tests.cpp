@@ -1644,7 +1644,7 @@ TEST(TestOperatorFactory, GPUTest_256x256x128_osf_15_Balanced)
   imgDims.height = 256;
   imgDims.depth = 128;
 
-  for (int cnt = 0; cnt < 100; cnt++) {
+  for (int cnt = 0; cnt < 10000; cnt++) {
     gpuNUFFT::GpuNUFFTOperatorFactory factory(true, true, true);
     gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp = factory.createGpuNUFFTOperator(kSpaceData, kernel_width, sector_width, osr, imgDims);
 
@@ -1658,7 +1658,10 @@ TEST(TestOperatorFactory, GPUTest_256x256x128_osf_15_Balanced)
     //Output Grid
     CufftType* gdata = gdataArray.data;
 
+    gpuNUFFT::Array<DType2> data = gpuNUFFTOp->performForwardGpuNUFFT(gdataArray);
+
     free(gdata);
+    free(data.data);
     delete gpuNUFFTOp;
   }
   

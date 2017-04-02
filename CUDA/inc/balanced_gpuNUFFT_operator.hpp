@@ -22,14 +22,15 @@ class BalancedGpuNUFFTOperator : public GpuNUFFTOperator,
 {
  public:
   BalancedGpuNUFFTOperator(IndType kernelWidth, IndType sectorWidth, DType osf,
-                           Dimensions imgDims)
-    : GpuNUFFTOperator(kernelWidth, sectorWidth, osf, imgDims, true, BALANCED)
+    Dimensions imgDims, bool matlabSharedMem = false)
+    : GpuNUFFTOperator(kernelWidth, sectorWidth, osf, imgDims, true, BALANCED, matlabSharedMem)
   {
   }
 
   ~BalancedGpuNUFFTOperator()
   {
-    freeLocalMemberArray(this->sectorProcessingOrder.data);
+    if (!matlabSharedMem)
+      freeLocalMemberArray(this->sectorProcessingOrder.data);
   }
 
   Array<IndType2> getSectorProcessingOrder()

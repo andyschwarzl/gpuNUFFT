@@ -27,21 +27,17 @@ class BalancedTextureGpuNUFFTOperator : public TextureGpuNUFFTOperator,
  public:
   BalancedTextureGpuNUFFTOperator(IndType kernelWidth, IndType sectorWidth,
                                   DType osf, Dimensions imgDims,
-                                  InterpolationType interpolationType)
+                                  InterpolationType interpolationType = InterpolationType::TEXTURE2D_LOOKUP,
+                                  bool matlabSharedMem = false)
     : TextureGpuNUFFTOperator(kernelWidth, sectorWidth, osf, imgDims,
-                              interpolationType)
-  {
-  }
-
-  BalancedTextureGpuNUFFTOperator(IndType kernelWidth, IndType sectorWidth,
-                                  DType osf, Dimensions imgDims)
-    : TextureGpuNUFFTOperator(kernelWidth, sectorWidth, osf, imgDims)
+                              interpolationType, matlabSharedMem)
   {
   }
 
   ~BalancedTextureGpuNUFFTOperator()
   {
-    freeLocalMemberArray(this->sectorProcessingOrder.data);
+    if (!matlabSharedMem)
+      freeLocalMemberArray(this->sectorProcessingOrder.data);
   }
 
   // OPERATIONS

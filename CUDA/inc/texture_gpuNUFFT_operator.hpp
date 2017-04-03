@@ -24,7 +24,7 @@ class TextureGpuNUFFTOperator : public GpuNUFFTOperator
                           InterpolationType interpolationType = InterpolationType::TEXTURE2D_LOOKUP,
                           bool matlabSharedMem = false)
     : GpuNUFFTOperator(kernelWidth, sectorWidth, osf, imgDims, false, TEXTURE, matlabSharedMem),
-      interpolationType(interpolationType)
+    interpolationType(interpolationType), kernel_d(NULL)
   {
     if (typeid(DType) == typeid(double))
       throw std::runtime_error(
@@ -35,6 +35,7 @@ class TextureGpuNUFFTOperator : public GpuNUFFTOperator
 
   ~TextureGpuNUFFTOperator()
   {
+    freeLookupTable();
   }
 
   virtual OperatorType getType()

@@ -43,6 +43,8 @@ void gpuNUFFT::GpuNUFFTOperator::initKernel()
 {
   IndType kernelSize = calculateGrid3KernelSize(osf, kernelWidth);
   this->kernel.dim.length = kernelSize;
+  if (this->kernel.data != NULL)
+    free(this->kernel.data);
   this->kernel.data = (DType *)calloc(this->kernel.count(), sizeof(DType));
   load1DKernel(this->kernel.data, (int)kernelSize, (int)kernelWidth, osf);
 }

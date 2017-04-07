@@ -1604,7 +1604,7 @@ float randomNumber(float start, float stop) {
   return start + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (stop - start)));
 }
 
-TEST(TestOperatorFactory, GPUTest_256x256x128_osf_15_Balanced)
+TEST(TestOperatorFactory, DISABLED_GPUTest_256x256x128_osf_15_Balanced)
 {
   float osr = 1.5f;
   int kernel_width = 3;

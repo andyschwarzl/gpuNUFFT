@@ -28,6 +28,8 @@ FIND_PACKAGE(CUDA REQUIRED)
 #Searching MATLAB
 if(WIN32)
   SET(MATLAB_ROOT_DIR "C:\\Program Files\\MATLAB\\R2011a" CACHE STRING "MATLAB Installation Directory")
+elseif(UNIX AND APPLE)
+  SET(MATLAB_ROOT_DIR "/Applications/MATLAB_R2010b.app" CACHE STRING "MATLAB Installation Directory")
 elseif(UNIX)
   SET(MATLAB_ROOT_DIR "/usr/local/MATLAB/R2010b" CACHE STRING "MATLAB Installation Directory")
 endif()
@@ -36,10 +38,14 @@ SET(MATLAB_DIR = "${MATLAB_ROOT_DIR}")
 
 FIND_PACKAGE(Matlab)
 
+if (Matlab_FOUND)
+  MESSAGE(STATUS "MATLAB Installation found via script variable Matlab_ROOT_DIR in ${Matlab_ROOT_DIR}")
+endif()
+
 IF (EXISTS "${MATLAB_ROOT_DIR}")
   MESSAGE(STATUS "MATLAB Installation found in ${MATLAB_ROOT_DIR}")
 else()
-  MESSAGE(FATAL_ERROR "Please set variable MATLAB_ROOT_DIR correctly!")
+  MESSAGE(FATAL_ERROR "Please set variable MATLAB_ROOT_DIR correctly! Current value: ${MATLAB_ROOT_DIR}")
 endif()
 
 #Options
@@ -76,10 +82,10 @@ endif(GPU_DOUBLE_PREC)
 
 IF(CMAKE_BUILD_TYPE MATCHES Debug)
   MESSAGE("debug mode")
-  SET(CUDA_NVCC_FLAGS "-arch;sm_20;--ptxas-options=-v")
+  list(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_20,code=sm_20 -gencode arch=compute_30,code=sm_30 -gencode arch=compute_50,code=sm_50 --ptxas-options=-v)
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -g")
 ELSE(CMAKE_BUILD_TYPE)
-  SET(CUDA_NVCC_FLAGS "-arch;sm_20;")
+  list(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_20,code=sm_20 -gencode arch=compute_30,code=sm_30 -gencode arch=compute_50,code=sm_50)
 ENDIF()
 
 MESSAGE(STATUS "setting NVCC FLAGS to: ${CUDA_NVCC_FLAGS}")

@@ -41,12 +41,14 @@ class GpuNUFFTOperator
     */
   GpuNUFFTOperator(IndType kernelWidth, IndType sectorWidth, DType osf,
                    Dimensions imgDims, bool loadKernel = true,
-                   OperatorType operatorType = DEFAULT)
+                   OperatorType operatorType = DEFAULT,
+                   bool matlabSharedMem = false)
     : operatorType(operatorType), osf(osf), kernelWidth(kernelWidth),
       sectorWidth(sectorWidth), imgDims(imgDims), gpuMemAllocated(false),
       debugTiming(DEBUG), sens_d(NULL), crds_d(NULL), density_comp_d(NULL),
       deapo_d(NULL), gdata_d(NULL), sector_centers_d(NULL), sectors_d(NULL),
-      data_indices_d(NULL), data_sorted_d(NULL), allocatedCoils(0)
+      data_indices_d(NULL), data_sorted_d(NULL), allocatedCoils(0),
+      matlabSharedMem(matlabSharedMem)
   {
     if (loadKernel)
       initKernel();
@@ -59,7 +61,16 @@ class GpuNUFFTOperator
 
   virtual ~GpuNUFFTOperator()
   {
-    free(this->kernel.data);
+    freeLocalMemberArray(this->kernel.data);
+
+    if (!matlabSharedMem) {
+      freeLocalMemberArray(this->deapo.data);
+      freeLocalMemberArray(this->kSpaceTraj.data);
+      freeLocalMemberArray(this->sectorCenters.data);
+      freeLocalMemberArray(this->dataIndices.data);
+      freeLocalMemberArray(this->sectorDataCount.data);
+    }
+
     freeDeviceMemory();
   }
 
@@ -94,6 +105,10 @@ class GpuNUFFTOperator
   void setDens(Array<DType> dens)
   {
     this->dens = dens;
+  }
+  void setDeapodizationFunction(Array<DType> deapo)
+  {
+    this->deapo= deapo;
   }
 
   void setImageDims(Dimensions dims)
@@ -332,6 +347,16 @@ class GpuNUFFTOperator
   }
 
  protected:
+
+   template<typename T>
+   void freeLocalMemberArray(T* dataPointer)
+   {
+     if (dataPointer != NULL) {
+       free(dataPointer);
+       dataPointer = NULL;
+     }
+   }
+
   /** \brief gpuNUFFT::OperatorType classifier. Value according to sub-class
    * implementation. */
   OperatorType operatorType;
@@ -357,6 +382,12 @@ class GpuNUFFTOperator
     * dimensions: dataCount
     */
   Array<DType> dens;
+
+  /** \brief Deapodization function array
+  * 
+  * dimensions: image dimensions
+  */
+  Array<DType> deapo;
 
   /** \brief Sector centers array.
     * sector centers
@@ -402,6 +433,10 @@ class GpuNUFFTOperator
 
   /** \brief Size of one sector in grid units*/
   Dimensions sectorDims;
+
+  /** \brief Flag which indicates if data pointers are allocated with Matlab 
+  */
+  bool matlabSharedMem;
 
   /** \brief Return Grid Width (ImageWidth * osf) */
   IndType getGridWidth()

@@ -38,7 +38,7 @@ else
 end
 %%
 for ii=1:nCh
-    img_sens(:,:,ii) = FT'*rawdata(:,ii);
+    img_sens(:,:,ii) = FT'*(rawdata(:,ii) .* sqrt(col(w)));
 end
 
 %% Estimate sensitivities
@@ -56,10 +56,10 @@ end
 tic
 img_comb = zeros(imwidth,imwidth);
 if (useGPU)
-    img_comb = FT'*rawdata;
+    img_comb = FT'*(rawdata .*  sqrt(repmat(col(w), [1, nCh])));
 else
     for ii=1:nCh
-        img_comb = img_comb + (FT'*rawdata(:,ii)) .* conj(senseEst(:,:,ii));
+        img_comb = img_comb + (FT'*rawdata(:,ii) .* sqrt(col(w))) .* conj(senseEst(:,:,ii));
     end
 end
 timeFTH = toc;
@@ -78,7 +78,7 @@ timeFT = toc;
 disp(['Time forward: ', num2str(timeFT), ' s']);
 
 %% CGSENSE Reconstruction
-mask = 1;
+mask = w;
 tic
 img_cgsense = cg_sense_2d(rawdata,FT,senseEst,mask,alpha,tol,maxitCG,display,useMultiCoil);
 timeCG = toc;

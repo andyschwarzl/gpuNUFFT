@@ -22,23 +22,10 @@ namespace gpuNUFFT
 class GpuNUFFTOperatorMatlabFactory : public GpuNUFFTOperatorFactory
 {
  public:
-  GpuNUFFTOperatorMatlabFactory() : GpuNUFFTOperatorFactory()
-  {
-  }
 
-  GpuNUFFTOperatorMatlabFactory(const bool useTextures, const bool useGpu,
-                                const bool balanceWorkload)
-    : GpuNUFFTOperatorFactory(useTextures, useGpu, balanceWorkload)
-  {
-  }
-
-  GpuNUFFTOperatorMatlabFactory(const bool useTextures, const bool useGpu)
-    : GpuNUFFTOperatorFactory(useTextures, useGpu)
-  {
-  }
-
-  GpuNUFFTOperatorMatlabFactory(const bool useTextures)
-    : GpuNUFFTOperatorFactory(useTextures)
+  GpuNUFFTOperatorMatlabFactory(const bool useTextures = true, const bool useGpu = true,
+                                const bool balanceWorkload = true)
+    : GpuNUFFTOperatorFactory(useTextures, useGpu, balanceWorkload, true)
   {
   }
 
@@ -63,6 +50,8 @@ class GpuNUFFTOperatorMatlabFactory : public GpuNUFFTOperatorFactory
   Array<IndType2> initSectorProcessingOrder(GpuNUFFTOperator *gpuNUFFTOp,
                                             IndType sectorCnt);
   Array<DType> initDensData(GpuNUFFTOperator *gpuNUFFTOp, IndType coordCnt);
+
+  Array<DType> initDeapoData(IndType imgDimsCount);
 
   void debug(const std::string &message);
 

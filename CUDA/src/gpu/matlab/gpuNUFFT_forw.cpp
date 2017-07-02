@@ -92,6 +92,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   gpuNUFFT::Array<IndType> sectorCentersArray =
       readAndCreateArray<IndType>(prhs, pcount++, 0, "sector-centers");
 
+  // Density compensation
+  gpuNUFFT::Array<DType> density_compArray =
+    readAndCreateArray<DType>(prhs, pcount++, 0, "density-comp");
+
   if (MATLAB_DEBUG)
     mexPrintf("1st sector center: [%d,%d]\n", sectorCentersArray.data[0],
               sectorCentersArray.data[1]);
@@ -101,7 +105,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   int n_coils_sens, sens_count;
   readMatlabInputArray<DType2>(prhs, pcount++, 0, "sens-data", &sensData,
                                &sens_count, 3, &n_coils_sens);
-
+  // Deapo function
+  gpuNUFFT::Array<DType> deapoFunctionArray =
+    readAndCreateArray<DType>(prhs, pcount++, 0, "deapo-function");
+  
   // Parameters
   const mxArray *matParams = prhs[pcount++];
 
@@ -135,6 +142,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mexPrintf("coords count: %d\n", kSpaceTraj.count());
     mexPrintf("sector data count: %d\n", sectorDataCountArray.count());
     mexPrintf("centers count: %d\n", sectorCentersArray.count());
+    mexPrintf("dens count: %d\n", density_compArray.count());
     mexPrintf("sens coils: %d, img coils: %d\n", n_coils_sens, n_coils);
 
     mexPrintf("passed Params, IM_WIDTH: [%d,%d,%d], IM_COUNT: %d, OSR: %f, "
@@ -176,8 +184,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                                                             balance_workload);
     gpuNUFFTOp = gpuNUFFTFactory.loadPrecomputedGpuNUFFTOperator(
         kSpaceTraj, dataIndicesArray, sectorDataCountArray,
-        sectorProcessingOrderArray, sectorCentersArray, sensArray, kernel_width,
-        sector_width, osr, imgDims);
+        sectorProcessingOrderArray, sectorCentersArray, density_compArray, sensArray, deapoFunctionArray,
+        kernel_width, sector_width, osr, imgDims);
 
     if (MATLAB_DEBUG)
       mexPrintf("Creating gpuNUFFT Operator of Type: %d \n",

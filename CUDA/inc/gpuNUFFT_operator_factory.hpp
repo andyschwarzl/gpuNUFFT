@@ -48,37 +48,6 @@ namespace gpuNUFFT
 class GpuNUFFTOperatorFactory
 {
  public:
-  /** \brief Default constructor
-    *
-    * Uses gpu for precomputation, balanced = true, textures = true
-    */
-  GpuNUFFTOperatorFactory()
-    : useTextures(true), useGpu(true), balanceWorkload(true)
-  {
-  }
-
-  /** \brief Constructor overload
-    *
-    * Uses gpu for precomputation, balanced = true
-    *
-    * @param useTextures Flag to indicate texture interpolation
-    */
-  GpuNUFFTOperatorFactory(const bool useTextures)
-    : useTextures(useTextures), useGpu(true), balanceWorkload(true)
-  {
-  }
-
-  /** \brief Constructor overload
-    *
-    * Uses balanced = true
-    *
-    * @param useTextures Flag to indicate texture interpolation
-    * @param useGpu Flag to indicate gpu usage for precomputation
-    */
-  GpuNUFFTOperatorFactory(const bool useTextures, const bool useGpu)
-    : useTextures(useTextures), useGpu(useGpu), balanceWorkload(true)
-  {
-  }
 
   /** \brief Constructor overload
     *
@@ -86,9 +55,10 @@ class GpuNUFFTOperatorFactory
     * @param useGpu Flag to indicate gpu usage for precomputation
     * @param balanceWorkload Flag to indicate load balancing
     */
-  GpuNUFFTOperatorFactory(const bool useTextures, const bool useGpu,
-                          bool balanceWorkload)
-    : useTextures(useTextures), useGpu(useGpu), balanceWorkload(balanceWorkload)
+  GpuNUFFTOperatorFactory(const bool useTextures = true, const bool useGpu = true,
+                          bool balanceWorkload = true, bool matlabSharedMem = false)
+    : useTextures(useTextures), useGpu(useGpu), balanceWorkload(balanceWorkload),
+    matlabSharedMem(matlabSharedMem)
   {
   }
 
@@ -174,7 +144,7 @@ class GpuNUFFTOperatorFactory
       Array<IndType> &sectorDataCount,
       gpuNUFFT::Array<IndType2> &sectorProcessingOrder,
       Array<IndType> &sectorCenters, Array<DType> &densCompData,
-      Array<DType2> &sensData, const IndType &kernelWidth,
+      Array<DType2> &sensData, Array<DType> &deapoData, const IndType &kernelWidth,
       const IndType &sectorWidth, const DType &osf, Dimensions &imgDims);
 
   /** \brief Load GpuNUFFT Operator from previously computed mappings.
@@ -198,8 +168,8 @@ class GpuNUFFTOperatorFactory
       Array<IndType> &sectorDataCount,
       gpuNUFFT::Array<IndType2> &sectorProcessingOrder,
       Array<IndType> &sectorCenters, Array<DType2> &sensData,
-      const IndType &kernelWidth, const IndType &sectorWidth, const DType &osf,
-      Dimensions &imgDims);
+      Array<DType> &deapoData, const IndType &kernelWidth, const IndType &sectorWidth, 
+      const DType &osf, Dimensions &imgDims);
 
   void setUseTextures(bool useTextures);
 
@@ -241,6 +211,9 @@ class GpuNUFFTOperatorFactory
   virtual Array<IndType> initSectorCenters(GpuNUFFTOperator *gpuNUFFTOp,
                                            IndType sectorCnt);
 
+  /** \brief Initialization method for the deapodization function array */
+  virtual Array<DType> initDeapoData(IndType imgDimsCount);
+
   /** \brief Debug message */
   virtual void debug(const std::string &message);
 
@@ -280,7 +253,7 @@ class GpuNUFFTOperatorFactory
    */
   Array<IndType>
   computeSectorDataCount(gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp,
-                         gpuNUFFT::Array<IndType> assignedSectors);
+                         gpuNUFFT::Array<IndType> assignedSectors, bool useLocalMemory = false);
 
   /** \brief Method to compute the sector processing order.
     *
@@ -292,9 +265,9 @@ class GpuNUFFTOperatorFactory
   void computeProcessingOrder(GpuNUFFTOperator *gpuNUFFTOp);
 
   /** \brief Compute sector centers array */
-  Array<IndType> computeSectorCenters(GpuNUFFTOperator *gpuNUFFTOp);
+  Array<IndType> computeSectorCenters(GpuNUFFTOperator *gpuNUFFTOp, bool useLocalMemory = false);
   /** \brief Compute 2-d sector centers array */
-  Array<IndType> computeSectorCenters2D(GpuNUFFTOperator *gpuNUFFTOp);
+  Array<IndType> computeSectorCenters2D(GpuNUFFTOperator *gpuNUFFTOp, bool useLocalMemory = false);
 
   /** \brief Method to compute the sector center for the given sector index. */
   IndType computeSectorCenter(IndType var, IndType sectorWidth);
@@ -327,6 +300,14 @@ class GpuNUFFTOperatorFactory
                               Dimensions &imgDims, Dimensions &densDims,
                               Dimensions &sensDims);
 
+  /**
+  * \brief Computation of the deapodization function
+  * 
+  * @returns scalar array in image dimensions (imgDims)
+  */
+  gpuNUFFT::Array<DType> computeDeapodizationFunction(const IndType &kernelWidth,
+    const DType &osf, gpuNUFFT::Dimensions &imgDims);
+
  private:
   /** \brief Flag to indicate texture interpolation */
   bool useTextures;
@@ -336,6 +317,9 @@ class GpuNUFFTOperatorFactory
 
   /** \brief Flag to indicate load balancing */
   bool balanceWorkload;
+
+  /** \brief Flag to indicate shared memory usage with Matlab */
+  bool matlabSharedMem;
 };
 }
 

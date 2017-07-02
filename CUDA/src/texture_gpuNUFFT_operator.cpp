@@ -4,11 +4,13 @@
 void gpuNUFFT::TextureGpuNUFFTOperator::initKernel()
 {
   IndType kernelSize = (interpolationType > 1)
-                           ? calculateKernelSizeLinInt(osf, kernelWidth / 2.0f)
-                           : calculateGrid3KernelSize(osf, kernelWidth / 2.0f);
+                           ? calculateKernelSizeLinInt(osf, kernelWidth)
+                           : calculateGrid3KernelSize(osf, kernelWidth);
   this->kernel.dim.width = kernelSize;
   this->kernel.dim.height = interpolationType > 1 ? kernelSize : 1;
   this->kernel.dim.depth = interpolationType > 2 ? kernelSize : 1;
+  if (this->kernel.data != NULL)
+    free(this->kernel.data);
   this->kernel.data = (DType *)calloc(this->kernel.count(), sizeof(DType));
 
   switch (interpolationType)
@@ -96,5 +98,6 @@ void gpuNUFFT::TextureGpuNUFFTOperator::initLookupTable()
 
 void gpuNUFFT::TextureGpuNUFFTOperator::freeLookupTable()
 {
-  freeTexture(getInterpolationTypeName(), kernel_d);
+  if (kernel_d != NULL)
+    freeTexture(getInterpolationTypeName(), kernel_d);
 }

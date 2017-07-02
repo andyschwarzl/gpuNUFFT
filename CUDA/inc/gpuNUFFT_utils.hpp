@@ -48,9 +48,6 @@
  * defined by Beatty et al. */
 #define MAXIMUM_ALIASING_ERROR_LIN_INT 0.0001f
 
-/** \brief Math round implementation */
-#define round(x) floor((x)+0.5)
-
 /** \brief Square value */
 #define sqr(__se) ((__se) * (__se))
 /** \brief beta function used in interpolation function. See Beatty et al. */
@@ -97,7 +94,7 @@ __inline__ __device__ __host__ void set_minmax(DType *x, int *min, int *max,
 
 long calculateGrid3KernelSize();
 long calculateGrid3KernelSize(DType osr, DType kernel_radius);
-long calculateKernelSizeLinInt(double osr, double kernel_radius);
+long calculateKernelSizeLinInt(DType osr, DType kernel_radius);
 
 /** \brief Loads a radius of the circularly symmetric kernel into a 1-d array,
 * with

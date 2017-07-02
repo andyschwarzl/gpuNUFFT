@@ -38,24 +38,25 @@ void initTexture(const char* symbol, cudaArray** devicePtr, gpuNUFFT::Array<DTyp
 {
   if (std::string("texKERNEL").compare(symbol)==0)
   {
-    HANDLE_ERROR (cudaMallocArray (devicePtr, &texKERNEL.channelDesc, hostTexture.dim.width, 1));
-    HANDLE_ERROR (cudaBindTextureToArray (texKERNEL, *devicePtr));
+    HANDLE_ERROR(cudaMallocArray (devicePtr, &texKERNEL.channelDesc, hostTexture.dim.width, 1));
+    HANDLE_ERROR(cudaBindTextureToArray(texKERNEL, *devicePtr));
     HANDLE_ERROR(cudaMemcpyToArray(*devicePtr, 0, 0, hostTexture.data, sizeof(float)*hostTexture.count(), cudaMemcpyHostToDevice));
     
     texKERNEL.filterMode = cudaFilterModePoint;
     texKERNEL.normalized = true;
     texKERNEL.addressMode[0] = cudaAddressModeClamp;
   }
-  if (std::string("texKERNEL2D").compare(symbol)==0)
+  else if (std::string("texKERNEL2D").compare(symbol)==0)
   {
-    HANDLE_ERROR (cudaMallocArray (devicePtr, &texKERNEL2D.channelDesc, hostTexture.dim.width, hostTexture.dim.height));
-    HANDLE_ERROR (cudaBindTextureToArray (texKERNEL2D, *devicePtr));
+    HANDLE_ERROR(cudaMallocArray (devicePtr, &texKERNEL2D.channelDesc, hostTexture.dim.width, hostTexture.dim.height));
+
+    HANDLE_ERROR(cudaBindTextureToArray(texKERNEL2D, *devicePtr));
     HANDLE_ERROR(cudaMemcpyToArray(*devicePtr, 0, 0, hostTexture.data, sizeof(float)*hostTexture.count(), cudaMemcpyHostToDevice));
     
     texKERNEL2D.filterMode = cudaFilterModeLinear;
     texKERNEL2D.normalized = true;
     texKERNEL2D.addressMode[0] = cudaAddressModeClamp;
-    texKERNEL2D.addressMode[1] = cudaAddressModeClamp;    
+    texKERNEL2D.addressMode[1] = cudaAddressModeClamp;
   }
   else if (std::string("texKERNEL3D").compare(symbol)==0)
   {
@@ -69,7 +70,7 @@ void initTexture(const char* symbol, cudaArray** devicePtr, gpuNUFFT::Array<DTyp
     copyparams.srcPtr= make_cudaPitchedPtr((void*)hostTexture.data,sizeof(float)*hostTexture.dim.width,hostTexture.dim.height,hostTexture.dim.depth); 
 
     HANDLE_ERROR(cudaMemcpy3D(&copyparams)); 
-    HANDLE_ERROR (cudaBindTextureToArray (texKERNEL3D, *devicePtr));
+    HANDLE_ERROR(cudaBindTextureToArray(texKERNEL3D, *devicePtr));
   
     texKERNEL3D.filterMode = cudaFilterModeLinear;
     texKERNEL3D.normalized = true;
@@ -104,10 +105,10 @@ void unbindTexture(const char* symbol)
 }
 
 
-void freeTexture(const char* symbol,cudaArray* devicePtr)
+void freeTexture(const char* symbol, cudaArray* devicePtr)
 {
-  HANDLE_ERROR(cudaFreeArray(devicePtr));
   unbindTexture(symbol);
+  HANDLE_ERROR(cudaFreeArray(devicePtr));  
 }
 
 __global__ void fftScaleKernel(CufftType* data, DType scaling, int N)
@@ -225,8 +226,8 @@ __global__ void densityCompensationKernel(DType2* data, DType* density_comp, int
     for (int c = threadIdx.z; c < GI.n_coils_cc; c+= blockDim.z)
     {
       DType2 data_p = data[t + c*N]; 
-      data_p.x = data_p.x * density_comp[t];
-      data_p.y = data_p.y * density_comp[t];
+      data_p.x = data_p.x * sqrt(density_comp[t]);
+      data_p.y = data_p.y * sqrt(density_comp[t]);
       data[t + c*N] = data_p;
     }
     t = t+ blockDim.x*gridDim.x;
@@ -465,18 +466,15 @@ __global__ void fftShiftKernel2D(CufftType* gdata, IndType3 offset, int N)
 void performDeapodization(CufftType* imdata_d,
   gpuNUFFT::GpuNUFFTInfo* gi_host)
 {
-  DType beta = (DType)BETA(gi_host->kernel_width,gi_host->osr);
+  DType beta = (DType)BETA(gi_host->kernel_width, gi_host->osr);
 
-  //Calculate normalization value (should be at position 0 in interval [-N/2,N/2]) 
-  DType norm_val_x = calculateDeapodizationValue(0,gi_host->grid_width_inv.x,gi_host->kernel_width,beta);
-  DType norm_val_y = calculateDeapodizationValue(0,gi_host->grid_width_inv.y,gi_host->kernel_width,beta);
-  DType norm_val_z = calculateDeapodizationValue(0,gi_host->grid_width_inv.z,gi_host->kernel_width,beta);
-  DType norm_val;
+  //Calculate normalization value
+  DType norm_val = I0_BETA(gi_host->kernel_width, gi_host->osr) / (DType)gi_host->kernel_width;
 
   if (gi_host->is2Dprocessing)
-    norm_val = norm_val_x * norm_val_y;
+    norm_val = norm_val * norm_val;
   else
-    norm_val = norm_val_x * norm_val_y * norm_val_z;
+    norm_val = norm_val * norm_val * norm_val;
 
   if (DEBUG)
     printf("running deapodization with norm_val %.2f\n",norm_val);
@@ -525,17 +523,14 @@ void performDeapodization(CufftType* imdata_d,
 void precomputeDeapodization(DType* deapo_d,
   gpuNUFFT::GpuNUFFTInfo* gi_host)
 {
-  DType beta = (DType)BETA(gi_host->kernel_width,gi_host->osr);
+  DType beta = (DType)BETA(gi_host->kernel_width, gi_host->osr);
 
-  //Calculate normalization value (should be at position 0 in interval [-N/2,N/2]) 
-  DType norm_val_x = calculateDeapodizationValue(0,gi_host->grid_width_inv.x,gi_host->kernel_width,beta);
-  DType norm_val_y = calculateDeapodizationValue(0,gi_host->grid_width_inv.y,gi_host->kernel_width,beta);
-  DType norm_val_z = calculateDeapodizationValue(0,gi_host->grid_width_inv.z,gi_host->kernel_width,beta);
-  DType norm_val;
+  //Calculate normalization value
+  DType norm_val = I0_BETA(gi_host->kernel_width, gi_host->osr) / (DType)gi_host->kernel_width;
   if (gi_host->is2Dprocessing)
-    norm_val = norm_val_x * norm_val_y;
+    norm_val = norm_val * norm_val;
   else
-    norm_val = norm_val_x * norm_val_y * norm_val_z;
+    norm_val = norm_val * norm_val * norm_val;
 
   if (DEBUG)
     printf("running deapodization precomputation with norm_val %.2f\n",norm_val);
@@ -673,7 +668,7 @@ __global__ void forwardDeapodizationKernel(DType2* imdata, DType beta, DType nor
     if (!isnan(deapo))// == deapo)
     {
       imdata[t].x = imdata[t].x / deapo;//Re
-      imdata[t].y = imdata[t].y / deapo ; //Im
+      imdata[t].y = imdata[t].y / deapo; //Im
     }
     t = t + blockDim.x*gridDim.x;
   }
@@ -694,7 +689,7 @@ __global__ void forwardDeapodizationKernel2D(DType2* imdata, DType beta, DType n
     if (!isnan(deapo))// == deapo)
     {
       imdata[t].x = imdata[t].x / deapo;//Re
-      imdata[t].y = imdata[t].y / deapo ; //Im
+      imdata[t].y = imdata[t].y / deapo; //Im
     }
     t = t + blockDim.x*gridDim.x;
   }
@@ -742,20 +737,18 @@ __global__ void paddingKernel2D(DType2* imdata,CufftType* gdata, IndType3 offset
 void performForwardDeapodization(DType2* imdata_d,
   gpuNUFFT::GpuNUFFTInfo* gi_host)
 {
-  DType beta = (DType)BETA(gi_host->kernel_width,gi_host->osr);
+  DType beta = (DType)BETA(gi_host->kernel_width, gi_host->osr);
 
   dim3 grid_dim(getOptimalGridDim(gi_host->im_width_dim,THREAD_BLOCK_SIZE));
   dim3 block_dim(THREAD_BLOCK_SIZE);
 
-  //Calculate normalization value (should be at position 0 in interval [-N/2,N/2]) 
-  DType norm_val_x = calculateDeapodizationValue(0,gi_host->grid_width_inv.x,gi_host->kernel_width,beta);
-  DType norm_val_y = calculateDeapodizationValue(0,gi_host->grid_width_inv.y,gi_host->kernel_width,beta);
-  DType norm_val_z = calculateDeapodizationValue(0,gi_host->grid_width_inv.z,gi_host->kernel_width,beta);
-  DType norm_val;
+  //Calculate normalization value
+  DType norm_val = I0_BETA(gi_host->kernel_width, gi_host->osr) / (DType)gi_host->kernel_width;
+
   if (gi_host->is2Dprocessing)
-    norm_val = norm_val_x * norm_val_y;
+    norm_val = norm_val * norm_val;
   else
-    norm_val = norm_val_x * norm_val_y * norm_val_z;
+    norm_val = norm_val * norm_val * norm_val;
 
   if (gi_host->is2Dprocessing)
     forwardDeapodizationKernel2D<<<grid_dim,block_dim>>>(imdata_d,beta,norm_val,gi_host->im_width_dim);

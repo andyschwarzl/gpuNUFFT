@@ -21,21 +21,10 @@ class TextureGpuNUFFTOperator : public GpuNUFFTOperator
  public:
   TextureGpuNUFFTOperator(IndType kernelWidth, IndType sectorWidth, DType osf,
                           Dimensions imgDims,
-                          InterpolationType interpolationType)
-    : GpuNUFFTOperator(kernelWidth, sectorWidth, osf, imgDims, false, TEXTURE),
-      interpolationType(interpolationType)
-  {
-    if (typeid(DType) == typeid(double))
-      throw std::runtime_error(
-          "Double precision textures are not supported yet!");
-
-    initKernel();
-  }
-
-  TextureGpuNUFFTOperator(IndType kernelWidth, IndType sectorWidth, DType osf,
-                          Dimensions imgDims)
-    : GpuNUFFTOperator(kernelWidth, sectorWidth, osf, imgDims, false, TEXTURE),
-      interpolationType(gpuNUFFT::TEXTURE2D_LOOKUP)
+                          InterpolationType interpolationType = TEXTURE2D_LOOKUP,
+                          bool matlabSharedMem = false)
+    : GpuNUFFTOperator(kernelWidth, sectorWidth, osf, imgDims, false, TEXTURE, matlabSharedMem),
+    interpolationType(interpolationType), kernel_d(NULL)
   {
     if (typeid(DType) == typeid(double))
       throw std::runtime_error(
@@ -46,6 +35,7 @@ class TextureGpuNUFFTOperator : public GpuNUFFTOperator
 
   ~TextureGpuNUFFTOperator()
   {
+    freeLookupTable();
   }
 
   virtual OperatorType getType()

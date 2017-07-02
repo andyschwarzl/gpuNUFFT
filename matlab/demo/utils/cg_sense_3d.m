@@ -42,10 +42,10 @@ cbar = conj(c);
 % right hand side: -K^*residual 
 y  = zeros(nx,ny,nz);
 if useMulticoil
-    y = FT'*data;
+    y = FT'*(data .* sqrt(repmat(col(mask), [1 nc])));
 else
 for ii = 1:nc
-    y = y + FT*(data(:,:,ii)).*cbar(:,:,:,ii);
+    y = y + FT'*(data(:,:,ii) .* sqrt(col(mask))).*cbar(:,:,:,ii);
 end
 end
 

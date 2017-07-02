@@ -41,8 +41,10 @@ void gpuNUFFT::GpuNUFFTOperator::writeOrdered(gpuNUFFT::Array<T> &destArray,
 
 void gpuNUFFT::GpuNUFFTOperator::initKernel()
 {
-  IndType kernelSize = calculateGrid3KernelSize(osf, kernelWidth / 2.0f);
+  IndType kernelSize = calculateGrid3KernelSize(osf, kernelWidth);
   this->kernel.dim.length = kernelSize;
+  if (this->kernel.data != NULL)
+    free(this->kernel.data);
   this->kernel.data = (DType *)calloc(this->kernel.count(), sizeof(DType));
   load1DKernel(this->kernel.data, (int)kernelSize, (int)kernelWidth, osf);
 }
@@ -269,12 +271,12 @@ void gpuNUFFT::GpuNUFFTOperator::initDeviceMemory(int n_coils, int n_coils_cc)
     allocateDeviceMem<DType2>(&sens_d, imdata_count * n_coils_cc);
   }
 
-  if (n_coils > 1)
+  // copy deapo function to device
+  if (this->deapo.data)
   {
     if (DEBUG)
-      printf("allocate precompute deapofunction of size %d...\n", imdata_count);
-    allocateDeviceMem<DType>(&deapo_d, imdata_count);
-    precomputeDeapodization(deapo_d, gi_host);
+      printf("allocate precomputed deapofunction of size %d...\n", imdata_count);
+    allocateAndCopyToDeviceMem<DType>(&deapo_d, this->deapo.data, imdata_count);
   }
   if (DEBUG)
     printf("sector pad width: %d\n", gi_host->sector_pad_width);
@@ -522,15 +524,13 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       printf("error at adj thread synchronization 7: %s\n",
              cudaGetErrorString(cudaGetLastError()));
-    // check if precomputed deapo function can be used
-    if (n_coils > 1 && deapo_d != NULL)
-      performDeapodization(imdata_d, deapo_d, gi_host);
-    else
-      performDeapodization(imdata_d, gi_host);
+
+    performDeapodization(imdata_d, deapo_d, gi_host);
+
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       printf("error at adj thread synchronization 8: %s\n",
              cudaGetErrorString(cudaGetLastError()));
-
+	
     performFFTScaling(imdata_d, gi_host->im_width_dim, gi_host);
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       printf("error: at adj  thread synchronization 9: %s\n",
@@ -753,12 +753,31 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(
       fprintf(stderr, "error at adj thread synchronization 4: %s\n",
               cudaGetErrorString(cudaGetLastError()));
 
+    performFFTShift(gdata_d, INVERSE, getGridDims(), gi_host);
+
+    if (debugTiming)
+      printf("iFFT (incl. shift) : %.2f ms\n", stopTiming());
+
+    if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
+      printf("error at adj thread synchronization 5: %s\n",
+             cudaGetErrorString(cudaGetLastError()));
+    performCrop(gdata_d, imdata_d, gi_host);
+
+    if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
+      printf("error at adj thread synchronization 6: %s\n",
+             cudaGetErrorString(cudaGetLastError()));
+
+    performFFTScaling(imdata_d, gi_host->im_width_dim, gi_host);
+    if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
+      printf("error: at adj  thread synchronization 7: %s\n",
+      cudaGetErrorString(cudaGetLastError()));
+
     if (gpuNUFFTOut == FFT)
     {
       if (DEBUG)
         printf("stopping output after FFT step\n");
       // get output
-      copyFromDevice<CufftType>(gdata_d, imgData.data, gi_host->grid_width_dim);
+      copyFromDevice<CufftType>(imdata_d, imgData.data, gi_host->imgDims_count);
 
       freeTotalDeviceMemory(data_d, imdata_d, imdata_sum_d, NULL);
 
@@ -766,33 +785,13 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(
       return;
     }
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
-      printf("error at adj thread synchronization 5: %s\n",
-             cudaGetErrorString(cudaGetLastError()));
-    performFFTShift(gdata_d, INVERSE, getGridDims(), gi_host);
-
-    if (debugTiming)
-      printf("iFFT (incl. shift) : %.2f ms\n", stopTiming());
-
-    if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
-      printf("error at adj thread synchronization 6: %s\n",
-             cudaGetErrorString(cudaGetLastError()));
-    performCrop(gdata_d, imdata_d, gi_host);
-
-    if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
-      printf("error at adj thread synchronization 7: %s\n",
-             cudaGetErrorString(cudaGetLastError()));
-    // check if precomputed deapo function can be used
-    if (n_coils > 1 && deapo_d != NULL)
-      performDeapodization(imdata_d, deapo_d, gi_host);
-    else
-      performDeapodization(imdata_d, gi_host);
-    if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       printf("error at adj thread synchronization 8: %s\n",
-             cudaGetErrorString(cudaGetLastError()));
+      cudaGetErrorString(cudaGetLastError()));
 
-    performFFTScaling(imdata_d, gi_host->im_width_dim, gi_host);
+    performDeapodization(imdata_d, deapo_d, gi_host);
+	  
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
-      printf("error: at adj  thread synchronization 9: %s\n",
+      printf("error at adj thread synchronization 9: %s\n",
              cudaGetErrorString(cudaGetLastError()));
 
     if (this->applySensData())
@@ -946,11 +945,8 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(
     }
 
     // apodization Correction
-    if (n_coils > 1 && deapo_d != NULL)
-      performForwardDeapodization(imdata_d, deapo_d, gi_host);
-    else
-      performForwardDeapodization(imdata_d, gi_host);
-
+    performForwardDeapodization(imdata_d, deapo_d, gi_host);
+	  
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       printf("error at thread synchronization 2: %s\n",
              cudaGetErrorString(cudaGetLastError()));
@@ -1013,10 +1009,15 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       printf("error: at thread synchronization 8: %s\n",
              cudaGetErrorString(cudaGetLastError()));
+    
+    // Also apply density compensation here
+    if (this->applyDensComp())
+      performDensityCompensation(data_d, density_comp_d, gi_host);
 
     // write result in correct order back into output array
     writeOrderedGPU(data_sorted_d, data_indices_d, data_d,
                     (int)this->kSpaceTraj.count(), n_coils_cc);
+
     copyDeviceToDevice(data_sorted_d, data_d, data_count * n_coils_cc);
   }  // iterate over coils
 
@@ -1144,11 +1145,8 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(
     }
 
     // apodization Correction
-    if (n_coils > 1 && deapo_d != NULL)
-      performForwardDeapodization(imdata_d, deapo_d, gi_host);
-    else
-      performForwardDeapodization(imdata_d, gi_host);
-
+    performForwardDeapodization(imdata_d, deapo_d, gi_host);
+	  
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       printf("error at thread synchronization 2: %s\n",
              cudaGetErrorString(cudaGetLastError()));
@@ -1212,9 +1210,14 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(
       printf("error: at thread synchronization 8: %s\n",
              cudaGetErrorString(cudaGetLastError()));
 
+    // Also apply density compensation here
+    if (this->applyDensComp())
+      performDensityCompensation(data_d, density_comp_d, gi_host);
+
     // write result in correct order back into output array
     writeOrderedGPU(data_sorted_d, data_indices_d, data_d,
                     (int)this->kSpaceTraj.count(), n_coils_cc);
+    
     copyFromDevice(data_sorted_d, kspaceData.data + data_coil_offset,
                    data_count * n_coils_cc);
   }  // iterate over coils

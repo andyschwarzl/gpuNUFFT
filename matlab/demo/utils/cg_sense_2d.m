@@ -17,8 +17,12 @@ function  u = cg_sense_2d(data,FT,c,mask,alpha,tol,maxit,display,useMulticoil)
 % OUTPUT
 % u:       reconstructed 2D image
 %
-% Last Change: 23.11.2012
-% By: Florian (florian.knoll@tugraz.at)
+% Original version:
+% Christian Clason (christian.clason@uni-graz.at)
+% Florian Knoll (florian.knoll@tugraz.at)
+% 
+% Last Change: Jan 2018
+% By: Florian (florian.knoll@nyumc.org)
 % 
 % [1] Pruessmann, K. P.; Weiger, M.; Boernert, P. and Boesiger, P.
 % Advances in sensitivity encoding with arbitrary k-space trajectories.

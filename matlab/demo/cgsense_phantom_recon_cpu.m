@@ -1,11 +1,14 @@
 %% Reconstruction of 3D radial vibe data
-% Last change: Jan 18
+% Last change: Jan 2018
 % By: Florian Knoll (florian.knoll@nyumc.org)
+%
+% Note: the useMultiCoil flag that includes coil sensitivities in the
+% operator is only implemented for the gpuNUFFT, not for the CPU reference
+
 
 clear all; close all; clc; clear classes;
 
 addpath(genpath('./utils'));
-addpath(genpath('../../gpuNUFFT'));
 
 %% Data parameters
 N=160;
@@ -13,8 +16,7 @@ nSl=N;
 nFE=207;
 nCh=8;
 disp_slice=nSl/2;
-useGPU = true;
-useMultiCoil = 1;
+useMultiCoil = 0;
 
 %% Reconstruction parameters
 maxitCG = 10;
@@ -29,19 +31,28 @@ rawdata = reshape(rawdata,[nPE*nFE,nCh]);
 
 %% Regridding operator GPU without coil sensitivities for now
 disp('Generate NUFFT Operator without coil sensitivities');
-osf = 2; wg = 3; sw = 8;
-imwidth = N;
-FT = gpuNUFFT(k',col(w(:,:,1)),osf,wg,sw,[N,N,nSl],[],true);
+FT = NUFFT3D(k, col(sqrt(w)), 1, 0, [N,N,N], 2);
 
-for ii=1:nCh
-    img_sens(:,:,:,ii) = FT'*(rawdata(:,ii) .* sqrt(col(w)));
+%% Forward and adjoint transform
+tic
+for cc=1:nCh
+    img(:,:,:,cc) = FT'*rawdata(:,cc);
 end
+timeFTH = toc;
+disp(['Time adjoint: ', num2str(timeFTH), ' s']);
+
+tic
+for cc=1:nCh
+    test(:,cc) = FT*img(:,:,:,cc);
+end
+timeFT = toc;
+disp(['Time forward: ', num2str(timeFT), ' s']);
 
 %% Estimate sensitivities
 disp('Estimate coil sensitivities.');
 % Terribly crude, but fast
-img_sens_sos = sqrt(sum(abs(img_sens).^2,4));
-senseEst = img_sens./repmat(img_sens_sos,[1,1,1,nCh]);
+img_sos = sqrt(sum(abs(img).^2,4));
+senseEst = img./repmat(img_sos,[1,1,1,nCh]);
 
 % Use this instead for more reasonable sensitivitities, but takes some time
 % for ii=1:nSl
@@ -49,25 +60,8 @@ senseEst = img_sens./repmat(img_sens_sos,[1,1,1,nCh]);
 %     [~,senseEst(:,:,ii,:)]=adapt_array_2d(squeeze(img_sens(:,:,ii,:)));
 % end
 
-%% Redefine regridding operator GPU including coil sensitivities
-disp('Generate NUFFT Operator with coil sensitivities');
-FT = gpuNUFFT(k',col(w(:,:,1)),osf,wg,sw,[N,N,nSl],senseEst,true);
-
-%% Forward and adjoint transform
-tic
-img_comb = FT'*(rawdata .* sqrt(repmat(col(w),[1 nCh])));
-timeFTH = toc;
-disp(['Time adjoint: ', num2str(timeFTH), ' s']);
-% figure,imshow(abs(img_comb(:,:,disp_slice)),[]); title('Regridding');
-% figure,kshow(abs(fft2c(img_comb(:,:,disp_slice)))); title('Regridding k-space');
-
-tic
-test = FT*img_comb;
-timeFT = toc;
-disp(['Time forward: ', num2str(timeFT), ' s']);
-
 %% CGSENSE Reconstruction
-mask = w;
+mask = 1;
 tic
 img_cgsense = cg_sense_3d(rawdata,FT,senseEst,mask,alpha,tol,maxitCG,display,disp_slice,useMultiCoil);
 timeCG = toc;
@@ -75,5 +69,5 @@ disp(['Time CG SENSE: ', num2str(timeCG), ' s']);
 
 %% Display
 figure;
-subplot(1,2,1); imshow(abs(img_comb(:,:,disp_slice)),[]); title('Regridding');
+subplot(1,2,1); imshow(abs(img_sos(:,:,disp_slice)),[]); title('Regridding');
 subplot(1,2,2); imshow(abs(img_cgsense(:,:,disp_slice)),[]); title('CGSENSE');

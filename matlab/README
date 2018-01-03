@@ -8,3 +8,6 @@ To keep the package size and runtime small the coil sensitivities are
 estimated in a quite rough way. Nevertheless, the main functionality 
 of the gpuNUFFT MATLAB operator should be generally understandable. 
 
+Please note that the cpu reference comparison requires Jeff Fessler's NUFFT toolbox: http://web.eecs.umich.edu/~fessler/irt/irt/nufft/.
+It also makes use of Miki Lustig's class interface to the toolbox. An extension to 3D trajectories is included here with permission from the original author, as well as a copy of the orignal 2D version. It was originally included in: https://people.eecs.berkeley.edu/~mlustig/software/sparseMRI_v0.2.tar.gz
+

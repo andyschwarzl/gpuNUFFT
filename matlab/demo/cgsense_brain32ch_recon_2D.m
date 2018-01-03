@@ -1,9 +1,14 @@
 %% Test CG SENSE recon of 2D brain 32 channel data
+% Last change: Jan 2018
+% By: Florian Knoll (florian.knoll@nyumc.org)
+%
+% Note: the useMultiCoil flag that includes coil sensitivities in the
+% operator is only implemented for the gpuNUFFT, not for the CPU reference
+
 clear all; clc; close all; 
 
 addpath(genpath('./utils'));
 addpath(genpath('../../gpuNUFFT'));
-addpath(genpath('../../../fessler/NUFFT'));
 
 load ./data/brain_64spokes.mat;
 
@@ -13,7 +18,7 @@ alpha = 1e-6;
 tol = 1e-6;
 display = 1;
 
-% useGPU =false;
+% useGPU = false;
 useGPU = true;
 useMultiCoil = 1; % flag to compute all coils with one gpu call
 
@@ -21,8 +26,9 @@ useMultiCoil = 1; % flag to compute all coils with one gpu call
 [nFE,nSpokes,nCh]=size(rawdata);
 rawdata = reshape(rawdata,[nFE*nSpokes,nCh]);
 
-% construct density compensation data
-w = abs(k);
+% simple density compensation for radial
+w = sqrt(abs(k));
+
 %%
 disp('Generate NUFFT Operator without coil sensitivities');
 osf = 2; % oversampling: 1.5 1.25
@@ -56,10 +62,10 @@ end
 tic
 img_comb = zeros(imwidth,imwidth);
 if (useGPU)
-    img_comb = FT'*(rawdata .*  sqrt(repmat(col(w), [1, nCh])));
+    img_comb = FT'*rawdata;
 else
     for ii=1:nCh
-        img_comb = img_comb + (FT'*rawdata(:,ii) .* sqrt(col(w))) .* conj(senseEst(:,:,ii));
+        img_comb = img_comb + (FT'*(rawdata(:,ii))) .* conj(senseEst(:,:,ii));
     end
 end
 timeFTH = toc;
@@ -78,9 +84,8 @@ timeFT = toc;
 disp(['Time forward: ', num2str(timeFT), ' s']);
 
 %% CGSENSE Reconstruction
-mask = w;
 tic
-img_cgsense = cg_sense_2d(rawdata,FT,senseEst,mask,alpha,tol,maxitCG,display,useMultiCoil);
+img_cgsense = cg_sense_2d(rawdata,FT,senseEst,1,alpha,tol,maxitCG,display,useMultiCoil);
 timeCG = toc;
 disp(['Time CG SENSE: ', num2str(timeCG), ' s']);
 

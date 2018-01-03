@@ -18,8 +18,12 @@ function  u = cg_sense_3d(data,FT,c,mask,alpha,tol,maxit,display,slice,useMultic
 % OUTPUT
 % u:       reconstructed 3D image volume
 %
-% Last Change: 23.11.2012
-% By: Florian (florian.knoll@tugraz.at)
+% Original version:
+% Christian Clason (christian.clason@uni-graz.at)
+% Florian Knoll (florian.knoll@tugraz.at)
+% 
+% Last Change: Jan 2018
+% By: Florian (florian.knoll@nyumc.org)
 % 
 % [1] Pruessmann, K. P.; Weiger, M.; Boernert, P. and Boesiger, P.
 % Advances in sensitivity encoding with arbitrary k-space trajectories.
@@ -42,10 +46,10 @@ cbar = conj(c);
 % right hand side: -K^*residual 
 y  = zeros(nx,ny,nz);
 if useMulticoil
-    y = FT'*(data .* sqrt(repmat(col(mask), [1 nc])));
+    y = FT'*(data .* repmat(col(mask), [1 nc]));
 else
 for ii = 1:nc
-    y = y + FT'*(data(:,:,ii) .* sqrt(col(mask))).*cbar(:,:,:,ii);
+    y = y + FT'*(data(:,ii) .* col(mask)).*cbar(:,:,:,ii);
 end
 end
 
@@ -101,7 +105,7 @@ if useMulticoil
   y = FT'*(FT*dx);
 else
   for ii = 1:nc
-      y = y + cconj(:,:,:,ii).*FH(F(c(:,:,:,ii).*dx));
+     y = y + cconj(:,:,:,ii) .* (FT' * (FT * (c(:,:,:,ii).*dx)));
   end
 end
 y = y(:);

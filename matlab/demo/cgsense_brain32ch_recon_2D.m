@@ -7,13 +7,12 @@
 
 clear all; clc; close all; 
 
+addpath('../../CUDA/bin');
 addpath(genpath('./utils'));
 addpath(genpath('../../gpuNUFFT'));
 
-load ./data/brain_64spokes.mat;
-
 %% Reconstruction parameters
-maxitCG = 10;
+maxitCG = 20;
 alpha = 1e-6;
 tol = 1e-6;
 display = 1;
@@ -22,14 +21,15 @@ display = 1;
 useGPU = true;
 useMultiCoil = 1; % flag to compute all coils with one gpu call
 
-%%
+%% Load data
+load ./data/brain_64spokes.mat;
 [nFE,nSpokes,nCh]=size(rawdata);
 rawdata = reshape(rawdata,[nFE*nSpokes,nCh]);
 
+%% Generate NUFFT Operator without coil sensitivities
 % simple density compensation for radial
 w = sqrt(abs(k));
 
-%%
 disp('Generate NUFFT Operator without coil sensitivities');
 osf = 2; % oversampling: 1.5 1.25
 wg = 3; % kernel width: 5 7
@@ -42,15 +42,15 @@ else
     FT = NUFFT(col(k),col(w),1,0,[imwidth,imwidth], 2);
     useMultiCoil = 0; 
 end
-%%
-for ii=1:nCh
-    img_sens(:,:,ii) = FT'*(rawdata(:,ii) .* sqrt(col(w)));
-end
 
 %% Estimate sensitivities
 disp('Estimate coil sensitivities.');
+for ii=1:nCh
+    img_sens(:,:,ii) = FT'*(rawdata(:,ii));
+end
+
 img_sens_sos = sqrt(sum(abs(img_sens).^2,3));
-[~,senseEst]=adapt_array_2d(img_sens);
+senseEst = img_sens./repmat(img_sens_sos,[1,1,nCh]);
 
 %% Redefine regridding operator GPU including coil sensitivities
 disp('Generate NUFFT Operator with coil sensitivities');

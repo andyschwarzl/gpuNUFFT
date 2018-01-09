@@ -44,7 +44,7 @@ cbar = conj(c);
 % right hand side: -K^*residual 
 y  = zeros(nx,ny);
 if useMulticoil
-    y = FT'* (data .* sqrt(repmat(col(mask), [1 nc])));
+    y = FT'* (data .* sqrt(col(mask)));
 else
 for ii = 1:nc
     y = y + FT' * data(:,ii) .* sqrt(col(mask)) .* cbar(:,:,ii);

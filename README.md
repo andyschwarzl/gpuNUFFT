@@ -23,6 +23,7 @@ CMAKE Options:
 - WITH_DEBUG        : DEFAULT OFF, enables Command-Line DEBUG output
 - WITH_MATLAB_DEBUG : DEFAULT OFF, enables MATLAB Console DEBUG output
 - GEN_TESTS         : DEFAULT OFF, generate Unit tests
+- FERMI_GPU         : DEFAULT OFF, set ON to support cards with compute capability 2.0
 
 Prior to compilation, the path where MATLAB is installed has to be defined in the top level CMakeLists.txt file, e.g.:
 

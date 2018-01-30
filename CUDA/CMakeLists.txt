@@ -40,6 +40,7 @@ FIND_PACKAGE(Matlab)
 
 if (Matlab_FOUND)
   MESSAGE(STATUS "MATLAB Installation found via script variable Matlab_ROOT_DIR in ${Matlab_ROOT_DIR}")
+  SET(MATLAB_ROOT_DIR ${Matlab_ROOT_DIR})
 endif()
 
 IF (EXISTS "${MATLAB_ROOT_DIR}")

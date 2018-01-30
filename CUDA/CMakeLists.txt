@@ -25,29 +25,42 @@ SET(MEX_EXPORT_DIR ${PROJECT_SOURCE_DIR}/../gpuNUFFT/@gpuNUFFT/private CACHE STR
 #Searching CUDA
 FIND_PACKAGE(CUDA REQUIRED)
 
+#Enable Mex File Generation
 #Searching MATLAB
-if(WIN32)
-  SET(MATLAB_ROOT_DIR "C:\\Program Files\\MATLAB\\R2011a" CACHE STRING "MATLAB Installation Directory")
-elseif(UNIX AND APPLE)
-  SET(MATLAB_ROOT_DIR "/Applications/MATLAB_R2010b.app" CACHE STRING "MATLAB Installation Directory")
-elseif(UNIX)
-  SET(MATLAB_ROOT_DIR "/usr/local/MATLAB/R2010b" CACHE STRING "MATLAB Installation Directory")
-endif()
+SET(GEN_MEX_FILES ON CACHE BOOL "Enable generation of Matlab MEX files.")
 
-SET(MATLAB_DIR = "${MATLAB_ROOT_DIR}")
+if(GEN_MEX_FILES)
+  if(WIN32)
+    SET(MATLAB_ROOT_DIR "C:\\Program Files\\MATLAB\\R2011a" CACHE STRING "MATLAB Installation Directory")
+  elseif(UNIX AND APPLE)
+    SET(MATLAB_ROOT_DIR "/Applications/MATLAB_R2010b.app" CACHE STRING "MATLAB Installation Directory")
+  elseif(UNIX)
+    SET(MATLAB_ROOT_DIR "/usr/local/MATLAB/R2010b" CACHE STRING "MATLAB Installation Directory")
+  endif()
 
-FIND_PACKAGE(Matlab)
+  SET(MATLAB_DIR = "${MATLAB_ROOT_DIR}")
 
-if (Matlab_FOUND)
-  MESSAGE(STATUS "MATLAB Installation found via script variable Matlab_ROOT_DIR in ${Matlab_ROOT_DIR}")
-  SET(MATLAB_ROOT_DIR ${Matlab_ROOT_DIR})
-endif()
+  FIND_PACKAGE(Matlab)
 
-IF (EXISTS "${MATLAB_ROOT_DIR}")
-  MESSAGE(STATUS "MATLAB Installation found in ${MATLAB_ROOT_DIR}")
-else()
-  MESSAGE(FATAL_ERROR "Please set variable MATLAB_ROOT_DIR correctly! Current value: ${MATLAB_ROOT_DIR}")
-endif()
+  if (Matlab_FOUND)
+    MESSAGE(STATUS "MATLAB Installation found via script variable Matlab_ROOT_DIR in ${Matlab_ROOT_DIR}")
+    SET(MATLAB_ROOT_DIR ${Matlab_ROOT_DIR})
+  endif()
+
+  IF (EXISTS "${MATLAB_ROOT_DIR}")
+    MESSAGE(STATUS "MATLAB Installation found in ${MATLAB_ROOT_DIR}")
+  else()
+    MESSAGE(FATAL_ERROR "Please set variable MATLAB_ROOT_DIR correctly! Current value: ${MATLAB_ROOT_DIR}")
+  endif()
+
+  #Matlab DEBUG output
+  SET (MATLAB_DEBUG false)
+  OPTION(WITH_MATLAB_DEBUG "Enable DEBUG messages for MATLAB calls" OFF)
+  if (WITH_MATLAB_DEBUG)
+   SET (MATLAB_DEBUG true)
+  endif()
+  MESSAGE(STATUS "Setting MATLAB DEBUG Option to ${MATLAB_DEBUG}")
+endif(GEN_MEX_FILES)
 
 #Options
 #General DEBUG output 
@@ -57,14 +70,6 @@ if (WITH_DEBUG)
  SET (DEBUG true)
 endif()
 MESSAGE(STATUS "Setting DEBUG Option to ${DEBUG}")
-
-#Matlab DEBUG output
-SET (MATLAB_DEBUG false)
-OPTION(WITH_MATLAB_DEBUG "Enable DEBUG messages for MATLAB calls" OFF)
-if (WITH_MATLAB_DEBUG)
- SET (MATLAB_DEBUG true)
-endif()
-MESSAGE(STATUS "Setting MATLAB DEBUG Option to ${MATLAB_DEBUG}")
 
 #Enable ATOMIC kernel  
 SET(GEN_ATOMIC ON CACHE BOOL "Enable atomic kernel generation (Compute Capability 2.0 needed). Only turn it off when old architectures (<2.0) have to be supported.")

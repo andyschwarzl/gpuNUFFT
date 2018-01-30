@@ -5,4 +5,7 @@ ADD_SUBDIRECTORY(coarse)
 if(GEN_ATOMIC)
 	ADD_SUBDIRECTORY(atomic)
 endif()
-ADD_SUBDIRECTORY(matlab)
+
+if(GEN_MEX_FILES)
+  ADD_SUBDIRECTORY(matlab)
+endif(GEN_MEX_FILES)

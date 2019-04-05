@@ -77,9 +77,6 @@ if (WITH_DEBUG)
 endif()
 MESSAGE(STATUS "Setting DEBUG Option to ${DEBUG}")
 
-#Enable ATOMIC kernel  
-SET(GEN_ATOMIC ON CACHE BOOL "Enable atomic kernel generation (Compute Capability 2.0 needed). Only turn it off when old architectures (<2.0) have to be supported.")
-
 #Enable Google Tests
 SET(GEN_TESTS OFF CACHE BOOL "Enable and generate simple GOOGLE test framework unit tests")
 
@@ -189,11 +186,9 @@ if(GEN_TESTS)
 		COMMAND runGPUUnitTests
 	)
 
-	if(GEN_ATOMIC)
-		add_test(
-			NAME runGPUATMUnitTests
-			COMMAND runGPUATMUnitTests)
-	endif(GEN_ATOMIC)
+	add_test(
+		NAME runGPUATMUnitTests
+		COMMAND runGPUATMUnitTests)
 endif(GEN_TESTS)
 
 ADD_SUBDIRECTORY(doc)

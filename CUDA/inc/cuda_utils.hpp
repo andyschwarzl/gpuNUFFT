@@ -140,7 +140,7 @@ inline void freeTotalDeviceMemory(void *ptr, ...)
     i++;
     p = va_arg(list, void *);
   }
-  cudaThreadSynchronize();
+  cudaDeviceSynchronize();
   if (DEBUG)
     printf("%d device pointers freed\n", i);
 

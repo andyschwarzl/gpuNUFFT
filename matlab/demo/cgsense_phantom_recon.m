@@ -31,7 +31,7 @@ rawdata = reshape(rawdata,[nPE*nFE,nCh]);
 disp('Generate NUFFT Operator without coil sensitivities');
 osf = 2; wg = 3; sw = 8;
 imwidth = N;
-FT = gpuNUFFT(k',col(w(:,:,1)),osf,wg,sw,[N,N,nSl],[],true);
+FT = gpuNUFFT(k',col(w(:,:,1)),osf,wg,sw,[N,N,nSl],[]);
 
 for ii=1:nCh
     img_sens(:,:,:,ii) = FT'*(rawdata(:,ii) .* sqrt(col(w)));
@@ -51,7 +51,7 @@ senseEst = img_sens./repmat(img_sens_sos,[1,1,1,nCh]);
 
 %% Redefine regridding operator GPU including coil sensitivities
 disp('Generate NUFFT Operator with coil sensitivities');
-FT = gpuNUFFT(k',col(w(:,:,1)),osf,wg,sw,[N,N,nSl],senseEst,true);
+FT = gpuNUFFT(k',col(w(:,:,1)),osf,wg,sw,[N,N,nSl],senseEst);
 
 %% Forward and adjoint transform
 tic

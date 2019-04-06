@@ -131,11 +131,7 @@ ENDIF()
 MESSAGE(STATUS "setting NVCC FLAGS to: ${CUDA_NVCC_FLAGS}")
 
 #LIB and MEX-file names
-SET(GRID_LIB_NAME "gpuNUFFT${PREC_SUFFIX}")
 SET(GRID_LIB_ATM_NAME "gpuNUFFT_ATM${PREC_SUFFIX}")
-
-SET(GRID_MEX_FORW_NAME "mex_gpuNUFFT_forw${PREC_SUFFIX}")
-SET(GRID_MEX_ADJ_NAME "mex_gpuNUFFT_adj${PREC_SUFFIX}")
 
 SET(GRID_MEX_FORW_ATM_NAME "mex_gpuNUFFT_forw_atomic${PREC_SUFFIX}")
 SET(GRID_MEX_ADJ_ATM_NAME "mex_gpuNUFFT_adj_atomic${PREC_SUFFIX}")
@@ -143,7 +139,7 @@ SET(GRID_MEX_ADJ_ATM_NAME "mex_gpuNUFFT_adj_atomic${PREC_SUFFIX}")
 #Precomputation MEX file
 SET(GRID_MEX_PRECOMP_NAME "mex_gpuNUFFT_precomp${PREC_SUFFIX}")
 
-MESSAGE(STATUS "creating lib with name: ${GRID_LIB_NAME}")
+MESSAGE(STATUS "creating lib with name: ${GRID_LIB_ATM_NAME}")
 SET(WARNING "/* WARNING: Automatically generated file. Please do not modify this file. */")
 CONFIGURE_FILE( ${CMAKE_SOURCE_DIR}/inc/config.hpp.cmake ${CMAKE_SOURCE_DIR}/inc/config.hpp)
 CONFIGURE_FILE( ${CMAKE_SOURCE_DIR}/inc/cufft_config.hpp.cmake ${CMAKE_SOURCE_DIR}/inc/cufft_config.hpp)
@@ -180,10 +176,6 @@ if(GEN_TESTS)
 	add_test(
 		NAME runUnitTests
 		COMMAND runUnitTests
-	)
-	add_test(
-		NAME runGPUUnitTests
-		COMMAND runGPUUnitTests
 	)
 
 	add_test(

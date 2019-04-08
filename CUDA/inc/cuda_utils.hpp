@@ -181,8 +181,8 @@ inline void showMemoryInfo(bool force, FILE *stream)
   size_t total_mem = 0;
   cudaMemGetInfo(&free_mem, &total_mem);
   if (DEBUG || force)
-    fprintf(stream, "memory usage, free: %lu total: %lu\n", free_mem,
-            total_mem);
+    fprintf(stream, "memory usage, free: %lu total: %lu\n", (SizeType)(free_mem),
+    (SizeType)(total_mem));
 }
 
 /** \brief Debug short device memory information (free/total) to stdout if DEBUG

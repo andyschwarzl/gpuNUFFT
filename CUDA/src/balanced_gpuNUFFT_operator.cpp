@@ -9,8 +9,8 @@ gpuNUFFT::BalancedGpuNUFFTOperator::initAndCopyGpuNUFFTInfo(int n_coils_cc)
   gi_host->sectorsToProcess = sectorProcessingOrder.count();
 
   if (DEBUG)
-    printf("copy GpuNUFFT Info to symbol memory... size = %ld \n",
-           sizeof(gpuNUFFT::GpuNUFFTInfo));
+    printf("copy GpuNUFFT Info to symbol memory... size = %lu \n",
+           (SizeType)sizeof(gpuNUFFT::GpuNUFFTInfo));
 
   initConstSymbol("GI", gi_host, sizeof(gpuNUFFT::GpuNUFFTInfo));
 

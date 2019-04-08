@@ -110,7 +110,7 @@ void gpuNUFFT::GpuNUFFTOperatorFactory::computeProcessingOrder(
 
   Array<IndType2> sectorProcessingOrder =
       initSectorProcessingOrder(gpuNUFFTOp, (IndType)processingOrder.size());
-  std::memcpy(sectorProcessingOrder.data, processingOrder.data(), processingOrder.size());
+  std::memcpy(sectorProcessingOrder.data, processingOrder.data(), processingOrder.size() * sizeof(IndType2));
   if (gpuNUFFTOp->getType() == gpuNUFFT::BALANCED)
     static_cast<BalancedGpuNUFFTOperator *>(gpuNUFFTOp)
         ->setSectorProcessingOrder(sectorProcessingOrder);
@@ -194,7 +194,7 @@ gpuNUFFT::GpuNUFFTOperatorFactory::computeSectorDataCount(
   Array<IndType> sectorDataCount =
       useLocalMemory ? GpuNUFFTOperatorFactory::initSectorDataCount(gpuNUFFTOp, (IndType)dataCount.size()) : 
        initSectorDataCount(gpuNUFFTOp, (IndType)dataCount.size());
-  std::memcpy(sectorDataCount.data, dataCount.data(), dataCount.size());
+  std::memcpy(sectorDataCount.data, dataCount.data(), dataCount.size() * sizeof(IndType));
   return sectorDataCount;
 }
 

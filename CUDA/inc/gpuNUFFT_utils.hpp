@@ -57,21 +57,21 @@
 DType i0(DType x);
 
 /** \brief beta function used in interpolation function. See Beatty et al. */
-__inline__ DType BETA(DType kernelWidth, DType osr)
+__inline__ DType BETA(IndType kernelWidth, DType osr)
 {
-  return M_PI * sqrt(std::pow(kernelWidth / osr * (osr - 0.5f), 2.0) - 0.8f);
+  return (DType)M_PI * sqrt(std::pow((DType)kernelWidth / osr * (osr - (DType)0.5), (DType)2.0) - (DType)0.8);
 }
 
 /** \brief I_0 function used in interpolation function. See Beatty et al. */
-__inline__ DType I0_BETA(DType kernelWidth, DType osr)
+__inline__ DType I0_BETA(IndType kernelWidth, DType osr)
 {
   return i0(BETA(kernelWidth, osr));
 }
 
 /** \brief Interpolation Kernel evaluation for radius */
-__inline__ DType kernel(DType radius, DType kernelWidth, DType osr)
+__inline__ DType kernel(DType radius, IndType kernelWidth, DType osr)
 {
-  return i0(BETA(kernelWidth, osr) * sqrt(1 - std::pow(radius, 2.0))) / I0_BETA(kernelWidth, osr);
+  return i0(BETA(kernelWidth, osr) * sqrt((DType)1.0 - std::pow(radius, (DType)2.0))) / I0_BETA(kernelWidth, osr);
 }
 
 /*  KERNEL

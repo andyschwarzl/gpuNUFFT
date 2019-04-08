@@ -36,7 +36,7 @@ DType i0(DType x)
 long calculateGrid3KernelSize()
 {
   return calculateGrid3KernelSize(DEFAULT_OVERSAMPLING_RATIO,
-                                  DEFAULT_KERNEL_RADIUS);
+                                  DEFAULT_KERNEL_WIDTH);
 }
 
 // calculate necessary kernel density (per grid/kernel unit)

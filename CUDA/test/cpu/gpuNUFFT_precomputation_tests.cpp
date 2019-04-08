@@ -75,7 +75,7 @@ TEST(PrecomputationTest, ComputeIsotropicSectorDim)
   IndType sectorDim = computeTotalSectorCount(gridDim, sectorWidth);
   EXPECT_EQ(16 * osr, sectors);
 
-  IndType expected = 16 * 16 * 16 * osr * osr * osr;
+  IndType expected = (IndType)std::pow(16 * osr, 3.0);
   EXPECT_EQ(expected, sectorDim);
 
   gpuNUFFT::Dimensions sectorDims =
@@ -848,7 +848,7 @@ TEST(PrecomputationTest, AnisotropicComputeSectorDim)
 
   IndType sectorDim = computeTotalSectorCount(gridDim, sectorWidth);
 
-  IndType expected = (IndType)16 * 16 * 14 * osr * osr * osr;
+  IndType expected = (IndType)(16 * 16 * 14 * osr * osr * osr);
   EXPECT_EQ(expected, sectorDim);
 
   gpuNUFFT::Dimensions sectorDims =

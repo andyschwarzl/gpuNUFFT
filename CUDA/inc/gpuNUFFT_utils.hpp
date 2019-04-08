@@ -12,6 +12,7 @@
 #define _USE_MATH_DEFINES
 #endif
 
+#include <cmath>
 #include <math.h>
 #include <assert.h>
 
@@ -50,18 +51,28 @@
 
 /** \brief Square value */
 #define sqr(__se) ((__se) * (__se))
-/** \brief beta function used in interpolation function. See Beatty et al. */
-#define BETA(__kw, __osr)                                                      \
-  (M_PI * sqrt(sqr(__kw / __osr * (__osr - 0.5f)) - 0.8f))
-/** \brief I_0 function used in interpolation function. See Beatty et al. */
-#define I0_BETA(__kw, __osr) (i0(BETA(__kw, __osr)))
-/** \brief Interpolation Kernel evaluation for radius */
-#define kernel(__radius, __kw, __osr)                                          \
-  (i0(BETA(__kw, __osr) * sqrt(1 - sqr(__radius))) / I0_BETA(__kw, __osr))
 
 /**
  * \brief Modified Kaiser Bessel function of zero-th order. */
 DType i0(DType x);
+
+/** \brief beta function used in interpolation function. See Beatty et al. */
+__inline__ DType BETA(DType kernelWidth, DType osr)
+{
+  return M_PI * sqrt(std::pow(kernelWidth / osr * (osr - 0.5f), 2.0) - 0.8f);
+}
+
+/** \brief I_0 function used in interpolation function. See Beatty et al. */
+__inline__ DType I0_BETA(DType kernelWidth, DType osr)
+{
+  return i0(BETA(kernelWidth, osr));
+}
+
+/** \brief Interpolation Kernel evaluation for radius */
+__inline__ DType kernel(DType radius, DType kernelWidth, DType osr)
+{
+  return i0(BETA(kernelWidth, osr) * sqrt(1 - std::pow(radius, 2.0))) / I0_BETA(kernelWidth, osr);
+}
 
 /*  KERNEL
 *	Summary: Allocates the 3D spherically symmetric kaiser-bessel function

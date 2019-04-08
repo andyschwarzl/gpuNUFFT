@@ -29,6 +29,7 @@
   typedef cufftComplex CufftType;
 #endif
 
+typedef unsigned int SizeType;
 typedef unsigned int IndType;
 
 /** \brief Combined 2-tuple (x,y) of IndType */

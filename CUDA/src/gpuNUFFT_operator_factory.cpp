@@ -423,9 +423,9 @@ gpuNUFFT::Array<DType> gpuNUFFT::GpuNUFFTOperatorFactory::computeDeapodizationFu
 
   for (unsigned cnt = 0; cnt < deapoFunction.count(); cnt++)
   {
-    deapoFunction.data[cnt].x = deapoFunction.data[cnt].x * fft_scaling_factor;
-    deapoFunction.data[cnt].y = deapoFunction.data[cnt].y * fft_scaling_factor;
-    deapoAbs.data[cnt] = 1.0 / std::sqrt(std::pow(deapoFunction.data[cnt].x, 2.0) + std::pow(deapoFunction.data[cnt].y, 2.0));
+    deapoFunction.data[cnt].x = static_cast<DType>(deapoFunction.data[cnt].x * fft_scaling_factor);
+    deapoFunction.data[cnt].y = static_cast<DType>(deapoFunction.data[cnt].y * fft_scaling_factor);
+    deapoAbs.data[cnt] = static_cast<DType>(1.0 / std::sqrt(std::pow(deapoFunction.data[cnt].x, 2.0) + std::pow(deapoFunction.data[cnt].y, 2.0)));
     if (deapoAbs.data[cnt] > maxDeapoVal)
       maxDeapoVal = deapoAbs.data[cnt];
     if (deapoAbs.data[cnt] < minDeapoVal)
@@ -623,7 +623,7 @@ void gpuNUFFT::GpuNUFFTOperatorFactory::checkMemoryConsumption(
   size_t multiplier = sizeof(DType);
   size_t complexMultiplier = 2 * multiplier;
 
-  size_t estMem = 2 * imgDims.count() * std::pow(osf, 3) *
+  size_t estMem = 2 * static_cast<size_t>(imgDims.count() * std::pow(osf, 3)) *
                   complexMultiplier;  //< oversampled grid, and fft
   estMem += kSpaceDims.count() *
             (3 * multiplier +

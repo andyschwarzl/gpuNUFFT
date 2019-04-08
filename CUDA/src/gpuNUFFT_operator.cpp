@@ -333,7 +333,7 @@ int gpuNUFFT::GpuNUFFTOperator::computePossibleConcurrentCoilCount(
   int possibleCoilCount = n_coils;
 
   // estimated memory required per coil
-  float requiredMemoryPerCoil =
+  double requiredMemoryPerCoil =
       kSpaceDataDim.length * 8.0 * 2.0 +
       this->imgDims.width * this->imgDims.height * 8.0 * 2.0 +
       this->getGridDims().width * this->getGridDims().height * 8.0;

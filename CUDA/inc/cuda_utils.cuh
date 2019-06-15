@@ -50,8 +50,8 @@ __inline__ __device__ float compute3DTextureLookup(float x, float y, float z)
 
 __inline__ __device__ float computeTextureLookup(float x, float y)
 {
-  // wired to 2d
-  return compute2DTextureLookup((float)x, (float)y);
+  // wired to 1d
+  return compute1DTextureLookup((float)x, (float)y);
   // switch(GI.interpolationType)
   //{
   //  case 1: return compute1DTextureLookup(x,y);
@@ -63,8 +63,8 @@ __inline__ __device__ float computeTextureLookup(float x, float y)
 
 __inline__ __device__ float computeTextureLookup(float x, float y, float z)
 {
-  // wired to 2d
-  return compute2DTextureLookup(x, y, z);
+  // wired to 1d
+  return compute1DTextureLookup(x, y, z);
   // switch(GI.interpolationType)
   //{
   //  case 1: return compute1DTextureLookup(x,y,z);

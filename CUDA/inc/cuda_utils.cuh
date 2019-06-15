@@ -5,7 +5,10 @@
 
 __constant__ gpuNUFFT::GpuNUFFTInfo GI;
 
-__constant__ DType KERNEL[10000];
+// Maximum constant memory is 64kB
+// Allows for maximum kernel widths of 7 for 2E-4 aliasing amplitude
+// see calculateGrid3KernelSize in gpuNUFFT_utils.cpp
+__constant__ DType KERNEL[16000];
 
 texture<float, 1, cudaReadModeElementType> texKERNEL;
 texture<float, 2, cudaReadModeElementType> texKERNEL2D;

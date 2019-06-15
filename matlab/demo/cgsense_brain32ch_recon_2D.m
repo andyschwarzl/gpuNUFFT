@@ -35,9 +35,10 @@ osf = 2; % oversampling: 1.5 1.25
 wg = 3; % kernel width: 5 7
 sw = 8; % parallel sectors' width: 12 16
 imwidth = nFE/2;
+useTextureCache = true; % texture cache (linear interpolation kernel), false const cache (nearest neighbor)
 
 if (useGPU)
-    FT = gpuNUFFT([real(col(k)), imag(col(k))]',col(w),osf,wg,sw,[imwidth,imwidth],[],true);
+    FT = gpuNUFFT([real(col(k)), imag(col(k))]',col(w),osf,wg,sw,[imwidth,imwidth],[],true,useTextureCache);
 else
     FT = NUFFT(col(k),col(w),1,0,[imwidth,imwidth], 2);
     useMultiCoil = 0; 
@@ -55,7 +56,7 @@ senseEst = img_sens./repmat(img_sens_sos,[1,1,nCh]);
 %% Redefine regridding operator GPU including coil sensitivities
 disp('Generate NUFFT Operator with coil sensitivities');
 if (useGPU)
-    FT = gpuNUFFT([real(col(k)), imag(col(k))]',col(w),osf,wg,sw,[imwidth, imwidth],senseEst,true);
+    FT = gpuNUFFT([real(col(k)), imag(col(k))]',col(w),osf,wg,sw,[imwidth, imwidth],senseEst,true, useTextureCache);
 end
 
 %% Forward and adjoint transform

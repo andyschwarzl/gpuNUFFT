@@ -43,10 +43,10 @@
 
 /** \brief Maximum aliasing amplitude (nearest neighbor table lookup) defined by
  * Beatty et al. */
-#define MAXIMUM_ALIASING_ERROR 0.001f
+#define MAXIMUM_ALIASING_ERROR (2E-4f)
 /** \brief Maximum aliasing amplitude (linear interpolation table lookup)
  * defined by Beatty et al. */
-#define MAXIMUM_ALIASING_ERROR_LIN_INT 0.0001f
+#define MAXIMUM_ALIASING_ERROR_LIN_INT (1E-8f)
 
 /** \brief Square value */
 #define sqr(__se) ((__se) * (__se))

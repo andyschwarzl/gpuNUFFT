@@ -43,21 +43,21 @@
 
 /** \brief Maximum aliasing amplitude (nearest neighbor table lookup) defined by
  * Beatty et al. */
-#define MAXIMUM_ALIASING_ERROR (2E-4f)
+#define MAXIMUM_ALIASING_ERROR (2E-4)
 /** \brief Maximum aliasing amplitude (linear interpolation table lookup)
  * defined by Beatty et al. */
-#define MAXIMUM_ALIASING_ERROR_LIN_INT (1E-8f)
+#define MAXIMUM_ALIASING_ERROR_LIN_INT (1E-8)
 
 /** \brief Square value */
 #define sqr(__se) ((__se) * (__se))
 /** \brief beta function used in interpolation function. See Beatty et al. */
 #define BETA(__kw, __osr)                                                      \
-  (M_PI * sqrt(sqr(__kw / __osr * (__osr - 0.5f)) - 0.8f))
+  (M_PI * sqrt(sqr(__kw / __osr * (__osr - 0.5)) - 0.8))
 /** \brief I_0 function used in interpolation function. See Beatty et al. */
 #define I0_BETA(__kw, __osr) (i0(BETA(__kw, __osr)))
 /** \brief Interpolation Kernel evaluation for radius */
 #define kernel(__radius, __kw, __osr)                                          \
-  (i0(BETA(__kw, __osr) * sqrt(1 - sqr(__radius))) / I0_BETA(__kw, __osr))
+  (i0(BETA(__kw, __osr) * sqrt(1.0 - sqr(__radius))) / I0_BETA(__kw, __osr))
 
 /**
  * \brief Modified Kaiser Bessel function of zero-th order. */

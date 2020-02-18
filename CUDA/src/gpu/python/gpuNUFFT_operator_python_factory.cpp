@@ -46,7 +46,7 @@ class GpuNUFFTPythonOperator
     gpuNUFFT::Dimensions imgDims;
     public:
     GpuNUFFTPythonOperator(py::array_t<DType> kspace_loc, py::array_t<int> image_size, int num_coils,
-    py::array_t<float> density_comp, int kernel_width=3, int sector_width=8, int osr=2, bool balance_workload=0)
+    py::array_t<float> density_comp, int kernel_width=3, int sector_width=8, int osr=2, bool balance_workload=1)
     {
         py::buffer_info sample_loc = kspace_loc.request();
         trajectory_length = sample_loc.shape[0];

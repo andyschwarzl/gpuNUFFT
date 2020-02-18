@@ -1,3 +1,0 @@
-repeat tests: --gtest_repeat=n --gtest_break_on_failure
-select single tests, filter: --gtest_filter=TestGridding.GPUTest_8SectorsKernel3nDataw32
-write output to xml file: --gtest_output="xml:<file name>"  

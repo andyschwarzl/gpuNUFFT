@@ -781,7 +781,8 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(
 
       freeTotalDeviceMemory(data_d, imdata_d, imdata_sum_d, NULL);
 
-      printf("last cuda error: %s\n", cudaGetErrorString(cudaGetLastError()));
+      if(DEBUG)
+        printf("last cuda error: %s\n", cudaGetErrorString(cudaGetLastError()));
       return;
     }
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))

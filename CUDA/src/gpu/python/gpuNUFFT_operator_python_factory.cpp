@@ -49,9 +49,9 @@ class GpuNUFFTPythonOperator
     py::array_t<float> density_comp, int kernel_width=3, int sector_width=8, int osr=2, bool balance_workload=1)
     {
         py::buffer_info sample_loc = kspace_loc.request();
-        trajectory_length = sample_loc.shape[0];
+        trajectory_length = sample_loc.shape[1];
         n_coils = num_coils;
-        dimension = sample_loc.shape[1];
+        dimension = sample_loc.shape[0];
         gpuNUFFT::Array<DType> kSpaceTraj = readNumpyArray(kspace_loc);
         kSpaceTraj.dim.length = trajectory_length;
 

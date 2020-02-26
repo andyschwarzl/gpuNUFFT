@@ -531,6 +531,7 @@ gpuNUFFT::GpuNUFFTOperatorFactory::createGpuNUFFTOperator(
 
   // free temporary array
   free(assignedSectors.data);
+  assignedSectors.data = NULL;
 
   gpuNUFFTOp->setDeapodizationFunction(
     this->computeDeapodizationFunction(kernelWidth, osf, imgDims));

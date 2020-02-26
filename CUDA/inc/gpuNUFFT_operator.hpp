@@ -64,6 +64,7 @@ class GpuNUFFTOperator
     freeLocalMemberArray(this->kernel.data);
 
     if (!matlabSharedMem) {
+      freeLocalMemberArray(this->dens.data);
       freeLocalMemberArray(this->deapo.data);
       freeLocalMemberArray(this->kSpaceTraj.data);
       freeLocalMemberArray(this->sectorCenters.data);

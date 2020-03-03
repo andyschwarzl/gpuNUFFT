@@ -420,7 +420,7 @@ gpuNUFFT::Array<DType> gpuNUFFT::GpuNUFFTOperatorFactory::computeDeapodizationFu
 
   DType maxDeapoVal = 0;
   DType minDeapoVal = std::numeric_limits<DType>::max();
-  double fft_scaling_factor = std::sqrt(imgDims.count()); 
+  double fft_scaling_factor = std::sqrt(deapoGpuNUFFTOp->getGridDims().count()); 
   for (unsigned cnt = 0; cnt < deapoFunction.count(); cnt++)
   {
     deapoFunction.data[cnt].x = deapoFunction.data[cnt].x * fft_scaling_factor;

@@ -412,7 +412,6 @@ gpuNUFFT::Array<DType> gpuNUFFT::GpuNUFFTOperatorFactory::computeDeapodizationFu
   // cleanup locally initialized arrays here
   free(dataArray.data);
   free(assignedSectors.data);
-  delete deapoGpuNUFFTOp;
 
   // Compute abs values of deapo function and compensate
   // FFT scaling sqrt(N)
@@ -420,7 +419,8 @@ gpuNUFFT::Array<DType> gpuNUFFT::GpuNUFFTOperatorFactory::computeDeapodizationFu
 
   DType maxDeapoVal = 0;
   DType minDeapoVal = std::numeric_limits<DType>::max();
-  double fft_scaling_factor = std::sqrt(imgDims.count()); 
+  double fft_scaling_factor = std::sqrt(deapoGpuNUFFTOp->getGridDims().count()); 
+
   for (unsigned cnt = 0; cnt < deapoFunction.count(); cnt++)
   {
     deapoFunction.data[cnt].x = deapoFunction.data[cnt].x * fft_scaling_factor;
@@ -432,6 +432,8 @@ gpuNUFFT::Array<DType> gpuNUFFT::GpuNUFFTOperatorFactory::computeDeapodizationFu
       minDeapoVal = deapoAbs.data[cnt];
   }
 
+  // cleanup
+  delete deapoGpuNUFFTOp;
   free(deapoFunction.data);
   return deapoAbs;
 }
@@ -531,6 +533,7 @@ gpuNUFFT::GpuNUFFTOperatorFactory::createGpuNUFFTOperator(
 
   // free temporary array
   free(assignedSectors.data);
+  assignedSectors.data = NULL;
 
   gpuNUFFTOp->setDeapodizationFunction(
     this->computeDeapodizationFunction(kernelWidth, osf, imgDims));

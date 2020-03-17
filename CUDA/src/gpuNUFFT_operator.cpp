@@ -505,7 +505,8 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(
 
       freeTotalDeviceMemory(imdata_sum_d, NULL);
 
-      printf("last cuda error: %s\n", cudaGetErrorString(cudaGetLastError()));
+      if (DEBUG)
+        printf("last cuda error: %s\n", cudaGetErrorString(cudaGetLastError()));
       return;
     }
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
@@ -780,8 +781,8 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(
       copyFromDevice<CufftType>(imdata_d, imgData.data, gi_host->imgDims_count);
 
       freeTotalDeviceMemory(data_d, imdata_d, imdata_sum_d, NULL);
-
-      printf("last cuda error: %s\n", cudaGetErrorString(cudaGetLastError()));
+      if (DEBUG)
+        printf("last cuda error: %s\n", cudaGetErrorString(cudaGetLastError()));
       return;
     }
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))

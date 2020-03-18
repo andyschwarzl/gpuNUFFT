@@ -1,7 +1,7 @@
 """Script to test gpuNUFFT wrapper.
 Authors:
 Chaithya G R <chaithyagr@gmail.com>
-Carole Lazarus
+Carole Lazarus <carole.m.lazarus@gmail.com>
 """
 
 import numpy as np

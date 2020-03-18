@@ -72,7 +72,7 @@ class CMakeBuild(build_ext):
                       "-DPYTHON_EXECUTABLE=" + sys.executable,
                       "-DGEN_MEX_FILES=OFF",
                       "-DPYBIND11_INCLUDE_DIR=" + self.pybind_path]
-        cfg = "Debug" #if self.debug else "Release"
+        cfg = "Debug" if self.debug else "Release"
         build_args = ["--config", cfg]
         cmake_args += ["-DCMAKE_BUILD_TYPE=" + cfg]
         build_args += ["--", "-j8"]

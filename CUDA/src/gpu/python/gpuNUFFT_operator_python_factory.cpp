@@ -76,16 +76,13 @@ class GpuNUFFTPythonOperator
         // sensitivity maps
         gpuNUFFT::Array<DType2> sensArray;
         py::buffer_info sense_maps_buffer = sense_maps.request();
-        printf("sense buffer size : %d\n",  sense_maps_buffer.size);
         if (sense_maps_buffer.shape.size()==0)
         {
             has_sense_data = false;
-            printf("It is NULL\n");
             sensArray.data = NULL;
         }
         else
         {
-            printf("With Sens Array\n");
             sensArray = readNumpyArray(sense_maps);
             sensArray.dim = imgDims;
             sensArray.dim.channels = n_coils;
@@ -136,6 +133,7 @@ class GpuNUFFTPythonOperator
             imdataArray.dim.channels = n_coils;
         gpuNUFFT::Array<CufftType> dataArray = readNumpyArray(kspace_data);
         dataArray.dim.length = trajectory_length;
+        dataArray.dim.channels = n_coils;
         gpuNUFFTOp->performGpuNUFFTAdj(dataArray, imdataArray);
         cudaThreadSynchronize();
         return out_result;

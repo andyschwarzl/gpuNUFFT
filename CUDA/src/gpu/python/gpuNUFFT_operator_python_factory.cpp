@@ -1,3 +1,10 @@
+/*
+This file holds the python bindings for gpuNUFFT library.
+Authors:
+Chaithya G R <chaithyagr@gmail.com>
+Carole Lazarus
+*/
+
 #ifndef GPUNUFFT_OPERATOR_PYTHON_FACTORY_H_INCLUDED
 #define GPUNUFFT_OPERATOR_PYTHON_FACTORY_H_INCLUDED
 #include <pybind11/pybind11.h>

@@ -1,4 +1,8 @@
-"""Script to test gpuNUFFT wrapper."""
+"""Script to test gpuNUFFT wrapper.
+Authors:
+Chaithya G R <chaithyagr@gmail.com>
+Carole Lazarus
+"""
 
 import numpy as np
 import numpy.matlib

@@ -45,19 +45,21 @@ class GpuNUFFTPythonOperator
     int trajectory_length, n_coils, dimension;
     gpuNUFFT::Dimensions imgDims;
     public:
-    GpuNUFFTPythonOperator(py::array_t<DType> kspace_loc, py::array_t<int> image_size, int num_coils,
+    GpuNUFFTPythonOperator(py::array_t<DType> kspace_loc, py::array_t<int> image_size, py::array_t<std::complex<DType>> sense_maps,
     py::array_t<float> density_comp, int kernel_width=3, int sector_width=8, int osr=2, bool balance_workload=1)
     {
+        // k-space coordinates
         py::buffer_info sample_loc = kspace_loc.request();
         trajectory_length = sample_loc.shape[1];
-        n_coils = num_coils;
         dimension = sample_loc.shape[0];
         gpuNUFFT::Array<DType> kSpaceTraj = readNumpyArray(kspace_loc);
         kSpaceTraj.dim.length = trajectory_length;
 
+        // density compensation weights
         gpuNUFFT::Array<DType> density_compArray = readNumpyArray(density_comp);
         density_compArray.dim.length = trajectory_length;
-        
+
+        // image size
         py::buffer_info img_dim = image_size.request();
         int *dims = (int *) img_dim.ptr;
         imgDims.width = dims[0];
@@ -67,9 +69,23 @@ class GpuNUFFTPythonOperator
         else
             imgDims.depth = 0;
 
+        // sensitivity maps
         gpuNUFFT::Array<DType2> sensArray;
-        sensArray.data = NULL;
-        
+        DType2 *sensData = NULL;
+        py::buffer_info sense_maps_buffer = sense_maps.request();
+
+        if (sense_maps_buffer.size==0)
+            n_coils = 1;
+        else
+        {
+            n_coils = sense_maps_buffer.shape[0];
+            sensData = (DType2 *) sense_maps_buffer.ptr;
+        }
+
+        sensArray.data = sensData;
+        sensArray.dim = imgDims;
+        sensArray.dim.channels = n_coils;
+
         factory.setBalanceWorkload(balance_workload);
         gpuNUFFTOp = factory.createGpuNUFFTOperator(
             kSpaceTraj, density_compArray, sensArray, kernel_width, sector_width,
@@ -100,18 +116,16 @@ class GpuNUFFTPythonOperator
         int depth = imgDims.depth;
         if(dimension==2)
             depth = 1;
-        py::array_t<std::complex<DType>> out_result({n_coils, depth, (int)imgDims.height, (int)imgDims.width});
+        py::array_t<std::complex<DType>> out_result({depth, (int)imgDims.height, (int)imgDims.width});
         py::buffer_info out = out_result.request();
         std::complex<DType> *t_data = (std::complex<DType> *) out.ptr;
         DType2 *new_data = reinterpret_cast<DType2(&)[0]>(*t_data);
         gpuNUFFT::Array<DType2> imdataArray;
         imdataArray.data = new_data;
         imdataArray.dim = imgDims;
-        imdataArray.dim.channels = n_coils;
 
         gpuNUFFT::Array<CufftType> dataArray = readNumpyArray(kspace_data);
         dataArray.dim.length = trajectory_length;
-        dataArray.dim.channels = n_coils;
         gpuNUFFTOp->performGpuNUFFTAdj(dataArray, imdataArray);
         cudaThreadSynchronize();
         return out_result;
@@ -123,7 +137,7 @@ class GpuNUFFTPythonOperator
 };
 PYBIND11_MODULE(gpuNUFFT, m) {
     py::class_<GpuNUFFTPythonOperator>(m, "NUFFTOp")
-        .def(py::init<py::array_t<float>, py::array_t<int>, int, py::array_t<float>, int, int, int, bool>())
+        .def(py::init<py::array_t<float>, py::array_t<int>, py::array_t<std::complex<float>>, py::array_t<float>, int, int, int, bool>())
         .def("op", &GpuNUFFTPythonOperator::op)
         .def("adj_op",  &GpuNUFFTPythonOperator::adj_op);
 }

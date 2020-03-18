@@ -94,3 +94,15 @@ in the build directory.
 ### Supporting material
 
 Written documentation and presentations can be found [here](https://www.dropbox.com/sh/gcvcszporj65wnq/AAA3eFsGQnSb7UottCSx0Hiva?dl=0).
+
+
+Python Bindings
+---------------
+
+Now we have support for python bindings. Bindings written by Chaithya G R and Carole Lazarus.
+
+For using the python bindings, install from git repository:
+
+`pip install git+https://github.com/andyschwarzl/gpuNUFFT`
+
+To see the usage, please check gpuNUFFT/python or use the NonCartesianFFT class from [pysap-mri](https://github.com/CEA-COSMIC/pysap-mri/)

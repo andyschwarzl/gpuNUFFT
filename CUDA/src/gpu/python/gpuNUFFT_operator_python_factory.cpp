@@ -44,6 +44,18 @@ readNumpyArray(py::array_t<std::complex<DType>> data)
     return dataArray;
 }
 
+gpuNUFFT::Array<DType2>
+copyNumpyArray(py::array_t<std::complex<DType>> data, unsigned long alloc_size)
+{
+    gpuNUFFT::Array<DType2> dataArray;
+    py::buffer_info myData = data.request();
+    std::complex<DType> *t_data = (std::complex<DType> *) myData.ptr;
+    DType2 *my_data = reinterpret_cast<DType2(&)[0]>(*t_data);
+    DType2 *copy_data = (DType2 *) malloc(alloc_size*sizeof(DType2));
+    memcpy(copy_data, my_data, alloc_size*sizeof(DType2));
+    dataArray.data = copy_data;
+    return dataArray;
+}
 
 class GpuNUFFTPythonOperator
 {
@@ -52,6 +64,8 @@ class GpuNUFFTPythonOperator
     int trajectory_length, n_coils, dimension;
     bool has_sense_data;
     gpuNUFFT::Dimensions imgDims;
+    // sensitivity maps
+    gpuNUFFT::Array<DType2> sensArray;
     public:
     GpuNUFFTPythonOperator(py::array_t<DType> kspace_loc, py::array_t<int> image_size, int num_coils,
     py::array_t<std::complex<DType>> sense_maps,  py::array_t<float> density_comp, int kernel_width=3,
@@ -81,7 +95,6 @@ class GpuNUFFTPythonOperator
         n_coils = num_coils;
 
         // sensitivity maps
-        gpuNUFFT::Array<DType2> sensArray;
         py::buffer_info sense_maps_buffer = sense_maps.request();
         if (sense_maps_buffer.shape.size()==0)
         {
@@ -90,7 +103,7 @@ class GpuNUFFTPythonOperator
         }
         else
         {
-            sensArray = readNumpyArray(sense_maps);
+            sensArray = copyNumpyArray(sense_maps, imgDims.count() * n_coils);
             sensArray.dim = imgDims;
             sensArray.dim.channels = n_coils;
             has_sense_data = true;
@@ -148,6 +161,8 @@ class GpuNUFFTPythonOperator
     ~GpuNUFFTPythonOperator()
     {
         delete gpuNUFFTOp;
+        if(has_sense_data == true)
+            free(sensArray.data);
     }
 };
 PYBIND11_MODULE(gpuNUFFT, m) {

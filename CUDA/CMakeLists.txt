@@ -24,7 +24,13 @@ SET(MEX_EXPORT_DIR ${PROJECT_SOURCE_DIR}/../gpuNUFFT/@gpuNUFFT/private CACHE STR
 
 #Searching CUDA
 FIND_PACKAGE(CUDA REQUIRED)
-set(CMAKE_CXX_FLAGS "-std=c++11 -fPIC")
+
+if(WIN32)
+  set(CMAKE_CXX_FLAGS "-std=c++11")
+elseif(UNIX)
+  set(CMAKE_CXX_FLAGS "-std=c++11 -fPIC")
+endif(WIN32)
+
 #Enable Mex File Generation
 #Searching MATLAB
 SET(GEN_MEX_FILES ON CACHE BOOL "Enable generation of Matlab MEX files.")

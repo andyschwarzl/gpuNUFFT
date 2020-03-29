@@ -70,6 +70,7 @@ class CMakeBuild(build_ext):
             os.path.dirname(self.get_ext_fullpath(ext.name)))
         cmake_args = ["-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=" + extdir,
                       "-DPYTHON_EXECUTABLE=" + sys.executable,
+                      "-DGEN_PYHTON_FILES=ON",
                       "-DGEN_MEX_FILES=OFF",
                       "-DPYBIND11_INCLUDE_DIR=" + self.pybind_path]
         cfg = "Debug" if self.debug else "Release"

@@ -80,6 +80,9 @@ SET(GEN_TESTS OFF CACHE BOOL "Enable and generate simple GOOGLE test framework u
 #Enable/Disable GPU double precision 
 SET(GPU_DOUBLE_PREC OFF CACHE BOOL "Enable double precision floating point operations on GPU (Compute Capability 1.3 needed)")
 
+#Option to enable python bindings
+SET(GEN_PYTHON_FILES OFF CACHE BOOL "Enable generation of Python binding files.")
+
 if(GPU_DOUBLE_PREC)
   SET(PREC_SUFFIX "_d")
 else(GPU_DOUBLE_PREC)

@@ -3,6 +3,7 @@ import sys
 from setuptools import setup, Extension, find_packages
 from setuptools.command.build_ext import build_ext
 from importlib import import_module
+import platform
 from pprint import pprint
 import subprocess
 try:
@@ -75,8 +76,16 @@ class CMakeBuild(build_ext):
                       "-DPYBIND11_INCLUDE_DIR=" + self.pybind_path]
         cfg = "Debug" if self.debug else "Release"
         build_args = ["--config", cfg]
-        cmake_args += ["-DCMAKE_BUILD_TYPE=" + cfg]
-        build_args += ["--", "-j8"]
+
+        if platform.system() == "Windows":
+            cmake_args += ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}'.format(cfg.upper(), extdir)]
+            cmake_args += ['-DCMAKE_RUNTIME_OUTPUT_DIRECTORY_{}={}'.format(cfg.upper(), extdir)]
+            if sys.maxsize > 2**32:
+                cmake_args += ['-A', 'x64']
+            build_args += ['--', '/m']
+        else:
+            cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
+            build_args += ['--', '-j8']
 
         # Call cmake in specific environment
         env = os.environ.copy()

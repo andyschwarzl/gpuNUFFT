@@ -16,6 +16,7 @@ if(WIN32)
     MESSAGE("Pybind11 include dir ${PYBIND11_INCLUDE_DIR}")
     MESSAGE("Python include dir ${PYTHON_INCLUDE_DIR}")
     MESSAGE("Found ${PYTHON_LIBRARIES}")
+    set_target_properties(gpuNUFFT PROPERTIES SUFFIX ".pyd")
 
     TARGET_LINK_LIBRARIES(gpuNUFFT ${CUDA_LIBRARIES} ${GRID_LIB_ATM_NAME} ${GRID_LIB_NAME} ${PYTHON_LIBRARIES})
 elseif(UNIX)

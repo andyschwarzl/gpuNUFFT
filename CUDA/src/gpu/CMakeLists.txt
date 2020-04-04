@@ -9,3 +9,7 @@ endif()
 if(GEN_MEX_FILES)
   ADD_SUBDIRECTORY(matlab)
 endif(GEN_MEX_FILES)
+
+if (GEN_PYTHON_FILES)
+	ADD_SUBDIRECTORY(python)
+endif(GEN_PYTHON_FILES)

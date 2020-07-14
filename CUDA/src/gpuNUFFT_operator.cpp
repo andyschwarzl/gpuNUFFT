@@ -419,8 +419,8 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(
   // iterate over coils and compute result
   for (int coil_it = 0; coil_it < n_coils; coil_it += n_coils_cc)
   {
-    int im_coil_offset = coil_it * imdata_count;  // gi_host->width_dim;
-    int data_coil_offset = coil_it * data_count;
+    unsigned long int im_coil_offset = coil_it * (long int)imdata_count;  // gi_host->width_dim;
+    unsigned long int data_coil_offset = (long int)coil_it * data_count;
 
     this->updateConcurrentCoilCount(coil_it, n_coils, n_coils_cc);
 
@@ -679,8 +679,8 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(
     if (DEBUG)
       printf("process coil no %d / %d (%d concurrently)\n", coil_it + 1,
              n_coils, n_coils_cc);
-    unsigned data_coil_offset = coil_it * data_count;
-    unsigned im_coil_offset = coil_it * imdata_count;  // gi_host->width_dim;
+    unsigned long int data_coil_offset = (long int)coil_it * data_count;
+    unsigned long int im_coil_offset = coil_it * (long int)imdata_count;  // gi_host->width_dim;
 
     this->updateConcurrentCoilCount(coil_it, n_coils, n_coils_cc);
 
@@ -912,8 +912,8 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(
   // iterate over coils and compute result
   for (int coil_it = 0; coil_it < n_coils; coil_it += n_coils_cc)
   {
-    int data_coil_offset = coil_it * data_count;
-    int im_coil_offset = coil_it * (int)imdata_count;
+    unsigned long int data_coil_offset = (long int)coil_it * data_count;
+    unsigned long int im_coil_offset = coil_it * (long int)imdata_count;
 
     data_d = kspaceData_gpu.data + data_coil_offset;
 
@@ -1114,8 +1114,8 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(
   // iterate over coils and compute result
   for (int coil_it = 0; coil_it < n_coils; coil_it += n_coils_cc)
   {
-    int data_coil_offset = coil_it * data_count;
-    int im_coil_offset = coil_it * (int)imdata_count;
+    unsigned long int data_coil_offset = (long int) coil_it * data_count;
+    unsigned long int im_coil_offset = coil_it * (long int)imdata_count;
 
     this->updateConcurrentCoilCount(coil_it, n_coils, n_coils_cc);
 

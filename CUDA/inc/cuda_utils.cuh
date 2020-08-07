@@ -5,7 +5,10 @@
 
 __constant__ gpuNUFFT::GpuNUFFTInfo GI;
 
-__constant__ DType KERNEL[10000];
+// Maximum constant memory is 64kB
+// Allows for maximum kernel widths of 7 for 2E-4 aliasing amplitude
+// see calculateGrid3KernelSize in gpuNUFFT_utils.cpp
+__constant__ DType KERNEL[16000];
 
 texture<float, 1, cudaReadModeElementType> texKERNEL;
 texture<float, 2, cudaReadModeElementType> texKERNEL2D;
@@ -47,8 +50,8 @@ __inline__ __device__ float compute3DTextureLookup(float x, float y, float z)
 
 __inline__ __device__ float computeTextureLookup(float x, float y)
 {
-  // wired to 2d
-  return compute2DTextureLookup((float)x, (float)y);
+  // wired to 1d
+  return compute1DTextureLookup((float)x, (float)y);
   // switch(GI.interpolationType)
   //{
   //  case 1: return compute1DTextureLookup(x,y);
@@ -60,8 +63,8 @@ __inline__ __device__ float computeTextureLookup(float x, float y)
 
 __inline__ __device__ float computeTextureLookup(float x, float y, float z)
 {
-  // wired to 2d
-  return compute2DTextureLookup(x, y, z);
+  // wired to 1d
+  return compute1DTextureLookup(x, y, z);
   // switch(GI.interpolationType)
   //{
   //  case 1: return compute1DTextureLookup(x,y,z);

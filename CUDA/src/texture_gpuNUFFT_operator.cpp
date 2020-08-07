@@ -3,7 +3,7 @@
 
 void gpuNUFFT::TextureGpuNUFFTOperator::initKernel()
 {
-  IndType kernelSize = (interpolationType > 1)
+  IndType kernelSize = (interpolationType > 0)
                            ? calculateKernelSizeLinInt(osf, kernelWidth)
                            : calculateGrid3KernelSize(osf, kernelWidth);
   this->kernel.dim.width = kernelSize;

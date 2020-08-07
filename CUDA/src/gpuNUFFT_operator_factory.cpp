@@ -327,7 +327,7 @@ gpuNUFFT::GpuNUFFTOperatorFactory::createNewGpuNUFFTOperator(
     {
       debug("creating Balanced 2D TextureLookup Operator!\n");
       return new gpuNUFFT::BalancedTextureGpuNUFFTOperator(
-          kernelWidth, sectorWidth, osf, imgDims, TEXTURE2D_LOOKUP,
+          kernelWidth, sectorWidth, osf, imgDims, TEXTURE_LOOKUP,
           this->matlabSharedMem);
     }
     else
@@ -342,7 +342,7 @@ gpuNUFFT::GpuNUFFTOperatorFactory::createNewGpuNUFFTOperator(
   {
     debug("creating 2D TextureLookup Operator!\n");
     return new gpuNUFFT::TextureGpuNUFFTOperator(kernelWidth, sectorWidth, osf,
-      imgDims, TEXTURE2D_LOOKUP, this->matlabSharedMem);
+      imgDims, TEXTURE_LOOKUP, this->matlabSharedMem);
   }
   else
   {
@@ -363,7 +363,7 @@ gpuNUFFT::Array<DType> gpuNUFFT::GpuNUFFTOperatorFactory::computeDeapodizationFu
   
   if (useTextures)
     deapoGpuNUFFTOp = new gpuNUFFT::TextureGpuNUFFTOperator(kernelWidth, sectorWidth, osf,
-    imgDims, TEXTURE2D_LOOKUP);
+    imgDims, TEXTURE_LOOKUP);
   else
     deapoGpuNUFFTOp = new gpuNUFFT::GpuNUFFTOperator(kernelWidth, sectorWidth, osf, imgDims);
   

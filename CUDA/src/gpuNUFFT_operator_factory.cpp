@@ -401,12 +401,17 @@ gpuNUFFT::Array<DType> gpuNUFFT::GpuNUFFTOperatorFactory::computeDeapodizationFu
     deapoGpuNUFFTOp->setSectorCenters(computeSectorCenters2D(deapoGpuNUFFTOp, true));
   debug("finished creation of gpuNUFFT operator for deapo computation\n");
 
+  debug("compute deapodization\n");
+  deapoGpuNUFFTOp->setDebugFunction(std::bind(&gpuNUFFT::GpuNUFFTOperatorFactory::debug, this, std::placeholders::_1));
+
   // Compute deapodization function by gridding of a single value positioned 
   // in the center of k-space and by using the intended oversampling factor
   // and interpolation kernel width
   gpuNUFFT::Array<CufftType> deapoFunction =
     deapoGpuNUFFTOp->performGpuNUFFTAdj(dataArray,FFT);
   
+  debug("finished deapo computation\n");
+
   // cleanup locally initialized arrays here
   free(dataArray.data);
   free(assignedSectors.data);

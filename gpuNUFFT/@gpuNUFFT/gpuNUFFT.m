@@ -21,13 +21,6 @@ function [res] = gpuNUFFT(k,w,osf,wg,sw,imageDim,sens,varargin)
 %  F. Knoll, NYU School of Medicine
 %
 
-%t = gpuDevice;
-%if eval(t.ComputeCapability) < 2.0
-%    atomic = false;
-%else
-%    atomic = true;
-%end
-
 atomic = true;
 use_textures = true;    
 balance_workload = true;
@@ -43,6 +36,10 @@ if nargin >= 8
             balance_workload = varargin{3};
         end
     end
+end
+
+if ~atomic 
+    error('gpuNUFFT:usage:atomic','Coarse code path is not supported anymore. Please choose the atomic code path.');
 end
 
 %check types of 

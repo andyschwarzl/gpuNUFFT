@@ -19,7 +19,6 @@ REQUIREMENTS:
 
 CMAKE Options:
 
-- GEN_ATOMIC        : DEFAULT ON, enables fast library using atomic operations
 - GEN_MEX_FILES     : DEFAULT ON, enables generation of Matlab MEX files
 - WITH_DEBUG        : DEFAULT OFF, enables Command-Line DEBUG output
 - WITH_MATLAB_DEBUG : DEFAULT OFF, enables MATLAB Console DEBUG output

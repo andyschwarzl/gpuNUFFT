@@ -77,9 +77,6 @@ if (WITH_DEBUG)
 endif()
 MESSAGE(STATUS "Setting DEBUG Option to ${DEBUG}")
 
-#Enable ATOMIC kernel  
-SET(GEN_ATOMIC ON CACHE BOOL "Enable atomic kernel generation (Compute Capability 2.0 needed). Only turn it off when old architectures (<2.0) have to be supported.")
-
 #Enable Google Tests
 SET(GEN_TESTS OFF CACHE BOOL "Enable and generate simple GOOGLE test framework unit tests")
 
@@ -126,7 +123,7 @@ ENDIF(FERMI_GPU)
 IF(CMAKE_BUILD_TYPE MATCHES Debug)
   MESSAGE("debug mode")
   list(APPEND CUDA_NVCC_FLAGS ${MY_NVCC_FLAGS} --ptxas-options=-v)
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -g")
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -g -std=c++11")
 ELSE(CMAKE_BUILD_TYPE)
   list(APPEND CUDA_NVCC_FLAGS ${MY_NVCC_FLAGS})
 ENDIF()
@@ -134,11 +131,7 @@ ENDIF()
 MESSAGE(STATUS "setting NVCC FLAGS to: ${CUDA_NVCC_FLAGS}")
 
 #LIB and MEX-file names
-SET(GRID_LIB_NAME "gpuNUFFT${PREC_SUFFIX}")
 SET(GRID_LIB_ATM_NAME "gpuNUFFT_ATM${PREC_SUFFIX}")
-
-SET(GRID_MEX_FORW_NAME "mex_gpuNUFFT_forw${PREC_SUFFIX}")
-SET(GRID_MEX_ADJ_NAME "mex_gpuNUFFT_adj${PREC_SUFFIX}")
 
 SET(GRID_MEX_FORW_ATM_NAME "mex_gpuNUFFT_forw_atomic${PREC_SUFFIX}")
 SET(GRID_MEX_ADJ_ATM_NAME "mex_gpuNUFFT_adj_atomic${PREC_SUFFIX}")
@@ -146,7 +139,7 @@ SET(GRID_MEX_ADJ_ATM_NAME "mex_gpuNUFFT_adj_atomic${PREC_SUFFIX}")
 #Precomputation MEX file
 SET(GRID_MEX_PRECOMP_NAME "mex_gpuNUFFT_precomp${PREC_SUFFIX}")
 
-MESSAGE(STATUS "creating lib with name: ${GRID_LIB_NAME}")
+MESSAGE(STATUS "creating lib with name: ${GRID_LIB_ATM_NAME}")
 SET(WARNING "/* WARNING: Automatically generated file. Please do not modify this file. */")
 CONFIGURE_FILE( ${CMAKE_SOURCE_DIR}/inc/config.hpp.cmake ${CMAKE_SOURCE_DIR}/inc/config.hpp)
 CONFIGURE_FILE( ${CMAKE_SOURCE_DIR}/inc/cufft_config.hpp.cmake ${CMAKE_SOURCE_DIR}/inc/cufft_config.hpp)
@@ -184,16 +177,10 @@ if(GEN_TESTS)
 		NAME runUnitTests
 		COMMAND runUnitTests
 	)
-	add_test(
-		NAME runGPUUnitTests
-		COMMAND runGPUUnitTests
-	)
 
-	if(GEN_ATOMIC)
-		add_test(
-			NAME runGPUATMUnitTests
-			COMMAND runGPUATMUnitTests)
-	endif(GEN_ATOMIC)
+	add_test(
+		NAME runGPUATMUnitTests
+		COMMAND runGPUATMUnitTests)
 endif(GEN_TESTS)
 
 ADD_SUBDIRECTORY(doc)

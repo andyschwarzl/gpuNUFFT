@@ -36,7 +36,7 @@ DType i0(DType x)
 long calculateGrid3KernelSize()
 {
   return calculateGrid3KernelSize(DEFAULT_OVERSAMPLING_RATIO,
-                                  DEFAULT_KERNEL_RADIUS);
+                                  DEFAULT_KERNEL_WIDTH);
 }
 
 // calculate necessary kernel density (per grid/kernel unit)
@@ -44,19 +44,19 @@ long calculateGrid3KernelSize()
 // of 0.001
 //
 // based on Beatty et al. MRM 24, 2005
-long calculateGrid3KernelSize(DType osr, DType kernel_width)
+long calculateGrid3KernelSize(DType osr, IndType kernel_width)
 {
   long kernel_osf = (long)(floor((DType)0.91 / (osr * MAXIMUM_ALIASING_ERROR)));
 
-  return (long)(kernel_osf * kernel_width * 0.5);
+  return (long)(kernel_osf * (DType)kernel_width * 0.5);
 }
 
-long calculateKernelSizeLinInt(DType osr, DType kernel_width)
+long calculateKernelSizeLinInt(DType osr, IndType kernel_width)
 {
   long kernel_osf =
       (long)(floor(sqrt(0.37 / (sqr(osr) * MAXIMUM_ALIASING_ERROR_LIN_INT))));
 
-  return (long)(kernel_osf * kernel_width * 0.5);
+  return (long)(kernel_osf * (DType)kernel_width * 0.5);
 }
 
 void loadGrid3Kernel(DType *kernTab)

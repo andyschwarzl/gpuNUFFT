@@ -37,7 +37,7 @@ sw = 8; % parallel sectors' width: 12 16
 imwidth = nFE/2;
 
 if (useGPU)
-    FT = gpuNUFFT([real(col(k)), imag(col(k))]',col(w),osf,wg,sw,[imwidth,imwidth],[],true);
+    FT = gpuNUFFT([real(col(k)), imag(col(k))]',col(w),osf,wg,sw,[imwidth,imwidth],[]);
 else
     FT = NUFFT(col(k),col(w),1,0,[imwidth,imwidth], 2);
     useMultiCoil = 0; 
@@ -55,7 +55,7 @@ senseEst = img_sens./repmat(img_sens_sos,[1,1,nCh]);
 %% Redefine regridding operator GPU including coil sensitivities
 disp('Generate NUFFT Operator with coil sensitivities');
 if (useGPU)
-    FT = gpuNUFFT([real(col(k)), imag(col(k))]',col(w),osf,wg,sw,[imwidth, imwidth],senseEst,true);
+    FT = gpuNUFFT([real(col(k)), imag(col(k))]',col(w),osf,wg,sw,[imwidth, imwidth],senseEst);
 end
 
 %% Forward and adjoint transform

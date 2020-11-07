@@ -764,7 +764,7 @@ void performConvolution( DType2* data_d,
 #else
 #ifdef CONVKERNEL2
   long shared_mem_size = (gi_host->sector_dim) * sizeof(DType2) * gi_host->n_coils_cc;
-  int thread_size =THREAD_BLOCK_SIZE;
+  int thread_size = THREAD_BLOCK_SIZE;
 
   dim3 block_dim(thread_size);
   dim3 grid_dim(getOptimalGridDim(gi_host->sector_count,1));
@@ -779,7 +779,9 @@ void performConvolution( DType2* data_d,
     convolutionKernel2D<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
   }
   else
+  {
     convolutionKernel2<<<grid_dim,block_dim,shared_mem_size>>>(data_d,crds_d,gdata_d,sectors_d,sector_centers_d,gi_host->sector_count);
+  }
 #else 
 #ifdef CONVKERNEL4
   // TODO tune param z dim

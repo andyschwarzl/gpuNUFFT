@@ -12,5 +12,5 @@ set(CPU_SOURCES gpuNUFFT_tests.cpp
 include_directories(${CUDA_INCLUDE_DIRS})
 #add source dir
 add_executable(runUnitTests ${CPU_SOURCES} ${GPUNUFFT_SOURCES} ../../inc/gpuNUFFT_cpu.hpp ../../inc/gpuNUFFT_utils.hpp ../../inc/gpuNUFFT_operator_factory.hpp ../../inc/gpuNUFFT_operator.hpp ../../inc/gpuNUFFT_kernels.hpp)
-target_link_libraries(runUnitTests ${GRID_LIB_NAME} ${GTEST_LIB} ${GTESTMAIN_LIB})
+target_link_libraries(runUnitTests ${GRID_LIB_ATM_NAME} ${GTEST_LIB} ${GTESTMAIN_LIB})
 set_target_properties(runUnitTests PROPERTIES LINK_FLAGS -lpthread)

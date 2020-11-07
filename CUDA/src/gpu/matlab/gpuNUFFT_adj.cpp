@@ -220,7 +220,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                       e.what());
   }
 
-  cudaThreadSynchronize();
+  cudaDeviceSynchronize();
   if (MATLAB_DEBUG)
   {
     size_t free_mem = 0;

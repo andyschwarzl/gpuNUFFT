@@ -1,14 +1,25 @@
 #ifndef GPUNUFFT_OPERATOR_H_INCLUDED
 #define GPUNUFFT_OPERATOR_H_INCLUDED
 
+#pragma once 
+
 #include "gpuNUFFT_types.hpp"
 #include "gpuNUFFT_kernels.hpp"
 #include "config.hpp"
 #include <cstdlib>
 #include <iostream>
+#include <functional>
 
 namespace gpuNUFFT
 {
+  using DebugFnType = std::function<void(const std::string&)>;
+
+  static void defaultDebug(const std::string& message) {
+    if (DEBUG) {
+      printf(message.c_str());
+    }
+  }
+
 /**
  * \brief Main "Operator" used for gridding operations
  *
@@ -497,6 +508,12 @@ class GpuNUFFTOperator
   /** \brief Virtual method to allow custom free of lookup table */
   virtual void freeLookupTable();
 
+  /** \brief Pass debug function pointer
+  */
+  virtual void setDebugFunction(DebugFnType debugFn) {
+    this->debug = debugFn;
+  }
+
  private:
   /** \brief Flag to remember if gpu device memory has already been allocated */
   bool gpuMemAllocated;
@@ -564,6 +581,8 @@ class GpuNUFFTOperator
    */
   int computePossibleConcurrentCoilCount(int n_coils,
                                          gpuNUFFT::Dimensions kSpaceDataDim);
+
+  DebugFnType debug = &defaultDebug;
 };
 }
 

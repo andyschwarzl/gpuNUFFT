@@ -8,6 +8,7 @@
 #include <sstream>
 #include "precomp_kernels.hpp"
 #include <limits>
+#include <cstring>
 
 void gpuNUFFT::GpuNUFFTOperatorFactory::setUseTextures(bool useTextures)
 {

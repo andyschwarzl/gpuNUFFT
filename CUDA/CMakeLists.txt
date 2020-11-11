@@ -118,6 +118,12 @@ ELSE(FERMI_GPU)
     message("add CUDA 9 flags: Current version: ${CUDA_VERSION}")
     list(APPEND MY_NVCC_FLAGS -gencode=arch=compute_70,code=sm_70)
   endif()
+
+  if(${CUDA_VERSION_MAJOR} STRGREATER "9")
+    message("add CUDA 10 flags: Current version: ${CUDA_VERSION}")
+    list(APPEND MY_NVCC_FLAGS -gencode=arch=compute_75,code=sm_75)
+  endif()
+
 ENDIF(FERMI_GPU)
 
 IF(CMAKE_BUILD_TYPE MATCHES Debug)

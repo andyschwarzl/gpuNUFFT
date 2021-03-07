@@ -3,7 +3,7 @@ PROJECT(gpuNUFFT)
 
 #The CMake Minimum version that is required. The FindCUDA script
 #is distributed since version 2.8
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.12)
 
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${PROJECT_SOURCE_DIR}/bin)
@@ -107,17 +107,23 @@ ELSE(FERMI_GPU)
   list(APPEND MY_NVCC_FLAGS -gencode=arch=compute_52,code=sm_52)
   list(APPEND MY_NVCC_FLAGS -gencode=arch=compute_52,code=compute_52)
 
-  if(${CUDA_VERSION_MAJOR} STRGREATER "7")
+  if(${CUDA_VERSION_MAJOR} GREATER 7)
     message("add CUDA 8 flags: Current version: ${CUDA_VERSION}")
     list(APPEND MY_NVCC_FLAGS -gencode=arch=compute_60,code=sm_60)
     list(APPEND MY_NVCC_FLAGS -gencode=arch=compute_61,code=sm_61)
     list(APPEND MY_NVCC_FLAGS -gencode=arch=compute_61,code=compute_61)
   endif()
 
-  if(${CUDA_VERSION_MAJOR} STRGREATER "8")
+  if(${CUDA_VERSION_MAJOR} GREATER 8)
     message("add CUDA 9 flags: Current version: ${CUDA_VERSION}")
     list(APPEND MY_NVCC_FLAGS -gencode=arch=compute_70,code=sm_70)
   endif()
+
+  if(${CUDA_VERSION_MAJOR} GREATER 9)
+    message("add CUDA 10 flags: Current version: ${CUDA_VERSION}")
+    list(APPEND MY_NVCC_FLAGS -gencode=arch=compute_75,code=sm_75)
+  endif()
+
 ENDIF(FERMI_GPU)
 
 IF(CMAKE_BUILD_TYPE MATCHES Debug)

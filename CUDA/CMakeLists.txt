@@ -96,14 +96,12 @@ SET(FERMI_GPU OFF CACHE BOOL "Enable build for (old) Fermi architectures (Comput
 
 
 IF(FERMI_GPU)
-  set(MY_NVCC_FLAGS -gencode arch=compute_20,code=sm_20)
-  list(APPEND MY_NVCC_FLAGS -gencode arch=compute_30,code=sm_30)
+  set(MY_NVCC_FLAGS -gencode arch=compute_30,code=sm_30)
   list(APPEND MY_NVCC_FLAGS -gencode arch=compute_50,code=sm_50)
   list(APPEND MY_NVCC_FLAGS -gencode=arch=compute_52,code=sm_52)
   list(APPEND MY_NVCC_FLAGS -gencode=arch=compute_52,code=compute_52)
 ELSE(FERMI_GPU)
-  set(MY_NVCC_FLAGS -arch=sm_30 -gencode arch=compute_30,code=sm_30)
-  list(APPEND MY_NVCC_FLAGS -gencode arch=compute_50,code=sm_50)
+  set(MY_NVCC_FLAGS -gencode arch=compute_50,code=sm_50)
   list(APPEND MY_NVCC_FLAGS -gencode=arch=compute_52,code=sm_52)
   list(APPEND MY_NVCC_FLAGS -gencode=arch=compute_52,code=compute_52)
 

@@ -115,7 +115,7 @@ class GpuNUFFTPythonOperator
         cudaThreadSynchronize();
     }
 
-    py::array_t<std::complex<DType>> op(py::array_t<std::complex<DType>> image)
+    py::array_t<std::complex<DType>> op(py::array_t<std::complex<DType>> image, bool interpolate_data=false)
     {
         py::array_t<std::complex<DType>> out_result({n_coils, trajectory_length});
         py::buffer_info out = out_result.request();
@@ -129,32 +129,41 @@ class GpuNUFFTPythonOperator
         gpuNUFFT::Array<DType2> imdataArray = readNumpyArray(image);
         imdataArray.dim = imgDims;
         imdataArray.dim.channels = n_coils;
-        gpuNUFFTOp->performForwardGpuNUFFT(imdataArray, dataArray);
+        if(interpolate_data)
+            gpuNUFFTOp->performForwardGpuNUFFT(imdataArray, dataArray, gpuNUFFT::DENSITY_ESTIMATION);
+        else
+            gpuNUFFTOp->performForwardGpuNUFFT(imdataArray, dataArray);
         cudaThreadSynchronize();
         return out_result;
     }
-    py::array_t<std::complex<DType>> adj_op(py::array_t<std::complex<DType>> kspace_data)
+    py::array_t<std::complex<DType>> adj_op(py::array_t<std::complex<DType>> kspace_data, bool grid_data=false)
     {
-        int depth = imgDims.depth;
+        gpuNUFFT::Dimensions myDims = imgDims;
+        if(grid_data)
+            myDims = myDims * gpuNUFFTOp->getOsf();
+        int depth = myDims.depth;
         if(dimension==2)
-            depth = 1;
+            myDims.depth = 1;
         py::array_t<std::complex<DType>> out_result;
         if(has_sense_data == false)
-            out_result.resize({n_coils, depth, (int)imgDims.height, (int)imgDims.width});
+            out_result.resize({n_coils, depth, (int)myDims.height, (int)myDims.width});
         else
-            out_result.resize({depth, (int)imgDims.height, (int)imgDims.width});
+            out_result.resize({depth, (int)myDims.height, (int)myDims.width});
         py::buffer_info out = out_result.request();
         std::complex<DType> *t_data = (std::complex<DType> *) out.ptr;
         DType2 *new_data = reinterpret_cast<DType2(&)[0]>(*t_data);
         gpuNUFFT::Array<DType2> imdataArray;
         imdataArray.data = new_data;
-        imdataArray.dim = imgDims;
+        imdataArray.dim = myDims;
         if(has_sense_data == false)
             imdataArray.dim.channels = n_coils;
         gpuNUFFT::Array<CufftType> dataArray = readNumpyArray(kspace_data);
         dataArray.dim.length = trajectory_length;
         dataArray.dim.channels = n_coils;
-        gpuNUFFTOp->performGpuNUFFTAdj(dataArray, imdataArray);
+        if(grid_data)
+            gpuNUFFTOp->performGpuNUFFTAdj(dataArray, imdataArray, gpuNUFFT::DENSITY_ESTIMATION);
+        else
+            gpuNUFFTOp->performGpuNUFFTAdj(dataArray, imdataArray);
         cudaThreadSynchronize();
         return out_result;
     }

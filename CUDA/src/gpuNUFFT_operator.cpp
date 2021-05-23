@@ -732,7 +732,7 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(
     if (DEBUG && (cudaDeviceSynchronize() != cudaSuccess))
       fprintf(stderr, "error at adj  thread synchronization 2: %s\n",
               cudaGetErrorString(cudaGetLastError()));
-    if (gpuNUFFTOut == CONVOLUTION)
+    if (gpuNUFFTOut == CONVOLUTION || gpuNUFFTOut == DENSITY_ESTIMATION)
     {
       // get output (per coil)
       copyFromDevice<CufftType>(gdata_d, imgData.data + im_coil_offset,
@@ -1175,8 +1175,17 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(
 
     // apodization Correction
     performForwardDeapodization(imdata_d, deapo_d, gi_host);
-	  
-    if (DEBUG && (cudaDeviceSynchronize() != cudaSuccess))
+	  if(gpuNUFFTOut == DENSITY_ESTIMATION)
+	  {
+	      forwardConvolution(data_d, crds_d, imdata_d, NULL, sectors_d,
+                       sector_centers_d, gi_host);
+        writeOrderedGPU(data_sorted_d, data_indices_d, data_d,
+                    (int)this->kSpaceTraj.count(), n_coils_cc);
+        copyFromDevice(data_sorted_d, kspaceData.data + data_coil_offset,
+                   data_count * n_coils_cc);
+        return;
+    }
+    if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       printf("error at thread synchronization 2: %s\n",
              cudaGetErrorString(cudaGetLastError()));
     // resize by oversampling factor and zero pad

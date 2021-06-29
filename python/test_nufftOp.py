@@ -84,13 +84,13 @@ class TestgpuNUFFT(unittest.TestCase):
     def test_multicoil_with_sense(self):
         print('Apply forward op')
         operator = self.get_nufft_op(self.coil_maps)
-        x = operator.op(np.reshape(self.img.T, self.img.size))
+        x = operator.op(np.reshape(self.img.T, self.img.size), False)
         y = np.random.random(x.shape)
         print('Output kdata shape is', x.shape)
         print('-------------------------------')
         print('Apply adjoint op')
-        img_adj = operator.adj_op(x)
-        adj_y = operator.adj_op(y)
+        img_adj = operator.adj_op(x, False)
+        adj_y = operator.adj_op(y, False)
         print('Output adjoint img shape is', img_adj.shape)
         img_adj = np.squeeze(img_adj).T
         adj_y = np.squeeze(adj_y).T
@@ -110,18 +110,18 @@ class TestgpuNUFFT(unittest.TestCase):
         operator = self.get_nufft_op()
         x = operator.op(np.asarray(
             [np.reshape(image_ch.T, image_ch.size) for image_ch in self.multi_img]
-        ).T)
+        ).T, False)
         y = np.random.random(x.shape)
         print('Output kdata shape is', x.shape)
         print('-------------------------------')
         print('Apply adjoint op')
-        img_adj = operator.adj_op(x)
+        img_adj = operator.adj_op(x, False)
         print('Output adjoint img shape is', img_adj.shape)
         img_adj = np.squeeze(img_adj)
         img_adj = np.asarray(
                 [image_ch.T for image_ch in img_adj]
             )
-        adj_y = np.squeeze(operator.adj_op(y))
+        adj_y = np.squeeze(operator.adj_op(y), False)
         adj_y = np.asarray(
                 [image_ch.T for image_ch in adj_y]
             )

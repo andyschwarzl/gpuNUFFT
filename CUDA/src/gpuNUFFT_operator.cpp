@@ -572,7 +572,7 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(
   // move memory management into constructor/destructor of GpuNUFFT Operator!!!
   //
   freeTotalDeviceMemory(imdata_sum_d, NULL);
-  // this->freeDeviceMemory();
+  this->freeDeviceMemory();
 
   if ((cudaDeviceSynchronize() != cudaSuccess))
     fprintf(stderr, "error in gpuNUFFT_gpu_adj function: %s\n",
@@ -854,6 +854,7 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(
            cudaGetErrorString(cudaGetLastError()));
 
   freeTotalDeviceMemory(data_d, imdata_d, imdata_sum_d, NULL);
+  this->freeDeviceMemory();
 
   if ((cudaDeviceSynchronize() != cudaSuccess))
     fprintf(stderr, "error in gpuNUFFT_gpu_adj function: %s\n",
@@ -1051,7 +1052,7 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(
   }  // iterate over coils
 
   freeTotalDeviceMemory(imdata_d, NULL);
-  // this->freeDeviceMemory();
+  this->freeDeviceMemory();
 
   if ((cudaDeviceSynchronize() != cudaSuccess))
     fprintf(stderr, "error in performForwardGpuNUFFT function: %s\n",
@@ -1261,6 +1262,7 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(
   }  // iterate over coils
 
   freeTotalDeviceMemory(data_d, imdata_d, NULL);
+  this->freeDeviceMemory();
 
   if ((cudaDeviceSynchronize() != cudaSuccess))
     fprintf(stderr, "error in performForwardGpuNUFFT function: %s\n",

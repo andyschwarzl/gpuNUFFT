@@ -344,6 +344,7 @@ class GpuNUFFTOperator
   Array<CufftType> performForwardGpuNUFFT(Array<DType2> imgData,
                                           GpuNUFFTOutput gpuNUFFTOut);
 
+  void clean_memory();
   /** \brief Check if density compensation data is available. */
   bool applyDensComp()
   {

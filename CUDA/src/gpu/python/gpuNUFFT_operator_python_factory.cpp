@@ -167,6 +167,10 @@ class GpuNUFFTPythonOperator
         cudaThreadSynchronize();
         return out_result;
     }
+    void clean_memory()
+    {
+       gpuNUFFTOp->clean_memory();
+    }
     ~GpuNUFFTPythonOperator()
     {
         delete gpuNUFFTOp;

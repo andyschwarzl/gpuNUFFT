@@ -1178,12 +1178,15 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(
     performForwardDeapodization(imdata_d, deapo_d, gi_host);
 	  if(gpuNUFFTOut == DENSITY_ESTIMATION)
 	  {
-	      forwardConvolution(data_d, crds_d, imdata_d, NULL, sectors_d,
+	    forwardConvolution(data_d, crds_d, imdata_d, NULL, sectors_d,
                        sector_centers_d, gi_host);
         writeOrderedGPU(data_sorted_d, data_indices_d, data_d,
                     (int)this->kSpaceTraj.count(), n_coils_cc);
         copyFromDevice(data_sorted_d, kspaceData.data + data_coil_offset,
                    data_count * n_coils_cc);
+        if ((coil_it + n_coils_cc) < (n_coils))
+            continue;
+        freeTotalDeviceMemory(data_d, imdata_d, NULL);
         return;
     }
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
@@ -1310,4 +1313,9 @@ float gpuNUFFT::GpuNUFFTOperator::stopTiming()
   HANDLE_ERROR(cudaEventSynchronize(stop));
   HANDLE_ERROR(cudaEventElapsedTime(&time, start, stop));
   return time;
+}
+
+void gpuNUFFT::GpuNUFFTOperator::clean_memory()
+{
+    this->freeDeviceMemory();
 }

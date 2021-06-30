@@ -747,6 +747,7 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(
         printf("test value at point zero: %f\n", (imgData.data)[0].x);
 
       freeTotalDeviceMemory(data_d, imdata_d, imdata_sum_d, NULL);
+      this->freeDeviceMemory();
       return;
     }
     if ((cudaDeviceSynchronize() != cudaSuccess))
@@ -1187,6 +1188,7 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(
         if ((coil_it + n_coils_cc) < (n_coils))
             continue;
         freeTotalDeviceMemory(data_d, imdata_d, NULL);
+        this->freeDeviceMemory();
         return;
     }
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))

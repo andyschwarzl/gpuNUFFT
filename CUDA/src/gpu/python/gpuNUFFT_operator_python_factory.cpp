@@ -173,7 +173,6 @@ class GpuNUFFTPythonOperator
     }
     ~GpuNUFFTPythonOperator()
     {
-        delete gpuNUFFTOp;
         if(has_sense_data == true)
             free(sensArray.data);
     }
@@ -182,6 +181,7 @@ PYBIND11_MODULE(gpuNUFFT, m) {
     py::class_<GpuNUFFTPythonOperator>(m, "NUFFTOp")
         .def(py::init<py::array_t<DType>, py::array_t<int>, int, py::array_t<std::complex<DType>>, py::array_t<float>, int, int, int, bool>())
         .def("op", &GpuNUFFTPythonOperator::op)
-        .def("adj_op",  &GpuNUFFTPythonOperator::adj_op);
+        .def("adj_op",  &GpuNUFFTPythonOperator::adj_op)
+        .def("clean_memory", &GpuNUFFTPythonOperator::clean_memory);
 }
 #endif  // GPUNUFFT_OPERATOR_MATLABFACTORY_H_INCLUDED

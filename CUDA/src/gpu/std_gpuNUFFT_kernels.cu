@@ -226,8 +226,8 @@ __global__ void densityCompensationKernel(DType2* data, DType* density_comp, int
     for (int c = threadIdx.z; c < GI.n_coils_cc; c+= blockDim.z)
     {
       DType2 data_p = data[t + c*N]; 
-      data_p.x = data_p.x * sqrt(density_comp[t]);
-      data_p.y = data_p.y * sqrt(density_comp[t]);
+      data_p.x = data_p.x * density_comp[t];
+      data_p.y = data_p.y * density_comp[t];
       data[t + c*N] = data_p;
     }
     t = t+ blockDim.x*gridDim.x;

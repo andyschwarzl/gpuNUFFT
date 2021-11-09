@@ -73,17 +73,13 @@ class GpuNUFFTOperator
   virtual ~GpuNUFFTOperator()
   {
     freeLocalMemberArray(this->kernel.data);
-
-    if (!matlabSharedMem) {
-      freeLocalMemberArray(this->dens.data);
-      freeLocalMemberArray(this->deapo.data);
-      freeLocalMemberArray(this->kSpaceTraj.data);
-      freeLocalMemberArray(this->sectorCenters.data);
-      freeLocalMemberArray(this->dataIndices.data);
-      freeLocalMemberArray(this->sectorDataCount.data);
-    }
-
-    freeDeviceMemory();
+    freeLocalMemberArray(this->dens.data);
+    freeLocalMemberArray(this->sens.data);
+    freeLocalMemberArray(this->deapo.data);
+    freeLocalMemberArray(this->kSpaceTraj.data);
+    freeLocalMemberArray(this->sectorCenters.data);
+    freeLocalMemberArray(this->dataIndices.data);
+    freeLocalMemberArray(this->sectorDataCount.data);
   }
 
   friend class GpuNUFFTOperatorFactory;
@@ -373,7 +369,7 @@ class GpuNUFFTOperator
        dataPointer = NULL;
      }
    }
-
+gpuNUFFT::TextureGpuNUFFTOperator::~TextureGpuNUFFTOperator
   /** \brief gpuNUFFT::OperatorType classifier. Value according to sub-class
    * implementation. */
   OperatorType operatorType;

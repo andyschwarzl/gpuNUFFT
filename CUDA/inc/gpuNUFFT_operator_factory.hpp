@@ -176,7 +176,15 @@ class GpuNUFFTOperatorFactory
   void setBalanceWorkload(bool balanceWorkload);
 
  protected:
-  /** \brief Assign the samples on the k-space trajectory to its corresponding
+  template<typename T>
+   void freeLocalMemberArray(T* dataPointer)
+   {
+     if (dataPointer != NULL) {
+       free(dataPointer);
+       dataPointer = NULL;
+     }
+   }
+   /** \brief Assign the samples on the k-space trajectory to its corresponding
     *sector
     *
     * @return array of indices of the assigned sector

@@ -72,18 +72,15 @@ class GpuNUFFTOperator
 
   virtual ~GpuNUFFTOperator()
   {
-    freeLocalMemberArray(this->kernel.data);
-
-    if (!matlabSharedMem) {
-      freeLocalMemberArray(this->dens.data);
-      freeLocalMemberArray(this->deapo.data);
-      freeLocalMemberArray(this->kSpaceTraj.data);
-      freeLocalMemberArray(this->sectorCenters.data);
-      freeLocalMemberArray(this->dataIndices.data);
-      freeLocalMemberArray(this->sectorDataCount.data);
-    }
-
     freeDeviceMemory();
+    freeLocalMemberArray(this->kernel.data);
+    freeLocalMemberArray(this->dens.data);
+    freeLocalMemberArray(this->sens.data);
+    freeLocalMemberArray(this->deapo.data);
+    freeLocalMemberArray(this->kSpaceTraj.data);
+    freeLocalMemberArray(this->sectorCenters.data);
+    freeLocalMemberArray(this->dataIndices.data);
+    freeLocalMemberArray(this->sectorDataCount.data);
   }
 
   friend class GpuNUFFTOperatorFactory;

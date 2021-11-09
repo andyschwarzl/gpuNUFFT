@@ -171,10 +171,18 @@ class GpuNUFFTPythonOperator
     {
        gpuNUFFTOp->clean_memory();
     }
+    void set_smaps(py::array_t<std::complex<DType>> sense_maps)
+    {
+        free(sensArray.data);
+        sensArray = copyNumpyArray(sense_maps, imgDims.count() * n_coils);
+        sensArray.dim = imgDims;
+        sensArray.dim.channels = n_coils;
+        has_sense_data = true;
+        gpuNUFFTOp->setSens(sensArray);
+    }
     ~GpuNUFFTPythonOperator()
     {
-        if(has_sense_data == true)
-            free(sensArray.data);
+        delete gpuNUFFTOp;
     }
 };
 PYBIND11_MODULE(gpuNUFFT, m) {
@@ -182,6 +190,7 @@ PYBIND11_MODULE(gpuNUFFT, m) {
         .def(py::init<py::array_t<DType>, py::array_t<int>, int, py::array_t<std::complex<DType>>, py::array_t<float>, int, int, int, bool>())
         .def("op", &GpuNUFFTPythonOperator::op)
         .def("adj_op",  &GpuNUFFTPythonOperator::adj_op)
-        .def("clean_memory", &GpuNUFFTPythonOperator::clean_memory);
+        .def("clean_memory", &GpuNUFFTPythonOperator::clean_memory)
+        .def("set_smaps", &GpuNUFFTPythonOperator::set_smaps);
 }
 #endif  // GPUNUFFT_OPERATOR_MATLABFACTORY_H_INCLUDED

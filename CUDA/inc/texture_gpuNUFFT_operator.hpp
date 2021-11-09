@@ -35,7 +35,6 @@ class TextureGpuNUFFTOperator : public GpuNUFFTOperator
 
   ~TextureGpuNUFFTOperator()
   {
-    freeLookupTable();
   }
 
   virtual OperatorType getType()

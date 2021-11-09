@@ -29,7 +29,6 @@ class BalancedGpuNUFFTOperator : public GpuNUFFTOperator,
 
   ~BalancedGpuNUFFTOperator()
   {
-    if (!matlabSharedMem)
       freeLocalMemberArray(this->sectorProcessingOrder.data);
   }
 

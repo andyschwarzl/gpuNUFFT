@@ -183,8 +183,6 @@ class GpuNUFFTPythonOperator
     ~GpuNUFFTPythonOperator()
     {
         delete gpuNUFFTOp;
-        if(has_sense_data == true)
-            free(sensArray.data);
     }
 };
 PYBIND11_MODULE(gpuNUFFT, m) {

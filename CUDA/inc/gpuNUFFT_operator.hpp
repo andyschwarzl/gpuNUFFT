@@ -72,6 +72,7 @@ class GpuNUFFTOperator
 
   virtual ~GpuNUFFTOperator()
   {
+    freeDeviceMemory();
     freeLocalMemberArray(this->kernel.data);
     freeLocalMemberArray(this->dens.data);
     freeLocalMemberArray(this->sens.data);

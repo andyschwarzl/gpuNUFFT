@@ -369,7 +369,7 @@ class GpuNUFFTOperator
        dataPointer = NULL;
      }
    }
-gpuNUFFT::TextureGpuNUFFTOperator::~TextureGpuNUFFTOperator
+
   /** \brief gpuNUFFT::OperatorType classifier. Value according to sub-class
    * implementation. */
   OperatorType operatorType;

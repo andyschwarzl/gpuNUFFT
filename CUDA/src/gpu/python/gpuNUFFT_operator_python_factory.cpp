@@ -141,14 +141,13 @@ class GpuNUFFTPythonOperator
         gpuNUFFT::Dimensions myDims = imgDims;
         if(grid_data)
             myDims = myDims * gpuNUFFTOp->getOsf();
-        int depth = myDims.depth;
         if(dimension==2)
             myDims.depth = 1;
         py::array_t<std::complex<DType>> out_result;
         if(has_sense_data == false)
-            out_result.resize({n_coils, depth, (int)myDims.height, (int)myDims.width});
+            out_result.resize({n_coils, (int)myDims.depth, (int)myDims.height, (int)myDims.width});
         else
-            out_result.resize({depth, (int)myDims.height, (int)myDims.width});
+            out_result.resize({(int)myDims.depth, (int)myDims.height, (int)myDims.width});
         py::buffer_info out = out_result.request();
         std::complex<DType> *t_data = (std::complex<DType> *) out.ptr;
         DType2 *new_data = reinterpret_cast<DType2(&)[0]>(*t_data);

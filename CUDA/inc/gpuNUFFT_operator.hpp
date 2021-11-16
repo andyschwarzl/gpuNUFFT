@@ -75,7 +75,6 @@ class GpuNUFFTOperator
     freeDeviceMemory();
     freeLocalMemberArray(this->kernel.data);
     freeLocalMemberArray(this->dens.data);
-    freeLocalMemberArray(this->sens.data);
     freeLocalMemberArray(this->deapo.data);
     freeLocalMemberArray(this->kSpaceTraj.data);
     freeLocalMemberArray(this->sectorCenters.data);
@@ -574,7 +573,7 @@ class GpuNUFFTOperator
 
   /** \brief Update amount of concurrently computed coils
    */
-  void updateConcurrentCoilCount(int coil_it, int n_coils, int &n_coils_cc);
+  void updateConcurrentCoilCount(int coil_it, int n_coils, int &n_coils_cc, cudaStream_t stream=0);
 
   /** \brief Compute amount of coils which can be computed at once.
    *

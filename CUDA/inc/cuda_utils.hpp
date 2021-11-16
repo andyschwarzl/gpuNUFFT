@@ -59,7 +59,19 @@ inline void copyToDevice(TypeName *host_ptr, TypeName *device_ptr,
   HANDLE_ERROR(cudaMemcpy(device_ptr, host_ptr, num_elements * sizeof(TypeName),
                           cudaMemcpyHostToDevice));
 }
-
+/** \brief CUDA memcpy call to copy data from host to device
+ *
+ * @param host_ptr      host data pointer
+ * @param device_ptr    device pointer
+ * @param num_elements  amount of elements of size TypeName
+ */
+template <typename TypeName>
+inline void copyToDeviceAsync(TypeName *host_ptr, TypeName *device_ptr,
+                         IndType num_elements, cudaStream_t stream=0)
+{
+  HANDLE_ERROR(cudaMemcpyAsync(device_ptr, host_ptr, num_elements * sizeof(TypeName),
+                          cudaMemcpyHostToDevice, stream));
+}
 /** \brief CUDA memory allocation and memcpy call to copy data from host to
  *device
  *
@@ -118,7 +130,19 @@ inline void copyFromDevice(TypeName *device_ptr, TypeName *host_ptr,
   HANDLE_ERROR(cudaMemcpy(host_ptr, device_ptr, num_elements * sizeof(TypeName),
                           cudaMemcpyDeviceToHost));
 }
-
+/** \brief Copy CUDA memory from device to host
+ *
+ * @param device_ptr    device pointer
+ * @param host_ptr      host pointer
+ * @param num_elements  amount of elements of size TypeName
+ */
+template <typename TypeName>
+inline void copyFromDeviceAsync(TypeName *device_ptr, TypeName *host_ptr,
+                           IndType num_elements, cudaStream_t stream=0)
+{
+  HANDLE_ERROR(cudaMemcpyAsync(host_ptr, device_ptr, num_elements * sizeof(TypeName),
+                          cudaMemcpyDeviceToHost, stream));
+}
 /** \brief Free variable list of device pointers. Use NULL as stopping element
  *
  * e.g.: freeTotalDeviceMemory(ptr1*, ptr2*,NULL);
@@ -212,7 +236,7 @@ inline void showMemoryInfo()
  *
  * @param symbol Const symbol name
  */
-void initConstSymbol(const char *symbol, const void *src, IndType count);
+void initConstSymbol(const char *symbol, const void *src, IndType count, cudaStream_t stream=0);
 
 /** \brief Initialize texture memory on device
  *

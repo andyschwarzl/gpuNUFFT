@@ -8,17 +8,17 @@
 #include "precomp_utils.hpp"
 #include "cuda_utils.cuh"
 
-// Method to initialize CONSTANT memory symbols. Needs to reside in *.cu file 
+// Method to initialize CONSTANT memory symbols. Needs to reside in *.cu file
 // to work properly
 //
 //
-void initConstSymbol(const char* symbol, const void* src, IndType size)
+void initConstSymbol(const char* symbol, const void* src, IndType size, cudaStream_t stream)
 {
   if (std::string("GI").compare(symbol)==0)
-    HANDLE_ERROR(cudaMemcpyToSymbol(GI, src,size));
+    HANDLE_ERROR(cudaMemcpyToSymbolAsync(GI, src, size, 0, cudaMemcpyHostToDevice, stream));
 
   if (std::string("KERNEL").compare(symbol)==0)
-    HANDLE_ERROR(cudaMemcpyToSymbol(KERNEL, src,size));
+    HANDLE_ERROR(cudaMemcpyToSymbolAsync(KERNEL, src, size, 0, cudaMemcpyHostToDevice, stream));
 }
 
 void bindTo1DTexture(const char* symbol, void* devicePtr, IndType count)

@@ -148,8 +148,8 @@ class GpuNUFFTPythonOperator
         else
             gpuNUFFTOp->performForwardGpuNUFFT(imdataArray, dataArray);
         cudaDeviceSynchronize();
-      // Free the Copied array
-        cudaFree(imdataArray.data);
+        // Free the Copied array
+        cudaFreeHost(imdataArray.data);
         imdataArray.data = NULL;
         return py::array_t<std::complex<DType>>(py::buffer_info(
             new_data,                               /* Pointer to buffer */
@@ -190,7 +190,7 @@ class GpuNUFFTPythonOperator
             gpuNUFFTOp->performGpuNUFFTAdj(dataArray, imdataArray);
         cudaDeviceSynchronize();
         // Free the Copied array
-        cudaFree(dataArray.data);
+        cudaFreeHost(dataArray.data);
         dataArray.data = NULL;
         if(has_sense_data == false)
           return py::array_t<std::complex<DType>>(py::buffer_info(
@@ -240,10 +240,6 @@ class GpuNUFFTPythonOperator
         std::complex<DType> *t_data = (std::complex<DType> *) myData.ptr;
         DType2 *my_data = reinterpret_cast<DType2(&)[0]>(*t_data);
         memcpy(sensArray.data, my_data, myData.size*sizeof(DType2));
-        free(sensArray.data);
-        sensArray = copyNumpyArray(sense_maps);
-        sensArray.dim = imgDims;
-        sensArray.dim.channels = n_coils;
         has_sense_data = true;
         gpuNUFFTOp->setSens(sensArray);
     }

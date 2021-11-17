@@ -300,7 +300,7 @@ void gpuNUFFT::GpuNUFFTOperator::freeDeviceMemory()
   if (!gpuMemAllocated)
     return;
 
-  cudaFree(gi_host);
+  cudaFreeHost(gi_host);
   cufftDestroy(fft_plan);
   // Destroy the cuFFT plan.
   if (DEBUG && (cudaDeviceSynchronize() != cudaSuccess))

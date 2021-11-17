@@ -415,7 +415,7 @@ gpuNUFFT::Array<DType> gpuNUFFT::GpuNUFFTOperatorFactory::computeDeapodizationFu
 
   // cleanup locally initialized arrays here
   free(dataArray.data);
-  cudaFree(assignedSectors.data);
+  cudaFreeHost(assignedSectors.data);
 
   // Compute abs values of deapo function and compensate
   // FFT scaling sqrt(N)
@@ -438,7 +438,7 @@ gpuNUFFT::Array<DType> gpuNUFFT::GpuNUFFTOperatorFactory::computeDeapodizationFu
 
   // cleanup
   delete deapoGpuNUFFTOp;
-  cudaFree(deapoFunction.data);
+  cudaFreeHost(deapoFunction.data);
   return deapoAbs;
 }
 
@@ -536,7 +536,7 @@ gpuNUFFT::GpuNUFFTOperatorFactory::createGpuNUFFTOperator(
     gpuNUFFTOp->setSectorCenters(computeSectorCenters2D(gpuNUFFTOp));
 
   // free temporary array
-  cudaFree(assignedSectors.data);
+  cudaFreeHost(assignedSectors.data);
   assignedSectors.data = NULL;
 
   gpuNUFFTOp->setDeapodizationFunction(

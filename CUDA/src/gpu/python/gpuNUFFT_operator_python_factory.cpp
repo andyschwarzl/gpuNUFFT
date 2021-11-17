@@ -133,7 +133,8 @@ class GpuNUFFTPythonOperator
             gpuNUFFTOp->performForwardGpuNUFFT(imdataArray, dataArray, gpuNUFFT::DENSITY_ESTIMATION);
         else
             gpuNUFFTOp->performForwardGpuNUFFT(imdataArray, dataArray);
-        cudaThreadSynchronize();
+        cudaDeviceSynchronize();
+        free(imdataArray.data);
         return py::array_t<std::complex<DType>>(py::buffer_info(
             new_data,                               /* Pointer to buffer */
             sizeof(std::complex<DType>),                          /* Size of one scalar */
@@ -171,7 +172,7 @@ class GpuNUFFTPythonOperator
             gpuNUFFTOp->performGpuNUFFTAdj(dataArray, imdataArray, gpuNUFFT::DENSITY_ESTIMATION);
         else
             gpuNUFFTOp->performGpuNUFFTAdj(dataArray, imdataArray);
-        cudaThreadSynchronize();
+        cudaDeviceSynchronize();
         return out_result;
     }
     void clean_memory()

@@ -53,8 +53,8 @@ void gpuNUFFT::GpuNUFFTOperator::initKernel()
 gpuNUFFT::GpuNUFFTInfo *
 gpuNUFFT::GpuNUFFTOperator::initGpuNUFFTInfo(int n_coils_cc)
 {
-  gpuNUFFT::GpuNUFFTInfo *gi_host =
-      (gpuNUFFT::GpuNUFFTInfo *)malloc(sizeof(gpuNUFFT::GpuNUFFTInfo));
+  gpuNUFFT::GpuNUFFTInfo *gi_host;
+  cudaMallocHost((void **)&gi_host, sizeof(gpuNUFFT::GpuNUFFTInfo));
 
   gi_host->data_count = (int)this->kSpaceTraj.count();
   gi_host->sector_count = (int)this->gridSectorDims.count();
@@ -300,7 +300,7 @@ void gpuNUFFT::GpuNUFFTOperator::freeDeviceMemory()
   if (!gpuMemAllocated)
     return;
 
-  free(gi_host);
+  cudaFree(gi_host);
   cufftDestroy(fft_plan);
   // Destroy the cuFFT plan.
   if (DEBUG && (cudaDeviceSynchronize() != cudaSuccess))

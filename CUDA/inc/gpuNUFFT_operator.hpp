@@ -365,7 +365,7 @@ class GpuNUFFTOperator
    void freeLocalMemberArray(T* dataPointer)
    {
      if (dataPointer != NULL) {
-       free(dataPointer);
+       cudaFree(dataPointer);
        dataPointer = NULL;
      }
    }

@@ -59,6 +59,19 @@ copyNumpyArray(py::array_t<std::complex<DType>> data)
     dataArray.data = copy_data;
     return dataArray;
 }
+template <typename TType>
+gpuNUFFT::Array<TType>
+copyNumpyArray(py::array_t<std::complex<DType>> data)
+{
+    gpuNUFFT::Array<DType2> dataArray;
+    py::buffer_info myData = data.request();
+    TType *my_data = (TType *) myData.ptr;
+    DType2 *copy_data;
+    cudaMallocHost((void **)&copy_data, myData.size*sizeof(TType));
+    memcpy(copy_data, my_data, myData.size*sizeof(TType));
+    dataArray.data = copy_data;
+    return dataArray;
+}
 
 class GpuNUFFTPythonOperator
 {
@@ -115,7 +128,7 @@ class GpuNUFFTPythonOperator
         gpuNUFFTOp = factory.createGpuNUFFTOperator(
             kSpaceTraj, density_compArray, sensArray, kernel_width, sector_width,
             osr, imgDims);
-        cudaThreadSynchronize();
+        cudaDeviceSynchronize();
     }
 
     py::array_t<std::complex<DType>> op(py::array_t<std::complex<DType>> image, bool interpolate_data=false)
@@ -126,6 +139,7 @@ class GpuNUFFTPythonOperator
         dataArray.data = new_data;
         dataArray.dim.length = trajectory_length;
         dataArray.dim.channels = n_coils;
+        // Copy array to pinned memory for better memory bandwidths!
         gpuNUFFT::Array<DType2> imdataArray = copyNumpyArray(image);
         imdataArray.dim = imgDims;
         imdataArray.dim.channels = n_coils;
@@ -134,15 +148,19 @@ class GpuNUFFTPythonOperator
         else
             gpuNUFFTOp->performForwardGpuNUFFT(imdataArray, dataArray);
         cudaDeviceSynchronize();
-        free(imdataArray.data);
+      // Free the Copied array
+        cudaFree(imdataArray.data);
+        imdataArray.data = NULL;
         return py::array_t<std::complex<DType>>(py::buffer_info(
             new_data,                               /* Pointer to buffer */
             sizeof(std::complex<DType>),                          /* Size of one scalar */
             py::format_descriptor<std::complex<DType>>::format(), /* Python struct-style format descriptor */
             2,                                      /* Number of dimensions */
             { n_coils, trajectory_length },                 /* Buffer dimensions */
-            { sizeof(float) * n_coils,             /* Strides (in bytes) for each index */
-              sizeof(float) }
+            {
+                sizeof(DType2) * trajectory_length,             /* Strides (in bytes) for each index */
+                sizeof(DType2)
+            }
         ));
     }
     py::array_t<std::complex<DType>> adj_op(py::array_t<std::complex<DType>> kspace_data, bool grid_data=false)
@@ -152,20 +170,18 @@ class GpuNUFFTPythonOperator
             myDims = myDims * gpuNUFFTOp->getOsf();
         if(dimension==2)
             myDims.depth = 1;
-        py::array_t<std::complex<DType>> out_result;
+        DType2 *t_data;
         if(has_sense_data == false)
-            out_result.resize({n_coils, (int)myDims.depth, (int)myDims.height, (int)myDims.width});
+            cudaMallocHost((void **)&t_data, n_coils*(int)myDims.depth*(int)myDims.height*(int)myDims.width*sizeof(DType2));
         else
-            out_result.resize({(int)myDims.depth, (int)myDims.height, (int)myDims.width});
-        py::buffer_info out = out_result.request();
-        std::complex<DType> *t_data = (std::complex<DType> *) out.ptr;
+            cudaMallocHost((void **)&t_data, (int)myDims.depth*(int)myDims.height*(int)myDims.width*sizeof(DType2));
         DType2 *new_data = reinterpret_cast<DType2(&)[0]>(*t_data);
         gpuNUFFT::Array<DType2> imdataArray;
         imdataArray.data = new_data;
         imdataArray.dim = myDims;
         if(has_sense_data == false)
             imdataArray.dim.channels = n_coils;
-        gpuNUFFT::Array<CufftType> dataArray = readNumpyArray(kspace_data);
+        gpuNUFFT::Array<CufftType> dataArray = copyNumpyArray(kspace_data);
         dataArray.dim.length = trajectory_length;
         dataArray.dim.channels = n_coils;
         if(grid_data)
@@ -173,7 +189,46 @@ class GpuNUFFTPythonOperator
         else
             gpuNUFFTOp->performGpuNUFFTAdj(dataArray, imdataArray);
         cudaDeviceSynchronize();
-        return out_result;
+        // Free the Copied array
+        cudaFree(dataArray.data);
+        dataArray.data = NULL;
+        if(has_sense_data == false)
+          return py::array_t<std::complex<DType>>(py::buffer_info(
+            new_data,                               /* Pointer to buffer */
+            sizeof(std::complex<DType>),                          /* Size of one scalar */
+            py::format_descriptor<std::complex<DType>>::format(), /* Python struct-style format descriptor */
+            4,                                                                                    /* Number of dimensions */
+            {
+                n_coils,
+                (int)myDims.depth,
+                (int)myDims.height,
+                (int)myDims.width
+            }, /* Buffer dimensions */
+            {
+                sizeof(DType2) * (int)myDims.depth * (int)myDims.height * (int)myDims.width,
+                sizeof(DType2) * (int)myDims.height * (int)myDims.width,
+                sizeof(DType2) * (int)myDims.width,
+                sizeof(DType2),
+            }
+          ));
+        else
+          return py::array_t<std::complex<DType>>(py::buffer_info(
+            new_data,                               /* Pointer to buffer */
+            sizeof(std::complex<DType>),                          /* Size of one scalar */
+            py::format_descriptor<std::complex<DType>>::format(), /* Python struct-style format descriptor */
+            3,                                                                                    /* Number of dimensions */
+            {
+                (int)myDims.depth,
+                (int)myDims.height,
+                (int)myDims.width
+            }, /* Buffer dimensions */
+            {
+                sizeof(DType2) * (int)myDims.height * (int)myDims.width,
+                sizeof(DType2) * (int)myDims.width,
+                sizeof(DType2),
+            }
+          ));
+
     }
     void clean_memory()
     {
@@ -181,6 +236,10 @@ class GpuNUFFTPythonOperator
     }
     void set_smaps(py::array_t<std::complex<DType>> sense_maps)
     {
+        py::buffer_info myData = sense_maps.request();
+        std::complex<DType> *t_data = (std::complex<DType> *) myData.ptr;
+        DType2 *my_data = reinterpret_cast<DType2(&)[0]>(*t_data);
+        memcpy(sensArray.data, my_data, myData.size*sizeof(DType2));
         free(sensArray.data);
         sensArray = copyNumpyArray(sense_maps);
         sensArray.dim = imgDims;

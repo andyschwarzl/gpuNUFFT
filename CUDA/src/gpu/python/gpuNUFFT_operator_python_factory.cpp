@@ -46,31 +46,19 @@ readNumpyArray(py::array_t<std::complex<DType>> data)
     return dataArray;
 }
 
-gpuNUFFT::Array<DType2>
-copyNumpyArray(py::array_t<std::complex<DType>> data)
+void allocate_pinned_memory(gpuNUFFT::Array<DType2> *lin_array, unsigned long int size)
 {
-    gpuNUFFT::Array<DType2> dataArray;
-    py::buffer_info myData = data.request();
-    std::complex<DType> *t_data = (std::complex<DType> *) myData.ptr;
-    DType2 *my_data = reinterpret_cast<DType2(&)[0]>(*t_data);
-    DType2 *copy_data;
-    cudaMallocHost((void **)&copy_data, myData.size*sizeof(DType2));
-    memcpy(copy_data, my_data, myData.size*sizeof(DType2));
-    dataArray.data = copy_data;
-    return dataArray;
+  DType2 *new_data;
+  cudaMallocHost((void **)&new_data, size);
+  lin_array->data = new_data;
 }
 template <typename TType>
-gpuNUFFT::Array<TType>
-copyNumpyArray(py::array_t<std::complex<DType>> data)
+void copyNumpyArray(py::array_t<std::complex<DType>> data, TType *copy_data)
 {
-    gpuNUFFT::Array<DType2> dataArray;
     py::buffer_info myData = data.request();
-    TType *my_data = (TType *) myData.ptr;
-    DType2 *copy_data;
-    cudaMallocHost((void **)&copy_data, myData.size*sizeof(TType));
+    std::complex<DType> *t_data = (std::complex<DType> *) myData.ptr;
+    TType *my_data = reinterpret_cast<TType(&)[0]>(*t_data);
     memcpy(copy_data, my_data, myData.size*sizeof(TType));
-    dataArray.data = copy_data;
-    return dataArray;
 }
 
 class GpuNUFFTPythonOperator
@@ -81,7 +69,7 @@ class GpuNUFFTPythonOperator
     bool has_sense_data;
     gpuNUFFT::Dimensions imgDims;
     // sensitivity maps
-    gpuNUFFT::Array<DType2> sensArray;
+    gpuNUFFT::Array<DType2> sensArray, kspace_data, image;
     public:
     GpuNUFFTPythonOperator(py::array_t<DType> kspace_loc, py::array_t<int> image_size, int num_coils,
     py::array_t<std::complex<DType>> sense_maps,  py::array_t<float> density_comp, int kernel_width=3,
@@ -119,40 +107,44 @@ class GpuNUFFTPythonOperator
         }
         else
         {
-            sensArray = copyNumpyArray(sense_maps);
+            allocate_pinned_memory(&sensArray, n_coils * imgDims.count() * sizeof(DType2));
             sensArray.dim = imgDims;
             sensArray.dim.channels = n_coils;
+            copyNumpyArray(sense_maps, sensArray.data);
             has_sense_data = true;
         }
         factory.setBalanceWorkload(balance_workload);
         gpuNUFFTOp = factory.createGpuNUFFTOperator(
             kSpaceTraj, density_compArray, sensArray, kernel_width, sector_width,
             osr, imgDims);
+        allocate_pinned_memory(&kspace_data, n_coils*trajectory_length*sizeof(DType2));
+        kspace_data.dim.length = trajectory_length;
+        kspace_data.dim.channels = n_coils;
+        image.dim = imgDims;
+        if(has_sense_data == false)
+        {
+          allocate_pinned_memory(&image, n_coils * imgDims.count() * sizeof(DType2));
+          image.dim.channels = n_coils;
+        }
+        else
+        {
+          allocate_pinned_memory(&image, imgDims.count() * sizeof(DType2));
+          image.dim.channels = 1;
+        }
         cudaDeviceSynchronize();
     }
 
-    py::array_t<std::complex<DType>> op(py::array_t<std::complex<DType>> image, bool interpolate_data=false)
+    py::array_t<std::complex<DType>> op(py::array_t<std::complex<DType>> input_image, bool interpolate_data=false)
     {
-        DType2 *new_data;
-        cudaMallocHost((void **)&new_data, n_coils*trajectory_length*sizeof(DType2));
-        gpuNUFFT::Array<CufftType> dataArray;
-        dataArray.data = new_data;
-        dataArray.dim.length = trajectory_length;
-        dataArray.dim.channels = n_coils;
         // Copy array to pinned memory for better memory bandwidths!
-        gpuNUFFT::Array<DType2> imdataArray = copyNumpyArray(image);
-        imdataArray.dim = imgDims;
-        imdataArray.dim.channels = n_coils;
+        copyNumpyArray(input_image, image.data);
         if(interpolate_data)
-            gpuNUFFTOp->performForwardGpuNUFFT(imdataArray, dataArray, gpuNUFFT::DENSITY_ESTIMATION);
+            gpuNUFFTOp->performForwardGpuNUFFT(image, kspace_data, gpuNUFFT::DENSITY_ESTIMATION);
         else
-            gpuNUFFTOp->performForwardGpuNUFFT(imdataArray, dataArray);
+            gpuNUFFTOp->performForwardGpuNUFFT(image, kspace_data);
         cudaDeviceSynchronize();
-        // Free the Copied array
-        cudaFreeHost(imdataArray.data);
-        imdataArray.data = NULL;
         return py::array_t<std::complex<DType>>(py::buffer_info(
-            new_data,                               /* Pointer to buffer */
+            kspace_data.data,                               /* Pointer to buffer */
             sizeof(std::complex<DType>),                          /* Size of one scalar */
             py::format_descriptor<std::complex<DType>>::format(), /* Python struct-style format descriptor */
             2,                                      /* Number of dimensions */
@@ -163,68 +155,47 @@ class GpuNUFFTPythonOperator
             }
         ));
     }
-    py::array_t<std::complex<DType>> adj_op(py::array_t<std::complex<DType>> kspace_data, bool grid_data=false)
+    py::array_t<std::complex<DType>> adj_op(py::array_t<std::complex<DType>> input_kspace_data, bool grid_data=false)
     {
-        gpuNUFFT::Dimensions myDims = imgDims;
+        copyNumpyArray(input_kspace_data, kspace_data.data);
         if(grid_data)
-            myDims = myDims * gpuNUFFTOp->getOsf();
-        if(dimension==2)
-            myDims.depth = 1;
-        DType2 *t_data;
-        if(has_sense_data == false)
-            cudaMallocHost((void **)&t_data, n_coils*(int)myDims.depth*(int)myDims.height*(int)myDims.width*sizeof(DType2));
+            gpuNUFFTOp->performGpuNUFFTAdj(kspace_data, image, gpuNUFFT::DENSITY_ESTIMATION);
         else
-            cudaMallocHost((void **)&t_data, (int)myDims.depth*(int)myDims.height*(int)myDims.width*sizeof(DType2));
-        DType2 *new_data = reinterpret_cast<DType2(&)[0]>(*t_data);
-        gpuNUFFT::Array<DType2> imdataArray;
-        imdataArray.data = new_data;
-        imdataArray.dim = myDims;
-        if(has_sense_data == false)
-            imdataArray.dim.channels = n_coils;
-        gpuNUFFT::Array<CufftType> dataArray = copyNumpyArray(kspace_data);
-        dataArray.dim.length = trajectory_length;
-        dataArray.dim.channels = n_coils;
-        if(grid_data)
-            gpuNUFFTOp->performGpuNUFFTAdj(dataArray, imdataArray, gpuNUFFT::DENSITY_ESTIMATION);
-        else
-            gpuNUFFTOp->performGpuNUFFTAdj(dataArray, imdataArray);
+            gpuNUFFTOp->performGpuNUFFTAdj(kspace_data, image);
         cudaDeviceSynchronize();
-        // Free the Copied array
-        cudaFreeHost(dataArray.data);
-        dataArray.data = NULL;
         if(has_sense_data == false)
           return py::array_t<std::complex<DType>>(py::buffer_info(
-            new_data,                               /* Pointer to buffer */
+            image.data,                               /* Pointer to buffer */
             sizeof(std::complex<DType>),                          /* Size of one scalar */
             py::format_descriptor<std::complex<DType>>::format(), /* Python struct-style format descriptor */
             4,                                                                                    /* Number of dimensions */
             {
                 n_coils,
-                (int)myDims.depth,
-                (int)myDims.height,
-                (int)myDims.width
+                (int)image.dim.depth,
+                (int)image.dim.height,
+                (int)image.dim.width
             }, /* Buffer dimensions */
             {
-                sizeof(DType2) * (int)myDims.depth * (int)myDims.height * (int)myDims.width,
-                sizeof(DType2) * (int)myDims.height * (int)myDims.width,
-                sizeof(DType2) * (int)myDims.width,
+                sizeof(DType2) * (int)image.dim.depth * (int)image.dim.height * (int)image.dim.width,
+                sizeof(DType2) * (int)image.dim.height * (int)image.dim.width,
+                sizeof(DType2) * (int)image.dim.width,
                 sizeof(DType2),
             }
           ));
         else
           return py::array_t<std::complex<DType>>(py::buffer_info(
-            new_data,                               /* Pointer to buffer */
+            image.data,                               /* Pointer to buffer */
             sizeof(std::complex<DType>),                          /* Size of one scalar */
             py::format_descriptor<std::complex<DType>>::format(), /* Python struct-style format descriptor */
             3,                                                                                    /* Number of dimensions */
             {
-                (int)myDims.depth,
-                (int)myDims.height,
-                (int)myDims.width
+                (int)image.dim.depth,
+                (int)image.dim.height,
+                (int)image.dim.width
             }, /* Buffer dimensions */
             {
-                sizeof(DType2) * (int)myDims.height * (int)myDims.width,
-                sizeof(DType2) * (int)myDims.width,
+                sizeof(DType2) * (int)image.dim.height * (int)image.dim.width,
+                sizeof(DType2) * (int)image.dim.width,
                 sizeof(DType2),
             }
           ));

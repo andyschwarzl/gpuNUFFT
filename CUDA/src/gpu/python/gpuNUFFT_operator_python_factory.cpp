@@ -137,68 +137,66 @@ class GpuNUFFTPythonOperator
     py::array_t<std::complex<DType>> op(py::array_t<std::complex<DType>> input_image, bool interpolate_data=false)
     {
         // Copy array to pinned memory for better memory bandwidths!
-        copyNumpyArray(input_image, image.data);
+        //copyNumpyArray(input_image, image.data);
         if(interpolate_data)
             gpuNUFFTOp->performForwardGpuNUFFT(image, kspace_data, gpuNUFFT::DENSITY_ESTIMATION);
         else
             gpuNUFFTOp->performForwardGpuNUFFT(image, kspace_data);
         cudaDeviceSynchronize();
-        return py::array_t<std::complex<DType>>(py::buffer_info(
-            kspace_data.data,                               /* Pointer to buffer */
-            sizeof(std::complex<DType>),                          /* Size of one scalar */
-            py::format_descriptor<std::complex<DType>>::format(), /* Python struct-style format descriptor */
-            2,                                      /* Number of dimensions */
-            { n_coils, trajectory_length },                 /* Buffer dimensions */
+        std::complex<DType> *ptr = reinterpret_cast<std::complex<DType>(&)[0]>(*kspace_data.data);
+        auto capsule = py::capsule(ptr, [](void *ptr) { return; });
+        return py::array_t<std::complex<DType>>(
+            { n_coils, trajectory_length },
             {
-                sizeof(DType2) * trajectory_length,             /* Strides (in bytes) for each index */
+                sizeof(DType2) * trajectory_length,
                 sizeof(DType2)
-            }
-        ));
+            },
+            ptr,
+            capsule
+        );
     }
     py::array_t<std::complex<DType>> adj_op(py::array_t<std::complex<DType>> input_kspace_data, bool grid_data=false)
     {
-        copyNumpyArray(input_kspace_data, kspace_data.data);
+        //copyNumpyArray(input_kspace_data, kspace_data.data);
         if(grid_data)
             gpuNUFFTOp->performGpuNUFFTAdj(kspace_data, image, gpuNUFFT::DENSITY_ESTIMATION);
         else
             gpuNUFFTOp->performGpuNUFFTAdj(kspace_data, image);
         cudaDeviceSynchronize();
+        std::complex<DType> *ptr = reinterpret_cast<std::complex<DType>(&)[0]>(*image.data);
+        auto capsule = py::capsule(ptr, [](void *ptr) { return; });
         if(has_sense_data == false)
-          return py::array_t<std::complex<DType>>(py::buffer_info(
-            image.data,                               /* Pointer to buffer */
-            sizeof(std::complex<DType>),                          /* Size of one scalar */
-            py::format_descriptor<std::complex<DType>>::format(), /* Python struct-style format descriptor */
-            4,                                                                                    /* Number of dimensions */
+          return py::array_t<std::complex<DType>>(
             {
                 n_coils,
                 (int)image.dim.depth,
                 (int)image.dim.height,
                 (int)image.dim.width
-            }, /* Buffer dimensions */
+            },
             {
                 sizeof(DType2) * (int)image.dim.depth * (int)image.dim.height * (int)image.dim.width,
                 sizeof(DType2) * (int)image.dim.height * (int)image.dim.width,
                 sizeof(DType2) * (int)image.dim.width,
                 sizeof(DType2),
-            }
-          ));
+            },
+            ptr,
+            capsule
+          );
         else
-          return py::array_t<std::complex<DType>>(py::buffer_info(
-            image.data,                               /* Pointer to buffer */
-            sizeof(std::complex<DType>),                          /* Size of one scalar */
-            py::format_descriptor<std::complex<DType>>::format(), /* Python struct-style format descriptor */
-            3,                                                                                    /* Number of dimensions */
+          return py::array_t<std::complex<DType>>(
             {
                 (int)image.dim.depth,
                 (int)image.dim.height,
                 (int)image.dim.width
-            }, /* Buffer dimensions */
+            },
             {
                 sizeof(DType2) * (int)image.dim.height * (int)image.dim.width,
                 sizeof(DType2) * (int)image.dim.width,
                 sizeof(DType2),
-            }
-          ));
+            },
+            ptr,
+            capsule
+      );
 
     }
     void clean_memory()
@@ -216,14 +214,16 @@ class GpuNUFFTPythonOperator
     }
     ~GpuNUFFTPythonOperator()
     {
+        cudaFree(kspace_data.data);
+        cudaFree(image.data);
         delete gpuNUFFTOp;
     }
 };
 PYBIND11_MODULE(gpuNUFFT, m) {
     py::class_<GpuNUFFTPythonOperator>(m, "NUFFTOp")
         .def(py::init<py::array_t<DType>, py::array_t<int>, int, py::array_t<std::complex<DType>>, py::array_t<float>, int, int, int, bool>())
-        .def("op", &GpuNUFFTPythonOperator::op)
-        .def("adj_op",  &GpuNUFFTPythonOperator::adj_op)
+        .def("op", &GpuNUFFTPythonOperator::op, py::return_value_policy::reference)
+        .def("adj_op",  &GpuNUFFTPythonOperator::adj_op, py::return_value_policy::reference)
         .def("clean_memory", &GpuNUFFTPythonOperator::clean_memory)
         .def("set_smaps", &GpuNUFFTPythonOperator::set_smaps);
 }

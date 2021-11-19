@@ -75,6 +75,7 @@ class GpuNUFFTOperator
     freeDeviceMemory();
     freeLocalMemberArray(this->kernel.data);
     freeLocalMemberArray(this->dens.data);
+    freeLocalMemberArray(this->sens.data);
     freeLocalMemberArray(this->deapo.data);
     freeLocalMemberArray(this->kSpaceTraj.data);
     freeLocalMemberArray(this->sectorCenters.data);

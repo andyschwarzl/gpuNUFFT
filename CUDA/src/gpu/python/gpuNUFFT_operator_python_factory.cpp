@@ -158,6 +158,9 @@ class GpuNUFFTPythonOperator
     }
     py::array_t<std::complex<DType>> adj_op(py::array_t<std::complex<DType>> input_kspace_data, bool grid_data=false)
     {
+        gpuNUFFT::Dimensions myDims = imgDims;
+        if(dimension==2)
+            myDims.depth = 1;
         copyNumpyArray(input_kspace_data, kspace_data.data);
         if(grid_data)
             gpuNUFFTOp->performGpuNUFFTAdj(kspace_data, image, gpuNUFFT::DENSITY_ESTIMATION);
@@ -171,14 +174,14 @@ class GpuNUFFTPythonOperator
           return py::array_t<std::complex<DType>>(
             {
                 n_coils,
-                (int)image.dim.depth,
-                (int)image.dim.height,
-                (int)image.dim.width
+                (int)myDims.depth,
+                (int)myDims.height,
+                (int)myDims.width
             },
             {
-                sizeof(DType2) * (int)image.dim.depth * (int)image.dim.height * (int)image.dim.width,
-                sizeof(DType2) * (int)image.dim.height * (int)image.dim.width,
-                sizeof(DType2) * (int)image.dim.width,
+                sizeof(DType2) * (int)myDims.depth * (int)myDims.height * (int)myDims.width,
+                sizeof(DType2) * (int)myDims.height * (int)myDims.width,
+                sizeof(DType2) * (int)myDims.width,
                 sizeof(DType2),
             },
             ptr,
@@ -187,13 +190,13 @@ class GpuNUFFTPythonOperator
         else
           return py::array_t<std::complex<DType>>(
             {
-                (int)image.dim.depth,
-                (int)image.dim.height,
-                (int)image.dim.width
+                (int)myDims.depth,
+                (int)myDims.height,
+                (int)myDims.width
             },
             {
-                sizeof(DType2) * (int)image.dim.height * (int)image.dim.width,
-                sizeof(DType2) * (int)image.dim.width,
+                sizeof(DType2) * (int)myDims.height * (int)myDims.width,
+                sizeof(DType2) * (int)myDims.width,
                 sizeof(DType2),
             },
             ptr,

@@ -91,17 +91,22 @@ void gpuNUFFT::GpuNUFFTOperatorFactory::computeProcessingOrder(
   {
     if (countPerSector[i].second > 0)
     {
-      processingOrder.push_back(IndType2(countPerSector[i].first, 0));
+      IndType2 tmp;
+      tmp.x = countPerSector[i].first;
+      tmp.y = 0;
+      processingOrder.push_back(tmp);
       if (countPerSector[i].second > MAXIMUM_PAYLOAD)
       {
         int remaining = (int)countPerSector[i].second;
-        int offset = 1;
+        IndType offset = 1;
         // split sector
         while ((remaining - MAXIMUM_PAYLOAD) > 0)
         {
           remaining -= MAXIMUM_PAYLOAD;
-          processingOrder.push_back(
-              IndType2(countPerSector[i].first, (offset++) * MAXIMUM_PAYLOAD));
+          IndType2 tmp_remain;
+          tmp_remain.x = countPerSector[i].first;
+          tmp_remain.y = (offset++) * MAXIMUM_PAYLOAD;
+          processingOrder.push_back(tmp_remain);
         }
       }
     }

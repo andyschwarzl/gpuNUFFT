@@ -25,11 +25,11 @@ void bindTo1DTexture(const char* symbol, void* devicePtr, IndType count)
 {
   if (std::string("texDATA").compare(symbol)==0)
   {
-    HANDLE_ERROR (cudaBindTexture(NULL,texDATA, devicePtr,count*sizeof(float2)));
+    HANDLE_ERROR (cudaBindTexture(NULL,texDATA, devicePtr,(unsigned long)count*sizeof(float2)));
   }
   else if (std::string("texGDATA").compare(symbol)==0)
   {
-    HANDLE_ERROR (cudaBindTexture(NULL,texGDATA, devicePtr,count*sizeof(cufftComplex)));
+    cudaBindTexture(NULL,texGDATA, devicePtr,(unsigned long)count*sizeof(cufftComplex));
   }
 }
 

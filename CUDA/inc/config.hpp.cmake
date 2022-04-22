@@ -30,7 +30,7 @@
 #endif
 
 typedef unsigned int SizeType;
-typedef unsigned int IndType;
+typedef unsigned long int IndType;
 
 /** \brief Combined 2-tuple (x,y) of IndType */
 typedef struct IndType2

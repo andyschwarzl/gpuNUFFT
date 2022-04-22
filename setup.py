@@ -74,7 +74,7 @@ class CMakeBuild(build_ext):
                       "-DGEN_PYTHON_FILES=ON",
                       "-DGEN_MEX_FILES=OFF",
                       "-DPYBIND11_INCLUDE_DIR=" + self.pybind_path]
-        cfg = "Debug" if self.debug else "Release"
+        cfg = "Debug" #if self.debug else "Release"
         build_args = ["--config", cfg]
 
         if platform.system() == "Windows":

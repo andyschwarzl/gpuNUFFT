@@ -29,7 +29,7 @@ void bindTo1DTexture(const char* symbol, void* devicePtr, IndType count)
   }
   else if (std::string("texGDATA").compare(symbol)==0)
   {
-    cudaBindTexture(NULL,texGDATA, devicePtr,(unsigned long)count*sizeof(cufftComplex));
+    HANDLE_ERROR (cudaBindTexture(NULL,texGDATA, devicePtr,(unsigned long)count*sizeof(cufftComplex)));
   }
 }
 
@@ -111,9 +111,9 @@ void freeTexture(const char* symbol, cudaArray* devicePtr)
   HANDLE_ERROR(cudaFreeArray(devicePtr));  
 }
 
-__global__ void fftScaleKernel(CufftType* data, DType scaling, int N)
+__global__ void fftScaleKernel(CufftType* data, DType scaling, long int N)
 {
-  int t = threadIdx.x +  blockIdx.x *blockDim.x;
+  long int t = threadIdx.x +  blockIdx.x *blockDim.x;
 
   while (t < N) 
   {
@@ -129,7 +129,7 @@ __global__ void fftScaleKernel(CufftType* data, DType scaling, int N)
   }
 }
 
-void performFFTScaling(CufftType* data,int N, gpuNUFFT::GpuNUFFTInfo* gi_host)
+void performFFTScaling(CufftType* data,long int N, gpuNUFFT::GpuNUFFTInfo* gi_host)
 {
   dim3 block_dim(64, 1, 8);
   //dim3 block_dim(THREAD_BLOCK_SIZE);

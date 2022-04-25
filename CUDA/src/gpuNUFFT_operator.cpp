@@ -1104,7 +1104,7 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(
   if (debugTiming)
     startTiming();
 
-  int data_count = (int)this->kSpaceTraj.count();
+  long int data_count = (int)this->kSpaceTraj.count();
   int n_coils = (int)kspaceData.dim.channels;
   IndType imdata_count = this->imgDims.count();
 
@@ -1253,7 +1253,7 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(
 
     // write result in correct order back into output array
     writeOrderedGPU(data_sorted_d, data_indices_d, data_d,
-                    (int)this->kSpaceTraj.count(), n_coils_cc);
+                    (long int)this->kSpaceTraj.count(), n_coils_cc);
     if(coil_it > 1)
     {
       cudaStreamSynchronize(old_stream);

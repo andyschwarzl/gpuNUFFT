@@ -486,16 +486,16 @@ textureForwardConvolutionFunction(long int *sec, long int sec_max, long int sec_
   center.y = sector_centers[sec[threadIdx.x] * 3 + 1];
   center.z = sector_centers[sec[threadIdx.x] * 3 + 2];
 
-  __shared__ int sector_ind_offset;
+  __shared__ long int sector_ind_offset;
   sector_ind_offset =
       computeXYZ2Lin(center.x - GI.sector_offset, center.y - GI.sector_offset,
                      center.z - GI.sector_offset, GI.gridDims);
 
   // init sector cache
   // preload sector grid data into cache
-  for (int ind = threadIdx.x; ind < GI.sector_dim; ind += blockDim.x)
+  for (long int ind = threadIdx.x; ind < GI.sector_dim; ind += blockDim.x)
   {
-    int grid_index;
+    long int grid_index;
     getCoordsFromIndex(ind, &i, &j, &k, GI.sector_pad_width);
 
     if (isOutlier(i, j, k, center.x, center.y, center.z, GI.gridDims,
@@ -516,7 +516,7 @@ textureForwardConvolutionFunction(long int *sec, long int sec_max, long int sec_
   __syncthreads();
 
   // Grid Points over Threads
-  int data_cnt = sectors[sec[threadIdx.x]] + threadIdx.x + sec_offset;
+  long int data_cnt = sectors[sec[threadIdx.x]] + threadIdx.x + sec_offset;
 
   while (data_cnt < sec_max)
   {

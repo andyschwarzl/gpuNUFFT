@@ -230,27 +230,27 @@ enum OperatorType
 struct GpuNUFFTInfo
 {
   /**\brief Total amount of data samples.*/
-  int data_count;
+  IndType data_count;
   /**\brief Width in grid units of gridding kernel.*/
-  int kernel_width;
+  IndType kernel_width;
   /**\brief Squared kernel_width.*/
-  int kernel_widthSquared;
+  IndType kernel_widthSquared;
   /**\brief Reciprocal value of kernel_widthSquared.*/
   DType kernel_widthInvSquared;
   /**\brief Total amount of kernel entries.*/
-  int kernel_count;
+  IndType kernel_count;
   /**\brief Radius of kernel relative to grid size.*/
   DType kernel_radius;
 
   /**\brief Width of oversampled grid.*/
-  int grid_width_dim;
+  IndType grid_width_dim;
   /**\brief .*/
-  int grid_width_offset;
+  IndType grid_width_offset;
   /**\brief Reciprocal value of grid_width_dim.*/
   DType3 grid_width_inv;
 
   /**\brief Total amount of image nodes.*/
-  int im_width_dim;
+  IndType im_width_dim;
   /**\brief Image offset (imgDims / 2).*/
   IndType3 im_width_offset;  // used in deapodization
 
@@ -258,22 +258,22 @@ struct GpuNUFFTInfo
   DType osr;
 
   /**\brief Total amount of sectors.*/
-  int sector_count;
+  IndType sector_count;
   /**\brief Amount of sectors per dimension.*/
-  int sector_width;
+  IndType sector_width;
 
   /**\brief Padded sector width (sector_width + kernel_width / 2).*/
-  int sector_pad_width;
+  IndType sector_pad_width;
   /**\brief Maximum index per dimension of padded sector (sector_pad_width -
    * 1).*/
-  int sector_pad_max;
+  IndType sector_pad_max;
   /**\brief Total amount of elements in one padded sector.*/
-  int sector_dim;
+  IndType sector_dim;
   /**\brief Offset to zero position inside padded sector (sector_pad_width / 2).
    * Used in combination with the sector center in order to get to the starting
    * index (bottom left of the front slice)
    */
-  int sector_offset;
+  IndType sector_offset;
 
   /**\brief Distance scale in x direction in case of anisotropic grids.*/
   DType aniso_x_scale;
@@ -302,12 +302,12 @@ struct GpuNUFFTInfo
   /**\brief Flag to indicate whether 2-d or 3-d data is processed.*/
   bool is2Dprocessing;
   /**\brief Type used for texture interpolation.*/
-  int interpolationType;
+  IndType interpolationType;
   /**\brief Total amount of sectors which have to be processed.
     * Depends on sector load balancing.*/
-  int sectorsToProcess;
+  IndType sectorsToProcess;
   /**\brief Number of coils processed concurrently */
-  int n_coils_cc;
+  IndType n_coils_cc;
 };
 }
 

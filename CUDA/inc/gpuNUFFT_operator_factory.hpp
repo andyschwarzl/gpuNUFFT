@@ -55,7 +55,7 @@ class GpuNUFFTOperatorFactory
     * @param useGpu Flag to indicat&GpuNUFFTPythonOperator::adj_op);e gpu usage for precomputation
     * @param balanceWorkload Flag to indicate load balancing
     */
-  GpuNUFFTOperatorFactory(const bool useTextures = true, const bool useGpu = true,
+  GpuNUFFTOperatorFactory(const bool useTextures = false, const bool useGpu = true,
                           bool balanceWorkload = true, bool matlabSharedMem = false)
     : useTextures(useTextures), useGpu(useGpu), balanceWorkload(balanceWorkload),
     matlabSharedMem(matlabSharedMem)

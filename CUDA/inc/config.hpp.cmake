@@ -29,30 +29,9 @@
   typedef cufftComplex CufftType;
 #endif
 
-typedef unsigned int SizeType;
+typedef unsigned long int SizeType;
 typedef unsigned long int IndType;
-
-/** \brief Combined 2-tuple (x,y) of IndType */
-typedef struct IndType2
-{
-  IndType x;
-  IndType y;
-  IndType2()
-  {
-  }
-  IndType2(IndType x, IndType y) : x(x), y(y)
-  {
-  }
-} IndType2;
-
-/** \brief Combined 3-tuple (x,y,z) of IndType */
-typedef struct IndType3
-{
-  IndType x;
-  IndType y;
-  IndType z;
-  //      IndType3(){}
-  //      IndType3(IndType x, IndType y, IndType z): x(x),y(y),z(z){}
-} IndType3;
+typedef uint2 IndType2;
+typedef uint3 IndType3;
 
 #endif  // CONFIG_H

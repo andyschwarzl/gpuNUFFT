@@ -366,7 +366,7 @@ class GpuNUFFTOperator
    void freeLocalMemberArray(T* dataPointer)
    {
      if (dataPointer != NULL) {
-       free(dataPointer);
+       cudaFreeHost(dataPointer);
        dataPointer = NULL;
      }
    }
@@ -574,7 +574,7 @@ class GpuNUFFTOperator
 
   /** \brief Update amount of concurrently computed coils
    */
-  void updateConcurrentCoilCount(int coil_it, int n_coils, int &n_coils_cc);
+  void updateConcurrentCoilCount(int coil_it, int n_coils, int &n_coils_cc, cudaStream_t stream=0);
 
   /** \brief Compute amount of coils which can be computed at once.
    *

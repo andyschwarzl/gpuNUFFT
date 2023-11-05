@@ -73,7 +73,7 @@ class GpuNUFFTPythonOperator
     public:
     GpuNUFFTPythonOperator(py::array_t<DType> kspace_loc, py::array_t<int> image_size, int num_coils,
     py::array_t<std::complex<DType>> sense_maps,  py::array_t<float> density_comp, int kernel_width=3,
-    int sector_width=8, int osr=2, bool balance_workload=1)
+    int sector_width=8, float osf=2, bool balance_workload=1)
     {
         // k-space coordinates
         py::buffer_info sample_loc = kspace_loc.request();
@@ -116,7 +116,7 @@ class GpuNUFFTPythonOperator
         factory.setBalanceWorkload(balance_workload);
         gpuNUFFTOp = factory.createGpuNUFFTOperator(
             kSpaceTraj, density_compArray, sensArray, kernel_width, sector_width,
-            osr, imgDims);
+            osf, imgDims);
         allocate_pinned_memory(&kspace_data, n_coils*trajectory_length*sizeof(DType2));
         kspace_data.dim.length = trajectory_length;
         kspace_data.dim.channels = n_coils;
@@ -226,7 +226,7 @@ class GpuNUFFTPythonOperator
 };
 PYBIND11_MODULE(gpuNUFFT, m) {
     py::class_<GpuNUFFTPythonOperator>(m, "NUFFTOp")
-        .def(py::init<py::array_t<DType>, py::array_t<int>, int, py::array_t<std::complex<DType>>, py::array_t<float>, int, int, int, bool>())
+        .def(py::init<py::array_t<DType>, py::array_t<int>, int, py::array_t<std::complex<DType>>, py::array_t<float>, int, int, float, bool>())
         .def("op", &GpuNUFFTPythonOperator::op)
         .def("adj_op",  &GpuNUFFTPythonOperator::adj_op)
         .def("clean_memory", &GpuNUFFTPythonOperator::clean_memory)

@@ -107,10 +107,11 @@ class GpuNUFFTPythonOperator
         }
         else
         {
-            bool is_pinned_memory;
+            cudaPointerAttributes attr;
             // FIXME, check for errors
-            cuPointerGetAttribute(&is_pinned_memory, CU_POINTER_ATTRIBUTE_MAPPED, (CUdeviceptr) sense_maps_buffer.ptr);
-            printf("Value of CU_POINTER_ATTRIBUTE_IS_MANAGED = %d\n", is_pinned_memory);
+            cudaPointerGetAttributes(&attr, sense_maps_buffer.ptr);
+            printf("Value of attr.cudaMemoryType = %d\n", attr.type);
+            bool is_pinned_memory = attr.type ==  cudaMemoryTypeHost;
             if(is_pinned_memory)
             {
                 printf("The smaps data is pinned!, skipping copies\n");

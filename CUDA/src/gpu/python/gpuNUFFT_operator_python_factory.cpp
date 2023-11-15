@@ -107,11 +107,22 @@ class GpuNUFFTPythonOperator
         }
         else
         {
-            allocate_pinned_memory(&sensArray, n_coils * imgDims.count() * sizeof(DType2));
-            sensArray.dim = imgDims;
-            sensArray.dim.channels = n_coils;
-            copyNumpyArray(sense_maps, sensArray.data);
-            has_sense_data = true;
+            printf("Value of CU_POINTER_ATTRIBUTE_IS_MANAGED = %d", cuPointerGetAttribute(sens_maps_buffer.ptr, CU_POINTER_ATTRIBUTE_IS_MANAGED));
+            if(cuPointerGetAttribute(sens_maps_buffer.ptr, CU_POINTER_ATTRIBUTE_IS_MANAGED))
+            {
+                printf("The smaps data is pinned!, skipping copies");
+                std::complex<DType> *t_data = (std::complex<DType> *) myData.ptr;
+                sensArray.data = reinterpret_cast<DType2(&)[0]>(*t_data);
+            }
+            else
+            {
+                printf("The smaps data is NOT pinned!, DOING copies");
+                allocate_pinned_memory(&sensArray, n_coils * imgDims.count() * sizeof(DType2));
+                sensArray.dim = imgDims;
+                sensArray.dim.channels = n_coils;
+                copyNumpyArray(sense_maps, sensArray.data);
+                has_sense_data = true;
+            }
         }
         factory.setBalanceWorkload(balance_workload);
         gpuNUFFTOp = factory.createGpuNUFFTOperator(

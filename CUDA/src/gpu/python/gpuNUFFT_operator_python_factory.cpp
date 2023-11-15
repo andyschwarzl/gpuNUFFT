@@ -107,11 +107,15 @@ class GpuNUFFTPythonOperator
         }
         else
         {
-            printf("Value of CU_POINTER_ATTRIBUTE_IS_MANAGED = %d", cuPointerGetAttribute(sens_maps_buffer.ptr, CU_POINTER_ATTRIBUTE_IS_MANAGED));
-            if(cuPointerGetAttribute(sens_maps_buffer.ptr, CU_POINTER_ATTRIBUTE_IS_MANAGED))
+            bool is_pinned_memory;
+            // FIXME, check for errors
+            cuPointerGetAttribute(&is_pinned_memory, CU_POINTER_ATTRIBUTE_IS_MANAGED, (CUdeviceptr) sense_maps_buffer.ptr);
+            printf("Value of CU_POINTER_ATTRIBUTE_IS_MANAGED = %d", is_pinned_memory);
+            if(is_pinned_memory)
             {
                 printf("The smaps data is pinned!, skipping copies");
-                std::complex<DType> *t_data = (std::complex<DType> *) myData.ptr;
+                // Just map the memory to sensArray! We dont need to make a copy if the memory is already pinned
+                std::complex<DType> *t_data = (std::complex<DType> *) sense_maps_buffer.ptr;
                 sensArray.data = reinterpret_cast<DType2(&)[0]>(*t_data);
             }
             else

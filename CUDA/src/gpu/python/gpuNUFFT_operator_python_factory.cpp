@@ -109,7 +109,7 @@ class GpuNUFFTPythonOperator
         {
             cudaPointerAttributes attr;
             // FIXME, check for errors
-            cudaPointerGetAttributes(&attr, sense_maps_buffer.ptr);
+            cudaPointerGetAttributes(&attr, &sense_maps_buffer.ptr);
             printf("Value of attr.cudaMemoryType = %d\n", attr.type);
             bool is_pinned_memory = attr.type ==  cudaMemoryTypeHost;
             if(is_pinned_memory)

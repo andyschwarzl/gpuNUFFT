@@ -107,11 +107,31 @@ class GpuNUFFTPythonOperator
         }
         else
         {
-            allocate_pinned_memory(&sensArray, n_coils * imgDims.count() * sizeof(DType2));
-            sensArray.dim = imgDims;
-            sensArray.dim.channels = n_coils;
-            copyNumpyArray(sense_maps, sensArray.data);
-            has_sense_data = true;
+            cudaPointerAttributes attr;
+            if(DEBUG)
+                printf("Value of sense_maps pointer == 0x%x or %d\n", sense_maps_buffer.ptr, sense_maps_buffer.ptr);
+            cudaPointerGetAttributes(&attr, sense_maps_buffer.ptr);
+            if(DEBUG)
+                printf("Value of attr.cudaMemoryType2 = %d\n", attr.type);
+            bool is_pinned_memory = attr.type ==  cudaMemoryTypeHost;
+            if(is_pinned_memory)
+            {
+                if(DEBUG)
+                    printf("The smaps data is pinned!, skipping copies\n");
+                // Just map the memory to sensArray! We dont need to make a copy if the memory is already pinned
+                std::complex<DType> *t_data = (std::complex<DType> *) sense_maps_buffer.ptr;
+                sensArray.data = reinterpret_cast<DType2(&)[0]>(*t_data);
+            }
+            else
+            {
+                if(DEBUG)
+                    printf("The smaps data is NOT pinned!, DOING copies\n");
+                allocate_pinned_memory(&sensArray, n_coils * imgDims.count() * sizeof(DType2));
+                sensArray.dim = imgDims;
+                sensArray.dim.channels = n_coils;
+                copyNumpyArray(sense_maps, sensArray.data);
+                has_sense_data = true;
+            }
         }
         factory.setBalanceWorkload(balance_workload);
         gpuNUFFTOp = factory.createGpuNUFFTOperator(

@@ -329,7 +329,9 @@ class GpuNUFFTPythonOperator
 };
 PYBIND11_MODULE(gpuNUFFT, m) {
     py::class_<GpuNUFFTPythonOperator>(m, "NUFFTOp")
-        .def(py::init<py::array_t<DType>, py::array_t<int>, int, py::array_t<std::complex<DType>>, py::array_t<float>, int, int, int, bool, MemoryAllocationType>()) // FIXME : Add defaul values!
+        .def(py::init<py::array_t<DType>, py::array_t<int>, int, py::array_t<std::complex<DType>>, py::array_t<float>, int, int, int, bool, MemoryAllocationType>(),
+            py::arg("kspace_loc"), py::arg("image_size"), py::arg("num_coils"), py::arg("sense_maps") = py::none(), py::arg("density_comp") = py::none(), py::arg("kernel_width") = 3, py::arg("sector_width") = 8, py::arg("osr") = 2, py::arg("balance_workload") = true, py::arg("when_allocate_memory") = ALLOCATE_MEMORY_IN_CONSTRUCTOR
+        ) // FIXME : Add defaul values!
         .def("op", &GpuNUFFTPythonOperator::op, py::arg("input_image"), py::arg("interpolate_data") = false, py::arg("out_kspace") = py::none())
         .def("adj_op",  &GpuNUFFTPythonOperator::adj_op, py::arg("input_kspace"), py::arg("grid_data") = false, py::arg("out_image") = py::none())
         .def("clean_memory", &GpuNUFFTPythonOperator::clean_memory)

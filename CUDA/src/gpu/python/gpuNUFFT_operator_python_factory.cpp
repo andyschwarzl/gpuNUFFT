@@ -196,7 +196,7 @@ class GpuNUFFTPythonOperator
         cudaDeviceSynchronize();
     }
 
-    py::array_t<std::complex<DType>> op(py::array_t<std::complex<DType>> input_image, bool interpolate_data=false)
+    py::array_t<std::complex<DType>> op(py::array_t<std::complex<DType>> input_image, bool interpolate_data, std::optional<py::array_t<std::complex<DType>>> out_kspace)
     {
         if(when_allocate_memory == ALLOCATE_MEMORY_IN_OP)
         {
@@ -228,7 +228,7 @@ class GpuNUFFTPythonOperator
             capsule
         );
     }
-    py::array_t<std::complex<DType>> adj_op(py::array_t<std::complex<DType>> input_kspace_data, bool grid_data=false)
+    py::array_t<std::complex<DType>> adj_op(py::array_t<std::complex<DType>> input_kspace, bool grid_data, std::optional<py::array_t<std::complex<DType>>> out_image)
     {
         if(when_allocate_memory == ALLOCATE_MEMORY_IN_OP)
         {
@@ -238,7 +238,7 @@ class GpuNUFFTPythonOperator
         gpuNUFFT::Dimensions myDims = imgDims;
         if(dimension==2)
             myDims.depth = 1;
-        copyNumpyArray(input_kspace_data, kspace_data.data);
+        copyNumpyArray(input_kspace, kspace_data.data);
         if(grid_data)
             gpuNUFFTOp->performGpuNUFFTAdj(kspace_data, image, gpuNUFFT::DENSITY_ESTIMATION);
         else
@@ -309,8 +309,8 @@ class GpuNUFFTPythonOperator
 PYBIND11_MODULE(gpuNUFFT, m) {
     py::class_<GpuNUFFTPythonOperator>(m, "NUFFTOp")
         .def(py::init<py::array_t<DType>, py::array_t<int>, int, py::array_t<std::complex<DType>>, py::array_t<float>, int, int, int, bool, MemoryAllocationType>()) // FIXME : Add defaul values!
-        .def("op", &GpuNUFFTPythonOperator::op)
-        .def("adj_op",  &GpuNUFFTPythonOperator::adj_op)
+        .def("op", &GpuNUFFTPythonOperator::op, py::arg("input_image"), py::arg("interpolate_data") = false, py::arg("out_kspace") = py::none())
+        .def("adj_op",  &GpuNUFFTPythonOperator::adj_op, py::arg("input_kspace"), py::arg("grid_data") = false, py::arg("out_image") = py::none())
         .def("clean_memory", &GpuNUFFTPythonOperator::clean_memory)
         .def("set_smaps", &GpuNUFFTPythonOperator::set_smaps);
     

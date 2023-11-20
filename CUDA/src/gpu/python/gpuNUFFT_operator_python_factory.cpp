@@ -68,6 +68,15 @@ void copyNumpyArray(py::array_t<std::complex<DType>> data, TType *copy_data)
     memcpy(copy_data, my_data, myData.size*sizeof(TType));
 }
 
+template <typename TType>
+void cast_pointer(py::array_t<std::complex<DType>> data, gpuNUFFT::Array<TType> &copy_data)
+{
+    py::buffer_info myData = data.request();
+    std::complex<DType> *t_data = (std::complex<DType> *) myData.ptr;
+    TType *my_data = reinterpret_cast<TType(&)[0]>(*t_data);
+    copy_data.data = my_data;
+}
+
 enum MemoryAllocationType{
         NEVER_ALLOCATE_MEMORY = 0,
         ALLOCATE_MEMORY_IN_CONSTRUCTOR = 1,
@@ -90,12 +99,6 @@ class GpuNUFFTPythonOperator
         kspace_data.dim.length = trajectory_length;
         kspace_data.dim.channels = n_coils;
     }
-    void deallocate_memory_kspace()
-    {
-        deallocate_pinned_memory(&kspace_data);
-        kspace_data.dim.length = 0;
-        kspace_data.dim.channels = 0;
-    }           
 
     void allocate_memory_image()
     {
@@ -110,14 +113,6 @@ class GpuNUFFTPythonOperator
           allocate_pinned_memory(&image, imgDims.count() * sizeof(DType2));
           image.dim.channels = 1;
         }
-    }
-    void deallocate_memory_image()
-    {
-        deallocate_pinned_memory(&image);
-        image.dim.width = 0;
-        image.dim.depth = 0;
-        image.dim.height = 0;
-        image.dim.channels = 0;
     }
     
     public:
@@ -202,9 +197,21 @@ class GpuNUFFTPythonOperator
         {
             allocate_memory_kspace();
             allocate_memory_image();
+            // Copy array to pinned memory for better memory bandwidths!
+            copyNumpyArray(input_image, image.data);
         }
-        // Copy array to pinned memory for better memory bandwidths!
-        copyNumpyArray(input_image, image.data);
+        else if(when_allocate_memory == NEVER_ALLOCATE_MEMORY)
+        {
+            cast_pointer(input_image, image);
+            if(out_kspace.has_value())
+                cast_pointer(out_kspace.value(), kspace_data);
+            else
+            {
+                // We dont have out_kspace allocated. Warn and then allocate
+                py::print("WARNING: NEVER_ALLOCATE_MEMORY is chosen but no memory is specified, allocating for now!");
+                allocate_memory_kspace();
+            }
+        }
         if(interpolate_data)
             gpuNUFFTOp->performForwardGpuNUFFT(image, kspace_data, gpuNUFFT::DENSITY_ESTIMATION);
         else
@@ -216,7 +223,7 @@ class GpuNUFFTPythonOperator
         if (when_allocate_memory == ALLOCATE_MEMORY_IN_OP)
         {
             // Deallocate the memory (only image) to prevent memory leaks!
-            deallocate_memory_image();
+            deallocate_pinned_memory(&image);
         }
         return py::array_t<std::complex<DType>>(
             { n_coils, trajectory_length },
@@ -234,11 +241,25 @@ class GpuNUFFTPythonOperator
         {
             allocate_memory_kspace();
             allocate_memory_image();
+            // Copy array to pinned memory for better memory bandwidths!
+            copyNumpyArray(input_kspace, kspace_data.data);
+        }
+        else if(when_allocate_memory == NEVER_ALLOCATE_MEMORY)
+        {
+            cast_pointer(input_kspace, kspace_data);
+            // Check if we have out image allocated
+            if (out_image.has_value())
+                cast_pointer(out_image.value(), image);
+            else
+            {
+                // We dont have out_image allocated. Warn and then allocate
+                py::print("WARNING: NEVER_ALLOCATE_MEMORY is chosen but no memory is specified, allocating for now!");
+                allocate_memory_image();
+            }
         }
         gpuNUFFT::Dimensions myDims = imgDims;
         if(dimension==2)
             myDims.depth = 1;
-        copyNumpyArray(input_kspace, kspace_data.data);
         if(grid_data)
             gpuNUFFTOp->performGpuNUFFTAdj(kspace_data, image, gpuNUFFT::DENSITY_ESTIMATION);
         else
@@ -250,7 +271,7 @@ class GpuNUFFTPythonOperator
         if (when_allocate_memory == ALLOCATE_MEMORY_IN_OP)
         {
             // Deallocate the memory (only k-space) to prevent memory leaks!
-            deallocate_memory_kspace();
+            deallocate_pinned_memory(&kspace_data);
         }
         if(has_sense_data == false)
           return py::array_t<std::complex<DType>>(

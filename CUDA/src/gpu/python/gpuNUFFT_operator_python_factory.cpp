@@ -108,7 +108,7 @@ class GpuNUFFTPythonOperator
     
     public:
     GpuNUFFTPythonOperator(py::array_t<DType> kspace_loc, py::array_t<int> image_size, int num_coils,
-    py::array_t<std::complex<DType>> sense_maps,  py::array_t<float> density_comp, int kernel_width=3,
+    py::array_t<std::complex<DType>> sense_maps,  std::optional<py::array_t<float>> density_comp, int kernel_width=3,
     int sector_width=8, int osr=2, bool balance_workload=1, MemoryAllocationType when_allocate_memory=ALLOCATE_MEMORY_IN_CONSTRUCTOR) : when_allocate_memory(when_allocate_memory)
     {
         // k-space coordinates
@@ -119,8 +119,13 @@ class GpuNUFFTPythonOperator
         kSpaceTraj.dim.length = trajectory_length;
 
         // density compensation weights
-        gpuNUFFT::Array<DType> density_compArray = readNumpyArray(density_comp);
-        density_compArray.dim.length = trajectory_length;
+        gpuNUFFT::Array<DType> density_compArray;
+        if(density_comp.has_value())
+        {
+            density_compArray = readNumpyArray(density_comp.value());
+            density_compArray.dim.length = trajectory_length;
+            // No need else as the init is by default with 0 length and density comp is not applied
+        }
 
         // image size
         py::buffer_info img_dim = image_size.request();

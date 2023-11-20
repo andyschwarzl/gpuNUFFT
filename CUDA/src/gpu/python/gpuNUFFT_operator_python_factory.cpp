@@ -96,23 +96,16 @@ class GpuNUFFTPythonOperator
     void allocate_memory_kspace()
     {
         allocate_pinned_memory(&kspace_data, n_coils*trajectory_length*sizeof(DType2));
-        kspace_data.dim.length = trajectory_length;
-        kspace_data.dim.channels = n_coils;
+        
     }
 
     void allocate_memory_image()
     {
         image.dim = imgDims;
         if(has_sense_data == false)
-        {
           allocate_pinned_memory(&image, n_coils * imgDims.count() * sizeof(DType2));
-          image.dim.channels = n_coils;
-        }
         else
-        {
           allocate_pinned_memory(&image, imgDims.count() * sizeof(DType2));
-          image.dim.channels = 1;
-        }
     }
     
     public:
@@ -142,7 +135,9 @@ class GpuNUFFTPythonOperator
             imgDims.depth = 0;
 
         n_coils = num_coils;
-
+        kspace_data.dim.length = trajectory_length;
+        kspace_data.dim.channels = n_coils;
+        
         // sensitivity maps
         py::buffer_info sense_maps_buffer = sense_maps.request();
         if (sense_maps_buffer.shape.size()==0)
@@ -182,7 +177,11 @@ class GpuNUFFTPythonOperator
         gpuNUFFTOp = factory.createGpuNUFFTOperator(
             kSpaceTraj, density_compArray, sensArray, kernel_width, sector_width,
             osr, imgDims);
-        
+
+        if(has_sense_data == false)
+            image.dim.channels = n_coils;
+        else
+            image.dim.channels = 1;
         if(when_allocate_memory == ALLOCATE_MEMORY_IN_CONSTRUCTOR)
         {
             allocate_memory_kspace();

@@ -100,7 +100,6 @@ class GpuNUFFTPythonOperator
 
     void allocate_memory_image()
     {
-        image.dim = imgDims;
         if(has_sense_data == false)
           allocate_pinned_memory(&image, n_coils * imgDims.count() * sizeof(DType2));
         else
@@ -172,8 +171,8 @@ class GpuNUFFTPythonOperator
                 sensArray.dim = imgDims;
                 sensArray.dim.channels = n_coils;
                 copyNumpyArray(sense_maps, sensArray.data);
-                has_sense_data = true;
             }
+            has_sense_data = true;
         }
         factory.setBalanceWorkload(balance_workload);
         gpuNUFFTOp = factory.createGpuNUFFTOperator(
@@ -198,8 +197,6 @@ class GpuNUFFTPythonOperator
         {
             allocate_memory_kspace();
             allocate_memory_image();
-            // Copy array to pinned memory for better memory bandwidths!
-            copyNumpyArray(input_image, image.data);
         }
         else if(when_allocate_memory == NEVER_ALLOCATE_MEMORY)
         {
@@ -215,6 +212,11 @@ class GpuNUFFTPythonOperator
                 allocate_memory_kspace();
                 cudaDeviceSynchronize();
             }
+        }
+        if(when_allocate_memory == ALLOCATE_MEMORY_IN_CONSTRUCTOR || when_allocate_memory == ALLOCATE_MEMORY_IN_OP)
+        {
+            // Copy array to pinned memory for better memory bandwidths!
+            copyNumpyArray(input_image, image.data);
         }
         if(interpolate_data)
             gpuNUFFTOp->performForwardGpuNUFFT(image, kspace_data, gpuNUFFT::DENSITY_ESTIMATION);
@@ -245,8 +247,6 @@ class GpuNUFFTPythonOperator
         {
             allocate_memory_kspace();
             allocate_memory_image();
-            // Copy array to pinned memory for better memory bandwidths!
-            copyNumpyArray(input_kspace, kspace_data.data);
         }
         else if(when_allocate_memory == NEVER_ALLOCATE_MEMORY)
         {
@@ -260,6 +260,11 @@ class GpuNUFFTPythonOperator
                 py::print("WARNING: NEVER_ALLOCATE_MEMORY is chosen but no memory is specified, allocating for now!");
                 allocate_memory_image();
             }
+        }
+        if(when_allocate_memory == ALLOCATE_MEMORY_IN_CONSTRUCTOR || when_allocate_memory == ALLOCATE_MEMORY_IN_OP)
+        {
+            // Copy array to pinned memory for better memory bandwidths!
+            copyNumpyArray(input_kspace, kspace_data.data);
         }
         gpuNUFFT::Dimensions myDims = imgDims;
         if(dimension==2)

@@ -52,6 +52,13 @@ void allocate_pinned_memory(gpuNUFFT::Array<DType2> *lin_array, unsigned long in
   cudaMallocHost((void **)&new_data, size);
   lin_array->data = new_data;
 }
+
+void deallocate_pinned_memory(gpuNUFFT::Array<DType2> *lin_array)
+{
+  cudaFreeHost(lin_array->data);
+  lin_array->data = NULL;
+}
+
 template <typename TType>
 void copyNumpyArray(py::array_t<std::complex<DType>> data, TType *copy_data)
 {
@@ -61,19 +68,62 @@ void copyNumpyArray(py::array_t<std::complex<DType>> data, TType *copy_data)
     memcpy(copy_data, my_data, myData.size*sizeof(TType));
 }
 
+enum MemoryAllocationType{
+        NEVER_ALLOCATE_MEMORY = 0,
+        ALLOCATE_MEMORY_IN_CONSTRUCTOR = 1,
+        ALLOCATE_MEMORY_IN_OP = 2
+    };
+
 class GpuNUFFTPythonOperator
 {
     gpuNUFFT::GpuNUFFTOperatorFactory factory;
     gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp;
     int trajectory_length, n_coils, dimension;
     bool has_sense_data;
+    MemoryAllocationType when_allocate_memory;
     gpuNUFFT::Dimensions imgDims;
     // sensitivity maps
     gpuNUFFT::Array<DType2> sensArray, kspace_data, image;
+    void allocate_memory_kspace()
+    {
+        allocate_pinned_memory(&kspace_data, n_coils*trajectory_length*sizeof(DType2));
+        kspace_data.dim.length = trajectory_length;
+        kspace_data.dim.channels = n_coils;
+    }
+    void deallocate_memory_kspace()
+    {
+        deallocate_pinned_memory(&kspace_data);
+        kspace_data.dim.length = 0;
+        kspace_data.dim.channels = 0;
+    }           
+
+    void allocate_memory_image()
+    {
+        image.dim = imgDims;
+        if(has_sense_data == false)
+        {
+          allocate_pinned_memory(&image, n_coils * imgDims.count() * sizeof(DType2));
+          image.dim.channels = n_coils;
+        }
+        else
+        {
+          allocate_pinned_memory(&image, imgDims.count() * sizeof(DType2));
+          image.dim.channels = 1;
+        }
+    }
+    void deallocate_memory_image()
+    {
+        deallocate_pinned_memory(&image);
+        image.dim.width = 0;
+        image.dim.depth = 0;
+        image.dim.height = 0;
+        image.dim.channels = 0;
+    }
+    
     public:
     GpuNUFFTPythonOperator(py::array_t<DType> kspace_loc, py::array_t<int> image_size, int num_coils,
     py::array_t<std::complex<DType>> sense_maps,  py::array_t<float> density_comp, int kernel_width=3,
-    int sector_width=8, int osr=2, bool balance_workload=1)
+    int sector_width=8, int osr=2, bool balance_workload=1, MemoryAllocationType when_allocate_memory=ALLOCATE_MEMORY_IN_CONSTRUCTOR) : when_allocate_memory(when_allocate_memory)
     {
         // k-space coordinates
         py::buffer_info sample_loc = kspace_loc.request();
@@ -137,25 +187,22 @@ class GpuNUFFTPythonOperator
         gpuNUFFTOp = factory.createGpuNUFFTOperator(
             kSpaceTraj, density_compArray, sensArray, kernel_width, sector_width,
             osr, imgDims);
-        allocate_pinned_memory(&kspace_data, n_coils*trajectory_length*sizeof(DType2));
-        kspace_data.dim.length = trajectory_length;
-        kspace_data.dim.channels = n_coils;
-        image.dim = imgDims;
-        if(has_sense_data == false)
+        
+        if(when_allocate_memory == ALLOCATE_MEMORY_IN_CONSTRUCTOR)
         {
-          allocate_pinned_memory(&image, n_coils * imgDims.count() * sizeof(DType2));
-          image.dim.channels = n_coils;
-        }
-        else
-        {
-          allocate_pinned_memory(&image, imgDims.count() * sizeof(DType2));
-          image.dim.channels = 1;
+            allocate_memory_kspace();
+            allocate_memory_image();
         }
         cudaDeviceSynchronize();
     }
 
     py::array_t<std::complex<DType>> op(py::array_t<std::complex<DType>> input_image, bool interpolate_data=false)
     {
+        if(when_allocate_memory == ALLOCATE_MEMORY_IN_OP)
+        {
+            allocate_memory_kspace();
+            allocate_memory_image();
+        }
         // Copy array to pinned memory for better memory bandwidths!
         copyNumpyArray(input_image, image.data);
         if(interpolate_data)
@@ -166,6 +213,11 @@ class GpuNUFFTPythonOperator
         std::complex<DType> *ptr = reinterpret_cast<std::complex<DType>(&)[0]>(*kspace_data.data);
         auto capsule = py::capsule(ptr, [](void *ptr) { return;
         });
+        if (when_allocate_memory == ALLOCATE_MEMORY_IN_OP)
+        {
+            // Deallocate the memory (only image) to prevent memory leaks!
+            deallocate_memory_image();
+        }
         return py::array_t<std::complex<DType>>(
             { n_coils, trajectory_length },
             {
@@ -178,6 +230,11 @@ class GpuNUFFTPythonOperator
     }
     py::array_t<std::complex<DType>> adj_op(py::array_t<std::complex<DType>> input_kspace_data, bool grid_data=false)
     {
+        if(when_allocate_memory == ALLOCATE_MEMORY_IN_OP)
+        {
+            allocate_memory_kspace();
+            allocate_memory_image();
+        }
         gpuNUFFT::Dimensions myDims = imgDims;
         if(dimension==2)
             myDims.depth = 1;
@@ -190,6 +247,11 @@ class GpuNUFFTPythonOperator
         std::complex<DType> *ptr = reinterpret_cast<std::complex<DType>(&)[0]>(*image.data);
         auto capsule = py::capsule(ptr, [](void *ptr) { return;
         });
+        if (when_allocate_memory == ALLOCATE_MEMORY_IN_OP)
+        {
+            // Deallocate the memory (only k-space) to prevent memory leaks!
+            deallocate_memory_kspace();
+        }
         if(has_sense_data == false)
           return py::array_t<std::complex<DType>>(
             {
@@ -246,10 +308,17 @@ class GpuNUFFTPythonOperator
 };
 PYBIND11_MODULE(gpuNUFFT, m) {
     py::class_<GpuNUFFTPythonOperator>(m, "NUFFTOp")
-        .def(py::init<py::array_t<DType>, py::array_t<int>, int, py::array_t<std::complex<DType>>, py::array_t<float>, int, int, int, bool>())
+        .def(py::init<py::array_t<DType>, py::array_t<int>, int, py::array_t<std::complex<DType>>, py::array_t<float>, int, int, int, bool, MemoryAllocationType>()) // FIXME : Add defaul values!
         .def("op", &GpuNUFFTPythonOperator::op)
         .def("adj_op",  &GpuNUFFTPythonOperator::adj_op)
         .def("clean_memory", &GpuNUFFTPythonOperator::clean_memory)
         .def("set_smaps", &GpuNUFFTPythonOperator::set_smaps);
+    
+    py::enum_<MemoryAllocationType>(m, "MemoryAllocationType")
+        .value("NEVER_ALLOCATE_MEMORY", MemoryAllocationType::NEVER_ALLOCATE_MEMORY)
+        .value("ALLOCATE_MEMORY_IN_CONSTRUCTOR", MemoryAllocationType::ALLOCATE_MEMORY_IN_CONSTRUCTOR)
+        .value("ALLOCATE_MEMORY_IN_OP", MemoryAllocationType::ALLOCATE_MEMORY_IN_OP)
+        .export_values();
+
 }
 #endif  // GPUNUFFT_OPERATOR_MATLABFACTORY_H_INCLUDED

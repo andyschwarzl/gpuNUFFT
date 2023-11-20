@@ -205,9 +205,7 @@ class GpuNUFFTPythonOperator
         }
         else if(when_allocate_memory == NEVER_ALLOCATE_MEMORY)
         {
-            printf("Not allocating memory in op\n");
             cast_pointer(input_image, image);
-            printf("Output kspace : %d\n", out_kspace.has_value());
             if(out_kspace.has_value())
                 cast_pointer(out_kspace.value(), kspace_data);
             else
@@ -336,8 +334,12 @@ class GpuNUFFTPythonOperator
     }
     ~GpuNUFFTPythonOperator()
     {
-        cudaFreeHost(kspace_data.data);
-        cudaFreeHost(image.data);
+        if(when_allocate_memory == ALLOCATE_MEMORY_IN_CONSTRUCTOR)
+        {
+            cudaFreeHost(kspace_data.data);
+            cudaFreeHost(image.data);
+        
+        }
         delete gpuNUFFTOp;
     }
 };

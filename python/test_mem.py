@@ -40,18 +40,18 @@ def test_pinned_memory_provided():
     kspace_loc = np.random.random((5000, 3)) - 0.5
     img_size = [256, 256, 256]
     n_coils = 1
-    image = np.random.random(img_size) + 1j * np.random.random(img_size)
-    kspace = np.random.random((n_coils, kspace_loc.shape[0])) + 1j * np.random.random((n_coils, kspace_loc.shape[0]))
+    image = (np.random.random(img_size) + 1j * np.random.random(img_size)).astype(np.complex64)
+    kspace = (np.random.random((n_coils, kspace_loc.shape[0])) + 1j * np.random.random((n_coils, kspace_loc.shape[0]))).astype(np.complex64)
     
     image_out = cpx.zeros_like_pinned(image)
     kspace_out = cpx.zeros_like_pinned(kspace)
-    
-    
+    print("Addresses: ", hex(kspace_out.ctypes.data), hex(image_out.ctypes.data))
+ 
     nufft_op = NUFFTOp(
         kspace_loc=np.reshape(kspace_loc, kspace_loc.shape[::-1], order='F').astype(np.float32),
         image_size=img_size,
         num_coils=n_coils,
     )
-    out_ksp = nufft_op.op(in_image=image, out_kspace=kspace_out)
+    out_ksp = nufft_op.op(image, kspace_out)
     out_im = nufft_op.adj_op(in_kspace=kspace, out_image=image_out)
     out_ksp

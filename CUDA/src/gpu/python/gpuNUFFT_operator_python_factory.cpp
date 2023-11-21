@@ -52,10 +52,10 @@ void warn_pinned_memory(py::array_t<std::complex<DType>> array, const char * nam
 {
     py::buffer_info buffer = array.request();
     cudaPointerAttributes attr;
-    // if(DEBUG)
+    if(DEBUG)
         printf("%s => Value of pointer == 0x%x\n", name, buffer.ptr);
     cudaPointerGetAttributes(&attr, buffer.ptr);
-    //if(DEBUG)
+    if(DEBUG)
         printf("%s => of attr.cudaMemoryType = %d\n", name, attr.type);
     bool is_pinned_memory = attr.type ==  cudaMemoryTypeHost;
     if(!is_pinned_memory)

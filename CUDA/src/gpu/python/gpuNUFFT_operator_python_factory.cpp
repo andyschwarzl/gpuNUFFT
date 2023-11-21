@@ -334,10 +334,11 @@ class GpuNUFFTPythonOperator
     ~GpuNUFFTPythonOperator()
     {
         py::print("Destructor called :: ", when_allocate_memory);
+        // We cant deallocate as we could have passed the memory to python!
         // if(when_allocate_memory == ALLOCATE_MEMORY_IN_CONSTRUCTOR)
         // {
-        //     cudaFreeHost(kspace_data.data);
-        //     cudaFreeHost(image.data);
+        //     deallocate_pinned_memory(&kspace_data);
+        //     deallocate_pinned_memory(&image);
         // }
         delete gpuNUFFTOp;
     }

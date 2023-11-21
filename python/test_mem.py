@@ -4,7 +4,7 @@ Chaithya G R <chaithyagr@gmail.com>
 """
 
 import numpy as np
-from gpuNUFFT import NUFFTOp, MemoryAllocationType
+from gpuNUFFT import NUFFTOp
 import pytest
 
 
@@ -43,24 +43,15 @@ def test_pinned_memory_provided():
     image = np.random.random(img_size) + 1j * np.random.random(img_size)
     kspace = np.random.random((n_coils, kspace_loc.shape[0])) + 1j * np.random.random((n_coils, kspace_loc.shape[0]))
     
-    image_out = cpx.empty_like_pinned(image)
-    kspace_out = cpx.empty_like_pinned(kspace)
+    image_out = cpx.zeros_like_pinned(image)
+    kspace_out = cpx.zeros_like_pinned(kspace)
     
-    nufft_ori = NUFFTOp(
-        kspace_loc=np.reshape(kspace_loc, kspace_loc.shape[::-1], order='F').astype(np.float32),
-        image_size=img_size,
-        num_coils=n_coils,
-        when_allocate_memory=MemoryAllocationType.ALLOCATE_MEMORY_IN_OP,
-    )
-    ori_kspace_out = nufft_ori.op(input_image=image)
-    ori_image_out = nufft_ori.adj_op(input_kspace=kspace)
     
     nufft_op = NUFFTOp(
         kspace_loc=np.reshape(kspace_loc, kspace_loc.shape[::-1], order='F').astype(np.float32),
         image_size=img_size,
         num_coils=n_coils,
-        when_allocate_memory=MemoryAllocationType.NEVER_ALLOCATE_MEMORY,
     )
-    out_ksp = nufft_op.op(input_image=image, out_kspace=kspace_out)
-    out_im = nufft_op.adj_op(input_kspace=kspace, out_image=image_out)
+    out_ksp = nufft_op.op(in_image=image, out_kspace=kspace_out)
+    out_im = nufft_op.adj_op(in_kspace=kspace, out_image=image_out)
     out_ksp

@@ -21,6 +21,7 @@ Carole Lazarus <carole.m.lazarus@gmail.com>
 #include <vector>     // std::vector
 #include <string>
 #include <cuda.h>
+#define CAST_POINTER_VARNAME(x, y)   cast_pointer(x, y, #x)
 
 namespace py = pybind11;
 
@@ -47,18 +48,18 @@ readNumpyArray(py::array_t<std::complex<DType>> data)
 }
 
 
-void warn_pinned_memory(py::array_t<std::complex<DType>> array)
+void warn_pinned_memory(py::array_t<std::complex<DType>> array, const char * name)
 {
     py::buffer_info buffer = array.request();
     cudaPointerAttributes attr;
-    if(DEBUG)
-        printf("Value of sense_maps pointer == 0x%x\n", buffer.ptr);
+    // if(DEBUG)
+        printf("%s => Value of pointer == 0x%x\n", name, buffer.ptr);
     cudaPointerGetAttributes(&attr, buffer.ptr);
-    if(DEBUG)
-        printf("Value of attr.cudaMemoryType2 = %d\n", attr.type);
+    //if(DEBUG)
+        printf("%s => of attr.cudaMemoryType = %d\n", name, attr.type);
     bool is_pinned_memory = attr.type ==  cudaMemoryTypeHost;
     if(!is_pinned_memory)
-        py::print("WARNING:: The data is NOT pinned! This will be slow, consider pinning\n");
+        py::print("WARNING:: The data", name , "is NOT pinned! This will be slow, consider pinning\n");
 }
 
 void allocate_pinned_memory(gpuNUFFT::Array<DType2> *lin_array, unsigned long int size)
@@ -84,14 +85,14 @@ void copyNumpyArray(py::array_t<std::complex<DType>> data, TType *copy_data)
 }
 
 template <typename TType>
-void cast_pointer(py::array_t<std::complex<DType>> data, gpuNUFFT::Array<TType> &copy_data, bool warn=true)
+void cast_pointer(py::array_t<std::complex<DType>> data, gpuNUFFT::Array<TType> &copy_data, const char * name , bool warn=true)
 {
     py::buffer_info myData = data.request();
     std::complex<DType> *t_data = (std::complex<DType> *) myData.ptr;
     TType *my_data = reinterpret_cast<TType(&)[0]>(*t_data);
     copy_data.data = my_data;
     if (warn)
-        warn_pinned_memory(data);
+        warn_pinned_memory(data, name);
 }
 
 
@@ -166,7 +167,7 @@ class GpuNUFFTPythonOperator
         }
         else
         {
-            cast_pointer(sense_maps, sensArray);
+            CAST_POINTER_VARNAME(sense_maps, sensArray);
             has_sense_data = true;
         }
         factory.setBalanceWorkload(balance_workload);
@@ -183,8 +184,8 @@ class GpuNUFFTPythonOperator
 
     py::array_t<std::complex<DType>> op(py::array_t<std::complex<DType>> in_image, py::array_t<std::complex<DType>> out_kspace, bool interpolate_data)
     {
-        cast_pointer(in_image, image);
-        cast_pointer(out_kspace, kspace_data);
+        CAST_POINTER_VARNAME(in_image, image);
+        CAST_POINTER_VARNAME(out_kspace, kspace_data);
         if(interpolate_data)
             gpuNUFFTOp->performForwardGpuNUFFT(image, kspace_data, gpuNUFFT::DENSITY_ESTIMATION);
         else
@@ -205,8 +206,8 @@ class GpuNUFFTPythonOperator
     }
     py::array_t<std::complex<DType>> adj_op(py::array_t<std::complex<DType>> in_kspace, py::array_t<std::complex<DType>> out_image, bool grid_data)
     {
-        cast_pointer(in_kspace, kspace_data);
-        cast_pointer(out_image, image);
+        CAST_POINTER_VARNAME(in_kspace, kspace_data);
+        CAST_POINTER_VARNAME(out_image, image);
         gpuNUFFT::Dimensions myDims = imgDims;
         if(dimension==2)
             myDims.depth = 1;

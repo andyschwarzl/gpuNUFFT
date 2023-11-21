@@ -190,6 +190,10 @@ class GpuNUFFTPythonOperator
             image.dim.channels = 1;
         if(when_allocate_memory == ALLOCATE_MEMORY_IN_CONSTRUCTOR)
         {
+            py::print("
+                WARNING: Allocation in Memory will be deprecated in futurte due to memory handeling issues.\n 
+                Please consider providing pinned memory yourself for speed and efficiency"
+            );
             allocate_memory_kspace();
             allocate_memory_image();
         }
@@ -335,6 +339,7 @@ class GpuNUFFTPythonOperator
     {
         py::print("Destructor called :: ", when_allocate_memory);
         // We cant deallocate as we could have passed the memory to python!
+        // FIXME, we will no longer support this!
         // if(when_allocate_memory == ALLOCATE_MEMORY_IN_CONSTRUCTOR)
         // {
         //     deallocate_pinned_memory(&kspace_data);

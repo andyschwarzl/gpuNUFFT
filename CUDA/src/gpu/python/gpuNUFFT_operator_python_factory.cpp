@@ -46,6 +46,21 @@ readNumpyArray(py::array_t<std::complex<DType>> data)
     return dataArray;
 }
 
+
+void warn_pinned_memory(py::array_t<std::complex<DType>> array)
+{
+    py::buffer_info buffer = array.request();
+    cudaPointerAttributes attr;
+    if(DEBUG)
+        printf("Value of sense_maps pointer == 0x%x\n", buffer.ptr);
+    cudaPointerGetAttributes(&attr, buffer.ptr);
+    if(DEBUG)
+        printf("Value of attr.cudaMemoryType2 = %d\n", attr.type);
+    bool is_pinned_memory = attr.type ==  cudaMemoryTypeHost;
+    if(!is_pinned_memory)
+        py::print("WARNING:: The data is NOT pinned! This will be slow, consider pinning\n");
+}
+
 void allocate_pinned_memory(gpuNUFFT::Array<DType2> *lin_array, unsigned long int size)
 {
   DType2 *new_data;
@@ -69,13 +84,17 @@ void copyNumpyArray(py::array_t<std::complex<DType>> data, TType *copy_data)
 }
 
 template <typename TType>
-void cast_pointer(py::array_t<std::complex<DType>> data, gpuNUFFT::Array<TType> &copy_data)
+void cast_pointer(py::array_t<std::complex<DType>> data, gpuNUFFT::Array<TType> &copy_data, bool warn=true)
 {
     py::buffer_info myData = data.request();
     std::complex<DType> *t_data = (std::complex<DType> *) myData.ptr;
     TType *my_data = reinterpret_cast<TType(&)[0]>(*t_data);
     copy_data.data = my_data;
+    if (warn)
+        warn_pinned_memory(data);
 }
+
+
 
 
 class GpuNUFFTPythonOperator
@@ -147,30 +166,7 @@ class GpuNUFFTPythonOperator
         }
         else
         {
-            cudaPointerAttributes attr;
-            if(DEBUG)
-                printf("Value of sense_maps pointer == 0x%x or %d\n", sense_maps_buffer.ptr, sense_maps_buffer.ptr);
-            cudaPointerGetAttributes(&attr, sense_maps_buffer.ptr);
-            if(DEBUG)
-                printf("Value of attr.cudaMemoryType2 = %d\n", attr.type);
-            bool is_pinned_memory = attr.type ==  cudaMemoryTypeHost;
-            if(is_pinned_memory)
-            {
-                if(DEBUG)
-                    printf("The smaps data is pinned!, skipping copies\n");
-                // Just map the memory to sensArray! We dont need to make a copy if the memory is already pinned
-                std::complex<DType> *t_data = (std::complex<DType> *) sense_maps_buffer.ptr;
-                sensArray.data = reinterpret_cast<DType2(&)[0]>(*t_data);
-            }
-            else
-            {
-                if(DEBUG)
-                    printf("The smaps data is NOT pinned!, DOING copies\n");
-                allocate_pinned_memory(&sensArray, n_coils * imgDims.count() * sizeof(DType2));
-                sensArray.dim = imgDims;
-                sensArray.dim.channels = n_coils;
-                copyNumpyArray(sense_maps, sensArray.data);
-            }
+            cast_pointer(sense_maps, sensArray);
             has_sense_data = true;
         }
         factory.setBalanceWorkload(balance_workload);
@@ -188,7 +184,7 @@ class GpuNUFFTPythonOperator
     py::array_t<std::complex<DType>> op(py::array_t<std::complex<DType>> in_image, py::array_t<std::complex<DType>> out_kspace, bool interpolate_data)
     {
         cast_pointer(in_image, image);
-        cast_pointer(out_kspace.value(), kspace_data);
+        cast_pointer(out_kspace, kspace_data);
         if(interpolate_data)
             gpuNUFFTOp->performForwardGpuNUFFT(image, kspace_data, gpuNUFFT::DENSITY_ESTIMATION);
         else
@@ -210,7 +206,7 @@ class GpuNUFFTPythonOperator
     py::array_t<std::complex<DType>> adj_op(py::array_t<std::complex<DType>> in_kspace, py::array_t<std::complex<DType>> out_image, bool grid_data)
     {
         cast_pointer(in_kspace, kspace_data);
-        cast_pointer(out_image.value(), image);
+        cast_pointer(out_image, image);
         gpuNUFFT::Dimensions myDims = imgDims;
         if(dimension==2)
             myDims.depth = 1;

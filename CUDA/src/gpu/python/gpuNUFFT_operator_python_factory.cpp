@@ -190,10 +190,10 @@ class GpuNUFFTPythonOperator
             image.dim.channels = 1;
         if(when_allocate_memory == ALLOCATE_MEMORY_IN_CONSTRUCTOR)
         {
-            py::print("
-                WARNING: Allocation in Memory will be deprecated in futurte due to memory handeling issues.\n 
-                Please consider providing pinned memory yourself for speed and efficiency"
-            );
+            py::print(" \
+                WARNING: Allocation in Memory will be deprecated in futurte due to memory handeling issues.\
+                \nPlease consider providing pinned memory yourself for speed and efficiency\
+            ");
             allocate_memory_kspace();
             allocate_memory_image();
         }
@@ -337,7 +337,6 @@ class GpuNUFFTPythonOperator
     }
     ~GpuNUFFTPythonOperator()
     {
-        py::print("Destructor called :: ", when_allocate_memory);
         // We cant deallocate as we could have passed the memory to python!
         // FIXME, we will no longer support this!
         // if(when_allocate_memory == ALLOCATE_MEMORY_IN_CONSTRUCTOR)
@@ -358,7 +357,7 @@ PYBIND11_MODULE(gpuNUFFT, m) {
 
     py::class_<GpuNUFFTPythonOperator>(m, "NUFFTOp")
         .def(py::init<py::array_t<DType>, py::array_t<int>, int, py::array_t<std::complex<DType>>, std::optional<py::array_t<DType>>, int, int, int, bool, MemoryAllocationType>(),
-            py::arg("kspace_loc"), py::arg("image_size"), py::arg("num_coils"), py::arg("sense_maps") = py::none(), py::arg("density_comp") = py::none(), py::arg("kernel_width") = 3, py::arg("sector_width") = 8, py::arg("osr") = 2, py::arg("balance_workload") = true, py::arg("when_allocate_memory") = ALLOCATE_MEMORY_IN_CONSTRUCTOR
+            py::arg("kspace_loc"), py::arg("image_size"), py::arg("num_coils"), py::arg("sense_maps") = py::none(), py::arg("density_comp") = py::none(), py::arg("kernel_width") = 3, py::arg("sector_width") = 8, py::arg("osr") = 2, py::arg("balance_workload") = true, py::arg("when_allocate_memory") = ALLOCATE_MEMORY_IN_OP
         )
         .def("op", &GpuNUFFTPythonOperator::op, py::arg("input_image"), py::arg("interpolate_data") = false, py::arg("out_kspace") = py::none())
         .def("adj_op",  &GpuNUFFTPythonOperator::adj_op, py::arg("input_kspace"), py::arg("grid_data") = false, py::arg("out_image") = py::none())

@@ -59,7 +59,7 @@ void warn_pinned_memory(py::array_t<std::complex<DType>> array, const char * nam
         printf("%s => of attr.cudaMemoryType = %d\n", name, attr.type);
     bool is_pinned_memory = attr.type ==  cudaMemoryTypeHost;
     if(!is_pinned_memory)
-        py::print("WARNING:: The data", name , "is NOT pinned! This will be slow, consider pinning\n");
+        std::cerr<<"WARNING:: The data"<<name<<"is NOT pinned! This will be slow, consider pinning\n";
 }
 
 void allocate_pinned_memory(gpuNUFFT::Array<DType2> *lin_array, unsigned long int size)

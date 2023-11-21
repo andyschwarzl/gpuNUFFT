@@ -213,7 +213,6 @@ class GpuNUFFTPythonOperator
                 // We dont have out_kspace allocated. Warn and then allocate
                 py::print("WARNING: NEVER_ALLOCATE_MEMORY is chosen but no memory is specified, allocating for now!");
                 allocate_memory_kspace();
-                cudaDeviceSynchronize();
             }
         }
         if(when_allocate_memory == ALLOCATE_MEMORY_IN_CONSTRUCTOR || when_allocate_memory == ALLOCATE_MEMORY_IN_OP)
@@ -334,12 +333,12 @@ class GpuNUFFTPythonOperator
     }
     ~GpuNUFFTPythonOperator()
     {
-        if(when_allocate_memory == ALLOCATE_MEMORY_IN_CONSTRUCTOR)
-        {
-            cudaFreeHost(kspace_data.data);
-            cudaFreeHost(image.data);
-        
-        }
+        py::print("Destructor called :: ", when_allocate_memory);
+        // if(when_allocate_memory == ALLOCATE_MEMORY_IN_CONSTRUCTOR)
+        // {
+        //     cudaFreeHost(kspace_data.data);
+        //     cudaFreeHost(image.data);
+        // }
         delete gpuNUFFTOp;
     }
 };

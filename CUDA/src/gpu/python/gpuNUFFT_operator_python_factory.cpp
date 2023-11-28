@@ -168,6 +168,8 @@ class GpuNUFFTPythonOperator
         else
         {
             CAST_POINTER_VARNAME(sense_maps, sensArray);
+            sensArray.dim = imgDims;
+            sensArray.dim.channels = n_coils;
             has_sense_data = true;
         }
         factory.setBalanceWorkload(balance_workload);

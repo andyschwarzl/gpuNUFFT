@@ -262,10 +262,7 @@ class GpuNUFFTPythonOperator
 
     void set_smaps(py::array_t<std::complex<DType>> sense_maps)
     {
-        py::buffer_info myData = sense_maps.request();
-        std::complex<DType> *t_data = (std::complex<DType> *) myData.ptr;
-        DType2 *my_data = reinterpret_cast<DType2(&)[0]>(*t_data);
-        memcpy(sensArray.data, my_data, myData.size*sizeof(DType2));
+        CAST_POINTER_VARNAME(sense_maps, sensArray);
         has_sense_data = true;
         gpuNUFFTOp->setSens(sensArray);
     }

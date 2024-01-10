@@ -22,14 +22,12 @@ class CMakeBuild(build_ext):
     """
 
     @staticmethod
-    def _preinstall(package_list, options=[]):
+    def _preinstall(package):
         """ Pre-install PyPi packages before running cmake.
         """
 
-        if not isinstance(package_list, list) or not isinstance(options, list):
-            raise TypeError('preinstall inputs must be of type list.')
         subprocess.check_call(
-            [sys.executable, '-m', 'pip', 'install', options + package_list]
+            [sys.executable, '-m', 'pip', 'install', package]
         )
 
 
@@ -42,10 +40,10 @@ class CMakeBuild(build_ext):
         """ Redifine the run method.
         """
         # Set preinstall requirements
-        preinstall_list = ["pybind11"]
+        preinstall = "pybind11"
 
         # Preinstall packages
-        self._preinstall(preinstall_list)
+        self._preinstall(preinstall)
 
         # Set Pybind11 path
         self._set_pybind_path()

@@ -6,10 +6,7 @@ from importlib import import_module
 import platform
 from pprint import pprint
 import subprocess
-try:
-    from pip._internal.main import main as pip_main
-except ImportError:
-    from pip._internal import main as pip_main
+
 
 release_info = {}
 
@@ -31,8 +28,9 @@ class CMakeBuild(build_ext):
 
         if not isinstance(package_list, list) or not isinstance(options, list):
             raise TypeError('preinstall inputs must be of type list.')
-
-        pip_main(['install'] + options + package_list)
+        subprocess.check_call(
+            [sys.executable, '-m', 'pip', 'install', options + package_list]
+        )
 
 
     def _set_pybind_path(self):
@@ -107,7 +105,7 @@ class CMakeBuild(build_ext):
 
 setup(
     name="gpuNUFFT",
-    version="0.6.1",
+    version="0.6.2",
     description="gpuNUFFT - An open source GPU Library for 3D Gridding and NUFFT",
     package_dir={"": "CUDA/bin"},
     ext_modules=[

@@ -5,7 +5,6 @@ Carole Lazarus <carole.m.lazarus@gmail.com>
 """
 
 import numpy as np
-import numpy.matlib
 import matplotlib.pyplot as plt
 from gpuNUFFT import NUFFTOp
 import unittest

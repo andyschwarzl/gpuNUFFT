@@ -23,7 +23,7 @@ class TestgpuNUFFT(unittest.TestCase):
             self.weights,
             3,
             8,
-            2,
+            2.0,
             True,
         )
 

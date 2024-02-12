@@ -123,7 +123,7 @@ class GpuNUFFTPythonOperator
     public:
     GpuNUFFTPythonOperator(py::array_t<DType> kspace_loc, py::array_t<int> image_size, int num_coils,
     py::array_t<std::complex<DType>> sense_maps,  std::optional<py::array_t<DType>> density_comp, int kernel_width=3,
-    int sector_width=8, int osr=2, bool balance_workload=1) 
+    int sector_width=8, float osr=2, bool balance_workload=1) 
     {
         // k-space coordinates
         py::buffer_info sample_loc = kspace_loc.request();
@@ -176,7 +176,6 @@ class GpuNUFFTPythonOperator
         gpuNUFFTOp = factory.createGpuNUFFTOperator(
             kSpaceTraj, density_compArray, sensArray, kernel_width, sector_width,
             osr, imgDims);
-
         if(has_sense_data == false)
             image.dim.channels = n_coils;
         else
@@ -274,7 +273,7 @@ class GpuNUFFTPythonOperator
 
 PYBIND11_MODULE(gpuNUFFT, m) {
     py::class_<GpuNUFFTPythonOperator>(m, "NUFFTOp")
-        .def(py::init<py::array_t<DType>, py::array_t<int>, int, py::array_t<std::complex<DType>>, std::optional<py::array_t<DType>>, int, int, int, bool>(),
+        .def(py::init<py::array_t<DType>, py::array_t<int>, int, py::array_t<std::complex<DType>>, std::optional<py::array_t<DType>>, int, int, float, bool>(),
             py::arg("kspace_loc"), py::arg("image_size"), py::arg("num_coils"), py::arg("sense_maps") = py::none(), py::arg("density_comp") = py::none(), py::arg("kernel_width") = 3, py::arg("sector_width") = 8, py::arg("osr") = 2, py::arg("balance_workload") = true)
         .def("op", &GpuNUFFTPythonOperator::op, py::arg("in_image"), py::arg("out_kspace"), py::arg("interpolate_data") = false)
         .def("adj_op",  &GpuNUFFTPythonOperator::adj_op, py::arg("in_kspace"), py::arg("out_image"),  py::arg("grid_data") = false)

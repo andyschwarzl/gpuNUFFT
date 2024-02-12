@@ -14,7 +14,8 @@ Carole Lazarus <carole.m.lazarus@gmail.com>
 #include "cufft.h"
 #include "cuda_runtime.h"
 #include <cuda.h>
-#include <cublas.h>
+#include <cublas_v2.h>
+#include <curand.h>
 #include "config.hpp"
 #include "gpuNUFFT_operator_factory.hpp"
 #include <algorithm>  // std::sort
@@ -265,6 +266,61 @@ class GpuNUFFTPythonOperator
         has_sense_data = true;
         gpuNUFFTOp->setSens(sensArray);
     }
+
+    float get_spectral_radius(int max_iter = 20,float tolerance = 1e-6)
+    {
+        int im_size = image.count();
+
+        gpuNUFFT::GpuArray<DType2> x_gpu;
+        x_gpu.dim = image.dim;
+        allocateDeviceMem(&x_gpu.data, im_size);
+
+        gpuNUFFT::GpuArray<DType2> tmp_kspace_gpu;
+        tmp_kspace_gpu.dim = kspace_data.dim;
+        allocateDeviceMem(&tmp_kspace_gpu.data, kspace_data.count());
+
+        cudaDeviceSynchronize();
+        DType norm_old = 1.0;
+        DType norm_new = 1.0;
+        DType inv_norm = 1.0;
+        // initialisation: create a random complex image.
+        curandGenerator_t generator;
+        curandCreateGenerator(&generator, CURAND_RNG_PSEUDO_XORWOW);
+        curandSetPseudoRandomGeneratorSeed(generator, (int)time(NULL));
+
+        // complex value generator by giving twice the size.
+        curandGenerateUniform(generator, (DType *)x_gpu.data, 2 * im_size);
+        // xold = initialize random x of image size.
+        curandDestroyGenerator(generator);
+        // Create a handle
+        cublasHandle_t handle;
+        cublasCreate(&handle);
+
+        cublasScnrm2(handle, im_size, x_gpu.data, 1, &norm_old);
+        inv_norm = 1.0 / norm_old;
+        cublasCsscal(handle, im_size, &inv_norm, x_gpu.data, 1);
+
+        for (int i = 0; i < max_iter; i++)
+        {
+          // compute x_new = adj_op(op(x_old))
+          gpuNUFFTOp->performForwardGpuNUFFT(x_gpu, tmp_kspace_gpu);
+          gpuNUFFTOp->performGpuNUFFTAdj(tmp_kspace_gpu, x_gpu);
+          // compute ||x_new||
+          cublasScnrm2(handle, im_size, x_gpu.data, 1, &norm_new);
+          // x_new <- x_new/ ||x_new||
+          inv_norm = 1.0 / norm_new;
+
+          cublasCsscal(handle, im_size, &inv_norm, x_gpu.data, 1);
+          if (fabs(norm_new - norm_old) < tolerance)
+          {
+                break;
+          }
+          norm_old = norm_new;
+        }
+        freeTotalDeviceMemory(tmp_kspace_gpu.data, x_gpu.data, NULL);
+        cublasDestroy(handle);
+        return norm_new;
+    }
     ~GpuNUFFTPythonOperator()
     {
         delete gpuNUFFTOp;
@@ -278,7 +334,7 @@ PYBIND11_MODULE(gpuNUFFT, m) {
         .def("op", &GpuNUFFTPythonOperator::op, py::arg("in_image"), py::arg("out_kspace"), py::arg("interpolate_data") = false)
         .def("adj_op",  &GpuNUFFTPythonOperator::adj_op, py::arg("in_kspace"), py::arg("out_image"),  py::arg("grid_data") = false)
         .def("clean_memory", &GpuNUFFTPythonOperator::clean_memory)
-        .def("set_smaps", &GpuNUFFTPythonOperator::set_smaps);
-    
+        .def("set_smaps", &GpuNUFFTPythonOperator::set_smaps)
+        .def("get_spectral_radius", &GpuNUFFTPythonOperator::get_spectral_radius);
 }
 #endif  // GPUNUFFT_OPERATOR_MATLABFACTORY_H_INCLUDED

@@ -5,7 +5,6 @@ Carole Lazarus <carole.m.lazarus@gmail.com>
 """
 
 import numpy as np
-import numpy.matlib
 import matplotlib.pyplot as plt
 from gpuNUFFT import NUFFTOp
 import unittest
@@ -24,7 +23,7 @@ class TestgpuNUFFT(unittest.TestCase):
             self.weights,
             3,
             8,
-            2,
+            2.0,
             True,
         )
 

@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-find_package(PythonInterp 3.5 REQUIRED)
-find_package(PythonLibs 3.5 REQUIRED)
+find_package(Python 3.8 REQUIRED)
 MESSAGE(STATUS "Building Python interface")
 
 include_directories(

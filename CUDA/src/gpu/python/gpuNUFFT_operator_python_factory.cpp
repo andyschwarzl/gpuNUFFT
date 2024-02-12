@@ -267,6 +267,72 @@ class GpuNUFFTPythonOperator
         gpuNUFFTOp->setSens(sensArray);
     }
 
+    py::array_t<DType> estimate_density_comp(int max_iter = 10)
+    {
+        IndType n_samples = kspace_data.count();
+        gpuNUFFT::Array<CufftType> densArray;
+        allocate_pinned_memory(&densArray, n_samples * sizeof(CufftType));
+        densArray.dim.length = n_samples;
+
+        // TODO: Allocate directly on device and set with kernel.
+        for (int cnt = 0; cnt < n_samples; cnt++)
+        {
+          densArray.data[cnt].x = 1.0;
+          densArray.data[cnt].y = 0.0;
+        }
+
+        gpuNUFFT::GpuArray<DType2> densArray_gpu;
+        densArray_gpu.dim.length = n_samples;
+        allocateDeviceMem(&densArray_gpu.data, n_samples);
+
+        copyToDeviceAsync(densArray.data, densArray_gpu.data, n_samples);
+
+        gpuNUFFT::GpuArray<CufftType> densEstimation_gpu;
+        densEstimation_gpu.dim.length = n_samples;
+        allocateDeviceMem(&densEstimation_gpu.data, n_samples);
+
+        gpuNUFFT::GpuArray<CufftType> image_gpu;
+        image_gpu.dim = imgDims;
+        allocateDeviceMem(&image_gpu.data, imgDims.count());
+
+        if (DEBUG && (cudaDeviceSynchronize() != cudaSuccess))
+          printf("error at adj thread synchronization a: %s\n",
+                 cudaGetErrorString(cudaGetLastError()));
+        for (int cnt = 0; cnt < max_iter; cnt++)
+        {
+          if (DEBUG)
+                printf("### update %i\n", cnt);
+          gpuNUFFTOp->performGpuNUFFTAdj(densArray_gpu, image_gpu,
+                                         gpuNUFFT::DENSITY_ESTIMATION);
+          gpuNUFFTOp->performForwardGpuNUFFT(image_gpu, densEstimation_gpu,
+                                             gpuNUFFT::DENSITY_ESTIMATION);
+          performUpdateDensityComp(densArray_gpu.data, densEstimation_gpu.data,
+                                   n_samples);
+          if (DEBUG && (cudaDeviceSynchronize() != cudaSuccess))
+                printf("error at adj thread synchronization d: %s\n",
+                       cudaGetErrorString(cudaGetLastError()));
+        }
+        freeDeviceMem(densEstimation_gpu.data);
+        freeDeviceMem(image_gpu.data);
+
+        cudaDeviceSynchronize();
+        // copy only the real part back to cpu
+        DType *tmp_d = (DType *)densArray_gpu.data;
+
+        gpuNUFFT::Array<DType> final_densArray;
+        final_densArray.dim.length = n_samples;
+        allocate_pinned_memory(&final_densArray, n_samples * sizeof(DType));
+        HANDLE_ERROR(cudaMemcpy2DAsync(final_densArray.data, sizeof(DType),
+                                       tmp_d, sizeof(DType2), sizeof(DType),
+                                       n_samples, cudaMemcpyDeviceToHost));
+        cudaDeviceSynchronize();
+        freeDeviceMem(densArray_gpu.data);
+        DType *ptr = reinterpret_cast<DType(&)[0]>(*final_densArray.data);
+        auto capsule = py::capsule(ptr, [](void *ptr) { return; });
+        return py::array_t<DType>({ trajectory_length }, { sizeof(DType) }, ptr,
+                                  capsule);
+    }
+
     float get_spectral_radius(int max_iter = 20,float tolerance = 1e-6)
     {
         int im_size = image.count();
@@ -334,7 +400,8 @@ PYBIND11_MODULE(gpuNUFFT, m) {
         .def("op", &GpuNUFFTPythonOperator::op, py::arg("in_image"), py::arg("out_kspace"), py::arg("interpolate_data") = false)
         .def("adj_op",  &GpuNUFFTPythonOperator::adj_op, py::arg("in_kspace"), py::arg("out_image"),  py::arg("grid_data") = false)
         .def("clean_memory", &GpuNUFFTPythonOperator::clean_memory)
-        .def("set_smaps", &GpuNUFFTPythonOperator::set_smaps)
-        .def("get_spectral_radius", &GpuNUFFTPythonOperator::get_spectral_radius);
+        .def("estimate_density_comp", &GpuNUFFTPythonOperator::estimate_density_comp, py:arg("max_iter") = 10)
+        .def("set_smaps", &GpuNUFFTPythonOperator::set_smaps);
+        .def("get_spectral_radius", &GpuNUFFTPythonOperator::get_spectral_radius, py:arg("max_iter") = 20, py:arg("tolerance") = 1e-6);
 }
 #endif  // GPUNUFFT_OPERATOR_MATLABFACTORY_H_INCLUDED

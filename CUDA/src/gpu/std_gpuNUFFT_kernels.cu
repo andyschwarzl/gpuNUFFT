@@ -33,6 +33,25 @@ void bindTo1DTexture(const char* symbol, void* devicePtr, IndType count)
   }
 }
 
+__global__ void updateDensityCompKernel(DType2* density_data, DType2* estimation_data, long int N)
+{
+  long int t = threadIdx.x + blockIdx.x * blockDim.x;
+  while (t < N)
+  {
+    DType2 data_p = density_data[t];
+    DType2 esti_p = estimation_data[t];
+    data_p.x *= rsqrtf(esti_p.x * esti_p.x + esti_p.y * esti_p.y);
+    density_data[t] = data_p;
+    t = t + blockDim.x*gridDim.x;
+  } 
+}
+
+void performUpdateDensityComp(DType2* density_data, DType2* estimation_data, long int n_samples)
+{
+  dim3 block_dim(64, 1, 8);
+  dim3 grid_dim(getOptimalGridDim(n_samples,THREAD_BLOCK_SIZE));
+  updateDensityCompKernel<<<grid_dim,block_dim>>>(density_data, estimation_data, n_samples);
+}
 
 void initTexture(const char* symbol, cudaArray** devicePtr, gpuNUFFT::Array<DType> hostTexture)
 {

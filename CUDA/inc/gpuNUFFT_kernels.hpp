@@ -415,4 +415,6 @@ void performPadding(DType2 *imdata_d, CufftType *gdata_d,
   */
 void precomputeDeapodization(DType *deapo_d, gpuNUFFT::GpuNUFFTInfo *gi_host);
 
+void performUpdateDensityComp(DType2* density_data, DType2* estimation_data, long int n_samples);
+ 
 #endif

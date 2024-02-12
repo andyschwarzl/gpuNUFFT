@@ -22,6 +22,8 @@ Carole Lazarus <carole.m.lazarus@gmail.com>
 #include <vector>     // std::vector
 #include <string>
 #include <cuda.h>
+#include <cstdint>
+
 #define CAST_POINTER_VARNAME(x, y)   cast_pointer(x, y, #x)
 
 namespace py = pybind11;
@@ -63,9 +65,10 @@ void warn_pinned_memory(py::array_t<std::complex<DType>> array, const char * nam
         std::cerr<<"WARNING:: The data"<<name<<"is NOT pinned! This will be slow, consider pinning\n";
 }
 
-void allocate_pinned_memory(gpuNUFFT::Array<DType2> *lin_array, unsigned long int size)
+template <typename TType>
+void allocate_pinned_memory(gpuNUFFT::Array<TType> *lin_array, unsigned long int size)
 {
-  DType2 *new_data;
+  TType *new_data;
   cudaMallocHost((void **)&new_data, size);
   lin_array->data = new_data;
 }
@@ -206,6 +209,18 @@ class GpuNUFFTPythonOperator
             capsule
         );
     }
+
+    void op_direct(intptr_t in_image, intptr_t out_kspace, bool interpolate_data)
+    {
+        image.data = reinterpret_cast<DType2(&)[0]>(in_image);
+        kspace_data.data = reinterpret_cast<DType2(&)[0]>(out_kspace);
+        if(interpolate_data)
+            gpuNUFFTOp->performForwardGpuNUFFT(image, kspace_data, gpuNUFFT::DENSITY_ESTIMATION);
+        else
+            gpuNUFFTOp->performForwardGpuNUFFT(image, kspace_data);
+        cudaDeviceSynchronize();
+    }
+    
     py::array_t<std::complex<DType>> adj_op(py::array_t<std::complex<DType>> in_kspace, py::array_t<std::complex<DType>> out_image, bool grid_data)
     {
         CAST_POINTER_VARNAME(in_kspace, kspace_data);
@@ -275,7 +290,7 @@ class GpuNUFFTPythonOperator
         densArray.dim.length = n_samples;
 
         // TODO: Allocate directly on device and set with kernel.
-        for (int cnt = 0; cnt < n_samples; cnt++)
+        for (long int cnt = 0; cnt < n_samples; cnt++)
         {
           densArray.data[cnt].x = 1.0;
           densArray.data[cnt].y = 0.0;
@@ -306,8 +321,7 @@ class GpuNUFFTPythonOperator
                                          gpuNUFFT::DENSITY_ESTIMATION);
           gpuNUFFTOp->performForwardGpuNUFFT(image_gpu, densEstimation_gpu,
                                              gpuNUFFT::DENSITY_ESTIMATION);
-          performUpdateDensityComp(densArray_gpu.data, densEstimation_gpu.data,
-                                   n_samples);
+          performUpdateDensityComp(densArray_gpu.data, densEstimation_gpu.data, n_samples);
           if (DEBUG && (cudaDeviceSynchronize() != cudaSuccess))
                 printf("error at adj thread synchronization d: %s\n",
                        cudaGetErrorString(cudaGetLastError()));
@@ -332,6 +346,9 @@ class GpuNUFFTPythonOperator
         return py::array_t<DType>({ trajectory_length }, { sizeof(DType) }, ptr,
                                   capsule);
     }
+
+    
+
 
     float get_spectral_radius(int max_iter = 20,float tolerance = 1e-6)
     {
@@ -400,8 +417,8 @@ PYBIND11_MODULE(gpuNUFFT, m) {
         .def("op", &GpuNUFFTPythonOperator::op, py::arg("in_image"), py::arg("out_kspace"), py::arg("interpolate_data") = false)
         .def("adj_op",  &GpuNUFFTPythonOperator::adj_op, py::arg("in_kspace"), py::arg("out_image"),  py::arg("grid_data") = false)
         .def("clean_memory", &GpuNUFFTPythonOperator::clean_memory)
-        .def("estimate_density_comp", &GpuNUFFTPythonOperator::estimate_density_comp, py:arg("max_iter") = 10)
-        .def("set_smaps", &GpuNUFFTPythonOperator::set_smaps);
-        .def("get_spectral_radius", &GpuNUFFTPythonOperator::get_spectral_radius, py:arg("max_iter") = 20, py:arg("tolerance") = 1e-6);
+        .def("estimate_density_comp", &GpuNUFFTPythonOperator::estimate_density_comp, py::arg("max_iter") = 10)
+        .def("set_smaps", &GpuNUFFTPythonOperator::set_smaps)
+        .def("get_spectral_radius", &GpuNUFFTPythonOperator::get_spectral_radius, py::arg("max_iter") = 20, py::arg("tolerance") = 1e-6);
 }
 #endif  // GPUNUFFT_OPERATOR_MATLABFACTORY_H_INCLUDED

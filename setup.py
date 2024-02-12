@@ -1,6 +1,6 @@
 import os
 import sys
-from setuptools import setup, Extension, find_packages
+from setuptools import setup, Extension, find_namespace_packages
 from setuptools.command.build_ext import build_ext
 from importlib import import_module
 import platform
@@ -105,7 +105,6 @@ setup(
     name="gpuNUFFT",
     version="0.6.2",
     description="gpuNUFFT - An open source GPU Library for 3D Gridding and NUFFT",
-    package_dir={"": "CUDA/bin"},
     ext_modules=[
         CMakeExtension("gpuNUFFT", sourcedir=os.path.join("CUDA")),
     ],

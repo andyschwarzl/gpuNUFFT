@@ -1,0 +1,5 @@
+recursive-include CUDA/src *
+recursive-include CUDA/doc *
+recursive-include CUDA/inc *
+include CUDA/CMakeLists.txt
+

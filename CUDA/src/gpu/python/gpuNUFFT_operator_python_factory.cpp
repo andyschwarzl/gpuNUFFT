@@ -110,7 +110,9 @@ class GpuNUFFTPythonOperator
     bool has_sense_data;
     gpuNUFFT::Dimensions imgDims;
     // sensitivity maps
-    gpuNUFFT::Array<DType2> sensArray, kspace_data, image;
+    gpuNUFFT::GpuArray<DType2> image_gpu;
+    gpuNUFFT::GpuArray<CufftType> kspace_data_gpu;
+    gpuNUFFT::Array<CufftType> sensArray, kspace_data, image;
     void allocate_memory_kspace()
     {
         allocate_pinned_memory(&kspace_data, n_coils*trajectory_length*sizeof(DType2));
@@ -126,7 +128,7 @@ class GpuNUFFTPythonOperator
     
     public:
     GpuNUFFTPythonOperator(py::array_t<DType> kspace_loc, py::array_t<int> image_size, int num_coils,
-    py::array_t<std::complex<DType>> sense_maps,  std::optional<py::array_t<DType>> density_comp, int kernel_width=3,
+    py::array_t<std::complex<DType>> sense_maps,  py::array_t<DType> density_comp, int kernel_width=3,
     int sector_width=8, float osr=2, bool balance_workload=1) 
     {
         // k-space coordinates
@@ -138,12 +140,12 @@ class GpuNUFFTPythonOperator
 
         // density compensation weights
         gpuNUFFT::Array<DType> density_compArray;
-        if(density_comp.has_value())
-        {
-            density_compArray = readNumpyArray(density_comp.value());
+        //if(density_comp.has_value())
+        //{
+            density_compArray = readNumpyArray(density_comp);
             density_compArray.dim.length = trajectory_length;
             // No need else as the init is by default with 0 length and density comp is not applied
-        }
+        //}
 
         // image size
         py::buffer_info img_dim = image_size.request();
@@ -161,7 +163,10 @@ class GpuNUFFTPythonOperator
         kspace_data.dim.length = trajectory_length;
         kspace_data.dim.channels = num_coils;
         image.dim = imgDims;
-
+        kspace_data_gpu.dim.length = trajectory_length;
+        kspace_data_gpu.dim.channels = num_coils;
+        image_gpu.dim = imgDims;
+        
         // sensitivity maps
         py::buffer_info sense_maps_buffer = sense_maps.request();
         if (sense_maps_buffer.shape.size()==0)
@@ -210,14 +215,25 @@ class GpuNUFFTPythonOperator
         );
     }
 
-    void op_direct(intptr_t in_image, intptr_t out_kspace, bool interpolate_data)
+    void op_direct(uintptr_t in_image, uintptr_t out_kspace, bool interpolate_data)
     {
-        image.data = reinterpret_cast<DType2(&)[0]>(in_image);
-        kspace_data.data = reinterpret_cast<DType2(&)[0]>(out_kspace);
+        image_gpu.data = (DType2*) in_image;
+        kspace_data_gpu.data = (CufftType*) out_kspace;
         if(interpolate_data)
-            gpuNUFFTOp->performForwardGpuNUFFT(image, kspace_data, gpuNUFFT::DENSITY_ESTIMATION);
+            gpuNUFFTOp->performForwardGpuNUFFT(image_gpu, kspace_data_gpu, gpuNUFFT::DENSITY_ESTIMATION);
         else
-            gpuNUFFTOp->performForwardGpuNUFFT(image, kspace_data);
+            gpuNUFFTOp->performForwardGpuNUFFT(image_gpu, kspace_data_gpu);
+        cudaDeviceSynchronize();
+    }
+
+    void adj_op_direct(uintptr_t in_kspace, uintptr_t out_image, bool grid_data)
+    {
+        kspace_data_gpu.data = (CufftType*) in_kspace;
+        image_gpu.data = (DType2*) out_image;
+        if(grid_data)
+            gpuNUFFTOp->performGpuNUFFTAdj(kspace_data, image, gpuNUFFT::DENSITY_ESTIMATION);
+        else
+            gpuNUFFTOp->performGpuNUFFTAdj(kspace_data, image);
         cudaDeviceSynchronize();
     }
     
@@ -412,13 +428,15 @@ class GpuNUFFTPythonOperator
 
 PYBIND11_MODULE(gpuNUFFT, m) {
     py::class_<GpuNUFFTPythonOperator>(m, "NUFFTOp")
-        .def(py::init<py::array_t<DType>, py::array_t<int>, int, py::array_t<std::complex<DType>>, std::optional<py::array_t<DType>>, int, int, float, bool>(),
+        .def(py::init<py::array_t<DType>, py::array_t<int>, int, py::array_t<std::complex<DType>>, py::array_t<DType>, int, int, float, bool>(),
             py::arg("kspace_loc"), py::arg("image_size"), py::arg("num_coils"), py::arg("sense_maps") = py::none(), py::arg("density_comp") = py::none(), py::arg("kernel_width") = 3, py::arg("sector_width") = 8, py::arg("osr") = 2, py::arg("balance_workload") = true)
         .def("op", &GpuNUFFTPythonOperator::op, py::arg("in_image"), py::arg("out_kspace"), py::arg("interpolate_data") = false)
+        .def("op_direct", &GpuNUFFTPythonOperator::op_direct, py::arg("in_image"), py::arg("out_kspace"), py::arg("interpolate_data") = false)
+        .def("adj_op_direct", &GpuNUFFTPythonOperator::adj_op_direct, py::arg("in_kspace"), py::arg("out_image"), py::arg("grid_data") = false)
         .def("adj_op",  &GpuNUFFTPythonOperator::adj_op, py::arg("in_kspace"), py::arg("out_image"),  py::arg("grid_data") = false)
         .def("clean_memory", &GpuNUFFTPythonOperator::clean_memory)
         .def("estimate_density_comp", &GpuNUFFTPythonOperator::estimate_density_comp, py::arg("max_iter") = 10)
         .def("set_smaps", &GpuNUFFTPythonOperator::set_smaps)
         .def("get_spectral_radius", &GpuNUFFTPythonOperator::get_spectral_radius, py::arg("max_iter") = 20, py::arg("tolerance") = 1e-6);
 }
-#endif  // GPUNUFFT_OPERATOR_MATLABFACTORY_H_INCLUDED
+#endif  // GPUNUFFT_OPERATOR_PYTHONFACTORY_H_INCLUDED

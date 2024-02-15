@@ -25,3 +25,5 @@ elseif(UNIX)
 endif(WIN32)
 CUDA_ADD_CUFFT_TO_TARGET(gpuNUFFT)
 CUDA_ADD_CUBLAS_TO_TARGET(gpuNUFFT)
+target_link_libraries(gpuNUFFT ${CUDA_curand_LIBRARY})
+

@@ -231,9 +231,9 @@ class GpuNUFFTPythonOperator
         kspace_data_gpu.data = (CufftType*) in_kspace;
         image_gpu.data = (DType2*) out_image;
         if(grid_data)
-            gpuNUFFTOp->performGpuNUFFTAdj(kspace_data, image, gpuNUFFT::DENSITY_ESTIMATION);
+            gpuNUFFTOp->performGpuNUFFTAdj(kspace_data_gpu, image_gpu, gpuNUFFT::DENSITY_ESTIMATION);
         else
-            gpuNUFFTOp->performGpuNUFFTAdj(kspace_data, image);
+            gpuNUFFTOp->performGpuNUFFTAdj(kspace_data_gpu, image_gpu);
         cudaDeviceSynchronize();
     }
     

@@ -41,6 +41,7 @@ __global__ void updateDensityCompKernel(DType2* density_data, DType2* estimation
     DType2 data_p = density_data[t];
     DType2 esti_p = estimation_data[t];
     data_p.x *= rsqrtf(esti_p.x * esti_p.x + esti_p.y * esti_p.y);
+    data_p.y = 0;
     density_data[t] = data_p;
     t = t + blockDim.x*gridDim.x;
   } 

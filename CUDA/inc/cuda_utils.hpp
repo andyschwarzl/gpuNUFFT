@@ -110,13 +110,28 @@ inline void allocateAndSetMem(TypeName **device_ptr, IndType num_elements,
  */
 template <typename TypeName>
 inline void copyDeviceToDevice(TypeName *device_ptr_src,
-                               TypeName *device_ptr_dest, IndType num_elements)
+                               TypeName *device_ptr_dest, IndType num_elements
+                               )
 {
   HANDLE_ERROR(cudaMemcpy(device_ptr_dest, device_ptr_src,
                           num_elements * sizeof(TypeName),
                           cudaMemcpyDeviceToDevice));
 }
 
+/** \brief CUDA memcpy call to copy data from device ptr to device ptr
+ *
+ * @param device_ptr_src   source device pointer
+ * @param device_ptr_dest  destination device pointer
+ * @param num_elements     amount of elements of size TypeName
+ */
+template <typename TypeName>
+inline void copyDeviceToDeviceAsync(TypeName *device_ptr_src,
+                               TypeName *device_ptr_dest, IndType num_elements, cudaStream_t stream=0)
+{
+  HANDLE_ERROR(cudaMemcpyAsync(device_ptr_dest, device_ptr_src,
+                          num_elements * sizeof(TypeName),
+                          cudaMemcpyDeviceToDevice, stream));
+}
 /** \brief Copy CUDA memory from device to host
  *
  * @param device_ptr    device pointer

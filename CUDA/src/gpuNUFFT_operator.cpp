@@ -394,10 +394,11 @@ void gpuNUFFT::GpuNUFFTOperator::performGpuNUFFTAdj(
 
   // more than 2 coil sets are not sensible to reconstruct in one
   // adjoint kernel call , since the used shared memory is limited
+  // FIXME: We now limit to 1 as 2 has errors right now
   int n_coils_cc = this->is2DProcessing()
                        ? std::min(this->computePossibleConcurrentCoilCount(
                                       n_coils, kspaceData_gpu.dim),
-                                  2)
+                                  1)
                        : 1;
   if (DEBUG)
     printf("Computing %d coils concurrently.\n", n_coils_cc);
@@ -977,8 +978,6 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(
       performSensMul(imdata_d, sens_d, gi_host, false);
     }
 
-    // apodization Correction
-    performForwardDeapodization(imdata_d, deapo_d, gi_host);
 	 if(gpuNUFFTOut == DENSITY_ESTIMATION)
       {
         // convolution and resampling to non-standard trajectory
@@ -1000,6 +999,8 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(
         this->freeDeviceMemory();
         return;
     } 
+    // apodization Correction
+    performForwardDeapodization(imdata_d, deapo_d, gi_host);
     if (DEBUG && (cudaStreamSynchronize(new_stream) != cudaSuccess))
       printf("error at thread synchronization 2: %s\n",
              cudaGetErrorString(cudaGetLastError()));
@@ -1198,8 +1199,6 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(
       performSensMul(imdata_d, sens_d, gi_host, false);
     }
 
-    // apodization Correction
-    performForwardDeapodization(imdata_d, deapo_d, gi_host);
 	  if(gpuNUFFTOut == DENSITY_ESTIMATION)
 	  {
 	      forwardConvolution(data_d, crds_d, imdata_d, NULL, sectors_d,
@@ -1214,6 +1213,8 @@ void gpuNUFFT::GpuNUFFTOperator::performForwardGpuNUFFT(
         this->freeDeviceMemory();
         return;
     }
+    // apodization Correction
+    performForwardDeapodization(imdata_d, deapo_d, gi_host);
     if (DEBUG && (cudaThreadSynchronize() != cudaSuccess))
       printf("error at thread synchronization 2: %s\n",
              cudaGetErrorString(cudaGetLastError()));

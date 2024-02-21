@@ -107,6 +107,7 @@ class GpuNUFFTPythonOperator
     gpuNUFFT::GpuNUFFTOperatorFactory factory;
     gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp;
     int trajectory_length, n_coils, dimension;
+    float osr;
     bool has_sense_data;
     gpuNUFFT::Dimensions imgDims;
     // sensitivity maps
@@ -129,7 +130,7 @@ class GpuNUFFTPythonOperator
     public:
     GpuNUFFTPythonOperator(py::array_t<DType> kspace_loc, py::array_t<int> image_size, int num_coils,
     py::array_t<std::complex<DType>> sense_maps,  py::array_t<DType> density_comp, int kernel_width=3,
-    int sector_width=8, float osr=2, bool balance_workload=1) 
+    int sector_width=8, float osr=2, bool balance_workload=1) : osr(osr)
     {
         // k-space coordinates
         py::buffer_info sample_loc = kspace_loc.request();
@@ -140,12 +141,11 @@ class GpuNUFFTPythonOperator
 
         // density compensation weights
         gpuNUFFT::Array<DType> density_compArray;
-        //if(density_comp.has_value())
-        //{
+        if(density_comp == Py_None)
+        {
             density_compArray = readNumpyArray(density_comp);
             density_compArray.dim.length = trajectory_length;
-            // No need else as the init is by default with 0 length and density comp is not applied
-        //}
+        }
 
         // image size
         py::buffer_info img_dim = image_size.request();
@@ -165,7 +165,6 @@ class GpuNUFFTPythonOperator
         image.dim = imgDims;
         kspace_data_gpu.dim.length = trajectory_length;
         kspace_data_gpu.dim.channels = num_coils;
-        image_gpu.dim = imgDims;
         
         // sensitivity maps
         py::buffer_info sense_maps_buffer = sense_maps.request();
@@ -189,6 +188,7 @@ class GpuNUFFTPythonOperator
             image.dim.channels = n_coils;
         else
             image.dim.channels = 1;
+        image_gpu.dim = imgDims;
         cudaDeviceSynchronize();
     }
 
@@ -305,7 +305,6 @@ class GpuNUFFTPythonOperator
         allocate_pinned_memory(&densArray, n_samples * sizeof(CufftType));
         densArray.dim.length = n_samples;
 
-        // TODO: Allocate directly on device and set with kernel.
         for (long int cnt = 0; cnt < n_samples; cnt++)
         {
           densArray.data[cnt].x = 1.0;
@@ -324,7 +323,7 @@ class GpuNUFFTPythonOperator
 
         gpuNUFFT::GpuArray<CufftType> image_gpu;
         image_gpu.dim = imgDims;
-        allocateDeviceMem(&image_gpu.data, imgDims.count());
+        allocateDeviceMem(&image_gpu.data, image_gpu.dim.count());
 
         if (DEBUG && (cudaDeviceSynchronize() != cudaSuccess))
           printf("error at adj thread synchronization a: %s\n",

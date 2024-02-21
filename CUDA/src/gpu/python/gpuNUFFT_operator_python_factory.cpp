@@ -141,7 +141,7 @@ class GpuNUFFTPythonOperator
 
         // density compensation weights
         gpuNUFFT::Array<DType> density_compArray;
-        if(density_comp == Py_None)
+        if(density_comp != Py_None)
         {
             density_compArray = readNumpyArray(density_comp);
             density_compArray.dim.length = trajectory_length;

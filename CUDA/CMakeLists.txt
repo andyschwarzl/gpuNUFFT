@@ -94,14 +94,15 @@ endif(GPU_DOUBLE_PREC)
 
 SET(FERMI_GPU OFF CACHE BOOL "Enable build for (old) Fermi architectures (Compute capability 2.0)")
 
-
+set(MY_NVCC_FLAGS -I${CUDA_INCLUDE_DIRS})
+set(CMAKE_CXX_FLAGS -I${CUDA_INCLUDE_DIRS})
 IF(FERMI_GPU)
-  set(MY_NVCC_FLAGS -gencode arch=compute_30,code=sm_30)
+  list(APPEND MY_NVCC_FLAGS -gencode arch=compute_30,code=sm_30)
   list(APPEND MY_NVCC_FLAGS -gencode arch=compute_50,code=sm_50)
   list(APPEND MY_NVCC_FLAGS -gencode=arch=compute_52,code=sm_52)
   list(APPEND MY_NVCC_FLAGS -gencode=arch=compute_52,code=compute_52)
+  list(APPEND MY_NVCC_FLAGS -gencode arch=compute_50,code=sm_50)
 ELSE(FERMI_GPU)
-  set(MY_NVCC_FLAGS -gencode arch=compute_50,code=sm_50)
   list(APPEND MY_NVCC_FLAGS -gencode=arch=compute_52,code=sm_52)
   list(APPEND MY_NVCC_FLAGS -gencode=arch=compute_52,code=compute_52)
 
@@ -126,7 +127,7 @@ ENDIF(FERMI_GPU)
 
 IF(CMAKE_BUILD_TYPE MATCHES Debug)
   MESSAGE("debug mode")
-  list(APPEND CUDA_NVCC_FLAGS ${MY_NVCC_FLAGS} --ptxas-options=-v)
+  list(APPEND CUDA_NVCC_FLAGS ${MY_NVCC_FLAGS} --ptxas-options=-v -G)
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -g -std=c++11")
 ELSE(CMAKE_BUILD_TYPE)
   list(APPEND CUDA_NVCC_FLAGS ${MY_NVCC_FLAGS})
@@ -150,6 +151,7 @@ CONFIGURE_FILE( ${CMAKE_SOURCE_DIR}/inc/cufft_config.hpp.cmake ${CMAKE_SOURCE_DI
 
 #Include dirs
 include_directories(inc)
+message(CUDA_INCLUDE_DIRS : ${CUDA_INCLUDE_DIRS})
 SET(GPUNUFFT_INC_DIR ${CMAKE_SOURCE_DIR}/inc)
 SET(GPUNUFFT_INCLUDE ${GPUNUFFT_INC_DIR}/cuda_utils.hpp 
 										 ${GPUNUFFT_INC_DIR}/cuda_utils.cuh

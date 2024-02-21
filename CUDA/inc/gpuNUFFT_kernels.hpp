@@ -311,7 +311,7 @@ void performTextureForwardConvolution(CufftType *data_d, DType *crds_d,
   * @param N    Problem size N
   * @param gi_host Info struct with meta information
   */
-void performFFTScaling(CufftType *data, int N, gpuNUFFT::GpuNUFFTInfo *gi_host);
+void performFFTScaling(CufftType *data, long int N, gpuNUFFT::GpuNUFFTInfo *gi_host);
 
 /** \brief Scale each element of the input data by the value of the density
   *compensation function for the corresponding sample point.
@@ -415,4 +415,6 @@ void performPadding(DType2 *imdata_d, CufftType *gdata_d,
   */
 void precomputeDeapodization(DType *deapo_d, gpuNUFFT::GpuNUFFTInfo *gi_host);
 
+void performUpdateDensityComp(DType2* density_data, DType2* estimation_data, long int n_samples);
+ 
 #endif

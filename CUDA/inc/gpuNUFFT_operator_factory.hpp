@@ -52,10 +52,10 @@ class GpuNUFFTOperatorFactory
   /** \brief Constructor overload
     *
     * @param useTextures Flag to indicate texture interpolation
-    * @param useGpu Flag to indicate gpu usage for precomputation
+    * @param useGpu Flag to indicat&GpuNUFFTPythonOperator::adj_op);e gpu usage for precomputation
     * @param balanceWorkload Flag to indicate load balancing
     */
-  GpuNUFFTOperatorFactory(const bool useTextures = true, const bool useGpu = true,
+  GpuNUFFTOperatorFactory(const bool useTextures = false, const bool useGpu = true,
                           bool balanceWorkload = true, bool matlabSharedMem = false)
     : useTextures(useTextures), useGpu(useGpu), balanceWorkload(balanceWorkload),
     matlabSharedMem(matlabSharedMem)
@@ -176,7 +176,15 @@ class GpuNUFFTOperatorFactory
   void setBalanceWorkload(bool balanceWorkload);
 
  protected:
-  /** \brief Assign the samples on the k-space trajectory to its corresponding
+  template<typename T>
+   void freeLocalMemberArray(T* dataPointer)
+   {
+     if (dataPointer != NULL) {
+       cudaFreeHost(dataPointer);
+       dataPointer = NULL;
+     }
+   }
+   /** \brief Assign the samples on the k-space trajectory to its corresponding
     *sector
     *
     * @return array of indices of the assigned sector

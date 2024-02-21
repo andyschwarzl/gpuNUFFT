@@ -36,8 +36,7 @@ class BalancedTextureGpuNUFFTOperator : public TextureGpuNUFFTOperator,
 
   ~BalancedTextureGpuNUFFTOperator()
   {
-    if (!matlabSharedMem)
-      freeLocalMemberArray(this->sectorProcessingOrder.data);
+     freeLocalMemberArray(this->sectorProcessingOrder.data);
   }
 
   // OPERATIONS

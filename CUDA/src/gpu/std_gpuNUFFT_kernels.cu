@@ -8,31 +8,51 @@
 #include "precomp_utils.hpp"
 #include "cuda_utils.cuh"
 
-// Method to initialize CONSTANT memory symbols. Needs to reside in *.cu file 
+// Method to initialize CONSTANT memory symbols. Needs to reside in *.cu file
 // to work properly
 //
 //
-void initConstSymbol(const char* symbol, const void* src, IndType size)
+void initConstSymbol(const char* symbol, const void* src, IndType size, cudaStream_t stream)
 {
   if (std::string("GI").compare(symbol)==0)
-    HANDLE_ERROR(cudaMemcpyToSymbol(GI, src,size));
+    HANDLE_ERROR(cudaMemcpyToSymbolAsync(GI, src, size, 0, cudaMemcpyHostToDevice, stream));
 
   if (std::string("KERNEL").compare(symbol)==0)
-    HANDLE_ERROR(cudaMemcpyToSymbol(KERNEL, src,size));
+    HANDLE_ERROR(cudaMemcpyToSymbolAsync(KERNEL, src, size, 0, cudaMemcpyHostToDevice, stream));
 }
 
 void bindTo1DTexture(const char* symbol, void* devicePtr, IndType count)
 {
   if (std::string("texDATA").compare(symbol)==0)
   {
-    HANDLE_ERROR (cudaBindTexture(NULL,texDATA, devicePtr,count*sizeof(float2)));
+    HANDLE_ERROR (cudaBindTexture(NULL,texDATA, devicePtr,(unsigned long)count*sizeof(float2)));
   }
   else if (std::string("texGDATA").compare(symbol)==0)
   {
-    HANDLE_ERROR (cudaBindTexture(NULL,texGDATA, devicePtr,count*sizeof(cufftComplex)));
+    HANDLE_ERROR (cudaBindTexture(NULL,texGDATA, devicePtr,(unsigned long)count*sizeof(cufftComplex)));
   }
 }
 
+__global__ void updateDensityCompKernel(DType2* density_data, DType2* estimation_data, long int N)
+{
+  long int t = threadIdx.x + blockIdx.x * blockDim.x;
+  while (t < N)
+  {
+    DType2 data_p = density_data[t];
+    DType2 esti_p = estimation_data[t];
+    data_p.x *= rsqrtf(esti_p.x * esti_p.x + esti_p.y * esti_p.y);
+    data_p.y = 0;
+    density_data[t] = data_p;
+    t = t + blockDim.x*gridDim.x;
+  } 
+}
+
+void performUpdateDensityComp(DType2* density_data, DType2* estimation_data, long int n_samples)
+{
+  dim3 block_dim(64, 1, 8);
+  dim3 grid_dim(getOptimalGridDim(n_samples,THREAD_BLOCK_SIZE));
+  updateDensityCompKernel<<<grid_dim,block_dim>>>(density_data, estimation_data, n_samples);
+}
 
 void initTexture(const char* symbol, cudaArray** devicePtr, gpuNUFFT::Array<DType> hostTexture)
 {
@@ -111,9 +131,9 @@ void freeTexture(const char* symbol, cudaArray* devicePtr)
   HANDLE_ERROR(cudaFreeArray(devicePtr));  
 }
 
-__global__ void fftScaleKernel(CufftType* data, DType scaling, int N)
+__global__ void fftScaleKernel(CufftType* data, DType scaling, long int N)
 {
-  int t = threadIdx.x +  blockIdx.x *blockDim.x;
+  long int t = threadIdx.x +  blockIdx.x *blockDim.x;
 
   while (t < N) 
   {
@@ -129,7 +149,7 @@ __global__ void fftScaleKernel(CufftType* data, DType scaling, int N)
   }
 }
 
-void performFFTScaling(CufftType* data,int N, gpuNUFFT::GpuNUFFTInfo* gi_host)
+void performFFTScaling(CufftType* data,long int N, gpuNUFFT::GpuNUFFTInfo* gi_host)
 {
   dim3 block_dim(64, 1, 8);
   //dim3 block_dim(THREAD_BLOCK_SIZE);
@@ -226,8 +246,8 @@ __global__ void densityCompensationKernel(DType2* data, DType* density_comp, int
     for (int c = threadIdx.z; c < GI.n_coils_cc; c+= blockDim.z)
     {
       DType2 data_p = data[t + c*N]; 
-      data_p.x = data_p.x * sqrt(density_comp[t]);
-      data_p.y = data_p.y * sqrt(density_comp[t]);
+      data_p.x = data_p.x * density_comp[t];
+      data_p.y = data_p.y * density_comp[t];
       data[t + c*N] = data_p;
     }
     t = t+ blockDim.x*gridDim.x;

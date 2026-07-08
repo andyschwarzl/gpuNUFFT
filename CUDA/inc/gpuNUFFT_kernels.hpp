@@ -80,80 +80,6 @@ void performConvolution(DType2 *data_d, DType *crds_d, CufftType *gdata_d,
                         IndType *sector_centers_d,
                         gpuNUFFT::GpuNUFFTInfo *gi_host);
 
-/**
- * \brief Adjoint gridding convolution implementation on GPU using textures for
- *kernel lookup.
- *
- * Performs the adjoint gridding convolution step on the GPU, thus the
- *interpolation
- * from non-uniform sampled k-space data onto the uniform oversampled grid.
- *
- * The distance from each sample to its neighboring grid positions is computed
- *and the corresponding
- * data value is weighted by the kernel function according to the distance.
- *
- * The kernel lookup is performed by the use of gpu textures.
- *
- * CUDA function prototype.
- *
- *
- * @param data_d            Input k-space sample data value, complex, sorted due
- *to precomputation
- * @param crds_d            k-space sample coordinate (non-cartesian),
- *linearized array (x1,x2,x3,...,xn,y1,y2,y3,...,yn,z1,z2,z3,...zn)
- * @param gdata_d           Outpu k-space grid (cartesian)
- * @param kernel_d          precomputed interpolation kernel
- * @param sectors_d         precomputed data-sector mapping, defines the range
- *of data elements per sector, e.g. 0,3,4,4,10 -> maps data points 0..3 to
- *sector id 0, 3..4 to sector 1, no data point to sector 2, 4..10 to sector 3 an
- *so on
- * @param sector_processing_order_d precomputed sector processing order
- * @param sector_centers_d  precomputed coordinates (x,y,z) of sector centers
- * @param gi_host           info struct with meta information
- */
-void performTextureConvolution(DType2 *data_d, DType *crds_d,
-                               CufftType *gdata_d, DType *kernel_d,
-                               IndType *sectors_d, IndType *sector_centers_d,
-                               gpuNUFFT::GpuNUFFTInfo *gi_host);
-
-/**
- * \brief Adjoint gridding convolution implementation on GPU using textures and
- *sector load balancing.
- *
- * Performs the adjoint gridding convolution step on the GPU, thus the
- *interpolation
- * from non-uniform sampled k-space data onto the uniform oversampled grid.
- *
- * The distance from each sample to its neighboring grid positions is computed
- *and the corresponding
- * data value is weighted by the kernel function according to the distance.
- *
- * The kernel lookup is performed by the use of gpu textures and the workload is
- *balanced.
- *
- * CUDA function prototype.
- *
- * @param data_d            Input k-space sample data value, complex, sorted due
- *to precomputation
- * @param crds_d            k-space sample coordinate (non-cartesian),
- *linearized array (x1,x2,x3,...,xn,y1,y2,y3,...,yn,z1,z2,z3,...zn)
- * @param gdata_d           Output k-space grid (cartesian)
- * @param kernel_d          precomputed interpolation kernel
- * @param sectors_d         precomputed data-sector mapping, defines the range
- *of data elements per sector, e.g. 0,3,4,4,10 -> maps data points 0..3 to
- *sector id 0, 3..4 to sector 1, no data point to sector 2, 4..10 to sector 3 an
- *so on
- * @param sector_processing_order_d precomputed sector processing order
- * @param sector_centers_d  precomputed coordinates (x,y,z) of sector centers
- * @param gi_host           info struct with meta information
- */
-void performTextureConvolution(DType2 *data_d, DType *crds_d,
-                               CufftType *gdata_d, DType *kernel_d,
-                               IndType *sectors_d,
-                               IndType2 *sector_processing_order_d,
-                               IndType *sector_centers_d,
-                               gpuNUFFT::GpuNUFFTInfo *gi_host);
-
 // FORWARD Operations
 
 /**
@@ -228,81 +154,6 @@ void performForwardConvolution(CufftType *data_d, DType *crds_d,
                                IndType *sector_centers_d,
                                gpuNUFFT::GpuNUFFTInfo *gi_host);
 
-/**
- * \brief Forward gridding convolution implementation on GPU using textures .
- *
- * Performs the forward gridding convolution step on the GPU, thus the
- *interpolation
- * from uniform oversampled grid positions to non-uniform sampled k-space data
- *points.
- *
- * The distance from each sample to its neighboring grid positions is computed
- *and the corresponding
- * data value is weighted by the kernel function according to the distance.
- *
- * The kernel lookup is performed by the use of gpu textures.
- *
- * CUDA function prototype.
- *
- * @param data_d            Output k-space sample data value, complex, sorted
- *due to precomputation
- * @param crds_d            k-space sample coordinate (non-cartesian),
- *linearized array (x1,x2,x3,...,xn,y1,y2,y3,...,yn,z1,z2,z3,...zn)
- * @param gdata_d           Input k-space grid (cartesian)
- * @param kernel_d          precomputed interpolation kernel
- * @param sectors_d         precomputed data-sector mapping, defines the range
- *of data elements per sector, e.g. 0,3,4,4,10 -> maps data points 0..3 to
- *sector id 0, 3..4 to sector 1, no data point to sector 2, 4..10 to sector 3 an
- *so on
- * @param sector_centers_d  precomputed coordinates (x,y,z) of sector centers
- * @param gi_host           info struct with meta information
- */
-void performTextureForwardConvolution(CufftType *data_d, DType *crds_d,
-                                      CufftType *gdata_d, DType *kernel_d,
-                                      IndType *sectors_d,
-                                      IndType *sector_centers_d,
-                                      gpuNUFFT::GpuNUFFTInfo *gi_host);
-
-/**
- * \brief Forward gridding convolution implementation on GPU using sector load
- *balancing and textures.
- *
- * Performs the forward gridding convolution step on the GPU, thus the
- *interpolation
- * from uniform oversampled grid positions to non-uniform sampled k-space data
- *points.
- *
- * The distance from each sample to its neighboring grid positions is computed
- *and the corresponding
- * data value is weighted by the kernel function according to the distance.
- *
- * The kernel lookup is performed by the use of gpu textures.
- * In order to balance the work load per thread block a sector processing order
- *is precomputed.
- *
- * CUDA function prototype.
- *
- * @param data_d            Output k-space sample data value, complex, sorted
- *due to precomputation
- * @param crds_d            k-space sample coordinate (non-cartesian),
- *linearized array (x1,x2,x3,...,xn,y1,y2,y3,...,yn,z1,z2,z3,...zn)
- * @param gdata_d           Input k-space grid (cartesian)
- * @param kernel_d          precomputed interpolation kernel
- * @param sectors_d         precomputed data-sector mapping, defines the range
- *of data elements per sector, e.g. 0,3,4,4,10 -> maps data points 0..3 to
- *sector id 0, 3..4 to sector 1, no data point to sector 2, 4..10 to sector 3 an
- *so on
- * @param sector_processing_order_d precomputed sector processing order
- * @param sector_centers_d  precomputed coordinates (x,y,z) of sector centers
- * @param gi_host           info struct with meta information
- */
-void performTextureForwardConvolution(CufftType *data_d, DType *crds_d,
-                                      CufftType *gdata_d, DType *kernel_d,
-                                      IndType *sectors_d,
-                                      IndType2 *sector_processing_order_d,
-                                      IndType *sector_centers_d,
-                                      gpuNUFFT::GpuNUFFTInfo *gi_host);
-
 // UTIL Functions
 /** \brief Scale each element by the total number of elements.
   *
@@ -311,7 +162,7 @@ void performTextureForwardConvolution(CufftType *data_d, DType *crds_d,
   * @param N    Problem size N
   * @param gi_host Info struct with meta information
   */
-void performFFTScaling(CufftType *data, int N, gpuNUFFT::GpuNUFFTInfo *gi_host);
+void performFFTScaling(CufftType *data, long int N, gpuNUFFT::GpuNUFFTInfo *gi_host);
 
 /** \brief Scale each element of the input data by the value of the density
   *compensation function for the corresponding sample point.
@@ -328,11 +179,11 @@ void performDensityCompensation(DType2 *data, DType *density_comp,
   * @param imdata_d image data
   * @param sens_d complex coil sensitivity
   * @param gi_host Info struct with meta information
-  * @param conjugate Flag whether to apply complex conjugate of sensitivity or
-  *not
+  * @param conjugate Flag whether to apply complex conjugate of sensitivity or not
+  * @param use_grid_dim Flag whether to use grid dimension or image dimension
   */
 void performSensMul(CufftType *imdata_d, DType2 *sens_d,
-                    gpuNUFFT::GpuNUFFTInfo *gi_host, bool conjugate);
+                    gpuNUFFT::GpuNUFFTInfo *gi_host, bool conjugate, bool use_grid_dim = false);
 
 /** \brief Perform a element-wise summation over multiple coil images
   *
@@ -415,4 +266,6 @@ void performPadding(DType2 *imdata_d, CufftType *gdata_d,
   */
 void precomputeDeapodization(DType *deapo_d, gpuNUFFT::GpuNUFFTInfo *gi_host);
 
+void performUpdateDensityComp(DType2* density_data, DType2* estimation_data, long int n_samples);
+ 
 #endif

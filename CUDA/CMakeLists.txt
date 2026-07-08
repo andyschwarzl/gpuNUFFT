@@ -33,7 +33,7 @@ endif(WIN32)
 
 #Enable Mex File Generation
 #Searching MATLAB
-SET(GEN_MEX_FILES ON CACHE BOOL "Enable generation of Matlab MEX files.")
+SET(GEN_MEX_FILES OFF CACHE BOOL "Enable generation of Matlab MEX files.")
 
 if(GEN_MEX_FILES)
   if(WIN32)
@@ -84,7 +84,7 @@ SET(GEN_TESTS OFF CACHE BOOL "Enable and generate simple GOOGLE test framework u
 SET(GPU_DOUBLE_PREC OFF CACHE BOOL "Enable double precision floating point operations on GPU (Compute Capability 1.3 needed)")
 
 #Option to enable python bindings
-SET(GEN_PYTHON_FILES OFF CACHE BOOL "Enable generation of Python binding files.")
+SET(GEN_PYTHON_FILES ON CACHE BOOL "Enable generation of Python binding files.")
 
 if(GPU_DOUBLE_PREC)
   SET(PREC_SUFFIX "_d")
@@ -92,41 +92,47 @@ else(GPU_DOUBLE_PREC)
   SET(PREC_SUFFIX "_f")
 endif(GPU_DOUBLE_PREC)
 
-SET(FERMI_GPU OFF CACHE BOOL "Enable build for (old) Fermi architectures (Compute capability 2.0)")
 
-
-IF(FERMI_GPU)
-  set(MY_NVCC_FLAGS -gencode arch=compute_30,code=sm_30)
-  list(APPEND MY_NVCC_FLAGS -gencode arch=compute_50,code=sm_50)
-  list(APPEND MY_NVCC_FLAGS -gencode=arch=compute_52,code=sm_52)
-  list(APPEND MY_NVCC_FLAGS -gencode=arch=compute_52,code=compute_52)
-ELSE(FERMI_GPU)
-  set(MY_NVCC_FLAGS -gencode arch=compute_50,code=sm_50)
-  list(APPEND MY_NVCC_FLAGS -gencode=arch=compute_52,code=sm_52)
-  list(APPEND MY_NVCC_FLAGS -gencode=arch=compute_52,code=compute_52)
-
-  if(${CUDA_VERSION_MAJOR} GREATER 7)
-    message("add CUDA 8 flags: Current version: ${CUDA_VERSION}")
-    list(APPEND MY_NVCC_FLAGS -gencode=arch=compute_60,code=sm_60)
-    list(APPEND MY_NVCC_FLAGS -gencode=arch=compute_61,code=sm_61)
-    list(APPEND MY_NVCC_FLAGS -gencode=arch=compute_61,code=compute_61)
-  endif()
-
-  if(${CUDA_VERSION_MAJOR} GREATER 8)
-    message("add CUDA 9 flags: Current version: ${CUDA_VERSION}")
-    list(APPEND MY_NVCC_FLAGS -gencode=arch=compute_70,code=sm_70)
-  endif()
+set(MY_NVCC_FLAGS -I${CUDA_INCLUDE_DIRS})
+set(CMAKE_CXX_FLAGS -I${CUDA_INCLUDE_DIRS})
 
   if(${CUDA_VERSION_MAJOR} GREATER 9)
     message("add CUDA 10 flags: Current version: ${CUDA_VERSION}")
     list(APPEND MY_NVCC_FLAGS -gencode=arch=compute_75,code=sm_75)
   endif()
+  
+  # Add support for Ada Lovelace (RTX 40-series / RTX Ada Generation)
+  if(${CUDA_VERSION_MAJOR} GREATER 11)
+      message("add CUDA 12 flags: Current version: ${CUDA_VERSION}")
+      list(APPEND MY_NVCC_FLAGS -gencode=arch=compute_89,code=sm_89)
+  endif()
 
-ENDIF(FERMI_GPU)
+  # --- Ampere (RTX 30-series / A100) ---
+  if(${CUDA_VERSION_MAJOR} GREATER 10)
+      list(APPEND MY_NVCC_FLAGS -gencode=arch=compute_80,code=sm_80)
+      list(APPEND MY_NVCC_FLAGS -gencode=arch=compute_86,code=sm_86)
+  endif()
+  
+  # --- Ada Lovelace (Your RTX 6000 Ada) & Hopper (H100) ---
+  if(${CUDA_VERSION_MAJOR} GREATER 11)
+      # Your current GPU (Ada)
+      list(APPEND MY_NVCC_FLAGS -gencode=arch=compute_89,code=sm_89)
+      # Hopper (Data Center H100)
+      list(APPEND MY_NVCC_FLAGS -gencode=arch=compute_90,code=sm_90)
+  endif()
+  
+  # --- Blackwell (RTX 50-series / B200) ---
+  # Note: Requires CUDA 12.8 or 13.0+
+  if(${CUDA_VERSION} VERSION_GREATER_EQUAL "12.8")
+      message("Adding Blackwell support")
+      list(APPEND MY_NVCC_FLAGS -gencode=arch=compute_100,code=sm_100)
+      list(APPEND MY_NVCC_FLAGS -gencode=arch=compute_120,code=sm_120)
+  endif()
+
 
 IF(CMAKE_BUILD_TYPE MATCHES Debug)
   MESSAGE("debug mode")
-  list(APPEND CUDA_NVCC_FLAGS ${MY_NVCC_FLAGS} --ptxas-options=-v)
+  list(APPEND CUDA_NVCC_FLAGS ${MY_NVCC_FLAGS} --ptxas-options=-v -G)
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -g -std=c++11")
 ELSE(CMAKE_BUILD_TYPE)
   list(APPEND CUDA_NVCC_FLAGS ${MY_NVCC_FLAGS})
@@ -150,6 +156,7 @@ CONFIGURE_FILE( ${CMAKE_SOURCE_DIR}/inc/cufft_config.hpp.cmake ${CMAKE_SOURCE_DI
 
 #Include dirs
 include_directories(inc)
+message(CUDA_INCLUDE_DIRS : ${CUDA_INCLUDE_DIRS})
 SET(GPUNUFFT_INC_DIR ${CMAKE_SOURCE_DIR}/inc)
 SET(GPUNUFFT_INCLUDE ${GPUNUFFT_INC_DIR}/cuda_utils.hpp 
 										 ${GPUNUFFT_INC_DIR}/cuda_utils.cuh
@@ -161,10 +168,8 @@ SET(GPUNUFFT_INCLUDE ${GPUNUFFT_INC_DIR}/cuda_utils.hpp
 										 ${GPUNUFFT_INC_DIR}/precomp_utils.hpp
                      ${GPUNUFFT_INC_DIR}/gpuNUFFT_operator.hpp
 										 ${GPUNUFFT_INC_DIR}/balanced_operator.hpp
-										 ${GPUNUFFT_INC_DIR}/texture_gpuNUFFT_operator.hpp
 										 ${GPUNUFFT_INC_DIR}/balanced_gpuNUFFT_operator.hpp
-                     ${GPUNUFFT_INC_DIR}/gpuNUFFT_operator_factory.hpp
-										 ${GPUNUFFT_INC_DIR}/balanced_texture_gpuNUFFT_operator.hpp)
+                     ${GPUNUFFT_INC_DIR}/gpuNUFFT_operator_factory.hpp)
 					 
 SET(MATLAB_HELPER_INCLUDE ${GPUNUFFT_INC_DIR}/matlab_helper.h)
 SET(CONFIG_INCLUDE ${GPUNUFFT_INC_DIR}/config.hpp ${GPUNUFFT_INC_DIR}/cufft_config.hpp)
@@ -208,4 +213,5 @@ OUTPUT_VARIABLE _file_list
 	    RESULT_VARIABLE _result
 	)
 endif(GEN_ZIP)
+
 

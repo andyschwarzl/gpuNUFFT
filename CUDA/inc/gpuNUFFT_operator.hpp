@@ -53,13 +53,13 @@ class GpuNUFFTOperator
   GpuNUFFTOperator(IndType kernelWidth, IndType sectorWidth, DType osf,
                    Dimensions imgDims, bool loadKernel = true,
                    OperatorType operatorType = DEFAULT,
-                   bool matlabSharedMem = false)
+                   bool matlabSharedMem = false, bool grad_mode = false)
     : operatorType(operatorType), osf(osf), kernelWidth(kernelWidth),
       sectorWidth(sectorWidth), imgDims(imgDims), gpuMemAllocated(false),
       debugTiming(DEBUG), sens_d(NULL), crds_d(NULL), density_comp_d(NULL),
       deapo_d(NULL), gdata_d(NULL), sector_centers_d(NULL), sectors_d(NULL),
       data_indices_d(NULL), data_sorted_d(NULL), allocatedCoils(0),
-      matlabSharedMem(matlabSharedMem)
+      matlabSharedMem(matlabSharedMem), grad_mode(grad_mode)
   {
     if (loadKernel)
       initKernel();
@@ -72,18 +72,15 @@ class GpuNUFFTOperator
 
   virtual ~GpuNUFFTOperator()
   {
-    freeLocalMemberArray(this->kernel.data);
-
-    if (!matlabSharedMem) {
-      freeLocalMemberArray(this->dens.data);
-      freeLocalMemberArray(this->deapo.data);
-      freeLocalMemberArray(this->kSpaceTraj.data);
-      freeLocalMemberArray(this->sectorCenters.data);
-      freeLocalMemberArray(this->dataIndices.data);
-      freeLocalMemberArray(this->sectorDataCount.data);
-    }
-
     freeDeviceMemory();
+    freeLocalMemberArray(this->kernel.data);
+    freeLocalMemberArray(this->dens.data);
+    freeLocalMemberArray(this->sens.data);
+    freeLocalMemberArray(this->deapo.data);
+    freeLocalMemberArray(this->kSpaceTraj.data);
+    freeLocalMemberArray(this->sectorCenters.data);
+    freeLocalMemberArray(this->dataIndices.data);
+    freeLocalMemberArray(this->sectorDataCount.data);
   }
 
   friend class GpuNUFFTOperatorFactory;
@@ -96,18 +93,27 @@ class GpuNUFFTOperator
 
   void setKSpaceTraj(Array<DType> kSpaceTraj)
   {
+    if (this->kSpaceTraj.data != NULL)
+      freeLocalMemberArray(this->kSpaceTraj.data);
     this->kSpaceTraj = kSpaceTraj;
   }
   void setSectorCenters(Array<IndType> sectorCenters)
   {
+    if(this->sectorCenters.data != NULL)
+      freeLocalMemberArray(this->sectorCenters.data);
     this->sectorCenters = sectorCenters;
   }
   void setSectorDataCount(Array<IndType> sectorDataCount)
   {
+    if(this->sectorDataCount.data != NULL)
+      freeLocalMemberArray(this->sectorDataCount.data);
+
     this->sectorDataCount = sectorDataCount;
   }
   void setDataIndices(Array<IndType> dataIndices)
   {
+    if (this->dataIndices.data != NULL)
+      freeLocalMemberArray(this->dataIndices.data);
     this->dataIndices = dataIndices;
   }
   void setSens(Array<DType2> sens)
@@ -116,10 +122,14 @@ class GpuNUFFTOperator
   }
   void setDens(Array<DType> dens)
   {
+    if (this->dens.data != NULL)
+      freeLocalMemberArray(this->dens.data);
     this->dens = dens;
   }
   void setDeapodizationFunction(Array<DType> deapo)
   {
+    if (this->deapo.data != NULL)
+      freeLocalMemberArray(this->deapo.data);
     this->deapo= deapo;
   }
 
@@ -344,6 +354,15 @@ class GpuNUFFTOperator
   Array<CufftType> performForwardGpuNUFFT(Array<DType2> imgData,
                                           GpuNUFFTOutput gpuNUFFTOut);
 
+  void clean_memory();
+
+  void setGradMode(bool grad_mode) {
+    this->grad_mode = grad_mode;
+  }
+
+  bool getGradMode() {
+    return this->grad_mode;
+  }
   /** \brief Check if density compensation data is available. */
   bool applyDensComp()
   {
@@ -362,13 +381,27 @@ class GpuNUFFTOperator
     return operatorType;
   }
 
+  /** \brief Function to allocate all neccessary device memory used by the
+   * GriddingOperator. */
+  void initDeviceMemory(int n_coils, int n_coils_cc = 1);
+
+  /** \brief Function to free the neccessary device memory used by the
+   * GriddingOperator. */
+  void freeDeviceMemory();
+  
+  /** \brief Gridding Info meta information.
+  *
+  * @see gpuNUFFT::GpuNUFFTOperator::initGpuNUFFTInfo
+  */
+  GpuNUFFTInfo *gi_host;
+
  protected:
 
    template<typename T>
    void freeLocalMemberArray(T* dataPointer)
    {
      if (dataPointer != NULL) {
-       free(dataPointer);
+       cudaFreeHost(dataPointer);
        dataPointer = NULL;
      }
    }
@@ -454,6 +487,10 @@ class GpuNUFFTOperator
   */
   bool matlabSharedMem;
 
+  /** \brief Flag for changing the isign, mainly used for gradients 
+  */
+  bool grad_mode;
+
   /** \brief Return Grid Width (ImageWidth * osf) */
   IndType getGridWidth()
   {
@@ -525,12 +562,6 @@ class GpuNUFFTOperator
   /** \brief Flag to determine debugging of GPU kernel execution times */
   bool debugTiming;
 
-  /** \brief Gridding Info meta information.
-    *
-    * @see gpuNUFFT::GpuNUFFTOperator::initGpuNUFFTInfo
-    */
-  GpuNUFFTInfo *gi_host;
-
   // GPU Device Members
 
   /** \brief GPU Device pointer to sensitivity array elements. */
@@ -566,17 +597,9 @@ class GpuNUFFTOperator
   /** \brief Function to stop CUDA timing test. */
   float stopTiming();
 
-  /** \brief Function to allocate all neccessary device memory used by the
-   * GriddingOperator. */
-  void initDeviceMemory(int n_coils, int n_coils_cc = 1);
-
-  /** \brief Function to free the neccessary device memory used by the
-   * GriddingOperator. */
-  void freeDeviceMemory();
-
   /** \brief Update amount of concurrently computed coils
    */
-  void updateConcurrentCoilCount(int coil_it, int n_coils, int &n_coils_cc);
+  void updateConcurrentCoilCount(int coil_it, int n_coils, int &n_coils_cc, cudaStream_t stream=0);
 
   /** \brief Compute amount of coils which can be computed at once.
    *

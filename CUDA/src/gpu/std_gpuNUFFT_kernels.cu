@@ -8,112 +8,43 @@
 #include "precomp_utils.hpp"
 #include "cuda_utils.cuh"
 
-// Method to initialize CONSTANT memory symbols. Needs to reside in *.cu file 
+// Method to initialize CONSTANT memory symbols. Needs to reside in *.cu file
 // to work properly
 //
 //
-void initConstSymbol(const char* symbol, const void* src, IndType size)
+void initConstSymbol(const char* symbol, const void* src, IndType size, cudaStream_t stream)
 {
   if (std::string("GI").compare(symbol)==0)
-    HANDLE_ERROR(cudaMemcpyToSymbol(GI, src,size));
+    HANDLE_ERROR(cudaMemcpyToSymbolAsync(GI, src, size, 0, cudaMemcpyHostToDevice, stream));
 
   if (std::string("KERNEL").compare(symbol)==0)
-    HANDLE_ERROR(cudaMemcpyToSymbol(KERNEL, src,size));
+    HANDLE_ERROR(cudaMemcpyToSymbolAsync(KERNEL, src, size, 0, cudaMemcpyHostToDevice, stream));
 }
 
-void bindTo1DTexture(const char* symbol, void* devicePtr, IndType count)
+__global__ void updateDensityCompKernel(DType2* density_data, DType2* estimation_data, long int N)
 {
-  if (std::string("texDATA").compare(symbol)==0)
+  long int t = threadIdx.x + blockIdx.x * blockDim.x;
+  while (t < N)
   {
-    HANDLE_ERROR (cudaBindTexture(NULL,texDATA, devicePtr,count*sizeof(float2)));
-  }
-  else if (std::string("texGDATA").compare(symbol)==0)
-  {
-    HANDLE_ERROR (cudaBindTexture(NULL,texGDATA, devicePtr,count*sizeof(cufftComplex)));
-  }
+    DType2 data_p = density_data[t];
+    DType2 esti_p = estimation_data[t];
+    data_p.x *= rsqrtf(esti_p.x * esti_p.x + esti_p.y * esti_p.y);
+    data_p.y = 0;
+    density_data[t] = data_p;
+    t = t + blockDim.x*gridDim.x;
+  } 
 }
 
-
-void initTexture(const char* symbol, cudaArray** devicePtr, gpuNUFFT::Array<DType> hostTexture)
+void performUpdateDensityComp(DType2* density_data, DType2* estimation_data, long int n_samples)
 {
-  if (std::string("texKERNEL").compare(symbol)==0)
-  {
-    HANDLE_ERROR(cudaMallocArray (devicePtr, &texKERNEL.channelDesc, hostTexture.dim.width, 1));
-    HANDLE_ERROR(cudaBindTextureToArray(texKERNEL, *devicePtr));
-    HANDLE_ERROR(cudaMemcpyToArray(*devicePtr, 0, 0, hostTexture.data, sizeof(float)*hostTexture.count(), cudaMemcpyHostToDevice));
-    
-    texKERNEL.filterMode = cudaFilterModePoint;
-    texKERNEL.normalized = true;
-    texKERNEL.addressMode[0] = cudaAddressModeClamp;
-  }
-  else if (std::string("texKERNEL2D").compare(symbol)==0)
-  {
-    HANDLE_ERROR(cudaMallocArray (devicePtr, &texKERNEL2D.channelDesc, hostTexture.dim.width, hostTexture.dim.height));
-
-    HANDLE_ERROR(cudaBindTextureToArray(texKERNEL2D, *devicePtr));
-    HANDLE_ERROR(cudaMemcpyToArray(*devicePtr, 0, 0, hostTexture.data, sizeof(float)*hostTexture.count(), cudaMemcpyHostToDevice));
-    
-    texKERNEL2D.filterMode = cudaFilterModeLinear;
-    texKERNEL2D.normalized = true;
-    texKERNEL2D.addressMode[0] = cudaAddressModeClamp;
-    texKERNEL2D.addressMode[1] = cudaAddressModeClamp;
-  }
-  else if (std::string("texKERNEL3D").compare(symbol)==0)
-  {
-    cudaExtent volumesize=make_cudaExtent(hostTexture.dim.width, hostTexture.dim.height, hostTexture.dim.depth); 
-    cudaMalloc3DArray(devicePtr,&texKERNEL3D.channelDesc,volumesize); 
-
-    cudaMemcpy3DParms copyparams = {0};
-    copyparams.extent=volumesize; 
-    copyparams.dstArray=*devicePtr; 
-    copyparams.kind=cudaMemcpyHostToDevice; 
-    copyparams.srcPtr= make_cudaPitchedPtr((void*)hostTexture.data,sizeof(float)*hostTexture.dim.width,hostTexture.dim.height,hostTexture.dim.depth); 
-
-    HANDLE_ERROR(cudaMemcpy3D(&copyparams)); 
-    HANDLE_ERROR(cudaBindTextureToArray(texKERNEL3D, *devicePtr));
-  
-    texKERNEL3D.filterMode = cudaFilterModeLinear;
-    texKERNEL3D.normalized = true;
-    texKERNEL3D.addressMode[0] = cudaAddressModeClamp;
-    texKERNEL3D.addressMode[1] = cudaAddressModeClamp;
-    texKERNEL3D.addressMode[2] = cudaAddressModeClamp;
-  }
+  dim3 block_dim(64, 1, 8);
+  dim3 grid_dim(getOptimalGridDim(n_samples,THREAD_BLOCK_SIZE));
+  updateDensityCompKernel<<<grid_dim,block_dim>>>(density_data, estimation_data, n_samples);
 }
 
-void unbindTexture(const char* symbol)
+__global__ void fftScaleKernel(CufftType* data, DType scaling, long int N)
 {
-  if (std::string("texKERNEL").compare(symbol)==0)
-  {
-    HANDLE_ERROR(cudaUnbindTexture(texKERNEL));    
-  }
-  else if (std::string("texKERNEL2D").compare(symbol)==0)
-  {
-    HANDLE_ERROR(cudaUnbindTexture(texKERNEL2D));    
-  }
-  else if (std::string("texKERNEL3D").compare(symbol)==0)
-  {
-    HANDLE_ERROR(cudaUnbindTexture(texKERNEL3D));    
-  }
-  else if (std::string("texDATA").compare(symbol)==0)
-  {
-    HANDLE_ERROR(cudaUnbindTexture(texDATA));    
-  }
-  else if (std::string("texGDATA").compare(symbol)==0)
-  {
-    HANDLE_ERROR(cudaUnbindTexture(texGDATA));    
-  }
-}
-
-
-void freeTexture(const char* symbol, cudaArray* devicePtr)
-{
-  unbindTexture(symbol);
-  HANDLE_ERROR(cudaFreeArray(devicePtr));  
-}
-
-__global__ void fftScaleKernel(CufftType* data, DType scaling, int N)
-{
-  int t = threadIdx.x +  blockIdx.x *blockDim.x;
+  long int t = threadIdx.x +  blockIdx.x *blockDim.x;
 
   while (t < N) 
   {
@@ -129,7 +60,7 @@ __global__ void fftScaleKernel(CufftType* data, DType scaling, int N)
   }
 }
 
-void performFFTScaling(CufftType* data,int N, gpuNUFFT::GpuNUFFTInfo* gi_host)
+void performFFTScaling(CufftType* data,long int N, gpuNUFFT::GpuNUFFTInfo* gi_host)
 {
   dim3 block_dim(64, 1, 8);
   //dim3 block_dim(THREAD_BLOCK_SIZE);
@@ -174,18 +105,19 @@ __global__ void conjSensMulKernel(CufftType* imdata, DType2* sens, int N)
 void performSensMul(CufftType* imdata_d,
   DType2* sens_d,
   gpuNUFFT::GpuNUFFTInfo* gi_host,
-  bool conjugate)
+  bool conjugate,
+  bool use_grid_dim)
 {
   if (DEBUG)
     printf("perform sensitivity multiplication \n");
 
-  dim3 grid_dim(getOptimalGridDim(gi_host->im_width_dim,THREAD_BLOCK_SIZE));
+  dim3 grid_dim(getOptimalGridDim(use_grid_dim?gi_host->grid_width_dim:gi_host->im_width_dim,THREAD_BLOCK_SIZE));
   //dim3 block_dim(THREAD_BLOCK_SIZE);
   dim3 block_dim(64, 1, 8);
   if (conjugate)
-    conjSensMulKernel<<<grid_dim,block_dim>>>(imdata_d,sens_d,gi_host->im_width_dim);
+    conjSensMulKernel<<<grid_dim,block_dim>>>(imdata_d,sens_d,use_grid_dim?gi_host->grid_width_dim:gi_host->im_width_dim);
   else
-    sensMulKernel<<<grid_dim,block_dim>>>(imdata_d,sens_d,gi_host->im_width_dim);
+    sensMulKernel<<<grid_dim,block_dim>>>(imdata_d,sens_d,use_grid_dim?gi_host->grid_width_dim:gi_host->im_width_dim);
 }
 
 __global__ void sensSumKernel(CufftType* imdata, DType2* imdata_sum, int N)
@@ -226,8 +158,8 @@ __global__ void densityCompensationKernel(DType2* data, DType* density_comp, int
     for (int c = threadIdx.z; c < GI.n_coils_cc; c+= blockDim.z)
     {
       DType2 data_p = data[t + c*N]; 
-      data_p.x = data_p.x * sqrt(density_comp[t]);
-      data_p.y = data_p.y * sqrt(density_comp[t]);
+      data_p.x = data_p.x * density_comp[t];
+      data_p.y = data_p.y * density_comp[t];
       data[t + c*N] = data_p;
     }
     t = t+ blockDim.x*gridDim.x;

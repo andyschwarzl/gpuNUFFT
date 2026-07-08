@@ -4,8 +4,6 @@
 #include "config.hpp"
 #include "gpuNUFFT_operator.hpp"
 #include "balanced_gpuNUFFT_operator.hpp"
-#include "texture_gpuNUFFT_operator.hpp"
-#include "balanced_texture_gpuNUFFT_operator.hpp"
 #include <algorithm>  // std::sort
 #include <vector>     // std::vector
 #include <string>
@@ -27,8 +25,6 @@ namespace gpuNUFFT
  *   operator like from subsequent matlab calls
  *
  * The factory defines how the operator is going to process (load balancing
- *and/or
- * texture interpolation).
  *
  * Sector mapping:
  *
@@ -51,13 +47,12 @@ class GpuNUFFTOperatorFactory
 
   /** \brief Constructor overload
     *
-    * @param useTextures Flag to indicate texture interpolation
-    * @param useGpu Flag to indicate gpu usage for precomputation
+    * @param useGpu Flag to indicat&GpuNUFFTPythonOperator::adj_op);e gpu usage for precomputation
     * @param balanceWorkload Flag to indicate load balancing
     */
-  GpuNUFFTOperatorFactory(const bool useTextures = true, const bool useGpu = true,
+  GpuNUFFTOperatorFactory(const bool useGpu = true,
                           bool balanceWorkload = true, bool matlabSharedMem = false)
-    : useTextures(useTextures), useGpu(useGpu), balanceWorkload(balanceWorkload),
+    : useGpu(useGpu), balanceWorkload(balanceWorkload),
     matlabSharedMem(matlabSharedMem)
   {
   }
@@ -171,12 +166,27 @@ class GpuNUFFTOperatorFactory
       Array<DType> &deapoData, const IndType &kernelWidth, const IndType &sectorWidth, 
       const DType &osf, Dimensions &imgDims);
 
-  void setUseTextures(bool useTextures);
-
   void setBalanceWorkload(bool balanceWorkload);
+  
+  /**
+  * \brief Set k-space locations and corresponding density. This can also be used 
+  * to update them
+  * 
+  */
+  void set_pts(
+    gpuNUFFT::GpuNUFFTOperator *gpuNUFFTOp, gpuNUFFT::Array<DType> &kSpaceTraj,
+    gpuNUFFT::Array<DType> &densCompData);
 
  protected:
-  /** \brief Assign the samples on the k-space trajectory to its corresponding
+  template<typename T>
+   void freeLocalMemberArray(T* dataPointer)
+   {
+     if (dataPointer != NULL) {
+       cudaFreeHost(dataPointer);
+       dataPointer = NULL;
+     }
+   }
+   /** \brief Assign the samples on the k-space trajectory to its corresponding
     *sector
     *
     * @return array of indices of the assigned sector
@@ -281,8 +291,6 @@ class GpuNUFFTOperatorFactory
     *
     * - default: GpuNUFFTOperator
     * - balanceWorkload = true: BalancedGpuNUFFTOperator
-    * - useTextures = true: TextureGpuNUFFTOperator
-    * - balanceWorkload + useTextures = true: BalancedTextureGpuNUFFTOperator
     *
     * @return New allocated GpuNUFFTOperator or sub class
     */
@@ -307,11 +315,10 @@ class GpuNUFFTOperatorFactory
   */
   gpuNUFFT::Array<DType> computeDeapodizationFunction(const IndType &kernelWidth,
     const DType &osf, gpuNUFFT::Dimensions &imgDims);
+  
 
+ 
  private:
-  /** \brief Flag to indicate texture interpolation */
-  bool useTextures;
-
   /** \brief Flag to indicate gpu usage for precomputation */
   bool useGpu;
 

@@ -29,8 +29,8 @@
   typedef cufftComplex CufftType;
 #endif
 
-typedef unsigned int SizeType;
-typedef unsigned int IndType;
+typedef unsigned long int SizeType;
+typedef unsigned long int IndType;
 typedef uint2 IndType2;
 typedef uint3 IndType3;
 

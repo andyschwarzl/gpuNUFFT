@@ -61,17 +61,20 @@ void gpuNUFFT::BalancedGpuNUFFTOperator::performGpuNUFFTAdj(
     GpuArray<DType2> kspaceData, GpuArray<CufftType> &imgData,
     GpuNUFFTOutput gpuNUFFTOut)
 {
-  if (DEBUG)
-    printf(
-        "BGpuNUFFT: allocate and copy sector processing order of size %d...\n",
-        this->sectorProcessingOrder.count());
-  allocateAndCopyToDeviceMem<IndType2>(&sector_processing_order_d,
+  if (gpuNUFFTOut != TOEPLITZ) 
+  {
+
+    if (DEBUG)
+      printf(
+            "BGpuNUFFT: allocate and copy sector processing order of size %d...\n",
+            this->sectorProcessingOrder.count());
+    allocateAndCopyToDeviceMem<IndType2>(&sector_processing_order_d,
                                        this->sectorProcessingOrder.data,
                                        this->sectorProcessingOrder.count());
-
+   }
   GpuNUFFTOperator::performGpuNUFFTAdj(kspaceData, imgData, gpuNUFFTOut);
-
-  freeTotalDeviceMemory(sector_processing_order_d, NULL);  // NULL as stop token
+  if (gpuNUFFTOut != TOEPLITZ) 
+      freeTotalDeviceMemory(sector_processing_order_d, NULL);  // NULL as stop token
 }
 
 void gpuNUFFT::BalancedGpuNUFFTOperator::performForwardGpuNUFFT(
@@ -95,16 +98,18 @@ void gpuNUFFT::BalancedGpuNUFFTOperator::performForwardGpuNUFFT(
     GpuArray<DType2> imgData, GpuArray<CufftType> &kspaceData,
     GpuNUFFTOutput gpuNUFFTOut)
 {
-  if (DEBUG)
-    printf(
-        "BGpuNUFFT: allocate and copy sector processing order of size %d...\n",
-        this->sectorProcessingOrder.count());
-  allocateAndCopyToDeviceMem<IndType2>(&sector_processing_order_d,
+  if (gpuNUFFTOut != TOEPLITZ) 
+  {
+    if (DEBUG)
+        printf(
+            "BGpuNUFFT: allocate and copy sector processing order of size %d...\n",
+            this->sectorProcessingOrder.count());
+        allocateAndCopyToDeviceMem<IndType2>(&sector_processing_order_d,
                                        this->sectorProcessingOrder.data,
                                        this->sectorProcessingOrder.count());
-
-  GpuNUFFTOperator::performForwardGpuNUFFT(imgData, kspaceData, gpuNUFFTOut);
-
-  freeTotalDeviceMemory(sector_processing_order_d, NULL);  // NULL as stop token
+   }
+   GpuNUFFTOperator::performForwardGpuNUFFT(imgData, kspaceData, gpuNUFFTOut);
+  if (gpuNUFFTOut != TOEPLITZ) 
+    freeTotalDeviceMemory(sector_processing_order_d, NULL);  // NULL as stop token
 }
 

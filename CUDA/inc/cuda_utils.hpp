@@ -59,7 +59,19 @@ inline void copyToDevice(TypeName *host_ptr, TypeName *device_ptr,
   HANDLE_ERROR(cudaMemcpy(device_ptr, host_ptr, num_elements * sizeof(TypeName),
                           cudaMemcpyHostToDevice));
 }
-
+/** \brief CUDA memcpy call to copy data from host to device
+ *
+ * @param host_ptr      host data pointer
+ * @param device_ptr    device pointer
+ * @param num_elements  amount of elements of size TypeName
+ */
+template <typename TypeName>
+inline void copyToDeviceAsync(TypeName *host_ptr, TypeName *device_ptr,
+                         IndType num_elements, cudaStream_t stream=0)
+{
+  HANDLE_ERROR(cudaMemcpyAsync(device_ptr, host_ptr, num_elements * sizeof(TypeName),
+                          cudaMemcpyHostToDevice, stream));
+}
 /** \brief CUDA memory allocation and memcpy call to copy data from host to
  *device
  *
@@ -98,13 +110,28 @@ inline void allocateAndSetMem(TypeName **device_ptr, IndType num_elements,
  */
 template <typename TypeName>
 inline void copyDeviceToDevice(TypeName *device_ptr_src,
-                               TypeName *device_ptr_dest, IndType num_elements)
+                               TypeName *device_ptr_dest, IndType num_elements
+                               )
 {
   HANDLE_ERROR(cudaMemcpy(device_ptr_dest, device_ptr_src,
                           num_elements * sizeof(TypeName),
                           cudaMemcpyDeviceToDevice));
 }
 
+/** \brief CUDA memcpy call to copy data from device ptr to device ptr
+ *
+ * @param device_ptr_src   source device pointer
+ * @param device_ptr_dest  destination device pointer
+ * @param num_elements     amount of elements of size TypeName
+ */
+template <typename TypeName>
+inline void copyDeviceToDeviceAsync(TypeName *device_ptr_src,
+                               TypeName *device_ptr_dest, IndType num_elements, cudaStream_t stream=0)
+{
+  HANDLE_ERROR(cudaMemcpyAsync(device_ptr_dest, device_ptr_src,
+                          num_elements * sizeof(TypeName),
+                          cudaMemcpyDeviceToDevice, stream));
+}
 /** \brief Copy CUDA memory from device to host
  *
  * @param device_ptr    device pointer
@@ -118,7 +145,19 @@ inline void copyFromDevice(TypeName *device_ptr, TypeName *host_ptr,
   HANDLE_ERROR(cudaMemcpy(host_ptr, device_ptr, num_elements * sizeof(TypeName),
                           cudaMemcpyDeviceToHost));
 }
-
+/** \brief Copy CUDA memory from device to host
+ *
+ * @param device_ptr    device pointer
+ * @param host_ptr      host pointer
+ * @param num_elements  amount of elements of size TypeName
+ */
+template <typename TypeName>
+inline void copyFromDeviceAsync(TypeName *device_ptr, TypeName *host_ptr,
+                           IndType num_elements, cudaStream_t stream=0)
+{
+  HANDLE_ERROR(cudaMemcpyAsync(host_ptr, device_ptr, num_elements * sizeof(TypeName),
+                          cudaMemcpyDeviceToHost, stream));
+}
 /** \brief Free variable list of device pointers. Use NULL as stopping element
  *
  * e.g.: freeTotalDeviceMemory(ptr1*, ptr2*,NULL);
@@ -181,7 +220,7 @@ inline void showMemoryInfo(bool force, FILE *stream)
   size_t total_mem = 0;
   cudaMemGetInfo(&free_mem, &total_mem);
   if (DEBUG || force)
-    fprintf(stream, "memory usage, free: %lu total: %lu\n", (SizeType)(free_mem),
+    printf("memory usage, free: %lu total: %lu\n", (SizeType)(free_mem),
     (SizeType)(total_mem));
 }
 
@@ -212,39 +251,6 @@ inline void showMemoryInfo()
  *
  * @param symbol Const symbol name
  */
-void initConstSymbol(const char *symbol, const void *src, IndType count);
-
-/** \brief Initialize texture memory on device
- *
- * CUDA Kernel function prototype.
- *
- * @param symbol Texture symbol name
- */
-void initTexture(const char *symbol, cudaArray **devicePtr,
-                 gpuNUFFT::Array<DType> hostTexture);
-
-/** \brief Bind to 1-d texture on device
- *
- * CUDA Kernel function prototype.
- *
- * @param symbol Texture symbol name
- */
-void bindTo1DTexture(const char *symbol, void *devicePtr, IndType count);
-
-/** \brief Unbind from device texture
- *
- * CUDA Kernel function prototype.
- *
- * @param symbol Texture symbol name
- */
-void unbindTexture(const char *symbol);
-
-/** \brief Free texture memory on device
- *
- * CUDA Kernel function prototype.
- *
- * @param symbol Texture symbol name
- */
-void freeTexture(const char *symbol, cudaArray *devicePtr);
+void initConstSymbol(const char *symbol, const void *src, IndType count, cudaStream_t stream=0);
 
 #endif
